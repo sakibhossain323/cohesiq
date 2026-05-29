@@ -1,0 +1,99 @@
+import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { StarRating } from "@/components/shared/StarRating";
+import { PlatformBadge } from "@/components/shared/PlatformBadge";
+import { NicheBadge } from "@/components/shared/NicheBadge";
+import { FollowerCount } from "@/components/shared/FollowerCount";
+import { MapPin } from "lucide-react";
+import type { Creator } from "@/lib/types";
+
+interface CreatorCardProps {
+  creator: Creator;
+}
+
+export function CreatorCard({ creator }: CreatorCardProps) {
+  const primaryProfile = creator.social_profiles.find(sp => sp.is_primary_platform) ?? creator.social_profiles[0];
+  const initials = creator.display_name
+    .split(" ")
+    .map(n => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  return (
+    <Link href={`/creators/${creator.id}`}>
+      <Card className="group h-full transition-all duration-200 hover:border-primary/50 hover:shadow-md">
+        <CardContent className="p-5">
+          <div className="flex items-start gap-4">
+            <Avatar className="h-14 w-14 border-2 border-border">
+              <AvatarImage src={creator.profile_photo_url} alt={creator.display_name} />
+              <AvatarFallback className="bg-muted text-sm font-medium">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="truncate font-semibold text-foreground group-hover:text-primary">
+                  {creator.display_name}
+                </h3>
+                {creator.is_available ? (
+                  <Badge variant="outline" className="shrink-0 border-green-200 bg-green-50 text-green-700">
+                    Available
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="shrink-0 border-amber-200 bg-amber-50 text-amber-700">
+                    Busy
+                  </Badge>
+                )}
+              </div>
+              
+              {creator.city && (
+                <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+                  <MapPin className="h-3.5 w-3.5" />
+                  <span>{creator.city}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <NicheBadge niche={creator.primary_niche} size="sm" />
+            {creator.niches
+              .filter(n => n !== creator.primary_niche)
+              .slice(0, 1)
+              .map(niche => (
+                <NicheBadge key={niche} niche={niche} size="sm" variant="outline" />
+              ))}
+          </div>
+
+          {primaryProfile && (
+            <div className="mt-4 flex items-center gap-3">
+              <PlatformBadge platform={primaryProfile.platform} showLabel />
+              {primaryProfile.follower_count && (
+                <FollowerCount count={primaryProfile.follower_count} />
+              )}
+            </div>
+          )}
+
+          {primaryProfile?.engagement_rate && (
+            <div className="mt-2 text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">
+                {primaryProfile.engagement_rate}%
+              </span>{" "}
+              engagement rate
+            </div>
+          )}
+
+          {creator.average_rating && (
+            <div className="mt-4 border-t border-border pt-4">
+              <StarRating rating={creator.average_rating} size="sm" />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
