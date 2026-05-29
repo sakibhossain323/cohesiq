@@ -8,6 +8,14 @@ from pydantic import BaseModel, EmailStr, field_validator
 # ------------------------------------------------------------------ #
 # Requests                                                             #
 # ------------------------------------------------------------------ #
+from typing import Any, Dict
+
+class OnboardingRequest(BaseModel):
+    role: Literal["creator", "brand"]
+    creatorProfile: Dict[str, Any] | None = None
+    creatorNiches: Dict[str, Any] | None = None
+    creatorPlatforms: list[Dict[str, Any]] | None = None
+    brandProfile: Dict[str, Any] | None = None
 
 class RegisterRequest(BaseModel):
     email: EmailStr

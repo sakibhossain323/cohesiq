@@ -33,6 +33,9 @@ app.include_router(creators_router, prefix="/creators", tags=["creators"])
 app.include_router(brands_router, prefix="/brands", tags=["brands"])
 app.include_router(campaigns_router, prefix="/campaigns", tags=["campaigns"])
 
+from app.webhooks.router import router as webhooks_router  # noqa: E402
+app.include_router(webhooks_router, prefix="/webhooks", tags=["webhooks"])
+
 
 # ------------------------------------------------------------------ #
 # Cross-domain read-only routes                                        #

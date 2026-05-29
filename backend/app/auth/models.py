@@ -17,7 +17,8 @@ class User(Base):
         server_default=func.gen_random_uuid(),
     )
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    clerk_id: Mapped[str | None] = mapped_column(String(255), nullable=True, unique=True)
     role: Mapped[str] = mapped_column(
         ENUM("creator", "brand", "admin", name="user_role", create_type=False),
         nullable=False,

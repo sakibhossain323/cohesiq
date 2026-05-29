@@ -208,7 +208,8 @@ CREATE TABLE languages (
 CREATE TABLE users (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email           VARCHAR(255) NOT NULL UNIQUE,
-    password_hash   VARCHAR(255) NOT NULL,
+    password_hash   VARCHAR(255),          -- Nullable since Clerk handles auth
+    clerk_id        VARCHAR(255) UNIQUE,   -- Maps to Clerk's user identity
     role            user_role NOT NULL,
     is_active       BOOLEAN DEFAULT TRUE,
     is_email_verified BOOLEAN DEFAULT FALSE,

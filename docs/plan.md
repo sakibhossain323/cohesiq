@@ -1016,28 +1016,28 @@ Rules for extension:
 - The matching engine receives platform-agnostic primitives only  
 - The graph schema stays unchanged: new platforms add ACTIVE_ON edges, not new node types  
 
-**Implementation Order**  
-Execute in this sequence. Do not start a step until the previous one is testable.  
- 1. docker-compose up (postgres + neo4j only, backend optional for now)  
-  2. Create all PostgreSQL enums and tables via Alembic migration  
-  3. Create Neo4j constraints and indexes (run Cypher in browser at localhost:7474)  
-  4. Implement config.py and database.py — verify async session works  
-  5. Implement SQLAlchemy ORM models — no routes yet  
-  6. Run first Alembic migration — verify tables exist with \dt in psql  
-  7. Implement YouTubeService — test get_channel_stats with one real BD channel ID  
-  8. Implement EmbeddingService — test encode() returns shape (384,)  
-  9. Implement LLM service — test classify_creator_niche with sample video titles  
- 10. Implement graph.py (Neo4j driver) and graph_sync.py  
- 11. Implement matching.py pure functions — unit test with no database  
- 12. Implement creator router + full YouTube sync flow end-to-end  
-     (URL in -> YouTube API -> Postgres -> Neo4j -> metrics computed -> LLM classified)  
- 13. Implement brand router  
- 14. Implement campaign router + matching engine endpoint  
- 15. Run seed script — verify 15+ creators and 2 match result sets in database  
- 16. Build Next.js frontend pages in order: creators -> brands -> campaigns/new -> campaigns/{id}  
- 17. Wire all frontend pages to backend — verify full user journey  
- 18. Polish match results page — this is the demo centrepiece  
-   
-*This is the source of truth for the coding agent. When in doubt about any design decision,*  
- *  
- choose the option that keeps the most extension points open without adding premature complexity.*  
+**Implementation Roadmap**  
+Execute in this sequence.
+
+**Phase 1: Foundation (COMPLETED)**
+- [x] Docker Compose setup (postgres + backend + frontend)
+- [x] Create PostgreSQL enums and tables via Alembic migration
+- [x] Implement config.py and database.py — verify async session works
+- [x] Integrate Clerk Auth (frontend middleware & backend JWT RS256 validation)
+- [x] Implement multi-step onboarding forms (frontend contexts & backend `/onboarding` sync)
+
+**Phase 2: Core Platform & Dashboards (PENDING)**
+- [ ] Implement Dashboard Layouts (`/dashboard/creator`, `/dashboard/brand`)
+- [ ] Build Brand Campaign Creation Form
+- [ ] Build Creator Public Profiles
+- [ ] Implement Campaign Browse & Application logic
+
+**Phase 3: Integrations & Matching Engine (PENDING)**
+- [ ] Implement YouTubeService — fetch channel stats and videos
+- [ ] Implement EmbeddingService — generate semantic embeddings
+- [ ] Implement LLM service — classify creator niches
+- [ ] Implement graph.py (Neo4j driver) and graph_sync.py
+- [ ] Implement matching.py pure functions — unit test with no database
+- [ ] Run seed script — verify creators and match result sets in database
+
+*This is the source of truth for the coding agent. When in doubt about any design decision, choose the option that keeps the most extension points open without adding premature complexity.*

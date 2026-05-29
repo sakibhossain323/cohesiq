@@ -2,25 +2,28 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { 
-  SidebarProvider, 
-  Sidebar, 
-  SidebarContent, 
-  SidebarHeader, 
-  SidebarMenu, 
-  SidebarMenuItem, 
-  SidebarMenuButton, 
+import { Show, UserButton, SignInButton } from '@clerk/nextjs'
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
   SidebarInset,
-  SidebarTrigger 
+  SidebarTrigger,
+  SidebarFooter,
 } from '@/components/ui/sidebar'
-import { 
-  Users, 
-  Megaphone, 
-  BarChart3, 
+import {
+  Users,
+  Megaphone,
+  BarChart3,
+  LogIn,
   Settings,
-  LogOut
+  FileText
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -28,28 +31,25 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname()
-  
+
   const isCreatorDashboard = pathname.startsWith('/dashboard/creator')
   const isBrandDashboard = pathname.startsWith('/dashboard/brand')
-  
-  const navItems = isCreatorDashboard 
+
+  const navItems = isCreatorDashboard
     ? [
-        { href: '/', label: 'Home', icon: <LogOut className="h-4 w-4" /> },
-        { href: '/creators', label: 'Browse Campaigns', icon: <Megaphone className="h-4 w-4" /> },
         { href: '/dashboard/creator', label: 'My Dashboard', icon: <BarChart3 className="h-4 w-4" /> },
+        { href: '/dashboard/creator/campaigns', label: 'Discover Campaigns', icon: <Megaphone className="h-4 w-4" /> },
+        { href: '/dashboard/creator/applications', label: 'My Applications', icon: <FileText className="h-4 w-4" /> },
+        { href: '/dashboard/creator/profile', label: 'Profile Settings', icon: <Settings className="h-4 w-4" /> },
       ]
     : isBrandDashboard
     ? [
-        { href: '/', label: 'Home', icon: <LogOut className="h-4 w-4" /> },
-        { href: '/creators', label: 'Find Creators', icon: <Users className="h-4 w-4" /> },
-        { href: '/campaigns', label: 'My Campaigns', icon: <Megaphone className="h-4 w-4" /> },
         { href: '/dashboard/brand', label: 'My Dashboard', icon: <BarChart3 className="h-4 w-4" /> },
+        { href: '/dashboard/brand/creators', label: 'Find Creators', icon: <Users className="h-4 w-4" /> },
+        { href: '/dashboard/brand/campaigns', label: 'My Campaigns', icon: <Megaphone className="h-4 w-4" /> },
+        { href: '/dashboard/brand/profile', label: 'Profile Settings', icon: <Settings className="h-4 w-4" /> },
       ]
-    : [
-        { href: '/', label: 'Home', icon: <LogOut className="h-4 w-4" /> },
-        { href: '/creators', label: 'Browse Creators', icon: <Users className="h-4 w-4" /> },
-        { href: '/campaigns', label: 'Browse Campaigns', icon: <Megaphone className="h-4 w-4" /> },
-      ]
+    : []
 
   return (
     <SidebarProvider>
@@ -62,12 +62,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <span className="text-lg font-bold text-foreground">Cohesiq</span>
           </Link>
         </SidebarHeader>
+
         <SidebarContent>
           <SidebarMenu>
             {navItems.map((item) => (
               <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton 
-                  asChild 
+                <SidebarMenuButton
+                  asChild
                   isActive={pathname === item.href}
                   tooltip={item.label}
                 >
@@ -80,7 +81,36 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             ))}
           </SidebarMenu>
         </SidebarContent>
+
+        {/* ── User section at the very bottom of the sidebar ── */}
+        <SidebarFooter className="border-t p-3">
+          <Show when="signed-in">
+            <div className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-sidebar-accent transition-colors">
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: 'h-8 w-8',
+                  },
+                }}
+              />
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-medium text-sidebar-foreground truncate">My Account</span>
+                <span className="text-xs text-muted-foreground truncate">Manage profile</span>
+              </div>
+            </div>
+          </Show>
+
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <Button variant="outline" size="sm" className="w-full gap-2">
+                <LogIn className="h-4 w-4" />
+                Sign In
+              </Button>
+            </SignInButton>
+          </Show>
+        </SidebarFooter>
       </Sidebar>
+
       <SidebarInset>
         <header className="flex h-14 items-center gap-2 border-b border-border bg-background px-4">
           <SidebarTrigger className="-ml-1" />

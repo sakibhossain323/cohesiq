@@ -35,3 +35,11 @@ graphify-out/cost.json
 graphify-out/cache/
 graphify-out/.*
 graphify-out/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]/
+
+# Explicitly ignore environment and secret files
+.env
+.env.*
+!.env.example
+*.env
+*.pem
+*.key

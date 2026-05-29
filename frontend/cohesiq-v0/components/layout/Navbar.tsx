@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { Show, SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
 
 const navLinks = [
   { href: "/creators", label: "Browse Creators" },
@@ -15,6 +16,12 @@ const navLinks = [
 export function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user } = useUser();
+
+  // Route signed-in users to their dashboard if onboarding is done, else /onboarding
+  const onboardingComplete = user?.publicMetadata?.onboardingComplete as boolean | undefined;
+  const role = user?.publicMetadata?.role as string | undefined;
+  const dashboardHref = onboardingComplete && role ? `/dashboard/${role}` : '/onboarding';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -46,12 +53,20 @@ export function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/dashboard/creator">Join as Creator</Link>
-          </Button>
-          <Button size="sm" asChild>
-            <Link href="/dashboard/brand">Join as Brand</Link>
-          </Button>
+          <Show when="signed-out">
+            <SignInButton mode="modal" forceRedirectUrl="/onboarding">
+              <Button variant="ghost" size="sm">Sign In</Button>
+            </SignInButton>
+            <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+              <Button size="sm">Get Started</Button>
+            </SignUpButton>
+          </Show>
+          <Show when="signed-in">
+            <Button variant="outline" size="sm" asChild className="mr-2">
+              <Link href={dashboardHref}>Dashboard</Link>
+            </Button>
+            <UserButton afterSignOutUrl="/" />
+          </Show>
         </div>
 
         <button
@@ -86,12 +101,19 @@ export function Navbar() {
               </Link>
             ))}
             <div className="mt-4 flex flex-col gap-2 border-t border-border pt-4">
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/dashboard/creator">Join as Creator</Link>
-              </Button>
-              <Button size="sm" asChild>
-                <Link href="/dashboard/brand">Join as Brand</Link>
-              </Button>
+              <Show when="signed-out">
+                <SignInButton mode="modal" forceRedirectUrl="/onboarding">
+                  <Button variant="outline" size="sm" className="w-full justify-center">Sign In</Button>
+                </SignInButton>
+                <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+                  <Button size="sm" className="w-full justify-center">Get Started</Button>
+                </SignUpButton>
+              </Show>
+              <Show when="signed-in">
+                <Button variant="outline" size="sm" asChild className="w-full justify-center">
+                  <Link href={dashboardHref}>Dashboard</Link>
+                </Button>
+              </Show>
             </div>
           </nav>
         </div>
