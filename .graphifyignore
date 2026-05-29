@@ -1,0 +1,16 @@
+# 1. Ignore build artifacts, virtual environments, and python caches
+node_modules/
+dist/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.git/
+
+# Explicitly ignore environment and secret files
+.env
+.env.*
+!.env.example
+*.env
+*.pem
+*.key
