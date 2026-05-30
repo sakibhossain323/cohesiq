@@ -1,0 +1,163 @@
+[
+  {
+    "name": "GrameenSoft",
+    "industry": "Technology",
+    "description": "A Bangladeshi IT solutions provider offering cutting-edge software development services.",
+    "logo_url": "https://ui-avatars.com/api/?name=GrameenSoft",
+    "website": "https://grameensoft.com/"
+  },
+  {
+    "name": "Bengal Spice",
+    "industry": "Food",
+    "description": "A popular Bangladeshi restaurant chain serving traditional and modern Bengali cuisine.",
+    "logo_url": "https://ui-avatars.com/api/?name=BengalSpice",
+    "website": "https://bengalspice.com/"
+  },
+  {
+    "name": "Chittagong Tours",
+    "industry": "Travel",
+    "description": "A Bangladeshi travel agency offering customized tour packages to Chittagong and other tourist destinations.",
+    "logo_url": "https://ui-avatars.com/api/?name=ChittagongTours",
+    "website": "https://chittagongtours.com/"
+  },
+  {
+    "name": "Sobuj Fashion",
+    "industry": "Fashion",
+    "description": "A Bangladeshi fashion brand offering stylish and affordable clothing for men and women.",
+    "logo_url": "https://ui-avatars.com/api/?name=SobujFashion",
+    "website": "https://sobujfashion.com/"
+  },
+  {
+    "name": "Green Beauty Co.",
+    "industry": "Beauty",
+    "description": "An eco-friendly Bangladeshi beauty brand offering natural skincare and haircare products.",
+    "logo_url": "https://ui-avatars.com/api/?name=GreenBeautyCo",
+    "website": "https://greenbeautyco.com/"
+  },
+  {
+    "name": "Lifestyle BD",
+    "industry": "Lifestyle",
+    "description": "A Bangladeshi lifestyle magazine featuring articles on fashion, beauty, travel, and entertainment.",
+    "logo_url": "https://ui-avatars.com/api/?name=LifestyleBD",
+    "website": "https://lifestylebd.com/"
+  },
+  {
+    "name": "GameOn BD",
+    "industry": "Gaming",
+    "description": "A Bangladeshi gaming community and esports organization featuring competitive teams and tournaments.",
+    "logo_url": "https://ui-avatars.com/api/?name=GameOnBD",
+    "website": "https://gameonbd.com/"
+  },
+  {
+    "name": "Education Hub",
+    "industry": "Education",
+    "description": "A Bangladeshi online education platform offering courses and resources for students and professionals.",
+    "logo_url": "https://ui-avatars.com/api/?name=EducationHub",
+    "website": "https://educationhub.com/"
+  },
+  {
+    "name": "FitZone BD",
+    "industry": "Fitness",
+    "description": "A Bangladeshi fitness center chain offering state-of-the-art equipment and personalized training services.",
+    "logo_url": "https://ui-avatars.com/api/?name=FitZoneBD",
+    "website": "https://fitzonebd.com/"
+  },
+  {
+    "name": "Entertainment Network",
+    "industry": "Entertainment",
+    "description": "A Bangladeshi media company producing films, TV shows, and music content for a global audience.",
+    "logo_url": "https://ui-avatars.com/api/?name=EntertainmentNetwork",
+    "website": "https://entertainmentnetwork.com/"
+  },
+  {
+    "name": "Dhaka Delights",
+    "industry": "Food",
+    "description": "A Bangladeshi food truck and catering service offering a variety of street food and desserts.",
+    "logo_url": "https://ui-avatars.com/api/?name=DhakaDelights",
+    "website": "https://dhakadelights.com/"
+  },
+  {
+    "name": "Rangs Electronics",
+    "industry": "Technology",
+    "description": "A Bangladeshi electronics company offering a range of consumer products, including smartphones, laptops, and home appliances.",
+    "logo_url": "https://ui-avatars.com/api/?name=RangsElectronics",
+    "website": "https://rangselectronics.com/"
+  },
+  {
+    "name": "Bengal Crafts",
+    "industry": "Fashion",
+    "description": "A Bangladeshi fashion brand specializing in traditional and contemporary handicrafts and textiles.",
+    "logo_url": "https://ui-avatars.com/api/?name=BengalCrafts",
+    "website": "https://bengalcrafts.com/"
+  },
+  {
+    "name": "Green Tech BD",
+    "industry": "Technology",
+    "description": "A Bangladeshi renewable energy company offering solar panel and wind turbine solutions for homes and businesses.",
+    "logo_url": "https://ui-avatars.com/api/?name=GreenTechBD",
+    "website": "https://greentechbd.com/"
+  },
+  {
+    "name": "Shapla Fashion",
+    "industry": "Fashion",
+    "description": "A Bangladeshi fashion brand offering affordable and stylish clothing for women and children.",
+    "logo_url": "https://ui-avatars.com/api/?name=ShaplaFashion",
+    "website": "https://shaplafashion.com/"
+  },
+  {
+    "name": "Chittagong University Press",
+    "industry": "Education",
+    "description": "A Bangladeshi academic publisher offering textbooks, research journals, and other educational materials.",
+    "logo_url": "https://ui-avatars.com/api/?name=ChittagongUniversityPress",
+    "website": "https://cupidpress.com/"
+  },
+  {
+    "name": "BD Travel Guide",
+    "industry": "Travel",
+    "description": "A Bangladeshi travel website offering guides, tips, and itineraries for tourists visiting Bangladesh.",
+    "logo_url": "https://ui-avatars.com/api/?name=BDTravelGuide",
+    "website": "https://bdtravels.com/"
+  },
+  {
+    "name": "Rangpur Foods",
+    "industry": "Food",
+    "description": "A Bangladeshi food processing company offering a range of packaged snacks and beverages.",
+    "logo_url": "https://ui-avatars.com/api/?name=RangpurFoods",
+    "website": "https://rangpuroods.com/"
+  },
+  {
+    "name": "Chaldal BD",
+    "industry": "Food",
+    "description": "A Bangladeshi food delivery and grocery service offering a wide range of products and restaurants.",
+    "logo_url": "https://ui-avatars.com/api/?name=ChaldalBD",
+    "website": "https://chaldalbd.com/"
+  },
+  {
+    "name": "Dhaka Fashion Week",
+    "industry": "Fashion",
+    "description": "A Bangladeshi fashion event showcasing the latest designs and trends from local and international designers.",
+    "logo_url": "https://ui-avatars.com/api/?name=DhakaFashionWeek",
+    "website": "https://dhakafashionweek.com/"
+  },
+  {
+    "name": "Pathao BD",
+    "industry": "Technology",
+    "description": "A Bangladeshi ride-hailing and logistics company offering transportation services and cargo delivery.",
+    "logo_url": "https://ui-avatars.com/api/?name=PathaoBD",
+    "website": "https://pathaobd.com/"
+  },
+  {
+    "name": "Lazeez BD",
+    "industry": "Food",
+    "description": "A Bangladeshi food delivery service offering a wide range of restaurants and cuisines.",
+    "logo_url": "https://ui-avatars.com/api/?name=LazeezBD",
+    "website": "https://lazeezbd.com/"
+  },
+  {
+    "name": "Sobuj Travel",
+    "industry": "Travel",
+    "description": "A Bangladeshi travel agency offering customized tour packages to domestic and international destinations.",
+    "logo_url": "https://ui-avatars.com/api/?name=SobujTravel",
+    "website": "https://sobujtravel.com/"
+  }
+]

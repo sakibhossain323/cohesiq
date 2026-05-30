@@ -1,0 +1,889 @@
+[
+  {
+    "display_name": "Md Saidul Islam",
+    "niche": "Lifestyle",
+    "follower_count": 240000,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=md+saidul+islam"
+  },
+  {
+    "display_name": "Wasif Khan",
+    "niche": "Gaming",
+    "follower_count": 161000,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=wasif+khan"
+  },
+  {
+    "display_name": "Bahar Ullah",
+    "niche": "Education",
+    "follower_count": 149000,
+    "platform": "youtube",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=bahar+ullah"
+  },
+  {
+    "display_name": "Khadiza Akter",
+    "niche": "Lifestyle",
+    "follower_count": 134000,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=khadiza+akter"
+  },
+  {
+    "display_name": "Shahinsha Moid",
+    "niche": "Technology",
+    "follower_count": 131000,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=shahinsha+moid"
+  },
+  {
+    "display_name": "DAKO KENO",
+    "niche": "Entertainment",
+    "follower_count": 370000,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=dako+keno"
+  },
+  {
+    "display_name": "Araf Intisar Dipto",
+    "niche": "Lifestyle",
+    "follower_count": 377000,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=araf+intisar+dipto"
+  },
+  {
+    "display_name": "Orpa Akter",
+    "niche": "Fashion",
+    "follower_count": 20500,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=orpa+akter"
+  },
+  {
+    "display_name": "Shalizma Orni",
+    "niche": "Fashion",
+    "follower_count": 101000,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=shalizma+orni"
+  },
+  {
+    "display_name": "Habiba Akter Shurovy",
+    "niche": "Fashion",
+    "follower_count": 251000,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=habiba+akter+shurovy"
+  },
+  {
+    "display_name": "IJKP",
+    "niche": "Lifestyle",
+    "follower_count": 50000,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=ijkp"
+  },
+  {
+    "display_name": "Ridemate",
+    "niche": "Lifestyle",
+    "follower_count": 6500,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=ridemate"
+  },
+  {
+    "display_name": "Ninad Akiato",
+    "niche": "Lifestyle",
+    "follower_count": 231,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=ninad+akiato"
+  },
+  {
+    "display_name": "Joyswasti Setu",
+    "niche": "Fashion",
+    "follower_count": 1100,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=joyswasti+setu"
+  },
+  {
+    "display_name": "Fahim Mozumder",
+    "niche": "Entertainment",
+    "follower_count": 16400,
+    "platform": "tiktok",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=fahim+mozumder"
+  },
+  {
+    "display_name": "Rafid Ninad",
+    "niche": "Technology",
+    "follower_count": 231,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=rafid+ninad"
+  },
+  {
+    "display_name": "Anupam Movies",
+    "niche": "Entertainment",
+    "follower_count": 1410,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=anupam+movies"
+  },
+  {
+    "display_name": "Juwel Chowdhury",
+    "niche": "Entertainment",
+    "follower_count": 589,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=juwel+chowdhury"
+  },
+  {
+    "display_name": "Bongo Movies",
+    "niche": "Entertainment",
+    "follower_count": 757,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=bongo+movies"
+  },
+  {
+    "display_name": "Banglavision DRAMA",
+    "niche": "Entertainment",
+    "follower_count": 5530,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=banglavision+drama"
+  },
+  {
+    "display_name": "BBC News বাংলা",
+    "niche": "Entertainment",
+    "follower_count": 9490,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=bbc+news+বাংলা"
+  },
+  {
+    "display_name": "Channel i News",
+    "niche": "Entertainment",
+    "follower_count": 100800,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=channel+i+news"
+  },
+  {
+    "display_name": "Rahul Ahmed",
+    "niche": "Technology",
+    "follower_count": 120000,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Rahul+Ahmed",
+    "bio": "Tech enthusiast from Dhaka, sharing latest gadget reviews and tutorials."
+  },
+  {
+    "display_name": "Nusrat Jahan",
+    "niche": "Food",
+    "follower_count": 180000,
+    "platform": "instagram",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Nusrat+Jahan",
+    "bio": "Foodie from Chittagong, sharing recipes and restaurant reviews."
+  },
+  {
+    "display_name": "Shahriar Khan",
+    "niche": "Travel",
+    "follower_count": 250000,
+    "platform": "youtube",
+    "city": "Sylhet",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Shahriar+Khan",
+    "bio": "Travel vlogger from Sylhet, exploring Bangladesh and beyond."
+  },
+  {
+    "display_name": "Jannatul Ferdous",
+    "niche": "Fashion",
+    "follower_count": 150000,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Jannatul+Ferdous",
+    "bio": "Fashionista from Dhaka, sharing style tips and trends."
+  },
+  {
+    "display_name": "Tanvir Hassan",
+    "niche": "Gaming",
+    "follower_count": 200000,
+    "platform": "youtube",
+    "city": "Rajshahi",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Tanvir+Hassan",
+    "bio": "Gamer from Rajshahi, playing and reviewing latest games."
+  },
+  {
+    "display_name": "Sadia Alam",
+    "niche": "Beauty",
+    "follower_count": 100000,
+    "platform": "instagram",
+    "city": "Khulna",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Sadia+Alam",
+    "bio": "Beauty blogger from Khulna, sharing skincare and makeup tips."
+  },
+  {
+    "display_name": "Kamruzzaman",
+    "niche": "Lifestyle",
+    "follower_count": 280000,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Kamruzzaman",
+    "bio": "Lifestyle influencer from Dhaka, sharing life hacks and experiences."
+  },
+  {
+    "display_name": "Ahsan Habib",
+    "niche": "Education",
+    "follower_count": 220000,
+    "platform": "youtube",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Ahsan+Habib",
+    "bio": "Educational content creator from Chittagong, sharing study tips and resources."
+  },
+  {
+    "display_name": "Fatima Rahman",
+    "niche": "Fitness",
+    "follower_count": 140000,
+    "platform": "instagram",
+    "city": "Sylhet",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Fatima+Rahman",
+    "bio": "Fitness enthusiast from Sylhet, sharing workout routines and healthy recipes."
+  },
+  {
+    "display_name": "Raihan Khan",
+    "niche": "Entertainment",
+    "follower_count": 300000,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Raihan+Khan",
+    "bio": "Entertainer from Dhaka, creating comedy skits and vlogs."
+  },
+  {
+    "display_name": "Taslima Akter",
+    "niche": "Food",
+    "follower_count": 160000,
+    "platform": "instagram",
+    "city": "Rajshahi",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Taslima+Akter",
+    "bio": "Food blogger from Rajshahi, sharing traditional Bangladeshi recipes."
+  },
+  {
+    "display_name": "Shahed Chowdhury",
+    "niche": "Travel",
+    "follower_count": 240000,
+    "platform": "youtube",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Shahed+Chowdhury",
+    "bio": "Travel vlogger from Chittagong, exploring Bangladesh and abroad."
+  },
+  {
+    "display_name": "Nabila Alam",
+    "niche": "Fashion",
+    "follower_count": 130000,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Nabila+Alam",
+    "bio": "Fashion influencer from Dhaka, sharing style tips and trends."
+  },
+  {
+    "display_name": "Rifat Hasan",
+    "niche": "Gaming",
+    "follower_count": 210000,
+    "platform": "youtube",
+    "city": "Sylhet",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Rifat+Hasan",
+    "bio": "Gamer from Sylhet, playing and reviewing latest games."
+  },
+  {
+    "display_name": "Sakib Mahmud",
+    "niche": "Technology",
+    "follower_count": 190000,
+    "platform": "youtube",
+    "city": "Rajshahi",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Sakib+Mahmud",
+    "bio": "Tech reviewer from Rajshahi, sharing gadget reviews and tutorials."
+  },
+  {
+    "display_name": "Jui Das",
+    "niche": "Beauty",
+    "follower_count": 110000,
+    "platform": "instagram",
+    "city": "Khulna",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Jui+Das",
+    "bio": "Beauty blogger from Khulna, sharing skincare and makeup tips."
+  },
+  {
+    "display_name": "Imran Hossain",
+    "niche": "Lifestyle",
+    "follower_count": 260000,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Imran+Hossain",
+    "bio": "Lifestyle influencer from Dhaka, sharing life hacks and experiences."
+  },
+  {
+    "display_name": "Nargis Akter",
+    "niche": "Education",
+    "follower_count": 230000,
+    "platform": "youtube",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Nargis+Akter",
+    "bio": "Educational content creator from Chittagong, sharing study tips and resources."
+  },
+  {
+    "display_name": "Rashed Khan",
+    "niche": "Entertainment",
+    "follower_count": 290000,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Rashed+Khan",
+    "bio": "Entertainer from Dhaka, creating comedy skits and vlogs."
+  },
+  {
+    "display_name": "Sanjida Islam",
+    "niche": "Food",
+    "follower_count": 170000,
+    "platform": "instagram",
+    "city": "Sylhet",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Sanjida+Islam",
+    "bio": "Food blogger from Sylhet, sharing traditional Bangladeshi recipes."
+  },
+  {
+    "display_name": "Tariqul Islam",
+    "niche": "Travel",
+    "follower_count": 270000,
+    "platform": "youtube",
+    "city": "Rajshahi",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Tariqul+Islam",
+    "bio": "Travel vlogger from Rajshahi, exploring Bangladesh and abroad."
+  },
+  {
+    "display_name": "Shamima Akter",
+    "niche": "Fashion",
+    "follower_count": 120000,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Shamima+Akter",
+    "bio": "Fashion influencer from Dhaka, sharing style tips and trends."
+  },
+  {
+    "display_name": "Abdul Malek",
+    "niche": "Gaming",
+    "follower_count": 200000,
+    "platform": "youtube",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Abdul+Malek",
+    "bio": "Gamer from Chittagong, playing and reviewing latest games."
+  },
+  {
+    "display_name": "Nasrin Sultana",
+    "niche": "Beauty",
+    "follower_count": 10000,
+    "platform": "instagram",
+    "city": "Khulna",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Nasrin+Sultana",
+    "bio": "Beauty blogger from Khulna, sharing skincare and makeup tips."
+  },
+  {
+    "display_name": "Mohammad Jamal",
+    "niche": "Technology",
+    "follower_count": 280000,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Mohammad+Jamal",
+    "bio": "Tech reviewer from Dhaka, sharing gadget reviews and tutorials."
+  },
+  {
+    "display_name": "Rumana Begum",
+    "niche": "Lifestyle",
+    "follower_count": 240000,
+    "platform": "youtube",
+    "city": "Sylhet",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Rumana+Begum",
+    "bio": "Lifestyle influencer from Sylhet, sharing life hacks and experiences."
+  },
+  {
+    "display_name": "Shahin Alam",
+    "niche": "Education",
+    "follower_count": 250000,
+    "platform": "youtube",
+    "city": "Rajshahi",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Shahin+Alam",
+    "bio": "Educational content creator from Rajshahi, sharing study tips and resources."
+  },
+  {
+    "display_name": "Sajal Chowdhury",
+    "niche": "Entertainment",
+    "follower_count": 260000,
+    "platform": "youtube",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Sajal+Chowdhury",
+    "bio": "Entertainer from Chittagong, creating comedy skits and vlogs."
+  },
+  {
+    "display_name": "Rahul Hasan",
+    "niche": "Technology",
+    "follower_count": 14321,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Rahul+Hasan",
+    "bio": "Tech enthusiast from Dhaka, sharing latest gadget reviews and tutorials."
+  },
+  {
+    "display_name": "Nusrat Jahan",
+    "niche": "Food",
+    "follower_count": 213456,
+    "platform": "instagram",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Nusrat+Jahan",
+    "bio": "Foodie from Chittagong, sharing delicious Bengali recipes and restaurant reviews."
+  },
+  {
+    "display_name": "Sohan Chowdhury",
+    "niche": "Travel",
+    "follower_count": 10234,
+    "platform": "youtube",
+    "city": "Sylhet",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Sohan+Chowdhury",
+    "bio": "Travel vlogger from Sylhet, exploring beautiful destinations in Bangladesh and abroad."
+  },
+  {
+    "display_name": "Tasnim Rahman",
+    "niche": "Fashion",
+    "follower_count": 187654,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Tasnim+Rahman",
+    "bio": "Fashionista from Dhaka, sharing latest fashion trends and styling tips."
+  },
+  {
+    "display_name": "Raihan Khan",
+    "niche": "Gaming",
+    "follower_count": 27891,
+    "platform": "youtube",
+    "city": "Rajshahi",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Raihan+Khan",
+    "bio": "Gamer from Rajshahi, sharing walkthroughs and reviews of latest games."
+  },
+  {
+    "display_name": "Farzana Akter",
+    "niche": "Beauty",
+    "follower_count": 293721,
+    "platform": "instagram",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Farzana+Akter",
+    "bio": "Beauty expert from Chittagong, sharing makeup tutorials and product reviews."
+  },
+  {
+    "display_name": "Mahfuzul Haque",
+    "niche": "Lifestyle",
+    "follower_count": 12567,
+    "platform": "youtube",
+    "city": "Sylhet",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Mahfuzul+Haque",
+    "bio": "Lifestyle influencer from Sylhet, sharing tips on health, wellness, and productivity."
+  },
+  {
+    "display_name": "Sabrina Sultana",
+    "niche": "Entertainment",
+    "follower_count": 201234,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Sabrina+Sultana",
+    "bio": "Entertainment enthusiast from Dhaka, sharing latest news and gossip from the film industry."
+  },
+  {
+    "display_name": "Mohammad Ali",
+    "niche": "Education",
+    "follower_count": 15678,
+    "platform": "youtube",
+    "city": "Rajshahi",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Mohammad+Ali",
+    "bio": "Educator from Rajshahi, sharing study tips and educational content."
+  },
+  {
+    "display_name": "Jesmin Akter",
+    "niche": "Fitness",
+    "follower_count": 24981,
+    "platform": "instagram",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Jesmin+Akter",
+    "bio": "Fitness enthusiast from Chittagong, sharing workout routines and healthy recipes."
+  },
+  {
+    "display_name": "Rashed Khan",
+    "niche": "Technology",
+    "follower_count": 17654,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Rashed+Khan",
+    "bio": "Tech reviewer from Dhaka, sharing latest gadget reviews and tech news."
+  },
+  {
+    "display_name": "Nargis Akter",
+    "niche": "Food",
+    "follower_count": 21987,
+    "platform": "instagram",
+    "city": "Sylhet",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Nargis+Akter",
+    "bio": "Food blogger from Sylhet, sharing traditional Bengali recipes and cooking tips."
+  },
+  {
+    "display_name": "Sohel Rana",
+    "niche": "Travel",
+    "follower_count": 14567,
+    "platform": "youtube",
+    "city": "Rajshahi",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Sohel+Rana",
+    "bio": "Travel vlogger from Rajshahi, exploring offbeat destinations in Bangladesh."
+  },
+  {
+    "display_name": "Tahsin Khan",
+    "niche": "Fashion",
+    "follower_count": 18921,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Tahsin+Khan",
+    "bio": "Fashion influencer from Dhaka, sharing latest fashion trends and styling tips."
+  },
+  {
+    "display_name": "Jannatul Ferdous",
+    "niche": "Beauty",
+    "follower_count": 26789,
+    "platform": "instagram",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Jannatul+Ferdous",
+    "bio": "Beauty expert from Chittagong, sharing makeup tutorials and skincare tips."
+  },
+  {
+    "display_name": "Shahriar Rahman",
+    "niche": "Gaming",
+    "follower_count": 19876,
+    "platform": "youtube",
+    "city": "Sylhet",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Shahriar+Rahman",
+    "bio": "Gamer from Sylhet, sharing walkthroughs and reviews of latest games."
+  },
+  {
+    "display_name": "Nahid Hasan",
+    "niche": "Lifestyle",
+    "follower_count": 12345,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Nahid+Hasan",
+    "bio": "Lifestyle influencer from Dhaka, sharing tips on health, wellness, and productivity."
+  },
+  {
+    "display_name": "Sadia Islam",
+    "niche": "Entertainment",
+    "follower_count": 23456,
+    "platform": "instagram",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Sadia+Islam",
+    "bio": "Entertainment enthusiast from Chittagong, sharing latest news and gossip from the film industry."
+  },
+  {
+    "display_name": "Rakibul Hasan",
+    "niche": "Education",
+    "follower_count": 18765,
+    "platform": "youtube",
+    "city": "Rajshahi",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Rakibul+Hasan",
+    "bio": "Educator from Rajshahi, sharing study tips and educational content."
+  },
+  {
+    "display_name": "Fahmida Akter",
+    "niche": "Fitness",
+    "follower_count": 20123,
+    "platform": "instagram",
+    "city": "Sylhet",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Fahmida+Akter",
+    "bio": "Fitness enthusiast from Sylhet, sharing workout routines and healthy recipes."
+  },
+  {
+    "display_name": "Abdul Malek",
+    "niche": "Technology",
+    "follower_count": 15678,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Abdul+Malek",
+    "bio": "Tech reviewer from Dhaka, sharing latest gadget reviews and tech news."
+  },
+  {
+    "display_name": "Nazma Begum",
+    "niche": "Food",
+    "follower_count": 21987,
+    "platform": "instagram",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Nazma+Begum",
+    "bio": "Food blogger from Chittagong, sharing traditional Bengali recipes and cooking tips."
+  },
+  {
+    "display_name": "Shamim Ahmed",
+    "niche": "Travel",
+    "follower_count": 14567,
+    "platform": "youtube",
+    "city": "Rajshahi",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Shamim+Ahmed",
+    "bio": "Travel vlogger from Rajshahi, exploring offbeat destinations in Bangladesh."
+  },
+  {
+    "display_name": "Rukhsar Jahan",
+    "niche": "Fashion",
+    "follower_count": 18921,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Rukhsar+Jahan",
+    "bio": "Fashion influencer from Dhaka, sharing latest fashion trends and styling tips."
+  },
+  {
+    "display_name": "Jamilur Rahman",
+    "niche": "Gaming",
+    "follower_count": 19876,
+    "platform": "youtube",
+    "city": "Sylhet",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Jamilur+Rahman",
+    "bio": "Gamer from Sylhet, sharing walkthroughs and reviews of latest games."
+  },
+  {
+    "display_name": "Sufia Khatun",
+    "niche": "Beauty",
+    "follower_count": 26789,
+    "platform": "instagram",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Sufia+Khatun",
+    "bio": "Beauty expert from Chittagong, sharing makeup tutorials and skincare tips."
+  },
+  {
+    "display_name": "Rahul Rahman",
+    "niche": "Technology",
+    "follower_count": 12000,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Rahul+Rahman",
+    "bio": "Tech enthusiast from Dhaka, sharing latest gadget reviews and tech news!"
+  },
+  {
+    "display_name": "Nusrat Jahan",
+    "niche": "Food",
+    "follower_count": 25000,
+    "platform": "instagram",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Nusrat+Jahan",
+    "bio": "Foodie from Chittagong, sharing delicious Bengali recipes and restaurant reviews!"
+  },
+  {
+    "display_name": "Sajid Hasan",
+    "niche": "Travel",
+    "follower_count": 18000,
+    "platform": "youtube",
+    "city": "Sylhet",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Sajid+Hasan",
+    "bio": "Travel vlogger from Sylhet, exploring beautiful destinations in Bangladesh and beyond!"
+  },
+  {
+    "display_name": "Taslima Akter",
+    "niche": "Fashion",
+    "follower_count": 20000,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Taslima+Akter",
+    "bio": "Fashionista from Dhaka, sharing latest fashion trends and styling tips!"
+  },
+  {
+    "display_name": "Riaz Uddin",
+    "niche": "Gaming",
+    "follower_count": 15000,
+    "platform": "youtube",
+    "city": "Rajshahi",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Riaz+Uddin",
+    "bio": "Gamer from Rajshahi, sharing walkthroughs and reviews of popular games!"
+  },
+  {
+    "display_name": "Farhana Islam",
+    "niche": "Beauty",
+    "follower_count": 22000,
+    "platform": "instagram",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Farhana+Islam",
+    "bio": "Beauty blogger from Chittagong, sharing skincare routines and makeup tutorials!"
+  },
+  {
+    "display_name": "Kamruzzaman Khan",
+    "niche": "Lifestyle",
+    "follower_count": 28000,
+    "platform": "youtube",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Kamruzzaman+Khan",
+    "bio": "Lifestyle vlogger from Dhaka, sharing tips on productivity and motivation!"
+  },
+  {
+    "display_name": "Nadia Sultana",
+    "niche": "Education",
+    "follower_count": 10000,
+    "platform": "youtube",
+    "city": "Sylhet",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Nadia+Sultana",
+    "bio": "Teacher from Sylhet, sharing educational content and study tips for students!"
+  },
+  {
+    "display_name": "Mahbub Alam",
+    "niche": "Fitness",
+    "follower_count": 20000,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Mahbub+Alam",
+    "bio": "Fitness enthusiast from Dhaka, sharing workout routines and healthy living tips!"
+  },
+  {
+    "display_name": "Sharmin Akter",
+    "niche": "Entertainment",
+    "follower_count": 25000,
+    "platform": "youtube",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Sharmin+Akter",
+    "bio": "Entertainment blogger from Chittagong, sharing movie reviews and celebrity news!"
+  },
+  {
+    "display_name": "Shahin Alam",
+    "niche": "Technology",
+    "follower_count": 12000,
+    "platform": "youtube",
+    "city": "Rajshahi",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Shahin+Alam",
+    "bio": "Tech reviewer from Rajshahi, sharing gadget reviews and tech news!"
+  },
+  {
+    "display_name": "Rimi Chakraborty",
+    "niche": "Food",
+    "follower_count": 18000,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Rimi+Chakraborty",
+    "bio": "Food blogger from Dhaka, sharing delicious Bengali recipes and restaurant reviews!"
+  },
+  {
+    "display_name": "Sohel Rana",
+    "niche": "Travel",
+    "follower_count": 15000,
+    "platform": "youtube",
+    "city": "Sylhet",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Sohel+Rana",
+    "bio": "Travel vlogger from Sylhet, exploring beautiful destinations in Bangladesh!"
+  },
+  {
+    "display_name": "Tania Ahmed",
+    "niche": "Fashion",
+    "follower_count": 20000,
+    "platform": "instagram",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Tania+Ahmed",
+    "bio": "Fashionista from Chittagong, sharing latest fashion trends and styling tips!"
+  },
+  {
+    "display_name": "Rakib Hasan",
+    "niche": "Gaming",
+    "follower_count": 10000,
+    "platform": "youtube",
+    "city": "Rajshahi",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Rakib+Hasan",
+    "bio": "Gamer from Rajshahi, sharing walkthroughs and reviews of popular games!"
+  },
+  {
+    "display_name": "Nipa Islam",
+    "niche": "Beauty",
+    "follower_count": 22000,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Nipa+Islam",
+    "bio": "Beauty blogger from Dhaka, sharing skincare routines and makeup tutorials!"
+  },
+  {
+    "display_name": "Kazi Rahman",
+    "niche": "Lifestyle",
+    "follower_count": 28000,
+    "platform": "youtube",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Kazi+Rahman",
+    "bio": "Lifestyle vlogger from Chittagong, sharing tips on productivity and motivation!"
+  },
+  {
+    "display_name": "Shamima Akter",
+    "niche": "Education",
+    "follower_count": 10000,
+    "platform": "youtube",
+    "city": "Sylhet",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Shamima+Akter",
+    "bio": "Teacher from Sylhet, sharing educational content and study tips for students!"
+  },
+  {
+    "display_name": "Mizanur Rahman",
+    "niche": "Fitness",
+    "follower_count": 20000,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Mizanur+Rahman",
+    "bio": "Fitness enthusiast from Dhaka, sharing workout routines and healthy living tips!"
+  },
+  {
+    "display_name": "Sohana Sultana",
+    "niche": "Entertainment",
+    "follower_count": 25000,
+    "platform": "youtube",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Sohana+Sultana",
+    "bio": "Entertainment blogger from Chittagong, sharing movie reviews and celebrity news!"
+  },
+  {
+    "display_name": "Sadiqur Rahman",
+    "niche": "Technology",
+    "follower_count": 12000,
+    "platform": "youtube",
+    "city": "Rajshahi",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Sadiqur+Rahman",
+    "bio": "Tech reviewer from Rajshahi, sharing gadget reviews and tech news!"
+  },
+  {
+    "display_name": "Rasheda Akter",
+    "niche": "Food",
+    "follower_count": 18000,
+    "platform": "instagram",
+    "city": "Dhaka",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Rasheda+Akter",
+    "bio": "Food blogger from Dhaka, sharing delicious Bengali recipes and restaurant reviews!"
+  },
+  {
+    "display_name": "Shahjahan Ali",
+    "niche": "Travel",
+    "follower_count": 15000,
+    "platform": "youtube",
+    "city": "Sylhet",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Shahjahan+Ali",
+    "bio": "Travel vlogger from Sylhet, exploring beautiful destinations in Bangladesh!"
+  },
+  {
+    "display_name": "Jannatul Ferdous",
+    "niche": "Fashion",
+    "follower_count": 20000,
+    "platform": "instagram",
+    "city": "Chittagong",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Jannatul+Ferdous",
+    "bio": "Fashionista from Chittagong, sharing latest fashion trends and styling tips!"
+  },
+  {
+    "display_name": "Sagor Hossain",
+    "niche": "Gaming",
+    "follower_count": 10000,
+    "platform": "youtube",
+    "city": "Rajshahi",
+    "profile_photo_url": "https://ui-avatars.com/api/?name=Sagor+Hossain",
+    "bio": "Gamer from Rajshahi, sharing walkthroughs and reviews of popular games!"
+  }
+]

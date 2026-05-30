@@ -43,6 +43,23 @@ Cohesiq is a next-generation B2B SaaS Influencer Matching Platform designed to s
 - `/backend/`: Contains the FastAPI backend, structured using Domain-Driven Design (auth, creators, brands, campaigns).
 - `/docs/`: Contains detailed architecture and schema documentation, including `schema.md` (Database Truth) and `plan.md` (Roadmap).
 
+## Data Seeding
+
+To populate the database with realistic AI-generated demo data and sync your Clerk users, run the following commands sequentially inside the backend container:
+
+1. **Generate Seed Data:** Uses Tavily and Groq to generate ~100 realistic Bangladeshi creators and brands (JSON files saved to `backend/data/`).
+   ```bash
+   docker compose exec backend python -m scripts.generate_seed_data
+   ```
+2. **Sync Clerk Users:** Fetches users from Clerk and assigns `brand` or `creator` roles to those with `@test.com` emails.
+   ```bash
+   docker compose exec backend python -m scripts.sync_clerk_users
+   ```
+3. **Seed Database:** Purges old business data, maps test users to the generated profiles, and seeds mock campaigns.
+   ```bash
+   docker compose exec backend python -m scripts.seed_db
+   ```
+
 ## Documentation
 
 For deep-dives into the database schema and future AI roadmap, please see the markdown files in the `/docs/` directory. If you are an AI assistant contributing to this repository, please strictly adhere to the rules outlined in `AGENTS.md`.

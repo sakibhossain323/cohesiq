@@ -50,3 +50,9 @@ Cohesiq is a B2B SaaS Influencer Matching Platform. It utilizes a Modular Monoli
 
 - Use `graphify` (if available via workflow) to maintain up-to-date knowledge of the codebase structure.
 - When making substantial architectural or model changes, you MUST update `docs/schema.md` and `docs/plan.md`.
+
+## Data Seeding & Mock Data
+When running demos or needing mock data, use the modular seeding scripts in `backend/scripts/`:
+1. `generate_seed_data.py`: Generates synthetic and real profiles using Tavily/Groq.
+2. `sync_clerk_users.py`: Fetches Clerk users, automatically granting `brand` or `creator` roles to those containing `@test.com`.
+3. `seed_db.py`: Truncates existing business data and safely links test users to the generated database records.

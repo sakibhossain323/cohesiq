@@ -1047,3 +1047,28 @@ Execute in this sequence.
 - [ ] Run seed script — verify creators and match result sets in database
 
 *This is the source of truth for the coding agent. When in doubt about any design decision, choose the option that keeps the most extension points open without adding premature complexity.*
+
+---
+
+## Major Architecture & Data Seeding Decisions (May 2026)
+
+### 1. Separation of Real & Synthetic Creator Data
+- **Decision:** Split seeded creator datasets into `real_creators.json` and `synthetic_creators.json` rather than managing a single unified array.
+- **Rationale:** Web scraping and extraction can fail midway due to network issues or API limits. Separating files allows us to cache high-value real web-scraped profiles (e.g., top Bangladeshi creators) independently from cheap, mass-generated synthetic profiles. 
+- **Implementation:** Both files are loaded and merged dynamically inside `seed_db.py` during seeding.
+
+### 2. Transition to Fast LLM Extraction Models
+- **Decision:** Migrated Tavily-enrichment extraction and synthetic profile prompts from `llama-3.3-70b-versatile` to `llama-3.1-8b-instant`.
+- **Rationale:** Large-context prompts containing web search content consumed massive token payloads, causing runs to frequently hit Groq daily token rate limits. The smaller 8B model is faster, robust to limits, and performs JSON-mode data extraction just as reliably.
+- **Implementation:** Minified the Tavily search payload to just title/content/url fields to minimize token consumption further.
+
+### 3. Business Data Reset Layer
+- **Decision:** Implemented an independent `reset_db.py` script to purge business data tables safely.
+- **Rationale:** Re-running seeds continuously on top of dirty databases caused conflicts and duplicate profiles. The reset script uses SQLAlchemy to cleanly truncate transactional tables (`campaigns`, `creator_profiles`, `brand_profiles`, `users`) with `CASCADE` while preserving core lookup values like `niches` and `languages`.
+
+### 4. Diverse Seeding Profiles for Demos
+- **Decision:** Standardized rich diversity guidelines for database seeding:
+  - **Multi-Platform:** Every creator gets at least two social profiles (primary YouTube + secondary Instagram) to support testing platform filters.
+  - **Multi-State Campaigns:** Every brand is seeded with 3 campaigns: 2 Active (varying budgets) and 1 Archived (past campaign), enabling UI state filters.
+  - **Real Images:** Tavily search extracts real profile URLs from Bangladeshi influencers instead of default avatar API placeholders.
+
