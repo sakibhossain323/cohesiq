@@ -164,7 +164,7 @@ graph TD
     
     D & E & F & G --> H{"Combined 100% Score"}
     H --> I(("Gemini 1.5 Flash"))
-    I --> J["Output: Localized Bangla Rationale"]
+    I --> J["Output: Reasoning"]
 ```
 
 **Speaker:** "Here is the real AI thinking behind the scenes. We initially built a pure LLM matching pipeline (`llm_matching.py`). But in testing, LLMs hallucinated budget constraints. So, we pivoted to a hybrid architecture. 
