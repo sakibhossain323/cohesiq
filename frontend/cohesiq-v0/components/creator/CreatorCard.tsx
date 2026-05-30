@@ -11,9 +11,10 @@ import type { Creator } from "@/lib/types";
 
 interface CreatorCardProps {
   creator: Creator;
+  basePath?: string;
 }
 
-export function CreatorCard({ creator }: CreatorCardProps) {
+export function CreatorCard({ creator, basePath = "/creators" }: CreatorCardProps) {
   const primaryProfile = creator.social_profiles.find(sp => sp.is_primary_platform) ?? creator.social_profiles[0];
   const initials = creator.display_name
     .split(" ")
@@ -23,7 +24,7 @@ export function CreatorCard({ creator }: CreatorCardProps) {
     .toUpperCase();
 
   return (
-    <Link href={`/creators/${creator.id}`}>
+    <Link href={`${basePath}/${creator.id}`}>
       <Card className="group h-full transition-all duration-200 hover:border-primary/50 hover:shadow-md">
         <CardContent className="p-5">
           <div className="flex items-start gap-4">

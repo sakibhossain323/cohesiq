@@ -1026,11 +1026,12 @@ Execute in this sequence.
 - [x] Integrate Clerk Auth (frontend middleware & backend JWT RS256 validation)
 - [x] Implement multi-step onboarding forms (frontend contexts & backend `/onboarding` sync)
 
-**Phase 2: Core Platform & Dashboards (PENDING)**
-- [ ] Implement Dashboard Layouts (`/dashboard/creator`, `/dashboard/brand`)
+**Phase 2: Core Platform & Dashboards (IN PROGRESS)**
+- [x] Implement Dashboard Layouts (`/dashboard/creator`, `/dashboard/brand`)
 - [ ] Build Brand Campaign Creation Form
 - [ ] Build Creator Public Profiles
-- [ ] Implement Campaign Browse & Application logic
+- [x] Implement Campaign Browse & Application logic (Creator side completed: Collaborations & Messages hubs)
+- [x] Implement Creator Profile/Platform management
 
 **Phase 3: Integrations & Matching Engine (PENDING)**
 - [ ] Implement YouTubeService — fetch channel stats and videos

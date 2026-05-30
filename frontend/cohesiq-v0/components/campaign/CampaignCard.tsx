@@ -10,9 +10,10 @@ import type { Campaign } from "@/lib/types";
 
 interface CampaignCardProps {
   campaign: Campaign;
+  basePath?: string;
 }
 
-export function CampaignCard({ campaign }: CampaignCardProps) {
+export function CampaignCard({ campaign, basePath = "/campaigns" }: CampaignCardProps) {
   const daysLeft = campaign.application_deadline 
     ? daysUntil(campaign.application_deadline)
     : null;
@@ -22,7 +23,7 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
     : `Up to ${formatBDT(campaign.budget_per_creator_max)}`;
 
   return (
-    <Link href={`/campaigns/${campaign.id}`}>
+    <Link href={`${basePath}/${campaign.id}`}>
       <Card className="group transition-all duration-200 hover:border-primary/50 hover:shadow-md">
         <CardContent className="p-5">
           <div className="flex items-start gap-4">

@@ -5,48 +5,86 @@ import { getCreatorById } from "./creators";
 
 async function mapApplicationResponse(a: any): Promise<Application> {
   const campaign = await getCampaignById(a.campaign_id);
-  const creator = await getCreatorById(a.creator_id);
+  const creator = a.creator_id ? await getCreatorById(a.creator_id) : null;
 
   return {
     id: a.id,
     campaign_id: a.campaign_id,
-    campaign: campaign as any, // We populate the campaign info for the UI
-    creator: creator as any,   // We populate the creator info for the UI
+    campaign: campaign as any,
+    creator_id: a.creator_id,
+    creator: creator as any,
+    initiated_by: a.initiated_by,
     proposed_rate: a.proposed_rate,
+    proposal_text: a.proposal_text,
     status: a.status as ApplicationStatus,
-    applied_at: a.applied_at ? new Date(a.applied_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    rejection_reason: a.rejection_reason,
+    agreed_rate: a.agreed_rate,
+    agreed_deliverables: a.agreed_deliverables,
+    applied_at: a.applied_at
+      ? new Date(a.applied_at).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0],
+    responded_at: a.responded_at ? new Date(a.responded_at).toISOString().split("T")[0] : undefined,
   };
 }
 
-export async function getApplications(): Promise<Application[]> {
-  return [];
+export async function withdrawApplication(
+  applicationId: string,
+  campaignId: string,
+  token: string
+): Promise<Application | null> {
+  return updateApplicationStatus(applicationId, "withdrawn", campaignId, token);
 }
 
-export async function getApplicationById(id: string): Promise<Application | null> {
-  return null;
+// ── Real submission ──────────────────────────────────────────────────
+export interface SubmitApplicationPayload {
+  proposal_text: string;
+  proposed_rate?: number;
 }
 
-export async function getApplicationsByCreatorId(creatorId: string): Promise<Application[]> {
+export async function submitApplication(
+  campaignId: string,
+  token: string,
+  payload: SubmitApplicationPayload
+): Promise<Application> {
+  const data = await fetchApi<any>(`/campaigns/${campaignId}/apply`, {
+    method: "POST",
+    token,
+    body: JSON.stringify(payload),
+  });
+  return mapApplicationResponse(data);
+}
+
+// ── Reads ────────────────────────────────────────────────────────────
+export async function getApplicationsByCreatorId(
+  creatorId: string,
+  token?: string
+): Promise<Application[]> {
   try {
-    const data = await fetchApi<any[]>(`/creators/${creatorId}/applications`);
+    const data = await fetchApi<any[]>(`/creators/${creatorId}/applications`, { token });
     return await Promise.all(data.map(mapApplicationResponse));
   } catch {
     return [];
   }
 }
 
-export async function getApplicationsByCampaignId(campaignId: string): Promise<Application[]> {
+export async function getApplicationsByCampaignId(
+  campaignId: string,
+  token?: string
+): Promise<Application[]> {
   try {
-    const data = await fetchApi<any[]>(`/campaigns/${campaignId}/applications`);
+    const data = await fetchApi<any[]>(`/campaigns/${campaignId}/applications`, { token });
     return await Promise.all(data.map(mapApplicationResponse));
   } catch {
     return [];
   }
 }
 
-export async function getApplicationsByBrandId(brandId: string): Promise<Application[]> {
+export async function getApplicationsByBrandId(
+  brandId: string,
+  token?: string
+): Promise<Application[]> {
   try {
-    const data = await fetchApi<any[]>(`/brands/${brandId}/applications`);
+    const data = await fetchApi<any[]>(`/brands/${brandId}/applications`, { token });
     return await Promise.all(data.map(mapApplicationResponse));
   } catch {
     return [];
@@ -54,15 +92,20 @@ export async function getApplicationsByBrandId(brandId: string): Promise<Applica
 }
 
 export async function updateApplicationStatus(
-  applicationId: string, 
+  applicationId: string,
   newStatus: ApplicationStatus,
-  campaignId: string
+  campaignId: string,
+  token?: string
 ): Promise<Application | null> {
   try {
-    const data = await fetchApi<any>(`/campaigns/${campaignId}/applications/${applicationId}/status`, {
-      method: "PATCH",
-      body: JSON.stringify({ status: newStatus }),
-    });
+    const data = await fetchApi<any>(
+      `/campaigns/${campaignId}/applications/${applicationId}/status`,
+      {
+        method: "PATCH",
+        token,
+        body: JSON.stringify({ status: newStatus }),
+      }
+    );
     return await mapApplicationResponse(data);
   } catch {
     return null;

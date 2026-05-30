@@ -20,8 +20,9 @@ import {
   Megaphone,
   BarChart3,
   LogIn,
-  Settings,
-  FileText
+  Share2,
+  FileText,
+  MessageSquare,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -39,17 +40,28 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     ? [
         { href: '/dashboard/creator', label: 'My Dashboard', icon: <BarChart3 className="h-4 w-4" /> },
         { href: '/dashboard/creator/campaigns', label: 'Discover Campaigns', icon: <Megaphone className="h-4 w-4" /> },
-        { href: '/dashboard/creator/applications', label: 'My Applications', icon: <FileText className="h-4 w-4" /> },
-        { href: '/dashboard/creator/profile', label: 'Profile Settings', icon: <Settings className="h-4 w-4" /> },
+        { href: '/dashboard/creator/collaborations', label: 'Collaborations', icon: <FileText className="h-4 w-4" /> },
+        { href: '/dashboard/creator/messages', label: 'Messages', icon: <MessageSquare className="h-4 w-4" /> },
+        { href: '/dashboard/creator/profile', label: 'My Platforms', icon: <Share2 className="h-4 w-4" /> },
       ]
     : isBrandDashboard
     ? [
         { href: '/dashboard/brand', label: 'My Dashboard', icon: <BarChart3 className="h-4 w-4" /> },
         { href: '/dashboard/brand/creators', label: 'Find Creators', icon: <Users className="h-4 w-4" /> },
         { href: '/dashboard/brand/campaigns', label: 'My Campaigns', icon: <Megaphone className="h-4 w-4" /> },
-        { href: '/dashboard/brand/profile', label: 'Profile Settings', icon: <Settings className="h-4 w-4" /> },
+        { href: '/dashboard/brand/messages', label: 'Messages', icon: <MessageSquare className="h-4 w-4" /> },
       ]
     : []
+
+  // A nav item is active if the path exactly matches OR the path starts with the href
+  // (for section roots), but the Dashboard root must be an exact match to avoid
+  // always being active when inside /campaigns, /messages, etc.
+  function isActive(href: string): boolean {
+    if (href === '/dashboard/creator' || href === '/dashboard/brand') {
+      return pathname === href
+    }
+    return pathname === href || pathname.startsWith(href + '/')
+  }
 
   return (
     <SidebarProvider>
@@ -69,7 +81,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === item.href}
+                  isActive={isActive(item.href)}
                   tooltip={item.label}
                 >
                   <Link href={item.href}>

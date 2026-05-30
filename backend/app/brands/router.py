@@ -21,6 +21,21 @@ async def list_brands(
     return await service.list_brands(db, limit=limit, offset=offset)
 
 
+@router.get("/me", response_model=BrandProfileOut)
+async def get_my_brand_profile(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """Retrieve the brand profile for the currently authenticated user."""
+    brand = await service.get_brand_by_user_id(db, current_user.id)
+    if not brand:
+        raise HTTPException(
+            status_code=404,
+            detail="Brand profile not found for this user",
+        )
+    return brand
+
+
 @router.get("/{brand_id}", response_model=BrandProfileOut)
 async def get_brand(
     brand_id: uuid.UUID,

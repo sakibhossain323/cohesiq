@@ -36,3 +36,25 @@ export async function completeOnboarding(role: 'creator' | 'brand', name?: strin
     return { error: 'There was an error updating the user metadata.' }
   }
 }
+
+export async function resetOnboarding() {
+  const { userId } = await auth()
+
+  if (!userId) {
+    return { error: 'No signed-in user' }
+  }
+
+  const client = await clerkClient()
+
+  try {
+    await client.users.updateUser(userId, {
+      publicMetadata: {
+        onboardingComplete: false,
+      },
+    })
+    return { success: true }
+  } catch (err) {
+    console.error('Error resetting user metadata:', err)
+    return { error: 'There was an error resetting the user metadata.' }
+  }
+}

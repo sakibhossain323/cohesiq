@@ -61,7 +61,30 @@ export async function getCreatorById(id: string): Promise<Creator | null> {
   }
 }
 
+export async function getMyCreatorProfile(token: string): Promise<Creator | null> {
+  try {
+    const data = await fetchApi<any>("/creators/me", { token });
+    return mapCreatorResponse(data);
+  } catch (error) {
+    return null;
+  }
+}
+
 export async function getFeaturedCreators(limit: number = 3): Promise<Creator[]> {
   const data = await fetchApi<any[]>(`/creators/?limit=${limit}`);
   return data.map(mapCreatorResponse);
 }
+
+export async function updateSocialProfile(
+  creatorId: string,
+  platformId: string,
+  token: string,
+  payload: any
+): Promise<any> {
+  return fetchApi(`/creators/${creatorId}/platforms/${platformId}`, {
+    method: "PATCH", // The API uses PATCH or PUT for updates, let's assume PUT if PATCH isn't available, but standard is PATCH.
+    token,
+    body: payload,
+  });
+}
+

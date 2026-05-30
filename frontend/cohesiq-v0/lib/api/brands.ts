@@ -15,7 +15,7 @@ function mapBrandResponse(b: any): Brand {
     logo_url: b.logo_url,
     website: b.website,
     city: b.city,
-    primary_niche: b.niche_id ? NICHE_MAP[b.niche_id] || `Niche ${b.niche_id}` : "general",
+    niche: b.niche_id ? NICHE_MAP[b.niche_id] || `Niche ${b.niche_id}` : "general",
     is_verified: b.is_verified,
     total_campaigns: b.total_campaigns,
     average_rating: b.average_rating ? Number(b.average_rating) : undefined,
@@ -39,4 +39,13 @@ export async function getBrandById(id: string): Promise<Brand | null> {
 export async function getVerifiedBrands(): Promise<Brand[]> {
   const data = await fetchApi<any[]>("/brands/");
   return data.map(mapBrandResponse).filter(b => b.is_verified);
+}
+
+export async function getMyBrandProfile(token: string): Promise<Brand | null> {
+  try {
+    const data = await fetchApi<any>("/brands/me", { token });
+    return mapBrandResponse(data);
+  } catch (error) {
+    return null;
+  }
 }

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { resetOnboarding } from "@/app/actions/onboarding";
 import { ApplicationStatusBadge } from "@/components/application/ApplicationStatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,18 +34,36 @@ import {
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StarRating } from "@/components/shared/StarRating";
 import { NicheBadge } from "@/components/shared/NicheBadge";
+import { useAuth } from "@clerk/nextjs";
 import { getCampaignsByBrandId } from "@/lib/api/campaigns";
 import { getApplicationsByCampaignId } from "@/lib/api/applications";
-import { getBrandById } from "@/lib/api/brands";
+import { getBrandById, getMyBrandProfile } from "@/lib/api/brands";
 import { formatBDT, formatDate, daysUntil, formatFollowerCount } from "@/lib/utils";
-import { Building2, Briefcase, MapPin, Settings } from "lucide-react";
+import { Building2, Briefcase, MapPin, Settings, Sparkles } from "lucide-react";
 import type { Campaign, Application, Brand, ApplicationStatus } from "@/lib/types";
 
-// Hardcode current brand as mockBrands[0]
-const CURRENT_BRAND_ID = "brand-1";
-
 export default function BrandDashboardPage() {
+  const { getToken, isLoaded, isSignedIn } = useAuth();
+  const router = useRouter();
   const [brand, setBrand] = useState<Brand | null>(null);
+  const [isResetting, setIsResetting] = useState(false);
+
+  const handleResetOnboarding = async () => {
+    setIsResetting(true);
+    try {
+      const res = await resetOnboarding();
+      if (res.success) {
+        router.push("/onboarding");
+      } else {
+        alert(res.error || "Failed to reset onboarding.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error resetting onboarding.");
+    } finally {
+      setIsResetting(false);
+    }
+  };
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
@@ -52,22 +72,37 @@ export default function BrandDashboardPage() {
   const [applicationStatuses, setApplicationStatuses] = useState<Record<string, ApplicationStatus>>({});
 
   useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      setIsLoading(false);
+      return;
+    }
+
     async function loadData() {
       setIsLoading(true);
-      const [brandData, campaignsData] = await Promise.all([
-        getBrandById(CURRENT_BRAND_ID),
-        getCampaignsByBrandId(CURRENT_BRAND_ID),
-      ]);
-      setBrand(brandData);
-      setCampaigns(campaignsData);
-      setIsLoading(false);
+      try {
+        const token = await getToken();
+        if (!token) return;
+
+        const brandData = await getMyBrandProfile(token);
+        if (brandData) {
+          setBrand(brandData);
+          const campaignsData = await getCampaignsByBrandId(brandData.id);
+          setCampaigns(campaignsData);
+        }
+      } catch (err) {
+        console.error("Error loading brand dashboard:", err);
+      } finally {
+        setIsLoading(false);
+      }
     }
     loadData();
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   const handleManageCampaign = async (campaign: Campaign) => {
     setSelectedCampaign(campaign);
-    const apps = await getApplicationsByCampaignId(campaign.id);
+    const token = await getToken();
+    const apps = await getApplicationsByCampaignId(campaign.id, token || undefined);
     setCampaignApplications(apps);
     // Initialize local status state
     const statuses: Record<string, ApplicationStatus> = {};
@@ -86,7 +121,7 @@ export default function BrandDashboardPage() {
     console.log(`Application ${applicationId} status changed to: ${newStatus}`);
   };
 
-  if (isLoading || !brand) {
+  if (isLoading) {
     return (
       <div className="flex flex-col bg-background">
         <main className="flex-1">
@@ -97,6 +132,18 @@ export default function BrandDashboardPage() {
             </div>
           </div>
         </main>
+      </div>
+    );
+  }
+
+  if (!brand) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center p-8 text-center bg-background">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Profile not found</h2>
+        <p className="text-muted-foreground mb-6">We couldn't find a brand profile for your account. Please complete the onboarding process.</p>
+        <Button onClick={handleResetOnboarding} disabled={isResetting}>
+          {isResetting ? "Resetting..." : "Go to Onboarding"}
+        </Button>
       </div>
     );
   }
@@ -157,7 +204,7 @@ export default function BrandDashboardPage() {
                               <TableRow key={campaign.id}>
                                 <TableCell>
                                   <Link 
-                                    href={`/campaigns/${campaign.id}`}
+                                    href={`/dashboard/brand/campaigns/${campaign.id}`}
                                     className="font-medium text-foreground hover:text-primary hover:underline"
                                   >
                                     {campaign.title}
@@ -182,14 +229,26 @@ export default function BrandDashboardPage() {
                                   )}
                                 </TableCell>
                                 <TableCell className="text-center">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleManageCampaign(campaign)}
-                                  >
-                                    <Settings className="mr-1 h-3.5 w-3.5" />
-                                    Manage
-                                  </Button>
+                                  <div className="flex items-center justify-center gap-2">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleManageCampaign(campaign)}
+                                    >
+                                      <Settings className="mr-1 h-3.5 w-3.5" />
+                                      Manage
+                                    </Button>
+                                    <Link href={`/dashboard/brand/campaigns/${campaign.id}/matches`}>
+                                      <Button 
+                                        variant="default" 
+                                        size="sm"
+                                        className="bg-primary text-primary-foreground flex items-center"
+                                      >
+                                        <Sparkles className="mr-1 h-3.5 w-3.5" />
+                                        AI Matches
+                                      </Button>
+                                    </Link>
+                                  </div>
                                 </TableCell>
                               </TableRow>
                             );

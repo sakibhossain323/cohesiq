@@ -17,6 +17,7 @@ from app.campaigns.schemas import (
     CampaignUpdate,
     ReviewCreate,
     ReviewOut,
+    AIMatchScoreOut,
 )
 from app.common.dependencies import get_current_user, get_db
 
@@ -179,3 +180,43 @@ async def create_review(
 ):
     """Submit a review. Only allowed when the application status is 'completed'."""
     return await service.create_review(db, current_user.id, data)
+
+
+# ------------------------------------------------------------------ #
+# AI Matching                                                        #
+# ------------------------------------------------------------------ #
+
+@router.post("/{campaign_id}/run-matching", response_model=List[AIMatchScoreOut])
+async def run_campaign_matching_endpoint(
+    campaign_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """Run AI matching algorithm for a campaign to find the best creators."""
+    campaign = await service.get_campaign(db, campaign_id)
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+    brand = await get_brand_by_user_id(db, current_user.id)
+    if not brand or campaign.brand_id != brand.id:
+        raise HTTPException(status_code=403, detail="Not your campaign")
+    
+    return await service.run_campaign_matching(db, campaign_id)
+
+
+@router.get("/{campaign_id}/matches", response_model=List[AIMatchScoreOut])
+async def get_campaign_matches_endpoint(
+    campaign_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """Retrieve existing AI match scores for a campaign."""
+    campaign = await service.get_campaign(db, campaign_id)
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+    brand = await get_brand_by_user_id(db, current_user.id)
+    if not brand or campaign.brand_id != brand.id:
+        raise HTTPException(status_code=403, detail="Not your campaign")
+    
+    return await service.get_campaign_matches(db, campaign_id)

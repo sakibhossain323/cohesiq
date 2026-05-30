@@ -1,3 +1,5 @@
+"use client";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -5,18 +7,32 @@ import { StarRating } from "@/components/shared/StarRating";
 import { NicheBadge } from "@/components/shared/NicheBadge";
 import { MapPin, MessageCircle } from "lucide-react";
 import type { Creator } from "@/lib/types";
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 interface CreatorProfileHeaderProps {
   creator: Creator;
 }
 
 export function CreatorProfileHeader({ creator }: CreatorProfileHeaderProps) {
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
+
   const initials = creator.display_name
     .split(" ")
     .map(n => n[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+  const handleContact = () => {
+    if (!isSignedIn) {
+      router.push("/sign-in");
+      return;
+    }
+    // Handle contact logic for authenticated users
+    alert("Messaging feature coming soon!");
+  };
 
   return (
     <div className="rounded-lg border border-border bg-card p-6">
@@ -66,7 +82,7 @@ export function CreatorProfileHeader({ creator }: CreatorProfileHeaderProps) {
               </div>
             </div>
 
-            <Button className="shrink-0">
+            <Button className="shrink-0" onClick={handleContact}>
               <MessageCircle className="mr-2 h-4 w-4" />
               Contact
             </Button>

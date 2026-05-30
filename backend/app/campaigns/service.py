@@ -14,6 +14,7 @@ from app.campaigns.models import (
     CampaignLanguageTarget,
     CampaignNicheTarget,
     Review,
+    AIMatchScore,
 )
 from app.campaigns.schemas import (
     ApplicationCreate,
@@ -365,5 +366,174 @@ async def list_brand_reviews(db: AsyncSession, brand_id: uuid.UUID) -> List[Revi
         select(Review).where(
             Review.reviewee_brand_id == brand_id, Review.is_public == True  # noqa: E712
         )
+    )
+    return list(result.scalars().all())
+
+
+def generate_rationale(creator_name: str, niche_match: float, budget_match: float, engagement_match: float, campaign_title: str) -> str:
+    parts = []
+    if niche_match >= 0.8:
+        parts.append(f"{creator_name} is a perfect match for {campaign_title} due to their strong alignment in content niche.")
+    else:
+        parts.append(f"{creator_name} has content overlapping with the theme of {campaign_title}.")
+    
+    if engagement_match >= 0.7:
+        parts.append("They exhibit exceptional audience engagement rates that outpace industry benchmarks.")
+    else:
+        parts.append("Their audience is highly receptive with steady engagement patterns.")
+        
+    if budget_match >= 1.0:
+        parts.append("Their content delivery costs fit seamlessly within your campaign budget limits.")
+    elif budget_match >= 0.5:
+        parts.append("Their standard rates are negotiable and match well with your target pricing.")
+    else:
+        parts.append("Pricing is slightly higher but negotiable for premium quality delivery.")
+        
+    return " ".join(parts)
+
+
+async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> List[AIMatchScore]:
+    from app.common.models import Niche, Language
+    from app.creators.models import CreatorProfile
+    from app.services.matching import compute_match_score
+    from sqlalchemy import text
+
+    # 1. Fetch Campaign
+    campaign = await get_campaign(db, campaign_id)
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+
+    # Clear previous matches for this campaign to avoid unique constraint conflict
+    await db.execute(
+        text("DELETE FROM ai_match_scores WHERE campaign_id = :campaign_id"),
+        {"campaign_id": campaign_id}
+    )
+    await db.commit()
+
+    # 2. Fetch all niches to map IDs
+    niches_result = await db.execute(select(Niche))
+    niche_map = {n.id: n.name for n in niches_result.scalars().all()}
+
+    # Get campaign niche name
+    campaign_niche_name = niche_map.get(campaign.primary_niche_id, "general")
+
+    # Get campaign target language (default to "bn")
+    target_lang = "bn"
+    if campaign.language_targets:
+        target_lang = campaign.language_targets[0].language_code
+
+    # 3. Fetch all creators
+    creators_result = await db.execute(
+        select(CreatorProfile)
+        .options(
+            selectinload(CreatorProfile.niches),
+            selectinload(CreatorProfile.languages),
+            selectinload(CreatorProfile.social_profiles),
+            selectinload(CreatorProfile.rate_cards)
+        )
+    )
+    creators = creators_result.scalars().all()
+
+    # Compute matches
+    matches = []
+    for creator in creators:
+        # Determine niche names
+        creator_primary = "general"
+        creator_subs = []
+        for cn in creator.niches:
+            n_name = niche_map.get(cn.niche_id, "general")
+            if cn.is_primary:
+                creator_primary = n_name
+            else:
+                creator_subs.append(n_name)
+
+        # Get social profiles info
+        primary_profile = None
+        for sp in creator.social_profiles:
+            if sp.is_primary_platform:
+                primary_profile = sp
+                break
+        if not primary_profile and creator.social_profiles:
+            primary_profile = max(creator.social_profiles, key=lambda x: x.follower_count or 0)
+
+        follower_count = primary_profile.follower_count if primary_profile else 0
+        engagement_rate = float(primary_profile.engagement_rate) if (primary_profile and primary_profile.engagement_rate is not None) else 0.0
+        creator_platforms = [sp.platform for sp in creator.social_profiles]
+
+        # Determine creator rate for campaign platforms
+        creator_rate = None
+        campaign_plats = campaign.required_platforms or []
+        for rc in creator.rate_cards:
+            if rc.platform in campaign_plats:
+                creator_rate = rc.price_bdt
+                break
+        if creator_rate is None:
+            creator_rate = creator.min_budget
+
+        # Language profile mapping
+        creator_lang_profile = {}
+        for cl in creator.languages:
+            creator_lang_profile[cl.language_code] = 1.0
+
+        # Compute match score using matching engine
+        scores = compute_match_score(
+            campaign_niche=campaign_niche_name,
+            campaign_budget=campaign.budget_per_creator_max,
+            campaign_platforms=campaign_plats,
+            campaign_target_language=target_lang,
+            creator_primary_niche=creator_primary,
+            creator_sub_niches=creator_subs,
+            creator_engagement_rate=engagement_rate,
+            creator_follower_count=follower_count,
+            creator_rate=creator_rate,
+            creator_platforms=creator_platforms,
+            creator_language_profile=creator_lang_profile,
+            creator_days_since_post=None,
+        )
+
+        # Generate rationale
+        rational_text = generate_rationale(
+            creator_name=creator.display_name,
+            niche_match=scores.niche,
+            budget_match=scores.budget,
+            engagement_match=scores.engagement,
+            campaign_title=campaign.title
+        )
+
+        match_score_obj = AIMatchScore(
+            campaign_id=campaign.id,
+            creator_id=creator.id,
+            score_niche=scores.niche,
+            score_engagement=scores.engagement,
+            score_budget=scores.budget,
+            score_language=scores.language,
+            score_total=scores.total,
+            rationale=rational_text
+        )
+        matches.append(match_score_obj)
+
+    # Sort matches by total score DESC and take top 10
+    matches.sort(key=lambda x: x.score_total, reverse=True)
+    top_matches = matches[:10]
+
+    # Save to db
+    for match in top_matches:
+        db.add(match)
+    await db.commit()
+
+    # Refresh objects to load relationships
+    for match in top_matches:
+        await db.refresh(match, ["creator"])
+
+    return top_matches
+
+
+async def get_campaign_matches(db: AsyncSession, campaign_id: uuid.UUID) -> List[AIMatchScore]:
+    from app.campaigns.models import AIMatchScore
+    result = await db.execute(
+        select(AIMatchScore)
+        .where(AIMatchScore.campaign_id == campaign_id)
+        .order_by(AIMatchScore.score_total.desc())
+        .options(selectinload(AIMatchScore.creator))
     )
     return list(result.scalars().all())

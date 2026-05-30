@@ -262,3 +262,37 @@ class Review(Base):
     application: Mapped["CampaignApplication"] = relationship(
         "CampaignApplication", back_populates="reviews"
     )
+
+
+class AIMatchScore(Base):
+    __tablename__ = "ai_match_scores"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
+    )
+    campaign_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("campaigns.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    creator_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("creator_profiles.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    score_niche: Mapped[Optional[float]] = mapped_column(nullable=True)
+    score_engagement: Mapped[Optional[float]] = mapped_column(nullable=True)
+    score_budget: Mapped[Optional[float]] = mapped_column(nullable=True)
+    score_language: Mapped[Optional[float]] = mapped_column(nullable=True)
+    score_total: Mapped[Optional[float]] = mapped_column(nullable=True)
+    rationale: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    generated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    __table_args__ = (
+        UniqueConstraint("campaign_id", "creator_id", name="uq_campaign_creator_match"),
+    )
+
+    campaign: Mapped["Campaign"] = relationship("Campaign")
+    creator: Mapped["CreatorProfile"] = relationship("CreatorProfile")

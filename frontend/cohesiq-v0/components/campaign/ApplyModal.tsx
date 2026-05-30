@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import {
   Dialog,
   DialogContent,
@@ -14,42 +15,68 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { submitApplication } from "@/lib/api/applications";
 import type { Campaign } from "@/lib/types";
 
 interface ApplyModalProps {
   campaign: Campaign;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
-export function ApplyModal({ campaign, open, onOpenChange }: ApplyModalProps) {
+export function ApplyModal({ campaign, open, onOpenChange, onSuccess }: ApplyModalProps) {
   const [proposalText, setProposalText] = useState("");
   const [proposedRate, setProposedRate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { getToken } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const token = await getToken();
+      if (!token) {
+        toast({
+          title: "Not authenticated",
+          description: "Please sign in to apply to campaigns.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    console.log("Application submitted:", {
-      campaign_id: campaign.id,
-      proposal_text: proposalText,
-      proposed_rate: proposedRate ? parseInt(proposedRate) : undefined,
-    });
+      await submitApplication(campaign.id, token, {
+        proposal_text: proposalText,
+        proposed_rate: proposedRate ? parseInt(proposedRate) : undefined,
+      });
 
-    toast({
-      title: "Application submitted!",
-      description: `Your application to "${campaign.title}" has been sent.`,
-    });
+      toast({
+        title: "Application submitted!",
+        description: `Your application to "${campaign.title}" has been sent successfully.`,
+      });
 
-    setIsSubmitting(false);
-    setProposalText("");
-    setProposedRate("");
-    onOpenChange(false);
+      setProposalText("");
+      setProposedRate("");
+
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onOpenChange(false);
+      }
+    } catch (err: any) {
+      const message = err?.message?.includes("already applied")
+        ? "You have already applied to this campaign."
+        : err?.message || "Failed to submit application. Please try again.";
+      toast({
+        title: "Submission failed",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

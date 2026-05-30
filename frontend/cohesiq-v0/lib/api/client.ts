@@ -4,18 +4,27 @@ export const API_BASE_URL = isServer
   ? 'http://backend:8000' 
   : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
 
-export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+export interface FetchOptions extends RequestInit {
+  token?: string;
+}
+
+export async function fetchApi<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
+  const { token, ...restOptions } = options;
   const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
   
-  const headers = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...Object.fromEntries(
+      Object.entries(restOptions.headers || {}).map(([key, val]) => [key, String(val)])
+    ),
   };
   
-  // We'll add auth token here later
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
   
   const response = await fetch(url, {
-    ...options,
+    ...restOptions,
     headers,
   });
   

@@ -1,4 +1,4 @@
-import type { Campaign, CampaignFilters, PlatformType, CampaignStatus } from "@/lib/types";
+import type { Campaign, CampaignFilters, PlatformType, CampaignStatus, AIMatchScore } from "@/lib/types";
 import { fetchApi } from "./client";
 
 const NICHE_MAP: Record<number, string> = {
@@ -104,4 +104,18 @@ export async function getSuggestedCampaigns(creatorNiche: string, limit: number 
   
   const data = await fetchApi<any[]>(`/campaigns/?${query.toString()}`);
   return Promise.all(data.map(mapCampaignResponse));
+}
+
+export async function runCampaignMatching(campaignId: string, token: string): Promise<AIMatchScore[]> {
+  return fetchApi<AIMatchScore[]>(`/campaigns/${campaignId}/run-matching`, {
+    method: "POST",
+    token,
+  });
+}
+
+export async function getCampaignMatches(campaignId: string, token: string): Promise<AIMatchScore[]> {
+  return fetchApi<AIMatchScore[]>(`/campaigns/${campaignId}/matches`, {
+    method: "GET",
+    token,
+  });
 }

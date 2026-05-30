@@ -193,3 +193,22 @@ class ReviewOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+from app.creators.schemas import CreatorProfileOut
+
+
+class AIMatchScoreOut(BaseModel):
+    id: uuid.UUID
+    campaign_id: uuid.UUID
+    creator_id: uuid.UUID
+    score_niche: Optional[float] = None
+    score_engagement: Optional[float] = None
+    score_budget: Optional[float] = None
+    score_language: Optional[float] = None
+    score_total: Optional[float] = None
+    rationale: Optional[str] = None
+    generated_at: datetime
+    creator: Optional[CreatorProfileOut] = None
+
+    model_config = {"from_attributes": True}

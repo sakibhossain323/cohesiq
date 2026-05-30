@@ -25,6 +25,7 @@ from app.brands.models import BrandProfile  # noqa: F401
 from app.campaigns.models import (  # noqa: F401
     Campaign, CampaignNicheTarget, CampaignLanguageTarget,
     CampaignDeliverableRequirement, CampaignApplication, Review,
+    AIMatchScore,
 )
 
 target_metadata = Base.metadata

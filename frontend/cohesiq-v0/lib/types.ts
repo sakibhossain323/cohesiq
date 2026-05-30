@@ -9,9 +9,25 @@ export interface CreatorSocialProfile {
   handle: string;
   profile_url: string;
   follower_count?: number;
-  engagement_rate?: number;
+  following_count?: number;
   avg_views_per_post?: number;
+  avg_likes_per_post?: number;
+  avg_comments_per_post?: number;
+  avg_shares_per_post?: number;
+  engagement_rate?: number;
+  posts_per_month?: number;
   is_primary_platform: boolean;
+  is_monetized: boolean;
+  has_verified_badge: boolean;
+  audience_country_primary?: string;
+  audience_city_primary?: string;
+  audience_age_range_min?: number;
+  audience_age_range_max?: number;
+  audience_gender_majority?: string;
+  audience_gender_pct?: number;
+  content_languages: string[];
+  stats_reported_at?: string;
+  stats_reported_for_period?: string;
 }
 
 export interface CreatorRateCard {
@@ -37,6 +53,7 @@ export interface Creator {
   is_available: boolean;
   total_collaborations: number;
   average_rating?: number;
+  min_budget?: number;
 }
 
 export interface Brand {
@@ -88,13 +105,19 @@ export interface Application {
   id: string;
   campaign_id: string;
   campaign: Pick<Campaign, "id" | "title" | "brand">;
+  creator_id: string;
   creator: Pick<Creator, "id" | "display_name" | "profile_photo_url" | "primary_niche"> & {
     follower_count?: number;
   };
+  initiated_by: string; // 'creator' or 'brand'
   proposed_rate?: number;
   proposal_text?: string;
   status: ApplicationStatus;
+  rejection_reason?: string;
+  agreed_rate?: number;
+  agreed_deliverables?: string;
   applied_at: string;
+  responded_at?: string;
 }
 
 export interface Review {
@@ -128,3 +151,18 @@ export interface CampaignFilters {
   budgetRange?: [number, number];
   status?: CampaignStatus;
 }
+
+export interface AIMatchScore {
+  id: string;
+  campaign_id: string;
+  creator_id: string;
+  score_niche?: number;
+  score_engagement?: number;
+  score_budget?: number;
+  score_language?: number;
+  score_total?: number;
+  rationale?: string;
+  generated_at: string;
+  creator?: Creator;
+}
+

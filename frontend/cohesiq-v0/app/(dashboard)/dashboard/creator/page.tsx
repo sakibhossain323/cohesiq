@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ResetOnboardingButton } from "@/components/onboarding/ResetOnboardingButton";
 import { CampaignCard } from "@/components/campaign/CampaignCard";
 import { ApplicationStatusBadge } from "@/components/application/ApplicationStatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,25 +16,45 @@ import {
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StarRating } from "@/components/shared/StarRating";
 import { NicheBadge } from "@/components/shared/NicheBadge";
+import { auth } from "@clerk/nextjs/server";
 import { getApplicationsByCreatorId } from "@/lib/api/applications";
 import { getSuggestedCampaigns } from "@/lib/api/campaigns";
-import { getCreatorById } from "@/lib/api/creators";
+import { getCreatorById, getMyCreatorProfile } from "@/lib/api/creators";
 import { formatBDT, formatDate } from "@/lib/utils";
 import { ExternalLink, FileText, MapPin } from "lucide-react";
 
-// Hardcode current creator as mockCreators[0]
-const CURRENT_CREATOR_ID = "creator-1";
-
 export default async function CreatorDashboardPage() {
-  const [creator, applications, suggestedCampaigns] = await Promise.all([
-    getCreatorById(CURRENT_CREATOR_ID),
-    getApplicationsByCreatorId(CURRENT_CREATOR_ID),
-    getSuggestedCampaigns("Food", 3),
-  ]);
+  const { getToken } = await auth();
+  const token = await getToken();
+
+  if (!token) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center p-8 text-center bg-background">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Access Denied</h2>
+        <p className="text-muted-foreground mb-6">Please log in to access your dashboard.</p>
+        <Button asChild>
+          <Link href="/sign-in">Log In</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const creator = await getMyCreatorProfile(token);
 
   if (!creator) {
-    return <div>Creator not found</div>;
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center p-8 text-center bg-background">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Profile not found</h2>
+        <p className="text-muted-foreground mb-6">We couldn't find a creator profile for your account. Please complete the onboarding process.</p>
+        <ResetOnboardingButton />
+      </div>
+    );
   }
+
+  const [applications, suggestedCampaigns] = await Promise.all([
+    getApplicationsByCreatorId(creator.id, token),
+    getSuggestedCampaigns(creator.primary_niche || "Food", 3),
+  ]);
 
   return (
     <div className="flex flex-col bg-background">
@@ -88,7 +109,7 @@ export default async function CreatorDashboardPage() {
                             <TableRow key={app.id}>
                               <TableCell>
                                 <Link 
-                                  href={`/campaigns/${app.campaign_id}`}
+                                  href={`/dashboard/creator/campaigns/${app.campaign_id}`}
                                   className="font-medium text-foreground hover:text-primary hover:underline"
                                 >
                                   {app.campaign.title}
@@ -122,7 +143,7 @@ export default async function CreatorDashboardPage() {
                 </h2>
                 <div className="space-y-4">
                   {suggestedCampaigns.map(campaign => (
-                    <CampaignCard key={campaign.id} campaign={campaign} />
+                    <CampaignCard key={campaign.id} campaign={campaign} basePath="/dashboard/creator/campaigns" />
                   ))}
                 </div>
               </div>

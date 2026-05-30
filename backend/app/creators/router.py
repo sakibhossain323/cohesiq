@@ -67,6 +67,21 @@ async def list_creators(
     return await service.list_creators(db, filters)
 
 
+@router.get("/me", response_model=CreatorProfileOut)
+async def get_my_creator_profile(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """Retrieve the creator profile for the currently authenticated user."""
+    creator = await service.get_creator_by_user_id(db, current_user.id)
+    if not creator:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Creator profile not found for this user",
+        )
+    return creator
+
+
 @router.get("/{creator_id}", response_model=CreatorProfileOut)
 async def get_creator(
     creator_id: uuid.UUID,
