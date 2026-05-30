@@ -1,243 +1,206 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@clerk/nextjs";
-import { getMyBrandProfile } from "@/lib/api/brands";
-import { getCampaignsByBrandId } from "@/lib/api/campaigns";
-import { getApplicationsByCampaignId, updateApplicationStatus } from "@/lib/api/applications";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { formatBDT, formatDate } from "@/lib/utils";
-import Link from "next/link";
-import { ExternalLink, Inbox, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import type { Application, ApplicationStatus } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
+import { Search, Send, Info, FileText, MessageSquare } from "lucide-react";
 
-const STATUS_CONFIG: Record<ApplicationStatus, { label: string; className: string }> = {
-  pending: { label: "Pending", className: "border-yellow-200 bg-yellow-50 text-yellow-700" },
-  shortlisted: { label: "Shortlisted", className: "border-blue-200 bg-blue-50 text-blue-700" },
-  accepted: { label: "Accepted", className: "border-green-200 bg-green-50 text-green-700" },
-  rejected: { label: "Rejected", className: "border-red-200 bg-red-50 text-red-700" },
-  withdrawn: { label: "Withdrawn", className: "border-gray-200 bg-gray-50 text-gray-700" },
-  completed: { label: "Completed", className: "border-muted bg-muted/50 text-muted-foreground" },
-};
+// Mock data for the UI
+const MOCK_CONVERSATIONS = [
+  {
+    id: "1",
+    creator_name: "Alex Johnson",
+    logo_url: "https://api.dicebear.com/9.x/initials/svg?seed=AlexJohnson",
+    last_message: "Can we clarify the timeline for the second video?",
+    time: "10:23 AM",
+    unread: 1,
+    campaign_title: "Q4 Tech Gadgets Launch",
+  },
+  {
+    id: "2",
+    creator_name: "Sam Smith",
+    logo_url: "https://api.dicebear.com/9.x/initials/svg?seed=SamSmith",
+    last_message: "Great! The draft looks perfect. Approved.",
+    time: "Yesterday",
+    unread: 0,
+    campaign_title: "Summer Discount Promo",
+  }
+];
 
-const ACTIONABLE_STATUSES: ApplicationStatus[] = [
-  "pending",
-  "shortlisted",
-  "accepted",
-  "rejected",
+const MOCK_MESSAGES = [
+  {
+    id: "m1",
+    sender: "brand",
+    text: "Hi Alex! We loved your recent tech reviews and would like to invite you to our Q4 launch campaign.",
+    time: "10:00 AM"
+  },
+  {
+    id: "m2",
+    sender: "creator",
+    text: "Thanks for reaching out! I'm definitely interested. Could you provide a bit more detail on the deliverable timeline?",
+    time: "10:15 AM"
+  },
+  {
+    id: "m3",
+    sender: "brand",
+    text: "Can we clarify the timeline for the second video? Ideally we'd want it up by mid-November.",
+    time: "10:23 AM"
+  }
 ];
 
 export default function BrandMessagesPage() {
-  const { getToken, isLoaded } = useAuth();
-  const { toast } = useToast();
-  const [applications, setApplications] = useState<(Application & { campaignTitle: string })[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [activeConversation, setActiveConversation] = useState(MOCK_CONVERSATIONS[0].id);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const loadApplications = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const token = await getToken();
-      if (!token) return;
-
-      const brand = await getMyBrandProfile(token);
-      if (!brand) return;
-
-      const campaigns = await getCampaignsByBrandId(brand.id);
-
-      // Fetch applications for all campaigns in parallel
-      const allApps = await Promise.all(
-        campaigns.map(async c => {
-          const apps = await getApplicationsByCampaignId(c.id, token);
-          return apps.map(a => ({ ...a, campaignTitle: c.title }));
-        })
-      );
-
-      // Flatten, sort: pending first, then by date
-      const flat = allApps.flat().sort((a, b) => {
-        if (a.status === "pending" && b.status !== "pending") return -1;
-        if (b.status === "pending" && a.status !== "pending") return 1;
-        return new Date(b.applied_at).getTime() - new Date(a.applied_at).getTime();
-      });
-
-      setApplications(flat);
-    } catch (err) {
-      console.error("Failed to load messages:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [getToken]);
-
-  useEffect(() => {
-    if (isLoaded) loadApplications();
-  }, [isLoaded, loadApplications]);
-
-  const handleStatusChange = async (
-    app: Application & { campaignTitle: string },
-    newStatus: ApplicationStatus
-  ) => {
-    setUpdatingId(app.id);
-    try {
-      const token = await getToken();
-      if (!token) return;
-      await updateApplicationStatus(app.id, newStatus, app.campaign_id, token);
-      setApplications(prev =>
-        prev.map(a => (a.id === app.id ? { ...a, status: newStatus } : a))
-      );
-      toast({ title: "Status updated", description: `Application marked as ${newStatus}.` });
-    } catch {
-      toast({ title: "Update failed", description: "Could not update the status.", variant: "destructive" });
-    } finally {
-      setUpdatingId(null);
-    }
-  };
-
-  const pendingCount = applications.filter(a => a.status === "pending").length;
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  const activeChat = MOCK_CONVERSATIONS.find(c => c.id === activeConversation);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Inbox</h1>
-          {pendingCount > 0 && (
-            <span className="flex h-6 min-w-[24px] items-center justify-center rounded-full bg-primary px-2 text-xs font-semibold text-primary-foreground">
-              {pendingCount}
-            </span>
-          )}
-        </div>
-        <p className="mt-2 text-muted-foreground">
-          Review incoming applications from creators and take action
-        </p>
+    <div className="flex h-[calc(100vh-theme(spacing.16))] w-full flex-col p-4 sm:p-6 lg:p-8">
+      {/* Demo Banner */}
+      <div className="mb-4 rounded-md bg-blue-50 p-3 border border-blue-200 flex items-center justify-center gap-2 text-blue-800 text-sm">
+        <Info className="h-4 w-4" />
+        <span className="font-medium">Demo Mode:</span> Direct Messaging is currently in development. This is a preview of the upcoming chat interface.
       </div>
 
-      {applications.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center p-16 text-center">
-            <Inbox className="mb-4 h-12 w-12 text-muted-foreground/40" />
-            <p className="font-medium text-foreground">No applications yet</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Applications from creators will appear here once your campaigns go live.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {applications.map(app => {
-            const config = STATUS_CONFIG[app.status] ?? STATUS_CONFIG.pending;
-            const isUpdating = updatingId === app.id;
-            const isPending = app.status === "pending";
-
-            return (
-              <Card
-                key={app.id}
-                className={`overflow-hidden transition-all hover:border-primary/40 hover:shadow-sm ${
-                  isPending ? "border-primary/20 bg-primary/[0.02]" : ""
+      <div className="flex flex-1 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+        
+        {/* Left Sidebar - Contacts List */}
+        <div className="w-full sm:w-80 border-r border-border flex flex-col bg-muted/10 shrink-0 hidden sm:flex">
+          <div className="p-4 border-b border-border">
+            <h2 className="font-semibold text-lg mb-4">Messages</h2>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search messages..."
+                className="pl-9 bg-background"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto">
+            {MOCK_CONVERSATIONS.map(chat => (
+              <button
+                key={chat.id}
+                onClick={() => setActiveConversation(chat.id)}
+                className={`w-full text-left p-4 flex items-start gap-3 border-b border-border transition-colors hover:bg-muted/50 ${
+                  activeConversation === chat.id ? "bg-muted/60" : ""
                 }`}
               >
-                <CardContent className="p-0">
-                  <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
-                    {/* Unread dot + avatar */}
-                    <div className="flex items-center gap-3">
-                      <div className="flex w-4 shrink-0 justify-center">
-                        {isPending && (
-                          <span className="mt-0.5 h-2 w-2 rounded-full bg-primary" />
-                        )}
-                      </div>
-                      <Avatar className="h-11 w-11 shrink-0 border border-border">
-                        <AvatarImage
-                          src={app.creator?.profile_photo_url}
-                          alt={app.creator?.display_name}
-                        />
-                        <AvatarFallback className="bg-muted text-xs font-semibold">
-                          {(app.creator?.display_name ?? "?").slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
-
-                    {/* Info */}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div>
-                          <p className="font-semibold text-foreground">
-                            {app.creator?.display_name ?? "Unknown Creator"}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Applied to{" "}
-                            <span className="font-medium text-foreground">
-                              {app.campaignTitle}
-                            </span>{" "}
-                            · {formatDate(app.applied_at)}
-                          </p>
-                        </div>
-                        <Badge variant="outline" className={`shrink-0 text-xs ${config.className}`}>
-                          {config.label}
-                        </Badge>
-                      </div>
-                      {app.proposed_rate && (
-                        <p className="mt-1.5 text-xs text-muted-foreground">
-                          Proposed:{" "}
-                          <span className="font-medium text-foreground">
-                            {formatBDT(app.proposed_rate)}
-                          </span>
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex shrink-0 items-center gap-2">
-                      <Select
-                        value={app.status}
-                        disabled={isUpdating}
-                        onValueChange={v => handleStatusChange(app, v as ApplicationStatus)}
-                      >
-                        <SelectTrigger className="h-8 w-36 text-xs">
-                          {isUpdating ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <SelectValue />
-                          )}
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ACTIONABLE_STATUSES.map(s => (
-                            <SelectItem key={s} value={s} className="text-xs">
-                              {STATUS_CONFIG[s].label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                      <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                        <Link href={`/dashboard/brand/creators/${app.creator?.id}`}>
-                          <ExternalLink className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </div>
+                <Avatar className="h-10 w-10 border border-border mt-0.5">
+                  <AvatarImage src={chat.logo_url} />
+                  <AvatarFallback>{chat.creator_name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-baseline mb-0.5">
+                    <span className="font-semibold text-sm truncate pr-2">{chat.creator_name}</span>
+                    <span className="text-[10px] text-muted-foreground shrink-0">{chat.time}</span>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  <p className="text-xs text-muted-foreground truncate mb-1">
+                    {chat.campaign_title}
+                  </p>
+                  <p className={`text-xs truncate ${chat.unread > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                    {chat.last_message}
+                  </p>
+                </div>
+                {chat.unread > 0 && (
+                  <Badge className="ml-2 mt-2 h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px]">
+                    {chat.unread}
+                  </Badge>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
-      )}
+
+        {/* Right Pane - Chat Window */}
+        {activeChat ? (
+          <div className="flex-1 flex flex-col min-w-0 bg-background">
+            {/* Chat Header */}
+            <div className="h-16 border-b border-border flex items-center justify-between px-6 bg-card shrink-0">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-9 w-9 border border-border">
+                  <AvatarImage src={activeChat.logo_url} />
+                  <AvatarFallback>{activeChat.creator_name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold text-sm">{activeChat.creator_name}</h3>
+                  <div className="flex items-center text-xs text-muted-foreground">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
+                    Online
+                  </div>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" className="hidden sm:flex text-xs h-8">
+                <FileText className="mr-2 h-3.5 w-3.5" />
+                View Campaign
+              </Button>
+            </div>
+
+            {/* Chat History */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="text-center">
+                <span className="bg-muted px-3 py-1 rounded-full text-xs text-muted-foreground">
+                  Today
+                </span>
+              </div>
+              
+              {MOCK_MESSAGES.map(msg => {
+                const isBrand = msg.sender === "brand";
+                return (
+                  <div key={msg.id} className={`flex flex-col ${isBrand ? "items-end" : "items-start"}`}>
+                    <div className="flex items-end gap-2 max-w-[75%] sm:max-w-[60%]">
+                      {!isBrand && (
+                        <Avatar className="h-6 w-6 border border-border shrink-0 mb-1">
+                          <AvatarImage src={activeChat.logo_url} />
+                        </Avatar>
+                      )}
+                      <div className={`rounded-2xl px-4 py-2.5 text-sm ${
+                        isBrand 
+                          ? "bg-primary text-primary-foreground rounded-br-none" 
+                          : "bg-muted text-foreground rounded-bl-none border border-border/50"
+                      }`}>
+                        {msg.text}
+                      </div>
+                    </div>
+                    <span className={`text-[10px] text-muted-foreground mt-1 mx-8 ${isBrand ? "text-right" : ""}`}>
+                      {msg.time}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Chat Input */}
+            <div className="p-4 border-t border-border bg-card shrink-0">
+              <div className="relative flex items-center">
+                <Input 
+                  placeholder="Messaging is currently in development..." 
+                  className="pr-12 bg-muted/30 border-muted-foreground/20 h-11"
+                  disabled
+                />
+                <Button 
+                  size="icon" 
+                  disabled
+                  className="absolute right-1 h-9 w-9 rounded-md bg-primary hover:bg-primary/90"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 flex items-center justify-center bg-muted/5">
+            <div className="text-center text-muted-foreground">
+              <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-20" />
+              <p>Select a conversation to start messaging</p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

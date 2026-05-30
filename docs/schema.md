@@ -96,7 +96,8 @@ CREATE TYPE campaign_status AS ENUM (
     'active',      -- open for applications
     'in_progress', -- creators selected, work ongoing
     'completed',   -- all deliverables received
-    'cancelled'
+    'cancelled',
+    'archived'     -- campaign is archived
 );
 
 -- Application lifecycle
@@ -106,7 +107,15 @@ CREATE TYPE application_status AS ENUM (
     'accepted',     -- brand confirmed this creator
     'rejected',     -- brand passed
     'withdrawn',    -- creator pulled out
-    'completed'     -- collaboration done, review can be left
+    'completed',    -- collaboration done, review can be left
+    'invited',      -- brand invited creator to campaign
+    'declined'      -- creator declined brand's invitation
+);
+
+-- Campaign visibility
+CREATE TYPE campaign_visibility AS ENUM (
+    'public',
+    'private'
 );
 
 -- Campaign deliverable types (what a brand expects)
@@ -571,6 +580,7 @@ CREATE TABLE campaigns (
     content_deadline     DATE,
 
     status           campaign_status DEFAULT 'draft',
+    visibility       campaign_visibility DEFAULT 'public',
     created_at       TIMESTAMPTZ DEFAULT NOW(),
     updated_at       TIMESTAMPTZ DEFAULT NOW()
 );

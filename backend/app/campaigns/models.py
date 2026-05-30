@@ -56,6 +56,15 @@ class Campaign(Base):
     )
     budget_per_creator_min: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     budget_per_creator_max: Mapped[int] = mapped_column(Integer, nullable=False)
+    visibility: Mapped[str] = mapped_column(
+        ENUM(
+            "public", "private",
+            name="campaign_visibility",
+            create_type=False,
+        ),
+        server_default="public",
+        nullable=False,
+    )
     creator_min_followers: Mapped[int] = mapped_column(Integer, server_default="1000")
     creator_max_followers: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     target_countries: Mapped[List[str]] = mapped_column(ARRAY(String(2)), server_default="{BD}")
@@ -76,7 +85,7 @@ class Campaign(Base):
     content_deadline: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     status: Mapped[str] = mapped_column(
         ENUM(
-            "draft", "active", "in_progress", "completed", "cancelled",
+            "draft", "active", "in_progress", "completed", "cancelled", "archived",
             name="campaign_status",
             create_type=False,
         ),
@@ -192,8 +201,8 @@ class CampaignApplication(Base):
     proposed_rate: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     status: Mapped[str] = mapped_column(
         ENUM(
-            "pending", "shortlisted", "accepted", "rejected",
-            "withdrawn", "completed",
+            "invited", "pending", "shortlisted", "accepted", "rejected",
+            "declined", "withdrawn", "completed",
             name="application_status",
             create_type=False,
         ),

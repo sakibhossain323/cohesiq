@@ -1,7 +1,7 @@
 import type { Campaign, CampaignFilters, PlatformType, CampaignStatus, AIMatchScore } from "@/lib/types";
 import { fetchApi } from "./client";
 
-const NICHE_MAP: Record<number, string> = {
+export const NICHE_MAP: Record<number, string> = {
   1: "technology", 2: "fashion", 3: "food", 4: "travel", 5: "lifestyle",
   6: "finance", 7: "gaming", 8: "education", 9: "health", 10: "beauty",
   11: "fitness", 12: "entertainment", 13: "sports"
@@ -30,6 +30,7 @@ async function mapCampaignResponse(c: any): Promise<Campaign> {
   const brandData = await resolveBrand(c.brand_id);
 
   return {
+    ...c,
     id: c.id,
     brand_id: c.brand_id,
     brand: {
@@ -118,4 +119,47 @@ export async function getCampaignMatches(campaignId: string, token: string): Pro
     method: "GET",
     token,
   });
+}
+
+export async function createCampaign(data: any, token: string): Promise<Campaign> {
+  const result = await fetchApi<any>("/campaigns/", {
+    method: "POST",
+    body: JSON.stringify(data),
+    token,
+  });
+  return mapCampaignResponse(result);
+}
+
+export async function inviteCreatorToCampaign(campaignId: string, creatorId: string, brandNotes: string | undefined, token: string): Promise<any> {
+  return fetchApi<any>(`/campaigns/${campaignId}/invite`, {
+    method: "POST",
+    body: JSON.stringify({ creator_id: creatorId, brand_notes: brandNotes }),
+    token,
+  });
+}
+
+export async function respondToInvitation(campaignId: string, applicationId: string, action: "accept" | "decline", proposalText: string | undefined, proposedRate: number | undefined, token: string): Promise<any> {
+  return fetchApi<any>(`/campaigns/${campaignId}/applications/${applicationId}/respond-invite`, {
+    method: "PATCH",
+    body: JSON.stringify({ action, proposal_text: proposalText, proposed_rate: proposedRate }),
+    token,
+  });
+}
+
+export async function updateCampaign(campaignId: string, data: any, token: string): Promise<Campaign> {
+  const result = await fetchApi<any>(`/campaigns/${campaignId}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+    token,
+  });
+  return mapCampaignResponse(result);
+}
+
+export async function updateCampaignStatus(campaignId: string, status: "active" | "cancelled" | "in_progress" | "completed" | "archived", token: string): Promise<Campaign> {
+  const result = await fetchApi<any>(`/campaigns/${campaignId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+    token,
+  });
+  return mapCampaignResponse(result);
 }

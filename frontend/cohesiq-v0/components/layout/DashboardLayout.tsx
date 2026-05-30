@@ -23,6 +23,9 @@ import {
   Share2,
   FileText,
   MessageSquare,
+  Search,
+  Briefcase,
+  Building2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -38,7 +41,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const navItems = isCreatorDashboard
     ? [
-        { href: '/dashboard/creator', label: 'My Dashboard', icon: <BarChart3 className="h-4 w-4" /> },
+        { href: '/dashboard/creator', label: 'Home', icon: <BarChart3 className="h-4 w-4" /> },
         { href: '/dashboard/creator/campaigns', label: 'Discover Campaigns', icon: <Megaphone className="h-4 w-4" /> },
         { href: '/dashboard/creator/collaborations', label: 'Collaborations', icon: <FileText className="h-4 w-4" /> },
         { href: '/dashboard/creator/messages', label: 'Messages', icon: <MessageSquare className="h-4 w-4" /> },
@@ -46,10 +49,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       ]
     : isBrandDashboard
     ? [
-        { href: '/dashboard/brand', label: 'My Dashboard', icon: <BarChart3 className="h-4 w-4" /> },
-        { href: '/dashboard/brand/creators', label: 'Find Creators', icon: <Users className="h-4 w-4" /> },
-        { href: '/dashboard/brand/campaigns', label: 'My Campaigns', icon: <Megaphone className="h-4 w-4" /> },
+        { href: '/dashboard/brand', label: 'Home', icon: <BarChart3 className="h-4 w-4" /> },
+        { href: '/dashboard/brand/campaigns', label: 'Campaigns', icon: <Megaphone className="h-4 w-4" /> },
+        { href: '/dashboard/brand/creators', label: 'Find Creators', icon: <Search className="h-4 w-4" /> },
+        { href: '/dashboard/brand/collaborations', label: 'Collaborations', icon: <Briefcase className="h-4 w-4" /> },
         { href: '/dashboard/brand/messages', label: 'Messages', icon: <MessageSquare className="h-4 w-4" /> },
+        { href: '/dashboard/brand/profile', label: 'Brand Profile', icon: <Building2 className="h-4 w-4" /> },
       ]
     : []
 

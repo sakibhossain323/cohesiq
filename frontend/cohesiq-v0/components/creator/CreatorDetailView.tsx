@@ -11,9 +11,10 @@ import { formatDate } from "@/lib/utils";
 
 interface CreatorDetailViewProps {
   creatorId: string;
+  actionSlot?: React.ReactNode;
 }
 
-export async function CreatorDetailView({ creatorId }: CreatorDetailViewProps) {
+export async function CreatorDetailView({ creatorId, actionSlot }: CreatorDetailViewProps) {
   const creator = await getCreatorById(creatorId);
   
   if (!creator) {
@@ -32,7 +33,7 @@ export async function CreatorDetailView({ creatorId }: CreatorDetailViewProps) {
       <main className="flex-1 w-full">
         <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 w-full">
           {/* Profile Header */}
-          <CreatorProfileHeader creator={creator} />
+          <CreatorProfileHeader creator={creator} actionSlot={actionSlot} />
 
           {/* About Section */}
           {creator.bio && (

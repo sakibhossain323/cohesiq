@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { getMyCreatorProfile } from "@/lib/api/creators";
 import { getApplicationsByCreatorId } from "@/lib/api/applications";
+import { respondToInvitation } from "@/lib/api/campaigns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,6 +16,8 @@ import { ArrowRight, Inbox, Briefcase, FileText, Loader2, CheckCircle2, Clock, X
 import type { Application, ApplicationStatus } from "@/lib/types";
 
 const STATUS_CONFIG: Record<ApplicationStatus, { label: string; className: string; icon: React.ElementType }> = {
+  invited: { label: "Invited", className: "border-purple-200 bg-purple-50 text-purple-700", icon: Clock },
+  declined: { label: "Declined", className: "border-gray-200 bg-gray-50 text-gray-700", icon: XCircle },
   pending: { label: "Pending Review", className: "border-yellow-200 bg-yellow-50 text-yellow-700", icon: Clock },
   shortlisted: { label: "Shortlisted", className: "border-blue-200 bg-blue-50 text-blue-700", icon: Clock },
   accepted: { label: "Accepted", className: "border-green-200 bg-green-50 text-green-700", icon: CheckCircle2 },
@@ -31,37 +34,36 @@ export default function CreatorCollaborationsPage() {
   const [activeContracts, setActiveContracts] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (!isLoaded) return;
-    
-    async function loadData() {
-      setIsLoading(true);
-      try {
-        const token = await getToken();
-        if (!token) return;
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const token = await getToken();
+      if (!token) return;
 
-        const creator = await getMyCreatorProfile(token);
-        if (!creator) return;
+      const creator = await getMyCreatorProfile(token);
+      if (!creator) return;
 
-        const apps = await getApplicationsByCreatorId(creator.id, token);
-        const sorted = apps.sort((a, b) => new Date(b.applied_at).getTime() - new Date(a.applied_at).getTime());
-        
-        // Brand Invitations
-        setInvitations(sorted.filter(a => a.initiated_by === 'brand' && a.status === 'pending'));
-        
-        // My Active Bids/Applications (creator initiated OR brand initiated but creator responded)
-        setMyApplications(sorted.filter(a => a.status !== 'accepted' && a.status !== 'completed' && !(a.initiated_by === 'brand' && a.status === 'pending')));
-        
-        // Active Contracts (accepted/in-progress)
-        setActiveContracts(sorted.filter(a => a.status === 'accepted' || a.status === 'completed'));
-        
-      } catch (err) {
-        console.error("Failed to load collaborations", err);
-      } finally {
-        setIsLoading(false);
-      }
+      const apps = await getApplicationsByCreatorId(creator.id, token);
+      const sorted = apps.sort((a, b) => new Date(b.applied_at).getTime() - new Date(a.applied_at).getTime());
+      
+      // Brand Invitations
+      setInvitations(sorted.filter(a => a.status === 'invited'));
+      
+      // My Active Bids/Applications (creator initiated OR brand initiated but creator responded)
+      setMyApplications(sorted.filter(a => a.status !== 'accepted' && a.status !== 'completed' && a.status !== 'invited'));
+      
+      // Active Contracts (accepted/in-progress)
+      setActiveContracts(sorted.filter(a => a.status === 'accepted' || a.status === 'completed'));
+      
+    } catch (err) {
+      console.error("Failed to load collaborations", err);
+    } finally {
+      setIsLoading(false);
     }
-    loadData();
+  };
+
+  useEffect(() => {
+    if (isLoaded) loadData();
   }, [isLoaded, getToken]);
 
   const ApplicationCard = ({ app, isInvite = false }: { app: Application, isInvite?: boolean }) => {
@@ -160,7 +162,37 @@ export default function CreatorCollaborationsPage() {
               </div>
 
               <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <Button variant="secondary" size="sm" className="sm:ml-auto" asChild>
+                {isInvite && (
+                  <>
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      onClick={async () => {
+                        const token = await getToken();
+                        if (!token) return;
+                        await respondToInvitation(app.campaign_id, app.id, "accept", undefined, undefined, token);
+                        loadData();
+                      }}
+                    >
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      Accept
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={async () => {
+                        const token = await getToken();
+                        if (!token) return;
+                        await respondToInvitation(app.campaign_id, app.id, "decline", undefined, undefined, token);
+                        loadData();
+                      }}
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Decline
+                    </Button>
+                  </>
+                )}
+                <Button variant="secondary" size="sm" className={isInvite ? "" : "sm:ml-auto"} asChild>
                   <Link href={`/dashboard/creator/campaigns/${app.campaign_id}`}>
                     View Campaign details
                     <ArrowRight className="ml-2 h-4 w-4" />

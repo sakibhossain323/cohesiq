@@ -1,34 +1,74 @@
-import { getCreators } from "@/lib/api/creators";
-import { CreatorCard } from "@/components/creator/CreatorCard";
+"use client";
 
-export default async function BrandFindCreatorsPage() {
-  const creators = await getCreators();
+import { useState, useEffect } from "react";
+import { CreatorCard } from "@/components/creator/CreatorCard";
+import { CreatorFilters } from "@/components/creator/CreatorFilters";
+import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { getCreators } from "@/lib/api/creators";
+import { Search, Users } from "lucide-react";
+import type { Creator, CreatorFilters as CreatorFiltersType } from "@/lib/types";
+
+export default function BrandFindCreatorsPage() {
+  const [creators, setCreators] = useState<Creator[]>([]);
+  const [filters, setFilters] = useState<CreatorFiltersType>({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadCreators() {
+      setIsLoading(true);
+      const data = await getCreators(filters);
+      setCreators(data);
+      setIsLoading(false);
+    }
+    loadCreators();
+  }, [filters]);
 
   return (
-    <div className="flex flex-col gap-6 p-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Find Creators</h1>
-          <p className="text-muted-foreground">
-            Discover and partner with top creators for your next campaign.
+    <div className="flex flex-col bg-background min-h-full">
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Search className="h-8 w-8 text-primary" />
+            Find Creators
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            Browse our network of vetted creators to invite to your campaigns.
           </p>
         </div>
-      </div>
-      
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {creators.map(creator => (
-          <CreatorCard 
-            key={creator.id} 
-            creator={creator} 
-            basePath="/dashboard/brand/creators" 
-          />
-        ))}
-        {creators.length === 0 && (
-          <div className="col-span-full py-12 text-center text-muted-foreground">
-            No creators found matching your criteria.
+
+        <div className="flex flex-col gap-8 lg:flex-row">
+          {/* Filters Sidebar */}
+          <aside className="w-full shrink-0 lg:w-72">
+            <CreatorFilters filters={filters} onFiltersChange={setFilters} />
+          </aside>
+
+          {/* Creator Grid */}
+          <div className="flex-1">
+            {isLoading ? (
+              <LoadingSkeleton variant="card" count={6} />
+            ) : creators.length === 0 ? (
+              <EmptyState
+                icon={Users}
+                title="No creators found"
+                description="Try adjusting your filters to find more creators"
+              />
+            ) : (
+              <>
+                <p className="mb-4 text-sm text-muted-foreground">
+                  Showing {creators.length} creator{creators.length !== 1 ? "s" : ""}
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {creators.map(creator => (
+                    <CreatorCard key={creator.id} creator={creator} basePath="/dashboard/brand/creators" />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

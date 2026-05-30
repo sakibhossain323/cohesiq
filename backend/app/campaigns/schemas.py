@@ -46,6 +46,7 @@ class CampaignCreate(BaseModel):
     objectives: Optional[str] = None
     primary_niche_id: Optional[int] = None
     required_platforms: List[str] = ["youtube"]
+    visibility: str = "public"
     budget_per_creator_min: Optional[int] = None
     budget_per_creator_max: int
     creator_min_followers: int = 1000
@@ -71,6 +72,7 @@ class CampaignUpdate(BaseModel):
     objectives: Optional[str] = None
     primary_niche_id: Optional[int] = None
     required_platforms: Optional[List[str]] = None
+    visibility: Optional[str] = None
     budget_per_creator_min: Optional[int] = None
     budget_per_creator_max: Optional[int] = None
     creator_min_followers: Optional[int] = None
@@ -95,6 +97,7 @@ class CampaignOut(BaseModel):
     brand_id: uuid.UUID
     title: str
     description: str
+    visibility: str
     objectives: Optional[str] = None
     primary_niche_id: Optional[int] = None
     required_platforms: List[str]
@@ -137,6 +140,17 @@ class CampaignFilters(BaseModel):
 # ------------------------------------------------------------------ #
 
 class ApplicationCreate(BaseModel):
+    proposal_text: Optional[str] = None
+    proposed_rate: Optional[int] = None
+
+
+class ApplicationInviteCreate(BaseModel):
+    creator_id: uuid.UUID
+    brand_notes: Optional[str] = None
+
+
+class ApplicationRespondInvite(BaseModel):
+    action: str  # accept | decline
     proposal_text: Optional[str] = None
     proposed_rate: Optional[int] = None
 

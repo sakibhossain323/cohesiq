@@ -49,3 +49,12 @@ export async function getMyBrandProfile(token: string): Promise<Brand | null> {
     return null;
   }
 }
+
+export async function updateBrandProfile(id: string, data: any, token: string): Promise<Brand> {
+  const result = await fetchApi<any>(`/brands/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+    token,
+  });
+  return mapBrandResponse(result);
+}

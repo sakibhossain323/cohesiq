@@ -175,7 +175,11 @@ CREATE TYPE platform_type AS ENUM (
  );  
    
  CREATE TYPE campaign_status AS ENUM (  
-   'draft', 'matching', 'completed', 'cancelled'  
+   'draft', 'matching', 'completed', 'cancelled', 'archived'  
+ );  
+   
+ CREATE TYPE campaign_visibility AS ENUM (  
+   'public', 'private'  
  );  
    
  CREATE TYPE match_status AS ENUM (  
@@ -310,6 +314,7 @@ CREATE TABLE campaigns (
    target_max_followers INTEGER DEFAULT 10000000,  
    target_cities        TEXT[] DEFAULT '{}',  
    status               campaign_status DEFAULT 'draft',  
+   visibility           campaign_visibility DEFAULT 'public',  
    brief_embedding      vector(384),               -- Embedded at creation  
    created_at           TIMESTAMPTZ DEFAULT NOW(),  
    updated_at           TIMESTAMPTZ DEFAULT NOW()  

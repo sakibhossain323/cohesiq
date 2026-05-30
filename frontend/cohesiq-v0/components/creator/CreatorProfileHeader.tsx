@@ -12,9 +12,10 @@ import { useRouter } from "next/navigation";
 
 interface CreatorProfileHeaderProps {
   creator: Creator;
+  actionSlot?: React.ReactNode;
 }
 
-export function CreatorProfileHeader({ creator }: CreatorProfileHeaderProps) {
+export function CreatorProfileHeader({ creator, actionSlot }: CreatorProfileHeaderProps) {
   const { isSignedIn } = useAuth();
   const router = useRouter();
 
@@ -82,10 +83,12 @@ export function CreatorProfileHeader({ creator }: CreatorProfileHeaderProps) {
               </div>
             </div>
 
-            <Button className="shrink-0" onClick={handleContact}>
-              <MessageCircle className="mr-2 h-4 w-4" />
-              Contact
-            </Button>
+            {actionSlot || (
+              <Button className="shrink-0" onClick={handleContact}>
+                <MessageCircle className="mr-2 h-4 w-4" />
+                Contact
+              </Button>
+            )}
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">

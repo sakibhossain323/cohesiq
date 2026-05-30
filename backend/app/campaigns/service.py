@@ -24,6 +24,8 @@ from app.campaigns.schemas import (
     CampaignStatusUpdate,
     CampaignUpdate,
     ReviewCreate,
+    ApplicationInviteCreate,
+    ApplicationRespondInvite,
 )
 
 
@@ -144,8 +146,10 @@ async def create_campaign(
         ))
 
     await db.commit()
-    await db.refresh(campaign)
-    return campaign
+    refreshed_campaign = await get_campaign(db, campaign.id)
+    if not refreshed_campaign:
+        return campaign
+    return refreshed_campaign
 
 
 async def update_campaign(
@@ -154,20 +158,24 @@ async def update_campaign(
     for field, value in data.model_dump(exclude_none=True).items():
         setattr(campaign, field, value)
     await db.commit()
-    await db.refresh(campaign)
-    return campaign
+    refreshed_campaign = await get_campaign(db, campaign.id)
+    if not refreshed_campaign:
+        return campaign
+    return refreshed_campaign
 
 
 async def update_campaign_status(
     db: AsyncSession, campaign: Campaign, data: CampaignStatusUpdate
 ) -> Campaign:
-    allowed = {"active", "cancelled", "in_progress", "completed"}
+    allowed = {"active", "cancelled", "in_progress", "completed", "archived"}
     if data.status not in allowed:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {allowed}")
     campaign.status = data.status
     await db.commit()
-    await db.refresh(campaign)
-    return campaign
+    refreshed_campaign = await get_campaign(db, campaign.id)
+    if not refreshed_campaign:
+        return campaign
+    return refreshed_campaign
 
 
 # ------------------------------------------------------------------ #
@@ -285,6 +293,72 @@ async def update_application_status(
     await db.refresh(app)
     return app
 
+
+async def invite_creator(
+    db: AsyncSession,
+    campaign_id: uuid.UUID,
+    brand_id: uuid.UUID,
+    data: ApplicationInviteCreate,
+) -> CampaignApplication:
+    campaign = await get_campaign(db, campaign_id)
+    if not campaign or campaign.brand_id != brand_id:
+        raise HTTPException(status_code=403, detail="Not your campaign")
+
+    existing = await db.execute(
+        select(CampaignApplication).where(
+            CampaignApplication.campaign_id == campaign_id,
+            CampaignApplication.creator_id == data.creator_id,
+        )
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="Application or invite already exists")
+
+    app = CampaignApplication(
+        campaign_id=campaign_id,
+        creator_id=data.creator_id,
+        initiated_by="brand",
+        status="invited",
+        brand_notes=data.brand_notes,
+    )
+    db.add(app)
+    await db.commit()
+    await db.refresh(app)
+    return app
+
+
+async def respond_invite(
+    db: AsyncSession,
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    creator_id: uuid.UUID,
+    data: ApplicationRespondInvite,
+) -> CampaignApplication:
+    result = await db.execute(
+        select(CampaignApplication).where(
+            CampaignApplication.id == application_id,
+            CampaignApplication.campaign_id == campaign_id,
+        )
+    )
+    app = result.scalar_one_or_none()
+    if not app or app.creator_id != creator_id:
+        raise HTTPException(status_code=404, detail="Invite not found")
+
+    if app.status != "invited":
+        raise HTTPException(status_code=400, detail="Application is not in invited state")
+
+    if data.action == "decline":
+        app.status = "declined"
+    elif data.action == "accept":
+        app.status = "pending"
+        app.proposal_text = data.proposal_text
+        app.proposed_rate = data.proposed_rate
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action")
+
+    app.responded_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(app)
+    return app
 
 # ------------------------------------------------------------------ #
 # Reviews                                                              #

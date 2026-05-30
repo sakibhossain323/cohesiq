@@ -1,6 +1,6 @@
 export type PlatformType = "youtube" | "instagram" | "facebook" | "tiktok" | "twitter_x" | "linkedin" | "snapchat" | "other";
-export type CampaignStatus = "draft" | "active" | "in_progress" | "completed" | "cancelled";
-export type ApplicationStatus = "pending" | "shortlisted" | "accepted" | "rejected" | "withdrawn" | "completed";
+export type CampaignStatus = "draft" | "active" | "in_progress" | "completed" | "cancelled" | "archived";
+export type ApplicationStatus = "invited" | "declined" | "pending" | "shortlisted" | "accepted" | "rejected" | "withdrawn" | "completed";
 export type DeliverableType = "dedicated_video" | "integrated_mention" | "short_video" | "photo_post" | "story" | "live_stream" | "blog_post" | "other";
 
 export interface CreatorSocialProfile {
@@ -74,25 +74,21 @@ export interface Campaign {
   brand_id: string;
   brand: Pick<Brand, "id" | "brand_name" | "logo_url" | "is_verified">;
   title: string;
-  name?: string;
   description: string;
+  primary_niche_id?: number;
   primary_niche: string;
-  required_niche?: string;
-  required_niches?: string[];
   required_platforms?: PlatformType[];
-  platforms?: PlatformType[];
   budget_per_creator_min?: number;
   budget_per_creator_max: number;
   creator_min_followers?: number;
-  min_followers?: number;
-  engagement_rate_min?: number;
+  creator_max_followers?: number;
+  number_of_creators?: number;
+  visibility?: string;
   application_deadline?: string;
-  start_date?: string;
+  content_deadline?: string;
   status: CampaignStatus;
   application_count: number;
-  applications_count?: number;
-  spots_available?: number;
-  deliverables?: CampaignDeliverable[];
+  created_at?: string;
 }
 
 export interface CampaignDeliverable {

@@ -18,6 +18,8 @@ from app.campaigns.schemas import (
     ReviewCreate,
     ReviewOut,
     AIMatchScoreOut,
+    ApplicationInviteCreate,
+    ApplicationRespondInvite,
 )
 from app.common.dependencies import get_current_user, get_db
 
@@ -166,6 +168,38 @@ async def update_application_status(
     if not brand:
         raise HTTPException(status_code=403, detail="Only brands can update application status")
     return await service.update_application_status(db, campaign_id, application_id, data, brand.id)
+
+
+@router.post("/{campaign_id}/invite", response_model=ApplicationOut, status_code=201)
+async def invite_creator_to_campaign(
+    campaign_id: uuid.UUID,
+    data: ApplicationInviteCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+    brand = await get_brand_by_user_id(db, current_user.id)
+    if not brand:
+        raise HTTPException(status_code=403, detail="Only brands can invite creators")
+    return await service.invite_creator(db, campaign_id, brand.id, data)
+
+
+@router.patch(
+    "/{campaign_id}/applications/{application_id}/respond-invite",
+    response_model=ApplicationOut,
+)
+async def respond_to_invitation(
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    data: ApplicationRespondInvite,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    from app.creators.service import get_creator_by_user_id  # noqa: PLC0415
+    creator = await get_creator_by_user_id(db, current_user.id)
+    if not creator:
+        raise HTTPException(status_code=403, detail="Only creators can respond to invites")
+    return await service.respond_invite(db, campaign_id, application_id, creator.id, data)
 
 
 # ------------------------------------------------------------------ #
