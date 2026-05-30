@@ -2,9 +2,20 @@ import type { Creator, CreatorFilters } from "@/lib/types";
 import { fetchApi } from "./client";
 
 const NICHE_MAP: Record<number, string> = {
-  1: "technology", 2: "fashion", 3: "food", 4: "travel", 5: "lifestyle",
-  6: "finance", 7: "gaming", 8: "education", 9: "health", 10: "beauty",
-  11: "fitness", 12: "entertainment", 13: "sports"
+  1: "technology",
+  2: "gaming",
+  3: "fashion",
+  4: "beauty",
+  5: "food",
+  6: "travel",
+  7: "lifestyle",
+  8: "education",
+  9: "finance",
+  10: "fitness",
+  11: "parenting",
+  12: "entertainment",
+  13: "news",
+  14: "other",
 };
 
 function mapCreatorResponse(c: any): Creator {

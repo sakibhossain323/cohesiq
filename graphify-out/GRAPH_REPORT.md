@@ -1,16 +1,16 @@
 # Graph Report - cohesiq  (2026-05-30)
 
 ## Corpus Check
-- 211 files · ~107,840 words
+- 213 files · ~109,107 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1659 nodes · 4887 edges · 113 communities (101 shown, 12 thin omitted)
-- Extraction: 75% EXTRACTED · 25% INFERRED · 0% AMBIGUOUS · INFERRED: 1238 edges (avg confidence: 0.51)
+- 1666 nodes · 4901 edges · 117 communities (107 shown, 10 thin omitted)
+- Extraction: 75% EXTRACTED · 25% INFERRED · 0% AMBIGUOUS · INFERRED: 1244 edges (avg confidence: 0.51)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `04f2da60`
+- Built from commit: `ab2de331`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -90,13 +90,17 @@
 - [[_COMMUNITY_Community 100|Community 100]]
 - [[_COMMUNITY_Community 105|Community 105]]
 - [[_COMMUNITY_Community 107|Community 107]]
+- [[_COMMUNITY_Community 110|Community 110]]
 - [[_COMMUNITY_Community 111|Community 111]]
 - [[_COMMUNITY_Community 112|Community 112]]
+- [[_COMMUNITY_Community 115|Community 115]]
+- [[_COMMUNITY_Community 116|Community 116]]
+- [[_COMMUNITY_Community 117|Community 117]]
 - [[_COMMUNITY_Community 119|Community 119]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `cn()` - 287 edges
-2. `CreatorProfile` - 75 edges
+2. `CreatorProfile` - 80 edges
 3. `get_db` - 64 edges
 4. `CampaignCreate` - 36 edges
 5. `CampaignUpdate` - 36 edges
@@ -113,20 +117,20 @@
   backend/app/brands/router.py → backend/app/common/dependencies.py
 - `BrandProfileUpdate` --uses--> `CampaignOut`  [INFERRED]
   backend/app/brands/router.py → backend/app/campaigns/schemas.py
-- `int` --uses--> `get_db`  [INFERRED]
-  backend/app/campaigns/router.py → backend/app/common/dependencies.py
 - `UUID` --uses--> `get_db`  [INFERRED]
   backend/app/main.py → backend/app/common/dependencies.py
+- `AsyncSession` --uses--> `User`  [INFERRED]
+  backend/app/main.py → backend/app/auth/models.py
 
-## Communities (113 total, 12 thin omitted)
+## Communities (117 total, 10 thin omitted)
 
 ### Community 0 - "FastAPI Models & Authentication"
-Cohesion: 0.12
-Nodes (111): RegisterRequest, get_db, AsyncSession, bool, CollabHistoryCreate, CreatorProfileUpdate, Depends, get_current_user (+103 more)
+Cohesion: 0.11
+Nodes (110): RegisterRequest, AsyncSession, bool, CollabHistoryCreate, CreatorProfileUpdate, Depends, get_current_user, get_db (+102 more)
 
 ### Community 1 - "API Endpoint Routers"
-Cohesion: 0.06
-Nodes (72): brand_reviews(), creator_applications(), creator_reviews(), Creator views their own application history., Public reviews for a creator., Public reviews for a brand., User, login() (+64 more)
+Cohesion: 0.25
+Nodes (22): login(), me(), onboarding_sync(), Register a new creator or brand account. Returns a JWT on success., Authenticate and return a JWT access token., Return the currently authenticated user's info., Sync onboarding data and create necessary profiles., register() (+14 more)
 
 ### Community 2 - "Base UI Components"
 Cohesion: 0.05
@@ -141,8 +145,8 @@ Cohesion: 0.04
 Nodes (51): dependencies, autoprefixer, class-variance-authority, @clerk/nextjs, clsx, cmdk, date-fns, embla-carousel-react (+43 more)
 
 ### Community 5 - "B2B SaaS Project Scope Docs"
-Cohesion: 0.15
-Nodes (26): getBrandById(), getMyBrandProfile(), mapBrandResponse(), NICHE_MAP, updateBrandProfile(), BrandCard(), BrandCardProps, ApplyModal() (+18 more)
+Cohesion: 0.12
+Nodes (35): BrandCard(), BrandCardProps, ApplyModal(), CampaignCard(), CampaignDetailView(), DeliverableTable(), SocialProfileCard(), SocialProfileCardProps (+27 more)
 
 ### Community 6 - "Integrations Feasibility Research"
 Cohesion: 0.04
@@ -161,12 +165,12 @@ Cohesion: 0.08
 Nodes (23): AI Components — What Must Be Implemented and Explainable, Challenge Definition, Common Mistakes to Avoid, Component 1: Graph-Based Matching (Neo4j), Component 2: LLM Match Rationale (Gemini 2.5 Flash — free tier), Component 3: Content Niche Classification (Gemini), Component 4: Engagement Authenticity Scoring (Rule-Based ML), Demo Seed Data Requirements (+15 more)
 
 ### Community 10 - "Frontend API Queries"
-Cohesion: 0.13
-Nodes (16): ButtonGroup(), ButtonGroupSeparator(), ButtonGroupText(), buttonGroupVariants, Field(), FieldContent(), FieldDescription(), FieldError() (+8 more)
+Cohesion: 0.25
+Nodes (13): getCreatorById(), getPublicReviews(), CreatorDetailView(), CreatorDetailViewProps, CreatorProfileHeader(), RateCardTable(), CreatorProfilePage(), CreatorProfilePageProps (+5 more)
 
 ### Community 11 - "Application Status Configs"
 Cohesion: 0.06
-Nodes (59): completeOnboarding(), NICHE_MAP, InviteModal(), InviteModalProps, ApplyModalProps, CampaignFiltersComponentProps, niches, platforms (+51 more)
+Nodes (54): completeOnboarding(), NICHE_MAP, InviteModal(), InviteModalProps, ApplyModalProps, niches, platforms, statuses (+46 more)
 
 ### Community 12 - "HTTP Get Utilities"
 Cohesion: 0.17
@@ -177,20 +181,20 @@ Cohesion: 0.21
 Nodes (12): getApplicationsByCreatorId(), getSuggestedCampaigns(), getMyCreatorProfile(), CreatorDashboardPage(), PrivateCampaignDetailPageProps, MOCK_CONVERSATIONS, MOCK_MESSAGES, PrivateCampaignDetailPage() (+4 more)
 
 ### Community 14 - "Backend Pydantic Schemas"
-Cohesion: 0.13
-Nodes (106): AIMatchScore, ApplicationCreate, ApplicationInviteCreate, ApplicationRespondInvite, ApplicationStatusUpdate, AsyncSession, CampaignCreate, CampaignStatusUpdate (+98 more)
+Cohesion: 0.11
+Nodes (117): AIMatchScore, int, ApplicationCreate, ApplicationInviteCreate, ApplicationRespondInvite, ApplicationStatusUpdate, AsyncSession, CampaignCreate (+109 more)
 
 ### Community 15 - "HTTP Post Utilities"
 Cohesion: 0.17
 Nodes (29): description, post, post, post, post, post, post, post (+21 more)
 
 ### Community 16 - "Authentication Schemas"
-Cohesion: 0.24
-Nodes (13): getCreatorById(), mapCreatorResponse(), getPublicReviews(), CreatorDetailView(), CreatorDetailViewProps, CreatorProfileHeader(), RateCardTable(), CreatorProfilePage() (+5 more)
+Cohesion: 0.09
+Nodes (38): getApplicationsByBrandId(), getApplicationsByCampaignId(), mapApplicationResponse(), submitApplication(), SubmitApplicationPayload, updateApplicationStatus(), withdrawApplication(), getBrandById() (+30 more)
 
 ### Community 17 - "Auth & Security Services"
-Cohesion: 0.17
-Nodes (24): authenticate_user(), create_access_token(), get_user_by_email(), get_user_by_id(), hash_password(), Create a User row and the corresponding profile row.     Returns (user, access_t, register_user(), verify_password() (+16 more)
+Cohesion: 0.33
+Nodes (13): authenticate_user(), create_access_token(), get_user_by_email(), get_user_by_id(), hash_password(), Create a User row and the corresponding profile row.     Returns (user, access_t, register_user(), verify_password() (+5 more)
 
 ### Community 18 - "Meta Compliance & API Audits"
 Cohesion: 0.08
@@ -201,16 +205,16 @@ Cohesion: 0.12
 Nodes (11): DropdownMenu(), DropdownMenuCheckboxItem(), DropdownMenuContent(), DropdownMenuItem(), DropdownMenuLabel(), DropdownMenuRadioItem(), DropdownMenuSeparator(), DropdownMenuShortcut() (+3 more)
 
 ### Community 20 - "Modals & Action Dialogs"
-Cohesion: 0.09
-Nodes (34): getApplicationsByBrandId(), getApplicationsByCampaignId(), mapApplicationResponse(), submitApplication(), SubmitApplicationPayload, updateApplicationStatus(), withdrawApplication(), getBrands() (+26 more)
+Cohesion: 0.20
+Nodes (8): Command(), CommandDialog(), CommandGroup(), CommandInput(), CommandItem(), CommandList(), CommandSeparator(), CommandShortcut()
 
 ### Community 21 - "Alert Dialog UI Primitives"
 Cohesion: 0.09
 Nodes (19): AlertDialog(), AlertDialogAction(), AlertDialogCancel(), AlertDialogContent(), AlertDialogDescription(), AlertDialogFooter(), AlertDialogHeader(), AlertDialogOverlay() (+11 more)
 
 ### Community 22 - "Rates & Deliverables Tables"
-Cohesion: 0.19
-Nodes (18): resetOnboarding(), getCampaignsByBrandId(), CampaignCard(), deliverableLabels, DeliverableTableProps, deliverableLabels, RateCardTableProps, CampaignDeliverable (+10 more)
+Cohesion: 0.14
+Nodes (23): resetOnboarding(), getCampaignsByBrandId(), ApplicationStatusBadge(), ApplicationStatusBadgeProps, statusConfig, CampaignDetailViewProps, deliverableLabels, DeliverableTableProps (+15 more)
 
 ### Community 23 - "TypeScript Compiler Config"
 Cohesion: 0.10
@@ -233,16 +237,16 @@ Cohesion: 0.25
 Nodes (16): description, delete, delete, delete, delete, operationId, parameters, responses (+8 more)
 
 ### Community 28 - "Social Profiles UI Components"
-Cohesion: 0.10
-Nodes (23): getCampaigns(), getCreators(), getFeaturedCreators(), NICHE_MAP, CampaignFilters(), CreatorDiscoverCampaignsPage(), CreatorCard(), CreatorCardProps (+15 more)
+Cohesion: 0.08
+Nodes (30): getCampaigns(), getCreators(), getFeaturedCreators(), mapCreatorResponse(), NICHE_MAP, updateSocialProfile(), CampaignCardProps, CampaignFilters() (+22 more)
 
 ### Community 29 - "Context Menu UI Components"
-Cohesion: 0.25
-Nodes (18): AsyncSession, BrandProfileUpdate, Depends, get_current_user, get_db, int, User, UUID (+10 more)
+Cohesion: 0.27
+Nodes (17): AsyncSession, BrandProfileUpdate, Depends, get_current_user, get_db, User, UUID, BrandProfileUpdate (+9 more)
 
 ### Community 30 - "Dropdown Menu UI Components"
-Cohesion: 0.20
-Nodes (8): Command(), CommandDialog(), CommandGroup(), CommandInput(), CommandItem(), CommandList(), CommandSeparator(), CommandShortcut()
+Cohesion: 0.40
+Nodes (3): AccordionContent(), AccordionItem(), AccordionTrigger()
 
 ### Community 31 - "HTTP Put Utilities"
 Cohesion: 0.32
@@ -253,8 +257,8 @@ Cohesion: 0.13
 Nodes (15): content, description, content, content, schema, patch, application/json, operationId (+7 more)
 
 ### Community 33 - "Database Schema Design Specs"
-Cohesion: 0.40
-Nodes (3): AccordionContent(), AccordionItem(), AccordionTrigger()
+Cohesion: 0.16
+Nodes (17): AsyncSession, Depends, get_db, str, bytes, Request, clerk_webhook(), _handle_user_created() (+9 more)
 
 ### Community 34 - "Market & Competitive Analysis"
 Cohesion: 0.14
@@ -265,12 +269,12 @@ Cohesion: 0.19
 Nodes (13): Carousel(), CarouselApi, CarouselContent(), CarouselContext, CarouselContextProps, CarouselItem(), CarouselNext(), CarouselOptions (+5 more)
 
 ### Community 36 - "Form Input Controls"
-Cohesion: 0.18
-Nodes (12): Item(), ItemActions(), ItemContent(), ItemDescription(), ItemFooter(), ItemGroup(), ItemHeader(), ItemMedia() (+4 more)
+Cohesion: 0.13
+Nodes (17): ButtonGroup(), ButtonGroupSeparator(), ButtonGroupText(), buttonGroupVariants, Item(), ItemActions(), ItemContent(), ItemDescription() (+9 more)
 
 ### Community 37 - "Community 37"
-Cohesion: 0.40
-Nodes (3): InputOTP(), InputOTPGroup(), InputOTPSlot()
+Cohesion: 0.19
+Nodes (14): brand_reviews(), creator_applications(), creator_reviews(), Creator views their own application history., Public reviews for a creator., Public reviews for a brand., AsyncSession, Depends (+6 more)
 
 ### Community 38 - "Chart UI Components"
 Cohesion: 0.22
@@ -285,8 +289,8 @@ Cohesion: 0.20
 Nodes (9): 11. Grading Criteria Alignment, 12. Immediate Next Steps (Pre-Code), 6. Regulatory & Compliance Framework, 9. The Upwork Analogy — Revised Assessment, Appendix — Verified Key Numbers for Pitch Deck, Changelog From Previous Version, Influencer Matching Engine — Feasibility, Competitive & Strategic Analysis, Where It Breaks (+1 more)
 
 ### Community 41 - "Future Roadmap Specs"
-Cohesion: 0.19
-Nodes (12): SocialProfileCard(), SocialProfileCardProps, CreatorSocialProfile, formatFollowerCount(), CampaignMatchesPage(), FollowerCount(), FollowerCountProps, getPlatformLabel() (+4 more)
+Cohesion: 0.40
+Nodes (3): InputOTP(), InputOTPGroup(), InputOTPSlot()
 
 ### Community 43 - "Tailwind & Styling Config"
 Cohesion: 0.22
@@ -301,8 +305,8 @@ Cohesion: 0.25
 Nodes (8): 8. Critical Blind Spots (Updated & Expanded), 🔴 Blind Spot #1 — HypeScout Is the Real Opponent, 🔴 Blind Spot #2 — Instagram Onboarding Drop-Off Will Be High, 🔴 Blind Spot #3 — Meta App Review Is a Fixed ~1-Month Blocker, 🔴 Blind Spot #4 — The KOS Shift Is Coming and Must Be Architected Now, 🔴 Blind Spot #5 — TTCM and Instagram Creator Marketplace Are Free Competitors, 🔴 Blind Spot #6 — Payment Batching Is Non-Trivial Infrastructure, 🟡 Blind Spot #7 — Cold Start Partially Solved, But Facebook Supply Remains Manual
 
 ### Community 47 - "Community 47"
-Cohesion: 0.38
-Nodes (13): float, int, str, compute_match_score(), get_tier(), MatchScores, Pure function. All inputs are pre-fetched primitives.     No database calls. Ful, score_budget() (+5 more)
+Cohesion: 0.28
+Nodes (17): float, int, str, compute_match_score(), get_tier(), MatchScores, Pure function. All inputs are pre-fetched primitives.     No database calls. Ful, Pure function. All inputs are pre-fetched primitives.     No database calls. Ful (+9 more)
 
 ### Community 49 - "Alembic Database Migrations"
 Cohesion: 0.33
@@ -356,9 +360,17 @@ Nodes (4): 7.1 Commission Structure — Updated to Variable Model, 7.2 Revenue S
 Cohesion: 0.50
 Nodes (4): info, description, title, version
 
+### Community 64 - "Community 64"
+Cohesion: 0.29
+Nodes (11): AsyncSession, BrandProfileUpdate, int, str, UUID, BrandProfile, create_brand_profile(), get_brand() (+3 more)
+
 ### Community 65 - "Community 65"
 Cohesion: 0.23
 Nodes (10): FormControl(), FormDescription(), FormFieldContext, FormFieldContextValue, FormItem(), FormItemContext, FormItemContextValue, FormLabel() (+2 more)
+
+### Community 74 - "Community 74"
+Cohesion: 0.18
+Nodes (6): DrawerContent(), DrawerDescription(), DrawerFooter(), DrawerHeader(), DrawerOverlay(), DrawerTitle()
 
 ### Community 98 - "Community 98"
 Cohesion: 0.33
@@ -369,8 +381,8 @@ Cohesion: 0.28
 Nodes (8): InputGroup(), InputGroupAddon(), inputGroupAddonVariants, InputGroupButton(), inputGroupButtonVariants, InputGroupInput(), InputGroupText(), InputGroupTextarea()
 
 ### Community 100 - "Community 100"
-Cohesion: 0.20
-Nodes (9): code:bash (git clone <repository_url>), code:bash (docker compose up --build), Cohesiq, Data Seeding, Documentation, Prerequisites, Project Structure, Quick Start (+1 more)
+Cohesion: 0.25
+Nodes (7): Cohesiq, Data Seeding, Documentation, Prerequisites, Project Structure, Quick Start, Tech Stack
 
 ### Community 105 - "Community 105"
 Cohesion: 0.25
@@ -380,29 +392,45 @@ Nodes (7): AI Agent Instructions for Cohesiq, Core Architecture & Stack Conventi
 Cohesion: 0.50
 Nodes (3): config, isOnboardingRoute, isProtectedRoute
 
+### Community 110 - "Community 110"
+Cohesion: 0.33
+Nodes (8): User, AsyncSession, Depends, bearer_scheme, get_current_user(), get_jwks(), Decode the JWT Bearer token and return the User ORM object.     Supports both Cl, HTTPAuthorizationCredentials
+
 ### Community 112 - "Community 112"
-Cohesion: 0.16
-Nodes (20): ApplicationStatusBadge(), ApplicationStatusBadgeProps, statusConfig, CampaignDetailView(), CampaignDetailViewProps, CampaignStatusBadge(), STATUS_CONFIG, ApplicationCard() (+12 more)
+Cohesion: 0.21
+Nodes (13): STATUS_CONFIG, Button(), Card(), CardContent(), CardDescription(), CardFooter(), CardHeader(), CardTitle() (+5 more)
+
+### Community 115 - "Community 115"
+Cohesion: 0.29
+Nodes (7): Empty(), EmptyContent(), EmptyDescription(), EmptyHeader(), EmptyMedia(), emptyMediaVariants, EmptyTitle()
+
+### Community 116 - "Community 116"
+Cohesion: 0.38
+Nodes (3): Footer(), Navbar(), navLinks
+
+### Community 117 - "Community 117"
+Cohesion: 0.83
+Nodes (3): insert_brand(), insert_creator(), seed_db()
 
 ## Knowledge Gaps
-- **432 isolated node(s):** `Config`, `AsyncSession`, `str`, `BrandProfileUpdate`, `int` (+427 more)
+- **431 isolated node(s):** `Config`, `AsyncSession`, `str`, `BrandProfileUpdate`, `int` (+426 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **12 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `cn()` connect `Base UI Components` to `Dashboard Layout & Navigation`, `B2B SaaS Project Scope Docs`, `State Actions & Typography`, `Frontend API Queries`, `Application Status Configs`, `Authentication Schemas`, `Community 19`, `Alert Dialog UI Primitives`, `Rates & Deliverables Tables`, `Community 24`, `Social Profiles UI Components`, `Dropdown Menu UI Components`, `Database Schema Design Specs`, `Carousel UI Components`, `Form Input Controls`, `Community 37`, `Chart UI Components`, `Future Roadmap Specs`, `Community 45`, `Toggle Group UI Components`, `Community 60`, `Community 64`, `Community 65`, `Community 74`, `Community 99`, `Community 112`?**
-  _High betweenness centrality (0.071) - this node is a cross-community bridge._
-- **Why does `get_db` connect `FastAPI Models & Authentication` to `API Endpoint Routers`, `Context Menu UI Components`, `Backend Pydantic Schemas`?**
-  _High betweenness centrality (0.015) - this node is a cross-community bridge._
-- **Why does `CreatorProfile` connect `FastAPI Models & Authentication` to `API Endpoint Routers`, `Backend Pydantic Schemas`, `Auth & Security Services`?**
+- **Why does `cn()` connect `Base UI Components` to `Dashboard Layout & Navigation`, `B2B SaaS Project Scope Docs`, `State Actions & Typography`, `Frontend API Queries`, `Application Status Configs`, `Community 19`, `Modals & Action Dialogs`, `Alert Dialog UI Primitives`, `Rates & Deliverables Tables`, `Community 24`, `Social Profiles UI Components`, `Dropdown Menu UI Components`, `Carousel UI Components`, `Form Input Controls`, `Chart UI Components`, `Future Roadmap Specs`, `Community 45`, `Toggle Group UI Components`, `Community 60`, `Community 65`, `Community 74`, `Community 99`, `Community 112`, `Community 115`, `Community 116`?**
+  _High betweenness centrality (0.068) - this node is a cross-community bridge._
+- **Why does `CreatorProfile` connect `FastAPI Models & Authentication` to `API Endpoint Routers`, `Backend Pydantic Schemas`, `Database Schema Design Specs`?**
   _High betweenness centrality (0.014) - this node is a cross-community bridge._
-- **Are the 73 inferred relationships involving `CreatorProfile` (e.g. with `AIMatchScore` and `AsyncSession`) actually correct?**
-  _`CreatorProfile` has 73 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `get_db` connect `Backend Pydantic Schemas` to `FastAPI Models & Authentication`, `API Endpoint Routers`, `Database Schema Design Specs`, `Community 37`, `Community 110`, `Context Menu UI Components`?**
+  _High betweenness centrality (0.013) - this node is a cross-community bridge._
+- **Are the 78 inferred relationships involving `CreatorProfile` (e.g. with `AIMatchScore` and `AsyncSession`) actually correct?**
+  _`CreatorProfile` has 78 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 63 inferred relationships involving `get_db` (e.g. with `AsyncSession` and `Depends`) actually correct?**
   _`get_db` has 63 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `Config`, `Creator views their own application history.`, `Public reviews for a creator.` to the rest of the system?**
-  _465 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _467 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `FastAPI Models & Authentication` be split into smaller, more focused modules?**
-  _Cohesion score 0.11679160419790105 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.11409295352323838 - nodes in this community are weakly interconnected._

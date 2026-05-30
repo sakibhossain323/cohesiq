@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface NicheBadgeProps {
-  niche: string;
+  niche?: string | null;
   variant?: "default" | "outline";
   size?: "sm" | "md";
 }
@@ -21,7 +21,8 @@ const nicheColors: Record<string, string> = {
 };
 
 export function NicheBadge({ niche, variant = "default", size = "md" }: NicheBadgeProps) {
-  const colorClass = nicheColors[niche.toLowerCase()] ?? nicheColors.other;
+  const safeNiche = niche || "other";
+  const colorClass = nicheColors[safeNiche.toLowerCase()] ?? nicheColors.other;
   
   return (
     <Badge
@@ -32,7 +33,7 @@ export function NicheBadge({ niche, variant = "default", size = "md" }: NicheBad
         size === "sm" && "px-2 py-0.5 text-xs"
       )}
     >
-      {niche}
+      {niche || "Unknown"}
     </Badge>
   );
 }

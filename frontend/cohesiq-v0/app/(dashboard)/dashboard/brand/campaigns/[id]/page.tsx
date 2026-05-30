@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { getCampaignById, updateCampaignStatus } from "@/lib/api/campaigns";
+import { getCampaignById, getCampaignMatches, runCampaignMatching, updateCampaignStatus } from "@/lib/api/campaigns";
 import { getApplicationsByCampaignId } from "@/lib/api/applications";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,12 +12,12 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ApplicationStatusBadge } from "@/components/application/ApplicationStatusBadge";
 import { CampaignStatusBadge } from "@/components/campaign/CampaignStatusBadge";
-import { ArrowLeft, Users, Sparkles, Settings, Loader2, CheckCircle2, XCircle, Edit, Archive, PlayCircle } from "lucide-react";
+import { ArrowLeft, Users, Sparkles, Settings, Loader2, CheckCircle2, XCircle, Edit, Archive, PlayCircle, Handshake, Send, FileSignature } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import Link from "next/link";
 import { formatBDT, formatDate } from "@/lib/utils";
-import type { Campaign, Application, ApplicationStatus } from "@/lib/types";
+import type { Campaign, Application, ApplicationStatus, AIMatchScore } from "@/lib/types";
 
 export default function BrandCampaignDetailPage() {
   const params = useParams();
@@ -26,7 +26,9 @@ export default function BrandCampaignDetailPage() {
   
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [matches, setMatches] = useState<AIMatchScore[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMatchesLoading, setIsMatchesLoading] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<"active" | "cancelled" | "completed" | "archived" | null>(null);
@@ -76,8 +78,12 @@ export default function BrandCampaignDetailPage() {
         const campaignData = await getCampaignById(id);
         if (campaignData) {
           setCampaign(campaignData);
-          const apps = await getApplicationsByCampaignId(id, token);
+          const [apps, matchData] = await Promise.all([
+            getApplicationsByCampaignId(id, token),
+            getCampaignMatches(id, token),
+          ]);
           setApplications(apps);
+          setMatches(matchData);
         }
       } catch (err) {
         console.error("Failed to load campaign details:", err);
@@ -174,119 +180,224 @@ export default function BrandCampaignDetailPage() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="applications" className="w-full">
+        <Tabs defaultValue="collaborations" className="w-full">
           <TabsList className="mb-8 bg-muted/50 w-full sm:w-auto p-1 h-auto grid grid-cols-3 sm:flex">
-            <TabsTrigger value="applications" className="py-2 px-6 flex gap-2">
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Applications</span>
+            <TabsTrigger value="collaborations" className="py-2 px-6 flex gap-2">
+              <Handshake className="h-4 w-4" />
+              <span className="hidden sm:inline">Collaborations</span>
               <Badge variant="secondary" className="bg-primary/10 text-primary px-1.5 py-0 h-5">
                 {applications.length}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="matches" className="py-2 px-6 flex gap-2">
+            <TabsTrigger value="recommendations" className="py-2 px-6 flex gap-2">
               <Sparkles className="h-4 w-4 text-purple-500" />
-              <span className="hidden sm:inline">AI Matches</span>
+              <span className="hidden sm:inline">Recommendations</span>
+              <Badge variant="secondary" className="bg-primary/10 text-primary px-1.5 py-0 h-5">
+                {matches.length}
+              </Badge>
             </TabsTrigger>
             <TabsTrigger value="details" className="py-2 px-6">
               Details
             </TabsTrigger>
           </TabsList>
 
-          {/* CRM View */}
-          <TabsContent value="applications" className="m-0">
-            {applications.length === 0 ? (
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center p-16 text-center text-muted-foreground">
-                  <Users className="mb-4 h-12 w-12 opacity-20" />
-                  <p className="font-medium text-foreground text-lg mb-1">No applications yet</p>
-                  <p className="text-sm max-w-sm mb-6">Creators will appear here once they apply to your campaign.</p>
-                  <Button variant="outline" onClick={() => document.querySelector<HTMLButtonElement>('[value="matches"]')?.click()}>
-                    <Sparkles className="mr-2 h-4 w-4 text-purple-500" />
-                    Find AI Matches
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 items-start">
-                {/* Invited Column */}
-                <div className="bg-muted/30 rounded-xl p-4 border border-border">
-                  <div className="flex items-center justify-between mb-4 px-1">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-purple-400"></span>
-                      Invited
-                    </h3>
-                    <Badge variant="secondary">{applications.filter(a => a.status === 'invited').length}</Badge>
-                  </div>
-                  <div className="space-y-3">
-                    {applications.filter(a => a.status === 'invited').map(app => (
-                      <ApplicationCard key={app.id} app={app} />
-                    ))}
-                  </div>
-                </div>
+          <TabsContent value="collaborations" className="m-0 space-y-6">
+            <p className="text-sm text-muted-foreground">
+              Invitations, contracts, and applications in one place
+            </p>
+            <Tabs defaultValue="invitations" className="w-full">
+              <TabsList className="mb-6 w-full sm:w-auto h-auto p-1 bg-muted/50">
+                <TabsTrigger value="invitations" className="py-2 px-4 flex gap-2">
+                  Sent Invitations
+                  <Badge variant="secondary" className="px-1.5 py-0 h-5">0</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="active" className="py-2 px-4 flex gap-2">
+                  Active Contracts
+                  <Badge variant="secondary" className="px-1.5 py-0 h-5">0</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="applications" className="py-2 px-4 flex gap-2">
+                  Applications
+                  <Badge variant="secondary" className="px-1.5 py-0 h-5">{applications.length}</Badge>
+                </TabsTrigger>
+              </TabsList>
 
-                {/* Pending Column */}
-                <div className="bg-muted/30 rounded-xl p-4 border border-border">
-                  <div className="flex items-center justify-between mb-4 px-1">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-yellow-400"></span>
-                      Needs Review
-                    </h3>
-                    <Badge variant="secondary">{applications.filter(a => a.status === 'pending').length}</Badge>
-                  </div>
-                  <div className="space-y-3">
-                    {applications.filter(a => a.status === 'pending').map(app => (
-                      <ApplicationCard key={app.id} app={app} />
-                    ))}
-                  </div>
-                </div>
+              <TabsContent value="invitations" className="space-y-6">
+                <Card className="min-h-[40vh] flex items-center justify-center border-dashed">
+                  <CardContent className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
+                    <Send className="mb-4 h-12 w-12 opacity-20" />
+                    <p className="font-medium text-foreground text-lg">No sent invitations</p>
+                    <p className="mt-2 text-sm max-w-sm text-balance">
+                      When you invite a creator to a campaign from the Find Creators page, it will appear here.
+                    </p>
+                    <Button variant="outline" className="mt-6" asChild>
+                      <Link href={`/dashboard/brand/campaigns/${campaign.id}/matches`}>
+                        Open Recommendations
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                {/* Shortlisted Column */}
-                <div className="bg-muted/30 rounded-xl p-4 border border-border">
-                  <div className="flex items-center justify-between mb-4 px-1">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-                      Shortlisted
-                    </h3>
-                    <Badge variant="secondary">{applications.filter(a => a.status === 'shortlisted').length}</Badge>
-                  </div>
-                  <div className="space-y-3">
-                    {applications.filter(a => a.status === 'shortlisted').map(app => (
-                      <ApplicationCard key={app.id} app={app} />
-                    ))}
-                  </div>
-                </div>
+              <TabsContent value="active" className="space-y-6">
+                <Card className="min-h-[40vh] flex items-center justify-center border-dashed">
+                  <CardContent className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
+                    <FileSignature className="mb-4 h-12 w-12 opacity-20" />
+                    <p className="font-medium text-foreground text-lg">No active contracts</p>
+                    <p className="mt-2 text-sm max-w-sm text-balance">
+                      When you accept a creator's application, it will move here so you can track deliverables.
+                    </p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                {/* Accepted/Completed Column */}
-                <div className="bg-muted/30 rounded-xl p-4 border border-border">
-                  <div className="flex items-center justify-between mb-4 px-1">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                      Accepted
-                    </h3>
-                    <Badge variant="secondary">{applications.filter(a => a.status === 'accepted' || a.status === 'completed').length}</Badge>
+              <TabsContent value="applications" className="m-0">
+                {applications.length === 0 ? (
+                  <Card className="border-dashed">
+                    <CardContent className="flex flex-col items-center justify-center p-16 text-center text-muted-foreground">
+                      <Users className="mb-4 h-12 w-12 opacity-20" />
+                      <p className="font-medium text-foreground text-lg mb-1">No applications yet</p>
+                      <p className="text-sm max-w-sm">Creators will appear here once they apply to your campaign.</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 items-start">
+                    <div className="bg-muted/30 rounded-xl p-4 border border-border">
+                      <div className="flex items-center justify-between mb-4 px-1">
+                        <h3 className="font-semibold flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-purple-400"></span>
+                          Invited
+                        </h3>
+                        <Badge variant="secondary">{applications.filter(a => a.status === 'invited').length}</Badge>
+                      </div>
+                      <div className="space-y-3">
+                        {applications.filter(a => a.status === 'invited').map(app => (
+                          <ApplicationCard key={app.id} app={app} />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="bg-muted/30 rounded-xl p-4 border border-border">
+                      <div className="flex items-center justify-between mb-4 px-1">
+                        <h3 className="font-semibold flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-yellow-400"></span>
+                          Needs Review
+                        </h3>
+                        <Badge variant="secondary">{applications.filter(a => a.status === 'pending').length}</Badge>
+                      </div>
+                      <div className="space-y-3">
+                        {applications.filter(a => a.status === 'pending').map(app => (
+                          <ApplicationCard key={app.id} app={app} />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="bg-muted/30 rounded-xl p-4 border border-border">
+                      <div className="flex items-center justify-between mb-4 px-1">
+                        <h3 className="font-semibold flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+                          Shortlisted
+                        </h3>
+                        <Badge variant="secondary">{applications.filter(a => a.status === 'shortlisted').length}</Badge>
+                      </div>
+                      <div className="space-y-3">
+                        {applications.filter(a => a.status === 'shortlisted').map(app => (
+                          <ApplicationCard key={app.id} app={app} />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="bg-muted/30 rounded-xl p-4 border border-border">
+                      <div className="flex items-center justify-between mb-4 px-1">
+                        <h3 className="font-semibold flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                          Accepted
+                        </h3>
+                        <Badge variant="secondary">{applications.filter(a => a.status === 'accepted' || a.status === 'completed').length}</Badge>
+                      </div>
+                      <div className="space-y-3">
+                        {applications.filter(a => a.status === 'accepted' || a.status === 'completed').map(app => (
+                          <ApplicationCard key={app.id} app={app} />
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-3">
-                    {applications.filter(a => a.status === 'accepted' || a.status === 'completed').map(app => (
-                      <ApplicationCard key={app.id} app={app} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+                )}
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
-          <TabsContent value="matches" className="m-0">
-            <Card className="border-dashed bg-purple-50/50 dark:bg-purple-950/10 border-purple-200 dark:border-purple-900/30">
-              <CardContent className="flex flex-col items-center justify-center p-16 text-center text-muted-foreground">
-                <Sparkles className="mb-4 h-12 w-12 text-purple-500 opacity-50" />
-                <p className="font-medium text-foreground text-lg mb-2">AI Matching Engine</p>
-                <p className="text-sm max-w-md">
-                  Our AI analyzes your campaign brief and matches it against creator audience demographics, semantic niche, and engagement metrics.
-                </p>
-                <p className="text-xs text-muted-foreground mt-4 font-mono bg-muted px-2 py-1 rounded">
-                  [Module Integration Pending]
-                </p>
+          <TabsContent value="recommendations" className="m-0">
+            <Card>
+              <CardHeader>
+                <CardTitle>Best Matches For This Campaign</CardTitle>
+                <CardDescription>Quick preview of your highest-scoring creators</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {isMatchesLoading && (
+                  <p className="text-sm text-muted-foreground">Loading recommendations...</p>
+                )}
+                {!isMatchesLoading && matches.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
+                    <Sparkles className="mb-4 h-10 w-10 text-purple-500 opacity-50" />
+                    <p className="font-medium text-foreground text-lg mb-1">No recommendations yet</p>
+                    <p className="text-sm max-w-sm mb-6">Run AI Matching to generate creator recommendations.</p>
+                    <Button
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                      onClick={async () => {
+                        if (!campaign) return;
+                        setIsMatchesLoading(true);
+                        try {
+                          const token = await getToken();
+                          if (!token) return;
+                          const nextMatches = await runCampaignMatching(campaign.id, token);
+                          setMatches(nextMatches);
+                        } catch (err) {
+                          console.error("Failed to run matching", err);
+                        } finally {
+                          setIsMatchesLoading(false);
+                        }
+                      }}
+                    >
+                      Run AI Matching
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {matches.slice(0, 3).map(match => {
+                      const creator = match.creator;
+                      const creatorName = creator?.display_name || "Unknown Creator";
+                      const initials = creatorName.slice(0, 2).toUpperCase();
+                      const niche = creator?.primary_niche ? creator.primary_niche.replace(/_/g, " ") : "";
+                      const scoreValue = match.score_total ? Math.round(match.score_total * 100) : 0;
+
+                      return (
+                        <div key={match.id} className="flex items-center justify-between gap-4 rounded-lg border border-border p-3">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={creator?.profile_photo_url || ""} alt={creatorName} />
+                              <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">{creatorName}</p>
+                              {niche && (
+                                <p className="text-xs text-muted-foreground capitalize">{niche}</p>
+                              )}
+                            </div>
+                          </div>
+                          <Badge variant="secondary">Score {scoreValue}%</Badge>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
+              <div className="flex justify-end px-6 pb-6">
+                <Button variant="outline" asChild>
+                  <Link href={`/dashboard/brand/campaigns/${campaign.id}/matches`}>
+                    View All Recommendations
+                  </Link>
+                </Button>
+              </div>
             </Card>
           </TabsContent>
 

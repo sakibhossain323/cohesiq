@@ -24,7 +24,6 @@ import {
   FileText,
   MessageSquare,
   Search,
-  Briefcase,
   Building2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -52,7 +51,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         { href: '/dashboard/brand', label: 'Home', icon: <BarChart3 className="h-4 w-4" /> },
         { href: '/dashboard/brand/campaigns', label: 'Campaigns', icon: <Megaphone className="h-4 w-4" /> },
         { href: '/dashboard/brand/creators', label: 'Find Creators', icon: <Search className="h-4 w-4" /> },
-        { href: '/dashboard/brand/collaborations', label: 'Collaborations', icon: <Briefcase className="h-4 w-4" /> },
         { href: '/dashboard/brand/messages', label: 'Messages', icon: <MessageSquare className="h-4 w-4" /> },
         { href: '/dashboard/brand/profile', label: 'Brand Profile', icon: <Building2 className="h-4 w-4" /> },
       ]

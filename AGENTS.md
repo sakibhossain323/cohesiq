@@ -6,6 +6,12 @@ This document contains strictly enforced conventions and rules for any AI agent 
 
 Cohesiq is a B2B SaaS Influencer Matching Platform. It utilizes a Modular Monolith architecture for the backend (FastAPI + PostgreSQL) and a modern frontend (Next.js App Router). Authentication is fully managed via Clerk.
 
+## Current Implementation Snapshot (May 30, 2026)
+
+- Matching engine runs in the backend with strict budget gating, tier-aware scoring, and semantic similarity fallback (Gemini embeddings when available).
+- Brand campaign detail view now embeds Collaborations and Recommendations per campaign.
+- Neo4j graph matching and YouTube sync remain planned but not implemented yet.
+
 ## Core Architecture & Stack Conventions
 
 1. **Frontend (Next.js 16 App Router)**

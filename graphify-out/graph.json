@@ -63,7 +63,7 @@
       "source_file": "backend/app/main.py",
       "source_location": "L1",
       "id": "backend_app_main_py",
-      "community": 1,
+      "community": 37,
       "norm_label": "main.py"
     },
     {
@@ -72,7 +72,7 @@
       "source_file": "backend/app/main.py",
       "source_location": "L21",
       "id": "app_main_health_check",
-      "community": 1,
+      "community": 37,
       "norm_label": "health_check()"
     },
     {
@@ -81,7 +81,7 @@
       "source_file": "backend/app/main.py",
       "source_location": "L57",
       "id": "app_main_creator_applications",
-      "community": 1,
+      "community": 37,
       "norm_label": "creator_applications()"
     },
     {
@@ -90,7 +90,7 @@
       "source_file": "backend/app/main.py",
       "source_location": "L57",
       "id": "backend_app_main_py_uuid",
-      "community": 1,
+      "community": 37,
       "norm_label": "uuid"
     },
     {
@@ -99,7 +99,7 @@
       "source_file": "backend/app/main.py",
       "source_location": "L57",
       "id": "backend_app_main_py_asyncsession",
-      "community": 1,
+      "community": 37,
       "norm_label": "asyncsession"
     },
     {
@@ -108,7 +108,7 @@
       "source_file": "backend/app/main.py",
       "source_location": "L57",
       "id": "backend_app_main_py_depends",
-      "community": 1,
+      "community": 37,
       "norm_label": "depends"
     },
     {
@@ -117,7 +117,7 @@
       "source_file": "backend/app/main.py",
       "source_location": "L57",
       "id": "backend_app_main_py_get_db",
-      "community": 1,
+      "community": 37,
       "norm_label": "get_db"
     },
     {
@@ -126,7 +126,7 @@
       "source_file": "backend/app/main.py",
       "source_location": "L57",
       "id": "backend_app_main_py_user",
-      "community": 1,
+      "community": 37,
       "norm_label": "user"
     },
     {
@@ -135,7 +135,7 @@
       "source_file": "backend/app/main.py",
       "source_location": "L57",
       "id": "backend_app_main_py_get_current_user",
-      "community": 1,
+      "community": 37,
       "norm_label": "get_current_user"
     },
     {
@@ -144,7 +144,7 @@
       "source_file": "backend/app/main.py",
       "source_location": "L72",
       "id": "app_main_creator_reviews",
-      "community": 1,
+      "community": 37,
       "norm_label": "creator_reviews()"
     },
     {
@@ -153,7 +153,7 @@
       "source_file": "backend/app/main.py",
       "source_location": "L81",
       "id": "app_main_brand_reviews",
-      "community": 1,
+      "community": 37,
       "norm_label": "brand_reviews()"
     },
     {
@@ -162,7 +162,7 @@
       "source_file": "backend/app/main.py",
       "source_location": "L62",
       "id": "app_main_rationale_62",
-      "community": 1,
+      "community": 37,
       "norm_label": "creator views their own application history."
     },
     {
@@ -171,7 +171,7 @@
       "source_file": "backend/app/main.py",
       "source_location": "L76",
       "id": "app_main_rationale_76",
-      "community": 1,
+      "community": 37,
       "norm_label": "public reviews for a creator."
     },
     {
@@ -180,7 +180,7 @@
       "source_file": "backend/app/main.py",
       "source_location": "L85",
       "id": "app_main_rationale_85",
-      "community": 1,
+      "community": 37,
       "norm_label": "public reviews for a brand."
     },
     {
@@ -216,7 +216,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L1",
       "id": "backend_app_webhooks_router_py",
-      "community": 1,
+      "community": 33,
       "norm_label": "router.py"
     },
     {
@@ -225,7 +225,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L28",
       "id": "webhooks_router_verify_svix_signature",
-      "community": 1,
+      "community": 33,
       "norm_label": "_verify_svix_signature()"
     },
     {
@@ -234,7 +234,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L28",
       "id": "bytes",
-      "community": 1,
+      "community": 33,
       "norm_label": "bytes"
     },
     {
@@ -243,7 +243,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L28",
       "id": "backend_app_webhooks_router_py_str",
-      "community": 1,
+      "community": 33,
       "norm_label": "str"
     },
     {
@@ -252,7 +252,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L62",
       "id": "webhooks_router_clerk_webhook",
-      "community": 1,
+      "community": 33,
       "norm_label": "clerk_webhook()"
     },
     {
@@ -261,7 +261,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L62",
       "id": "request",
-      "community": 1,
+      "community": 33,
       "norm_label": "request"
     },
     {
@@ -270,7 +270,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L62",
       "id": "backend_app_webhooks_router_py_asyncsession",
-      "community": 1,
+      "community": 33,
       "norm_label": "asyncsession"
     },
     {
@@ -279,7 +279,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L62",
       "id": "backend_app_webhooks_router_py_depends",
-      "community": 1,
+      "community": 33,
       "norm_label": "depends"
     },
     {
@@ -288,7 +288,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L62",
       "id": "backend_app_webhooks_router_py_get_db",
-      "community": 1,
+      "community": 33,
       "norm_label": "get_db"
     },
     {
@@ -297,7 +297,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L101",
       "id": "webhooks_router_handle_user_created",
-      "community": 1,
+      "community": 33,
       "norm_label": "_handle_user_created()"
     },
     {
@@ -306,7 +306,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L169",
       "id": "webhooks_router_handle_user_updated",
-      "community": 1,
+      "community": 33,
       "norm_label": "_handle_user_updated()"
     },
     {
@@ -315,7 +315,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L215",
       "id": "webhooks_router_handle_user_deleted",
-      "community": 1,
+      "community": 33,
       "norm_label": "_handle_user_deleted()"
     },
     {
@@ -324,7 +324,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L1",
       "id": "webhooks_router_rationale_1",
-      "community": 1,
+      "community": 33,
       "norm_label": "clerk webhook handler.  receives signed events from clerk and syncs the user int"
     },
     {
@@ -333,7 +333,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L35",
       "id": "webhooks_router_rationale_35",
-      "community": 1,
+      "community": 33,
       "norm_label": "verify the svix webhook signature used by clerk."
     },
     {
@@ -342,7 +342,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L69",
       "id": "webhooks_router_rationale_69",
-      "community": 1,
+      "community": 33,
       "norm_label": "clerk sends signed post requests here for user lifecycle events.     we sync the"
     },
     {
@@ -351,7 +351,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L102",
       "id": "webhooks_router_rationale_102",
-      "community": 1,
+      "community": 33,
       "norm_label": "create a user row when someone signs up via clerk.     clerk stores the intended"
     },
     {
@@ -360,7 +360,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L170",
       "id": "webhooks_router_rationale_170",
-      "community": 1,
+      "community": 33,
       "norm_label": "sync email updates and handle onboarding completion from clerk."
     },
     {
@@ -369,7 +369,7 @@
       "source_file": "backend/app/webhooks/router.py",
       "source_location": "L216",
       "id": "webhooks_router_rationale_216",
-      "community": 1,
+      "community": 33,
       "norm_label": "soft-delete the user when removed from clerk."
     },
     {
@@ -513,7 +513,7 @@
       "source_file": "backend/app/creators/schemas.py",
       "source_location": "L249",
       "id": "creators_schemas_creatorprofileout",
-      "community": 0,
+      "community": 14,
       "norm_label": "creatorprofileout"
     },
     {
@@ -908,7 +908,7 @@
       "file_type": "code",
       "source_file": "backend/app/creators/service.py",
       "source_location": "L50",
-      "id": "creatorprofile",
+      "id": "backend_app_creators_service_py_creatorprofile",
       "community": 0,
       "norm_label": "creatorprofile"
     },
@@ -1341,7 +1341,7 @@
       "source_file": "backend/app/brands/router.py",
       "source_location": "L16",
       "id": "backend_app_brands_router_py_int",
-      "community": 29,
+      "community": 14,
       "norm_label": "int"
     },
     {
@@ -1458,7 +1458,7 @@
       "source_file": "backend/app/brands/service.py",
       "source_location": "L1",
       "id": "backend_app_brands_service_py",
-      "community": 1,
+      "community": 64,
       "norm_label": "service.py"
     },
     {
@@ -1467,7 +1467,7 @@
       "source_file": "backend/app/brands/service.py",
       "source_location": "L11",
       "id": "brands_service_get_brand",
-      "community": 1,
+      "community": 64,
       "norm_label": "get_brand()"
     },
     {
@@ -1476,7 +1476,7 @@
       "source_file": "backend/app/brands/service.py",
       "source_location": "L11",
       "id": "backend_app_brands_service_py_asyncsession",
-      "community": 1,
+      "community": 64,
       "norm_label": "asyncsession"
     },
     {
@@ -1485,7 +1485,7 @@
       "source_file": "backend/app/brands/service.py",
       "source_location": "L11",
       "id": "backend_app_brands_service_py_uuid",
-      "community": 1,
+      "community": 64,
       "norm_label": "uuid"
     },
     {
@@ -1494,7 +1494,7 @@
       "source_file": "backend/app/brands/service.py",
       "source_location": "L11",
       "id": "brandprofile",
-      "community": 1,
+      "community": 64,
       "norm_label": "brandprofile"
     },
     {
@@ -1512,7 +1512,7 @@
       "source_file": "backend/app/brands/service.py",
       "source_location": "L29",
       "id": "brands_service_create_brand_profile",
-      "community": 1,
+      "community": 64,
       "norm_label": "create_brand_profile()"
     },
     {
@@ -1521,7 +1521,7 @@
       "source_file": "backend/app/brands/service.py",
       "source_location": "L29",
       "id": "backend_app_brands_service_py_str",
-      "community": 1,
+      "community": 64,
       "norm_label": "str"
     },
     {
@@ -1530,7 +1530,7 @@
       "source_file": "backend/app/brands/service.py",
       "source_location": "L39",
       "id": "brands_service_update_brand",
-      "community": 1,
+      "community": 64,
       "norm_label": "update_brand()"
     },
     {
@@ -1539,7 +1539,7 @@
       "source_file": "backend/app/brands/service.py",
       "source_location": "L39",
       "id": "backend_app_brands_service_py_brandprofileupdate",
-      "community": 1,
+      "community": 64,
       "norm_label": "brandprofileupdate"
     },
     {
@@ -1548,7 +1548,7 @@
       "source_file": "backend/app/brands/service.py",
       "source_location": "L49",
       "id": "brands_service_list_brands",
-      "community": 1,
+      "community": 64,
       "norm_label": "list_brands()"
     },
     {
@@ -1557,7 +1557,7 @@
       "source_file": "backend/app/brands/service.py",
       "source_location": "L49",
       "id": "backend_app_brands_service_py_int",
-      "community": 1,
+      "community": 64,
       "norm_label": "int"
     },
     {
@@ -1566,7 +1566,7 @@
       "source_file": "backend/app/brands/service.py",
       "source_location": "L32",
       "id": "brands_service_rationale_32",
-      "community": 1,
+      "community": 64,
       "norm_label": "called by auth service on brand registration."
     },
     {
@@ -1584,7 +1584,7 @@
       "source_file": "backend/app/brands/models.py",
       "source_location": "L1",
       "id": "backend_app_brands_models_py",
-      "community": 1,
+      "community": 37,
       "norm_label": "models.py"
     },
     {
@@ -1593,7 +1593,7 @@
       "source_file": "backend/app/brands/models.py",
       "source_location": "L16",
       "id": "brands_models_brandprofile",
-      "community": 1,
+      "community": 37,
       "norm_label": "brandprofile"
     },
     {
@@ -1962,7 +1962,7 @@
       "source_file": "backend/app/auth/models.py",
       "source_location": "L1",
       "id": "backend_app_auth_models_py",
-      "community": 1,
+      "community": 37,
       "norm_label": "models.py"
     },
     {
@@ -1971,8 +1971,80 @@
       "source_file": "backend/app/auth/models.py",
       "source_location": "L11",
       "id": "auth_models_user",
-      "community": 1,
+      "community": 110,
       "norm_label": "user"
+    },
+    {
+      "label": "llm_matching.py",
+      "file_type": "code",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L1",
+      "id": "backend_app_services_llm_matching_py",
+      "community": 0,
+      "norm_label": "llm_matching.py"
+    },
+    {
+      "label": "generate_matches_with_llm()",
+      "file_type": "code",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L19",
+      "id": "services_llm_matching_generate_matches_with_llm",
+      "community": 0,
+      "norm_label": "generate_matches_with_llm()"
+    },
+    {
+      "label": "Campaign",
+      "file_type": "code",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L19",
+      "id": "backend_app_services_llm_matching_py_campaign",
+      "community": 0,
+      "norm_label": "campaign"
+    },
+    {
+      "label": "CreatorProfile",
+      "file_type": "code",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L19",
+      "id": "backend_app_services_llm_matching_py_creatorprofile",
+      "community": 0,
+      "norm_label": "creatorprofile"
+    },
+    {
+      "label": "get_and_generate_matches()",
+      "file_type": "code",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L117",
+      "id": "services_llm_matching_get_and_generate_matches",
+      "community": 0,
+      "norm_label": "get_and_generate_matches()"
+    },
+    {
+      "label": "AsyncSession",
+      "file_type": "code",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L117",
+      "id": "backend_app_services_llm_matching_py_asyncsession",
+      "community": 0,
+      "norm_label": "asyncsession"
+    },
+    {
+      "label": "UUID",
+      "file_type": "code",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L117",
+      "id": "backend_app_services_llm_matching_py_uuid",
+      "community": 0,
+      "norm_label": "uuid"
+    },
+    {
+      "label": "AIMatchScore",
+      "file_type": "code",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L117",
+      "id": "backend_app_services_llm_matching_py_aimatchscore",
+      "community": 0,
+      "norm_label": "aimatchscore"
     },
     {
       "label": "matching.py",
@@ -1987,7 +2059,7 @@
       "label": "MatchScores",
       "file_type": "code",
       "source_file": "backend/app/services/matching.py",
-      "source_location": "L21",
+      "source_location": "L32",
       "id": "services_matching_matchscores",
       "community": 47,
       "norm_label": "matchscores"
@@ -1996,7 +2068,7 @@
       "label": "get_tier()",
       "file_type": "code",
       "source_file": "backend/app/services/matching.py",
-      "source_location": "L32",
+      "source_location": "L43",
       "id": "services_matching_get_tier",
       "community": 47,
       "norm_label": "get_tier()"
@@ -2005,7 +2077,7 @@
       "label": "int",
       "file_type": "code",
       "source_file": "backend/app/services/matching.py",
-      "source_location": "L32",
+      "source_location": "L43",
       "id": "backend_app_services_matching_py_int",
       "community": 47,
       "norm_label": "int"
@@ -2014,7 +2086,7 @@
       "label": "str",
       "file_type": "code",
       "source_file": "backend/app/services/matching.py",
-      "source_location": "L32",
+      "source_location": "L43",
       "id": "backend_app_services_matching_py_str",
       "community": 47,
       "norm_label": "str"
@@ -2023,7 +2095,7 @@
       "label": "score_niche()",
       "file_type": "code",
       "source_file": "backend/app/services/matching.py",
-      "source_location": "L42",
+      "source_location": "L53",
       "id": "services_matching_score_niche",
       "community": 47,
       "norm_label": "score_niche()"
@@ -2032,34 +2104,34 @@
       "label": "float",
       "file_type": "code",
       "source_file": "backend/app/services/matching.py",
-      "source_location": "L42",
+      "source_location": "L53",
       "id": "backend_app_services_matching_py_float",
       "community": 47,
       "norm_label": "float"
     },
     {
+      "label": "score_budget_with_tier()",
+      "file_type": "code",
+      "source_file": "backend/app/services/matching.py",
+      "source_location": "L71",
+      "id": "services_matching_score_budget_with_tier",
+      "community": 47,
+      "norm_label": "score_budget_with_tier()"
+    },
+    {
       "label": "score_engagement()",
       "file_type": "code",
       "source_file": "backend/app/services/matching.py",
-      "source_location": "L50",
+      "source_location": "L121",
       "id": "services_matching_score_engagement",
       "community": 47,
       "norm_label": "score_engagement()"
     },
     {
-      "label": "score_budget()",
-      "file_type": "code",
-      "source_file": "backend/app/services/matching.py",
-      "source_location": "L58",
-      "id": "services_matching_score_budget",
-      "community": 47,
-      "norm_label": "score_budget()"
-    },
-    {
       "label": "score_platform()",
       "file_type": "code",
       "source_file": "backend/app/services/matching.py",
-      "source_location": "L68",
+      "source_location": "L129",
       "id": "services_matching_score_platform",
       "community": 47,
       "norm_label": "score_platform()"
@@ -2068,7 +2140,7 @@
       "label": "score_language()",
       "file_type": "code",
       "source_file": "backend/app/services/matching.py",
-      "source_location": "L75",
+      "source_location": "L136",
       "id": "services_matching_score_language",
       "community": 47,
       "norm_label": "score_language()"
@@ -2077,7 +2149,7 @@
       "label": "score_recency()",
       "file_type": "code",
       "source_file": "backend/app/services/matching.py",
-      "source_location": "L79",
+      "source_location": "L142",
       "id": "services_matching_score_recency",
       "community": 47,
       "norm_label": "score_recency()"
@@ -2086,17 +2158,35 @@
       "label": "compute_match_score()",
       "file_type": "code",
       "source_file": "backend/app/services/matching.py",
-      "source_location": "L91",
+      "source_location": "L154",
       "id": "services_matching_compute_match_score",
       "community": 47,
       "norm_label": "compute_match_score()"
     },
     {
+      "label": "Compare niche strings case-insensitively.     Primary niche match = 1.0, seconda",
+      "file_type": "rationale",
+      "source_file": "backend/app/services/matching.py",
+      "source_location": "L54",
+      "id": "services_matching_rationale_54",
+      "community": 47,
+      "norm_label": "compare niche strings case-insensitively.     primary niche match = 1.0, seconda"
+    },
+    {
+      "label": "Budget scoring: checks two things:     1. Can we afford this creator? (campaign_",
+      "file_type": "rationale",
+      "source_file": "backend/app/services/matching.py",
+      "source_location": "L76",
+      "id": "services_matching_rationale_76",
+      "community": 47,
+      "norm_label": "budget scoring: checks two things:     1. can we afford this creator? (campaign_"
+    },
+    {
       "label": "Pure function. All inputs are pre-fetched primitives.     No database calls. Ful",
       "file_type": "rationale",
       "source_file": "backend/app/services/matching.py",
-      "source_location": "L105",
-      "id": "services_matching_rationale_105",
+      "source_location": "L168",
+      "id": "services_matching_rationale_168",
       "community": 47,
       "norm_label": "pure function. all inputs are pre-fetched primitives.     no database calls. ful"
     },
@@ -2618,7 +2708,7 @@
       "file_type": "code",
       "source_file": "backend/app/campaigns/service.py",
       "source_location": "L44",
-      "id": "campaign",
+      "id": "backend_app_campaigns_service_py_campaign",
       "community": 14,
       "norm_label": "campaign"
     },
@@ -2887,7 +2977,7 @@
       "label": "run_campaign_matching()",
       "file_type": "code",
       "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L469",
+      "source_location": "L471",
       "id": "campaigns_service_run_campaign_matching",
       "community": 14,
       "norm_label": "run_campaign_matching()"
@@ -2896,8 +2986,8 @@
       "label": "AIMatchScore",
       "file_type": "code",
       "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L469",
-      "id": "aimatchscore",
+      "source_location": "L471",
+      "id": "backend_app_campaigns_service_py_aimatchscore",
       "community": 14,
       "norm_label": "aimatchscore"
     },
@@ -2905,7 +2995,7 @@
       "label": "get_campaign_matches()",
       "file_type": "code",
       "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L605",
+      "source_location": "L608",
       "id": "campaigns_service_get_campaign_matches",
       "community": 14,
       "norm_label": "get_campaign_matches()"
@@ -3015,7 +3105,7 @@
       "source_file": "backend/app/common/models.py",
       "source_location": "L1",
       "id": "backend_app_common_models_py",
-      "community": 0,
+      "community": 14,
       "norm_label": "models.py"
     },
     {
@@ -3024,7 +3114,7 @@
       "source_file": "backend/app/common/models.py",
       "source_location": "L7",
       "id": "common_models_base",
-      "community": 0,
+      "community": 14,
       "norm_label": "base"
     },
     {
@@ -3033,7 +3123,7 @@
       "source_file": "",
       "source_location": "",
       "id": "declarativebase",
-      "community": 0,
+      "community": 14,
       "norm_label": "declarativebase"
     },
     {
@@ -3042,7 +3132,7 @@
       "source_file": "backend/app/common/models.py",
       "source_location": "L11",
       "id": "common_models_timestampmixin",
-      "community": 0,
+      "community": 14,
       "norm_label": "timestampmixin"
     },
     {
@@ -3051,7 +3141,7 @@
       "source_file": "backend/app/common/models.py",
       "source_location": "L25",
       "id": "common_models_niche",
-      "community": 0,
+      "community": 14,
       "norm_label": "niche"
     },
     {
@@ -3060,7 +3150,7 @@
       "source_file": "backend/app/common/models.py",
       "source_location": "L40",
       "id": "common_models_language",
-      "community": 0,
+      "community": 14,
       "norm_label": "language"
     },
     {
@@ -3069,7 +3159,7 @@
       "source_file": "backend/app/common/models.py",
       "source_location": "L12",
       "id": "common_models_rationale_12",
-      "community": 0,
+      "community": 14,
       "norm_label": "adds created_at and updated_at to any model that inherits it."
     },
     {
@@ -3078,7 +3168,7 @@
       "source_file": "backend/app/common/dependencies.py",
       "source_location": "L1",
       "id": "backend_app_common_dependencies_py",
-      "community": 1,
+      "community": 110,
       "norm_label": "dependencies.py"
     },
     {
@@ -3087,7 +3177,7 @@
       "source_file": "backend/app/common/dependencies.py",
       "source_location": "L20",
       "id": "common_dependencies_get_jwks",
-      "community": 1,
+      "community": 110,
       "norm_label": "get_jwks()"
     },
     {
@@ -3096,7 +3186,7 @@
       "source_file": "backend/app/common/dependencies.py",
       "source_location": "L31",
       "id": "common_dependencies_get_current_user",
-      "community": 1,
+      "community": 110,
       "norm_label": "get_current_user()"
     },
     {
@@ -3105,7 +3195,7 @@
       "source_file": "backend/app/common/dependencies.py",
       "source_location": "L31",
       "id": "httpauthorizationcredentials",
-      "community": 1,
+      "community": 110,
       "norm_label": "httpauthorizationcredentials"
     },
     {
@@ -3114,7 +3204,7 @@
       "source_file": "backend/app/common/dependencies.py",
       "source_location": "L31",
       "id": "backend_app_common_dependencies_py_depends",
-      "community": 1,
+      "community": 110,
       "norm_label": "depends"
     },
     {
@@ -3123,7 +3213,7 @@
       "source_file": "backend/app/common/dependencies.py",
       "source_location": "L31",
       "id": "bearer_scheme",
-      "community": 1,
+      "community": 110,
       "norm_label": "bearer_scheme"
     },
     {
@@ -3132,7 +3222,7 @@
       "source_file": "backend/app/common/dependencies.py",
       "source_location": "L31",
       "id": "backend_app_common_dependencies_py_asyncsession",
-      "community": 1,
+      "community": 110,
       "norm_label": "asyncsession"
     },
     {
@@ -3141,7 +3231,7 @@
       "source_file": "backend/app/common/dependencies.py",
       "source_location": "L31",
       "id": "backend_app_common_dependencies_py_get_db",
-      "community": 0,
+      "community": 14,
       "norm_label": "get_db"
     },
     {
@@ -3150,7 +3240,7 @@
       "source_file": "backend/app/common/dependencies.py",
       "source_location": "L35",
       "id": "common_dependencies_rationale_35",
-      "community": 1,
+      "community": 110,
       "norm_label": "decode the jwt bearer token and return the user orm object.     supports both cl"
     },
     {
@@ -3672,7 +3762,7 @@
       "source_file": "backend/scripts/seed_db.py",
       "source_location": "L1",
       "id": "backend_scripts_seed_db_py",
-      "community": 17,
+      "community": 117,
       "norm_label": "seed_db.py"
     },
     {
@@ -3681,7 +3771,7 @@
       "source_file": "backend/scripts/seed_db.py",
       "source_location": "L10",
       "id": "scripts_seed_db_seed_db",
-      "community": 17,
+      "community": 117,
       "norm_label": "seed_db()"
     },
     {
@@ -3690,7 +3780,7 @@
       "source_file": "backend/scripts/seed_db.py",
       "source_location": "L111",
       "id": "scripts_seed_db_insert_brand",
-      "community": 17,
+      "community": 117,
       "norm_label": "insert_brand()"
     },
     {
@@ -3699,7 +3789,7 @@
       "source_file": "backend/scripts/seed_db.py",
       "source_location": "L166",
       "id": "scripts_seed_db_insert_creator",
-      "community": 17,
+      "community": 117,
       "norm_label": "insert_creator()"
     },
     {
@@ -3755,6 +3845,24 @@
       "id": "scripts_generate_seed_data_generate_synthetic_brands",
       "community": 42,
       "norm_label": "generate_synthetic_brands()"
+    },
+    {
+      "label": "test_matching.py",
+      "file_type": "code",
+      "source_file": "backend/scripts/test_matching.py",
+      "source_location": "L1",
+      "id": "backend_scripts_test_matching_py",
+      "community": 0,
+      "norm_label": "test_matching.py"
+    },
+    {
+      "label": "test()",
+      "file_type": "code",
+      "source_file": "backend/scripts/test_matching.py",
+      "source_location": "L7",
+      "id": "scripts_test_matching_test",
+      "community": 0,
+      "norm_label": "test()"
     },
     {
       "label": "sync_clerk_users.py",
@@ -4878,7 +4986,7 @@
       "source_file": "frontend/cohesiq-v0/app/(auth)/onboarding/page.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_app_auth_onboarding_page_tsx",
-      "community": 5,
+      "community": 112,
       "norm_label": "page.tsx"
     },
     {
@@ -5040,7 +5148,7 @@
       "source_file": "frontend/cohesiq-v0/app/(public)/page.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_app_public_page_tsx",
-      "community": 5,
+      "community": 112,
       "norm_label": "page.tsx"
     },
     {
@@ -5049,7 +5157,7 @@
       "source_file": "frontend/cohesiq-v0/app/(public)/page.tsx",
       "source_location": "L7",
       "id": "public_page_homepage",
-      "community": 5,
+      "community": 112,
       "norm_label": "homepage()"
     },
     {
@@ -5058,7 +5166,7 @@
       "source_file": "frontend/cohesiq-v0/app/(public)/layout.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_app_public_layout_tsx",
-      "community": 11,
+      "community": 116,
       "norm_label": "layout.tsx"
     },
     {
@@ -5067,7 +5175,7 @@
       "source_file": "frontend/cohesiq-v0/app/(public)/layout.tsx",
       "source_location": "L4",
       "id": "public_layout_publiclayout",
-      "community": 11,
+      "community": 116,
       "norm_label": "publiclayout()"
     },
     {
@@ -5094,7 +5202,7 @@
       "source_file": "frontend/cohesiq-v0/app/(public)/creators/[id]/page.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_app_public_creators_id_page_tsx",
-      "community": 16,
+      "community": 10,
       "norm_label": "page.tsx"
     },
     {
@@ -5103,7 +5211,7 @@
       "source_file": "frontend/cohesiq-v0/app/(public)/creators/[id]/page.tsx",
       "source_location": "L3",
       "id": "id_page_creatorprofilepageprops",
-      "community": 16,
+      "community": 10,
       "norm_label": "creatorprofilepageprops"
     },
     {
@@ -5112,7 +5220,7 @@
       "source_file": "frontend/cohesiq-v0/app/(public)/creators/[id]/page.tsx",
       "source_location": "L7",
       "id": "id_page_creatorprofilepage",
-      "community": 16,
+      "community": 10,
       "norm_label": "creatorprofilepage()"
     },
     {
@@ -5157,7 +5265,7 @@
       "source_file": "frontend/cohesiq-v0/app/(public)/campaigns/[id]/page.tsx",
       "source_location": "L10",
       "id": "id_page_campaigndetailpage",
-      "community": 112,
+      "community": 5,
       "norm_label": "campaigndetailpage()"
     },
     {
@@ -5400,7 +5508,7 @@
       "source_file": "frontend/cohesiq-v0/app/(dashboard)/dashboard/brand/messages/page.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_app_dashboard_dashboard_brand_messages_page_tsx",
-      "community": 20,
+      "community": 5,
       "norm_label": "page.tsx"
     },
     {
@@ -5409,7 +5517,7 @@
       "source_file": "frontend/cohesiq-v0/app/(dashboard)/dashboard/brand/messages/page.tsx",
       "source_location": "L11",
       "id": "frontend_cohesiq_v0_app_dashboard_dashboard_brand_messages_page_tsx_messages_page_mock_conversations",
-      "community": 20,
+      "community": 5,
       "norm_label": "mock_conversations"
     },
     {
@@ -5418,7 +5526,7 @@
       "source_file": "frontend/cohesiq-v0/app/(dashboard)/dashboard/brand/messages/page.tsx",
       "source_location": "L32",
       "id": "frontend_cohesiq_v0_app_dashboard_dashboard_brand_messages_page_tsx_messages_page_mock_messages",
-      "community": 20,
+      "community": 5,
       "norm_label": "mock_messages"
     },
     {
@@ -5427,7 +5535,7 @@
       "source_file": "frontend/cohesiq-v0/app/(dashboard)/dashboard/brand/messages/page.tsx",
       "source_location": "L53",
       "id": "messages_page_brandmessagespage",
-      "community": 20,
+      "community": 5,
       "norm_label": "brandmessagespage()"
     },
     {
@@ -5436,7 +5544,7 @@
       "source_file": "frontend/cohesiq-v0/app/(dashboard)/dashboard/brand/profile/page.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_app_dashboard_dashboard_brand_profile_page_tsx",
-      "community": 5,
+      "community": 112,
       "norm_label": "page.tsx"
     },
     {
@@ -5445,7 +5553,7 @@
       "source_file": "frontend/cohesiq-v0/app/(dashboard)/dashboard/brand/profile/page.tsx",
       "source_location": "L15",
       "id": "profile_page_brandprofilepage",
-      "community": 5,
+      "community": 112,
       "norm_label": "brandprofilepage()"
     },
     {
@@ -5544,16 +5652,16 @@
       "source_file": "frontend/cohesiq-v0/app/(dashboard)/dashboard/brand/campaigns/[id]/page.tsx",
       "source_location": "L22",
       "id": "id_page_brandcampaigndetailpage",
-      "community": 112,
+      "community": 5,
       "norm_label": "brandcampaigndetailpage()"
     },
     {
       "label": "ApplicationCard()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/app/(dashboard)/dashboard/brand/campaigns/[id]/page.tsx",
-      "source_location": "L353",
+      "source_location": "L356",
       "id": "id_page_applicationcard",
-      "community": 112,
+      "community": 5,
       "norm_label": "applicationcard()"
     },
     {
@@ -5580,7 +5688,7 @@
       "source_file": "frontend/cohesiq-v0/app/(dashboard)/dashboard/brand/campaigns/[id]/matches/page.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_app_dashboard_dashboard_brand_campaigns_id_matches_page_tsx",
-      "community": 5,
+      "community": 112,
       "norm_label": "page.tsx"
     },
     {
@@ -5589,7 +5697,7 @@
       "source_file": "frontend/cohesiq-v0/app/(dashboard)/dashboard/brand/campaigns/[id]/matches/page.tsx",
       "source_location": "L30",
       "id": "matches_page_campaignmatchespage",
-      "community": 41,
+      "community": 5,
       "norm_label": "campaignmatchespage()"
     },
     {
@@ -5787,7 +5895,7 @@
       "source_file": "frontend/cohesiq-v0/lib/types.ts",
       "source_location": "L2",
       "id": "lib_types_campaignstatus",
-      "community": 112,
+      "community": 28,
       "norm_label": "campaignstatus"
     },
     {
@@ -5796,7 +5904,7 @@
       "source_file": "frontend/cohesiq-v0/lib/types.ts",
       "source_location": "L3",
       "id": "lib_types_applicationstatus",
-      "community": 112,
+      "community": 22,
       "norm_label": "applicationstatus"
     },
     {
@@ -5814,7 +5922,7 @@
       "source_file": "frontend/cohesiq-v0/lib/types.ts",
       "source_location": "L6",
       "id": "lib_types_creatorsocialprofile",
-      "community": 41,
+      "community": 5,
       "norm_label": "creatorsocialprofile"
     },
     {
@@ -5850,7 +5958,7 @@
       "source_file": "frontend/cohesiq-v0/lib/types.ts",
       "source_location": "L72",
       "id": "lib_types_campaign",
-      "community": 5,
+      "community": 28,
       "norm_label": "campaign"
     },
     {
@@ -5877,7 +5985,7 @@
       "source_file": "frontend/cohesiq-v0/lib/types.ts",
       "source_location": "L119",
       "id": "lib_types_review",
-      "community": 20,
+      "community": 16,
       "norm_label": "review"
     },
     {
@@ -5904,7 +6012,7 @@
       "source_file": "frontend/cohesiq-v0/lib/types.ts",
       "source_location": "L151",
       "id": "lib_types_aimatchscore",
-      "community": 20,
+      "community": 16,
       "norm_label": "aimatchscore"
     },
     {
@@ -5913,7 +6021,7 @@
       "source_file": "frontend/cohesiq-v0/lib/utils.ts",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_lib_utils_ts",
-      "community": 41,
+      "community": 5,
       "norm_label": "utils.ts"
     },
     {
@@ -5931,7 +6039,7 @@
       "source_file": "frontend/cohesiq-v0/lib/utils.ts",
       "source_location": "L8",
       "id": "lib_utils_sleep",
-      "community": 20,
+      "community": 16,
       "norm_label": "sleep()"
     },
     {
@@ -5940,7 +6048,7 @@
       "source_file": "frontend/cohesiq-v0/lib/utils.ts",
       "source_location": "L10",
       "id": "lib_utils_formatfollowercount",
-      "community": 41,
+      "community": 5,
       "norm_label": "formatfollowercount()"
     },
     {
@@ -5949,7 +6057,7 @@
       "source_file": "frontend/cohesiq-v0/lib/utils.ts",
       "source_location": "L16",
       "id": "lib_utils_formatbdt",
-      "community": 112,
+      "community": 5,
       "norm_label": "formatbdt()"
     },
     {
@@ -5958,7 +6066,7 @@
       "source_file": "frontend/cohesiq-v0/lib/utils.ts",
       "source_location": "L20",
       "id": "lib_utils_formatdate",
-      "community": 112,
+      "community": 5,
       "norm_label": "formatdate()"
     },
     {
@@ -5967,7 +6075,7 @@
       "source_file": "frontend/cohesiq-v0/lib/utils.ts",
       "source_location": "L26",
       "id": "lib_utils_daysuntil",
-      "community": 22,
+      "community": 5,
       "norm_label": "daysuntil()"
     },
     {
@@ -5976,7 +6084,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_lib_api_campaigns_ts",
-      "community": 20,
+      "community": 16,
       "norm_label": "campaigns.ts"
     },
     {
@@ -5992,34 +6100,52 @@
       "label": "brandsCache",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
-      "source_location": "L10",
+      "source_location": "L21",
       "id": "api_campaigns_brandscache",
-      "community": 20,
+      "community": 16,
       "norm_label": "brandscache"
     },
     {
       "label": "resolveBrand()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
-      "source_location": "L12",
+      "source_location": "L23",
       "id": "api_campaigns_resolvebrand",
-      "community": 20,
+      "community": 16,
       "norm_label": "resolvebrand()"
     },
     {
       "label": "mapCampaignResponse()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
-      "source_location": "L28",
+      "source_location": "L39",
       "id": "api_campaigns_mapcampaignresponse",
-      "community": 20,
+      "community": 16,
       "norm_label": "mapcampaignresponse()"
+    },
+    {
+      "label": "mapCreatorFromRaw()",
+      "file_type": "code",
+      "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
+      "source_location": "L65",
+      "id": "api_campaigns_mapcreatorfromraw",
+      "community": 16,
+      "norm_label": "mapcreatorfromraw()"
+    },
+    {
+      "label": "mapMatchScore()",
+      "file_type": "code",
+      "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
+      "source_location": "L89",
+      "id": "api_campaigns_mapmatchscore",
+      "community": 16,
+      "norm_label": "mapmatchscore()"
     },
     {
       "label": "getCampaigns()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
-      "source_location": "L54",
+      "source_location": "L105",
       "id": "api_campaigns_getcampaigns",
       "community": 28,
       "norm_label": "getcampaigns()"
@@ -6028,25 +6154,25 @@
       "label": "getCampaignById()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
-      "source_location": "L74",
+      "source_location": "L125",
       "id": "api_campaigns_getcampaignbyid",
-      "community": 20,
+      "community": 16,
       "norm_label": "getcampaignbyid()"
     },
     {
       "label": "getActiveCampaigns()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
-      "source_location": "L83",
+      "source_location": "L134",
       "id": "api_campaigns_getactivecampaigns",
-      "community": 20,
+      "community": 16,
       "norm_label": "getactivecampaigns()"
     },
     {
       "label": "getCampaignsByBrandId()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
-      "source_location": "L89",
+      "source_location": "L140",
       "id": "api_campaigns_getcampaignsbybrandid",
       "community": 22,
       "norm_label": "getcampaignsbybrandid()"
@@ -6055,7 +6181,7 @@
       "label": "getSuggestedCampaigns()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
-      "source_location": "L98",
+      "source_location": "L149",
       "id": "api_campaigns_getsuggestedcampaigns",
       "community": 13,
       "norm_label": "getsuggestedcampaigns()"
@@ -6064,63 +6190,63 @@
       "label": "runCampaignMatching()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
-      "source_location": "L110",
+      "source_location": "L161",
       "id": "api_campaigns_runcampaignmatching",
-      "community": 20,
+      "community": 16,
       "norm_label": "runcampaignmatching()"
     },
     {
       "label": "getCampaignMatches()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
-      "source_location": "L117",
+      "source_location": "L169",
       "id": "api_campaigns_getcampaignmatches",
-      "community": 20,
+      "community": 16,
       "norm_label": "getcampaignmatches()"
     },
     {
       "label": "createCampaign()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
-      "source_location": "L124",
+      "source_location": "L177",
       "id": "api_campaigns_createcampaign",
-      "community": 20,
+      "community": 16,
       "norm_label": "createcampaign()"
     },
     {
       "label": "inviteCreatorToCampaign()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
-      "source_location": "L133",
+      "source_location": "L186",
       "id": "api_campaigns_invitecreatortocampaign",
-      "community": 20,
+      "community": 16,
       "norm_label": "invitecreatortocampaign()"
     },
     {
       "label": "respondToInvitation()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
-      "source_location": "L141",
+      "source_location": "L194",
       "id": "api_campaigns_respondtoinvitation",
-      "community": 20,
+      "community": 16,
       "norm_label": "respondtoinvitation()"
     },
     {
       "label": "updateCampaign()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
-      "source_location": "L149",
+      "source_location": "L202",
       "id": "api_campaigns_updatecampaign",
-      "community": 20,
+      "community": 16,
       "norm_label": "updatecampaign()"
     },
     {
       "label": "updateCampaignStatus()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
-      "source_location": "L158",
+      "source_location": "L211",
       "id": "api_campaigns_updatecampaignstatus",
-      "community": 20,
+      "community": 16,
       "norm_label": "updatecampaignstatus()"
     },
     {
@@ -6145,16 +6271,16 @@
       "label": "mapCreatorResponse()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/creators.ts",
-      "source_location": "L10",
+      "source_location": "L21",
       "id": "api_creators_mapcreatorresponse",
-      "community": 16,
+      "community": 28,
       "norm_label": "mapcreatorresponse()"
     },
     {
       "label": "getCreators()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/creators.ts",
-      "source_location": "L32",
+      "source_location": "L43",
       "id": "api_creators_getcreators",
       "community": 28,
       "norm_label": "getcreators()"
@@ -6163,16 +6289,16 @@
       "label": "getCreatorById()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/creators.ts",
-      "source_location": "L55",
+      "source_location": "L66",
       "id": "api_creators_getcreatorbyid",
-      "community": 16,
+      "community": 10,
       "norm_label": "getcreatorbyid()"
     },
     {
       "label": "getMyCreatorProfile()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/creators.ts",
-      "source_location": "L64",
+      "source_location": "L75",
       "id": "api_creators_getmycreatorprofile",
       "community": 13,
       "norm_label": "getmycreatorprofile()"
@@ -6181,7 +6307,7 @@
       "label": "getFeaturedCreators()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/creators.ts",
-      "source_location": "L73",
+      "source_location": "L84",
       "id": "api_creators_getfeaturedcreators",
       "community": 28,
       "norm_label": "getfeaturedcreators()"
@@ -6190,9 +6316,9 @@
       "label": "updateSocialProfile()",
       "file_type": "code",
       "source_file": "frontend/cohesiq-v0/lib/api/creators.ts",
-      "source_location": "L78",
+      "source_location": "L89",
       "id": "api_creators_updatesocialprofile",
-      "community": 20,
+      "community": 28,
       "norm_label": "updatesocialprofile()"
     },
     {
@@ -6201,7 +6327,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/reviews.ts",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_lib_api_reviews_ts",
-      "community": 20,
+      "community": 16,
       "norm_label": "reviews.ts"
     },
     {
@@ -6210,7 +6336,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/reviews.ts",
       "source_location": "L4",
       "id": "api_reviews_getreviews",
-      "community": 20,
+      "community": 16,
       "norm_label": "getreviews()"
     },
     {
@@ -6219,7 +6345,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/reviews.ts",
       "source_location": "L8",
       "id": "api_reviews_getpublicreviews",
-      "community": 16,
+      "community": 10,
       "norm_label": "getpublicreviews()"
     },
     {
@@ -6228,7 +6354,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/reviews.ts",
       "source_location": "L12",
       "id": "api_reviews_getreviewsbycreatorname",
-      "community": 20,
+      "community": 16,
       "norm_label": "getreviewsbycreatorname()"
     },
     {
@@ -6237,7 +6363,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/reviews.ts",
       "source_location": "L16",
       "id": "api_reviews_getrecentreviews",
-      "community": 20,
+      "community": 16,
       "norm_label": "getrecentreviews()"
     },
     {
@@ -6246,7 +6372,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/client.ts",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_lib_api_client_ts",
-      "community": 20,
+      "community": 16,
       "norm_label": "client.ts"
     },
     {
@@ -6255,7 +6381,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/client.ts",
       "source_location": "L7",
       "id": "api_client_fetchoptions",
-      "community": 20,
+      "community": 16,
       "norm_label": "fetchoptions"
     },
     {
@@ -6264,7 +6390,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/client.ts",
       "source_location": "L11",
       "id": "api_client_fetchapi",
-      "community": 20,
+      "community": 16,
       "norm_label": "fetchapi()"
     },
     {
@@ -6273,7 +6399,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/applications.ts",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_lib_api_applications_ts",
-      "community": 20,
+      "community": 16,
       "norm_label": "applications.ts"
     },
     {
@@ -6282,7 +6408,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/applications.ts",
       "source_location": "L6",
       "id": "api_applications_mapapplicationresponse",
-      "community": 20,
+      "community": 16,
       "norm_label": "mapapplicationresponse()"
     },
     {
@@ -6291,7 +6417,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/applications.ts",
       "source_location": "L30",
       "id": "api_applications_withdrawapplication",
-      "community": 20,
+      "community": 16,
       "norm_label": "withdrawapplication()"
     },
     {
@@ -6300,7 +6426,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/applications.ts",
       "source_location": "L39",
       "id": "api_applications_submitapplicationpayload",
-      "community": 20,
+      "community": 16,
       "norm_label": "submitapplicationpayload"
     },
     {
@@ -6309,7 +6435,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/applications.ts",
       "source_location": "L44",
       "id": "api_applications_submitapplication",
-      "community": 20,
+      "community": 16,
       "norm_label": "submitapplication()"
     },
     {
@@ -6327,7 +6453,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/applications.ts",
       "source_location": "L70",
       "id": "api_applications_getapplicationsbycampaignid",
-      "community": 20,
+      "community": 16,
       "norm_label": "getapplicationsbycampaignid()"
     },
     {
@@ -6336,7 +6462,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/applications.ts",
       "source_location": "L82",
       "id": "api_applications_getapplicationsbybrandid",
-      "community": 20,
+      "community": 16,
       "norm_label": "getapplicationsbybrandid()"
     },
     {
@@ -6345,7 +6471,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/applications.ts",
       "source_location": "L94",
       "id": "api_applications_updateapplicationstatus",
-      "community": 20,
+      "community": 16,
       "norm_label": "updateapplicationstatus()"
     },
     {
@@ -6354,7 +6480,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/brands.ts",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_lib_api_brands_ts",
-      "community": 5,
+      "community": 16,
       "norm_label": "brands.ts"
     },
     {
@@ -6363,7 +6489,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/brands.ts",
       "source_location": "L4",
       "id": "api_brands_niche_map",
-      "community": 5,
+      "community": 16,
       "norm_label": "niche_map"
     },
     {
@@ -6372,7 +6498,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/brands.ts",
       "source_location": "L10",
       "id": "api_brands_mapbrandresponse",
-      "community": 5,
+      "community": 16,
       "norm_label": "mapbrandresponse()"
     },
     {
@@ -6381,7 +6507,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/brands.ts",
       "source_location": "L25",
       "id": "api_brands_getbrands",
-      "community": 20,
+      "community": 16,
       "norm_label": "getbrands()"
     },
     {
@@ -6390,7 +6516,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/brands.ts",
       "source_location": "L30",
       "id": "api_brands_getbrandbyid",
-      "community": 5,
+      "community": 16,
       "norm_label": "getbrandbyid()"
     },
     {
@@ -6399,7 +6525,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/brands.ts",
       "source_location": "L39",
       "id": "api_brands_getverifiedbrands",
-      "community": 20,
+      "community": 16,
       "norm_label": "getverifiedbrands()"
     },
     {
@@ -6408,7 +6534,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/brands.ts",
       "source_location": "L44",
       "id": "api_brands_getmybrandprofile",
-      "community": 5,
+      "community": 16,
       "norm_label": "getmybrandprofile()"
     },
     {
@@ -6417,7 +6543,7 @@
       "source_file": "frontend/cohesiq-v0/lib/api/brands.ts",
       "source_location": "L53",
       "id": "api_brands_updatebrandprofile",
-      "community": 5,
+      "community": 16,
       "norm_label": "updatebrandprofile()"
     },
     {
@@ -6462,7 +6588,7 @@
       "source_file": "frontend/cohesiq-v0/lib/mock-data/reviews.ts",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_lib_mock_data_reviews_ts",
-      "community": 20,
+      "community": 16,
       "norm_label": "reviews.ts"
     },
     {
@@ -6471,7 +6597,7 @@
       "source_file": "frontend/cohesiq-v0/lib/mock-data/reviews.ts",
       "source_location": "L3",
       "id": "mock_data_reviews_mockreviews",
-      "community": 20,
+      "community": 16,
       "norm_label": "mockreviews"
     },
     {
@@ -6489,7 +6615,7 @@
       "source_file": "frontend/cohesiq-v0/lib/mock-data/applications.ts",
       "source_location": "L5",
       "id": "mock_data_applications_mockapplications",
-      "community": 20,
+      "community": 16,
       "norm_label": "mockapplications"
     },
     {
@@ -6534,7 +6660,7 @@
       "source_file": "frontend/cohesiq-v0/components/creator/CreatorDetailView.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_creator_creatordetailview_tsx",
-      "community": 16,
+      "community": 10,
       "norm_label": "creatordetailview.tsx"
     },
     {
@@ -6543,7 +6669,7 @@
       "source_file": "frontend/cohesiq-v0/components/creator/CreatorDetailView.tsx",
       "source_location": "L12",
       "id": "creator_creatordetailview_creatordetailviewprops",
-      "community": 16,
+      "community": 10,
       "norm_label": "creatordetailviewprops"
     },
     {
@@ -6552,7 +6678,7 @@
       "source_file": "frontend/cohesiq-v0/components/creator/CreatorDetailView.tsx",
       "source_location": "L17",
       "id": "creator_creatordetailview_creatordetailview",
-      "community": 16,
+      "community": 10,
       "norm_label": "creatordetailview()"
     },
     {
@@ -6561,7 +6687,7 @@
       "source_file": "frontend/cohesiq-v0/components/creator/CreatorProfileHeader.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_creator_creatorprofileheader_tsx",
-      "community": 16,
+      "community": 10,
       "norm_label": "creatorprofileheader.tsx"
     },
     {
@@ -6579,7 +6705,7 @@
       "source_file": "frontend/cohesiq-v0/components/creator/CreatorProfileHeader.tsx",
       "source_location": "L18",
       "id": "creator_creatorprofileheader_creatorprofileheader",
-      "community": 16,
+      "community": 10,
       "norm_label": "creatorprofileheader()"
     },
     {
@@ -6615,7 +6741,7 @@
       "source_file": "frontend/cohesiq-v0/components/creator/RateCardTable.tsx",
       "source_location": "L30",
       "id": "creator_ratecardtable_ratecardtable",
-      "community": 16,
+      "community": 10,
       "norm_label": "ratecardtable()"
     },
     {
@@ -6705,7 +6831,7 @@
       "source_file": "frontend/cohesiq-v0/components/creator/SocialProfileCard.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_creator_socialprofilecard_tsx",
-      "community": 41,
+      "community": 5,
       "norm_label": "socialprofilecard.tsx"
     },
     {
@@ -6714,7 +6840,7 @@
       "source_file": "frontend/cohesiq-v0/components/creator/SocialProfileCard.tsx",
       "source_location": "L9",
       "id": "creator_socialprofilecard_socialprofilecardprops",
-      "community": 41,
+      "community": 5,
       "norm_label": "socialprofilecardprops"
     },
     {
@@ -6723,7 +6849,7 @@
       "source_file": "frontend/cohesiq-v0/components/creator/SocialProfileCard.tsx",
       "source_location": "L13",
       "id": "creator_socialprofilecard_socialprofilecard",
-      "community": 41,
+      "community": 5,
       "norm_label": "socialprofilecard()"
     },
     {
@@ -6813,7 +6939,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/badge.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_ui_badge_tsx",
-      "community": 112,
+      "community": 5,
       "norm_label": "badge.tsx"
     },
     {
@@ -6822,7 +6948,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/badge.tsx",
       "source_location": "L7",
       "id": "ui_badge_badgevariants",
-      "community": 112,
+      "community": 5,
       "norm_label": "badgevariants"
     },
     {
@@ -6831,7 +6957,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/badge.tsx",
       "source_location": "L28",
       "id": "ui_badge_badge",
-      "community": 112,
+      "community": 5,
       "norm_label": "badge()"
     },
     {
@@ -7326,7 +7452,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/accordion.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_ui_accordion_tsx",
-      "community": 33,
+      "community": 30,
       "norm_label": "accordion.tsx"
     },
     {
@@ -7335,7 +7461,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/accordion.tsx",
       "source_location": "L9",
       "id": "ui_accordion_accordion",
-      "community": 33,
+      "community": 30,
       "norm_label": "accordion()"
     },
     {
@@ -7344,7 +7470,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/accordion.tsx",
       "source_location": "L15",
       "id": "ui_accordion_accordionitem",
-      "community": 33,
+      "community": 30,
       "norm_label": "accordionitem()"
     },
     {
@@ -7353,7 +7479,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/accordion.tsx",
       "source_location": "L28",
       "id": "ui_accordion_accordiontrigger",
-      "community": 33,
+      "community": 30,
       "norm_label": "accordiontrigger()"
     },
     {
@@ -7362,7 +7488,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/accordion.tsx",
       "source_location": "L50",
       "id": "ui_accordion_accordioncontent",
-      "community": 33,
+      "community": 30,
       "norm_label": "accordioncontent()"
     },
     {
@@ -7506,7 +7632,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/hover-card.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_ui_hover_card_tsx",
-      "community": 64,
+      "community": 45,
       "norm_label": "hover-card.tsx"
     },
     {
@@ -7515,7 +7641,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/hover-card.tsx",
       "source_location": "L8",
       "id": "ui_hover_card_hovercard",
-      "community": 64,
+      "community": 45,
       "norm_label": "hovercard()"
     },
     {
@@ -7524,7 +7650,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/hover-card.tsx",
       "source_location": "L14",
       "id": "ui_hover_card_hovercardtrigger",
-      "community": 64,
+      "community": 45,
       "norm_label": "hovercardtrigger()"
     },
     {
@@ -7533,7 +7659,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/hover-card.tsx",
       "source_location": "L22",
       "id": "ui_hover_card_hovercardcontent",
-      "community": 64,
+      "community": 45,
       "norm_label": "hovercardcontent()"
     },
     {
@@ -7848,7 +7974,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/card.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_ui_card_tsx",
-      "community": 5,
+      "community": 112,
       "norm_label": "card.tsx"
     },
     {
@@ -7857,7 +7983,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/card.tsx",
       "source_location": "L5",
       "id": "ui_card_card",
-      "community": 5,
+      "community": 112,
       "norm_label": "card()"
     },
     {
@@ -7866,7 +7992,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/card.tsx",
       "source_location": "L18",
       "id": "ui_card_cardheader",
-      "community": 5,
+      "community": 112,
       "norm_label": "cardheader()"
     },
     {
@@ -7875,7 +8001,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/card.tsx",
       "source_location": "L31",
       "id": "ui_card_cardtitle",
-      "community": 5,
+      "community": 112,
       "norm_label": "cardtitle()"
     },
     {
@@ -7884,7 +8010,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/card.tsx",
       "source_location": "L41",
       "id": "ui_card_carddescription",
-      "community": 5,
+      "community": 112,
       "norm_label": "carddescription()"
     },
     {
@@ -7902,7 +8028,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/card.tsx",
       "source_location": "L64",
       "id": "ui_card_cardcontent",
-      "community": 5,
+      "community": 112,
       "norm_label": "cardcontent()"
     },
     {
@@ -7911,7 +8037,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/card.tsx",
       "source_location": "L74",
       "id": "ui_card_cardfooter",
-      "community": 5,
+      "community": 112,
       "norm_label": "cardfooter()"
     },
     {
@@ -7920,7 +8046,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/command.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_ui_command_tsx",
-      "community": 30,
+      "community": 20,
       "norm_label": "command.tsx"
     },
     {
@@ -7929,7 +8055,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/command.tsx",
       "source_location": "L16",
       "id": "ui_command_command",
-      "community": 30,
+      "community": 20,
       "norm_label": "command()"
     },
     {
@@ -7938,7 +8064,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/command.tsx",
       "source_location": "L32",
       "id": "ui_command_commanddialog",
-      "community": 30,
+      "community": 20,
       "norm_label": "commanddialog()"
     },
     {
@@ -7947,7 +8073,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/command.tsx",
       "source_location": "L63",
       "id": "ui_command_commandinput",
-      "community": 30,
+      "community": 20,
       "norm_label": "commandinput()"
     },
     {
@@ -7956,7 +8082,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/command.tsx",
       "source_location": "L85",
       "id": "ui_command_commandlist",
-      "community": 30,
+      "community": 20,
       "norm_label": "commandlist()"
     },
     {
@@ -7965,7 +8091,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/command.tsx",
       "source_location": "L101",
       "id": "ui_command_commandempty",
-      "community": 30,
+      "community": 20,
       "norm_label": "commandempty()"
     },
     {
@@ -7974,7 +8100,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/command.tsx",
       "source_location": "L113",
       "id": "ui_command_commandgroup",
-      "community": 30,
+      "community": 20,
       "norm_label": "commandgroup()"
     },
     {
@@ -7983,7 +8109,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/command.tsx",
       "source_location": "L129",
       "id": "ui_command_commandseparator",
-      "community": 30,
+      "community": 20,
       "norm_label": "commandseparator()"
     },
     {
@@ -7992,7 +8118,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/command.tsx",
       "source_location": "L142",
       "id": "ui_command_commanditem",
-      "community": 30,
+      "community": 20,
       "norm_label": "commanditem()"
     },
     {
@@ -8001,7 +8127,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/command.tsx",
       "source_location": "L158",
       "id": "ui_command_commandshortcut",
-      "community": 30,
+      "community": 20,
       "norm_label": "commandshortcut()"
     },
     {
@@ -8028,7 +8154,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/separator.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_ui_separator_tsx",
-      "community": 10,
+      "community": 36,
       "norm_label": "separator.tsx"
     },
     {
@@ -8037,7 +8163,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/separator.tsx",
       "source_location": "L8",
       "id": "ui_separator_separator",
-      "community": 10,
+      "community": 36,
       "norm_label": "separator()"
     },
     {
@@ -8046,7 +8172,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/input-otp.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_ui_input_otp_tsx",
-      "community": 37,
+      "community": 41,
       "norm_label": "input-otp.tsx"
     },
     {
@@ -8055,7 +8181,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/input-otp.tsx",
       "source_location": "L9",
       "id": "ui_input_otp_inputotp",
-      "community": 37,
+      "community": 41,
       "norm_label": "inputotp()"
     },
     {
@@ -8064,7 +8190,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/input-otp.tsx",
       "source_location": "L29",
       "id": "ui_input_otp_inputotpgroup",
-      "community": 37,
+      "community": 41,
       "norm_label": "inputotpgroup()"
     },
     {
@@ -8073,7 +8199,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/input-otp.tsx",
       "source_location": "L39",
       "id": "ui_input_otp_inputotpslot",
-      "community": 37,
+      "community": 41,
       "norm_label": "inputotpslot()"
     },
     {
@@ -8082,7 +8208,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/input-otp.tsx",
       "source_location": "L69",
       "id": "ui_input_otp_inputotpseparator",
-      "community": 37,
+      "community": 41,
       "norm_label": "inputotpseparator()"
     },
     {
@@ -8145,7 +8271,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/empty.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_ui_empty_tsx",
-      "community": 2,
+      "community": 115,
       "norm_label": "empty.tsx"
     },
     {
@@ -8154,7 +8280,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/empty.tsx",
       "source_location": "L5",
       "id": "ui_empty_empty",
-      "community": 2,
+      "community": 115,
       "norm_label": "empty()"
     },
     {
@@ -8163,7 +8289,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/empty.tsx",
       "source_location": "L18",
       "id": "ui_empty_emptyheader",
-      "community": 2,
+      "community": 115,
       "norm_label": "emptyheader()"
     },
     {
@@ -8172,7 +8298,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/empty.tsx",
       "source_location": "L31",
       "id": "ui_empty_emptymediavariants",
-      "community": 2,
+      "community": 115,
       "norm_label": "emptymediavariants"
     },
     {
@@ -8181,7 +8307,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/empty.tsx",
       "source_location": "L46",
       "id": "ui_empty_emptymedia",
-      "community": 2,
+      "community": 115,
       "norm_label": "emptymedia()"
     },
     {
@@ -8190,7 +8316,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/empty.tsx",
       "source_location": "L61",
       "id": "ui_empty_emptytitle",
-      "community": 2,
+      "community": 115,
       "norm_label": "emptytitle()"
     },
     {
@@ -8199,7 +8325,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/empty.tsx",
       "source_location": "L71",
       "id": "ui_empty_emptydescription",
-      "community": 2,
+      "community": 115,
       "norm_label": "emptydescription()"
     },
     {
@@ -8208,7 +8334,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/empty.tsx",
       "source_location": "L84",
       "id": "ui_empty_emptycontent",
-      "community": 2,
+      "community": 115,
       "norm_label": "emptycontent()"
     },
     {
@@ -8271,7 +8397,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/resizable.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_ui_resizable_tsx",
-      "community": 45,
+      "community": 2,
       "norm_label": "resizable.tsx"
     },
     {
@@ -8280,7 +8406,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/resizable.tsx",
       "source_location": "L9",
       "id": "ui_resizable_resizablepanelgroup",
-      "community": 45,
+      "community": 2,
       "norm_label": "resizablepanelgroup()"
     },
     {
@@ -8289,7 +8415,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/resizable.tsx",
       "source_location": "L25",
       "id": "ui_resizable_resizablepanel",
-      "community": 45,
+      "community": 2,
       "norm_label": "resizablepanel()"
     },
     {
@@ -8298,7 +8424,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/resizable.tsx",
       "source_location": "L31",
       "id": "ui_resizable_resizablehandle",
-      "community": 45,
+      "community": 2,
       "norm_label": "resizablehandle()"
     },
     {
@@ -8307,7 +8433,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/drawer.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_ui_drawer_tsx",
-      "community": 2,
+      "community": 74,
       "norm_label": "drawer.tsx"
     },
     {
@@ -8316,7 +8442,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/drawer.tsx",
       "source_location": "L8",
       "id": "ui_drawer_drawer",
-      "community": 2,
+      "community": 74,
       "norm_label": "drawer()"
     },
     {
@@ -8325,7 +8451,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/drawer.tsx",
       "source_location": "L14",
       "id": "ui_drawer_drawertrigger",
-      "community": 2,
+      "community": 74,
       "norm_label": "drawertrigger()"
     },
     {
@@ -8334,7 +8460,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/drawer.tsx",
       "source_location": "L20",
       "id": "ui_drawer_drawerportal",
-      "community": 2,
+      "community": 74,
       "norm_label": "drawerportal()"
     },
     {
@@ -8343,7 +8469,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/drawer.tsx",
       "source_location": "L26",
       "id": "ui_drawer_drawerclose",
-      "community": 2,
+      "community": 74,
       "norm_label": "drawerclose()"
     },
     {
@@ -8352,7 +8478,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/drawer.tsx",
       "source_location": "L32",
       "id": "ui_drawer_draweroverlay",
-      "community": 2,
+      "community": 74,
       "norm_label": "draweroverlay()"
     },
     {
@@ -8361,7 +8487,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/drawer.tsx",
       "source_location": "L48",
       "id": "ui_drawer_drawercontent",
-      "community": 2,
+      "community": 74,
       "norm_label": "drawercontent()"
     },
     {
@@ -8370,7 +8496,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/drawer.tsx",
       "source_location": "L75",
       "id": "ui_drawer_drawerheader",
-      "community": 2,
+      "community": 74,
       "norm_label": "drawerheader()"
     },
     {
@@ -8379,7 +8505,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/drawer.tsx",
       "source_location": "L88",
       "id": "ui_drawer_drawerfooter",
-      "community": 2,
+      "community": 74,
       "norm_label": "drawerfooter()"
     },
     {
@@ -8388,7 +8514,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/drawer.tsx",
       "source_location": "L98",
       "id": "ui_drawer_drawertitle",
-      "community": 2,
+      "community": 74,
       "norm_label": "drawertitle()"
     },
     {
@@ -8397,7 +8523,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/drawer.tsx",
       "source_location": "L111",
       "id": "ui_drawer_drawerdescription",
-      "community": 2,
+      "community": 74,
       "norm_label": "drawerdescription()"
     },
     {
@@ -8802,7 +8928,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/button-group.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_ui_button_group_tsx",
-      "community": 10,
+      "community": 36,
       "norm_label": "button-group.tsx"
     },
     {
@@ -8811,7 +8937,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/button-group.tsx",
       "source_location": "L7",
       "id": "ui_button_group_buttongroupvariants",
-      "community": 10,
+      "community": 36,
       "norm_label": "buttongroupvariants"
     },
     {
@@ -8820,7 +8946,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/button-group.tsx",
       "source_location": "L24",
       "id": "ui_button_group_buttongroup",
-      "community": 10,
+      "community": 36,
       "norm_label": "buttongroup()"
     },
     {
@@ -8829,7 +8955,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/button-group.tsx",
       "source_location": "L40",
       "id": "ui_button_group_buttongrouptext",
-      "community": 10,
+      "community": 36,
       "norm_label": "buttongrouptext()"
     },
     {
@@ -8838,7 +8964,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/button-group.tsx",
       "source_location": "L60",
       "id": "ui_button_group_buttongroupseparator",
-      "community": 10,
+      "community": 36,
       "norm_label": "buttongroupseparator()"
     },
     {
@@ -8946,7 +9072,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/button.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_ui_button_tsx",
-      "community": 11,
+      "community": 112,
       "norm_label": "button.tsx"
     },
     {
@@ -8964,7 +9090,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/button.tsx",
       "source_location": "L39",
       "id": "ui_button_button",
-      "community": 11,
+      "community": 112,
       "norm_label": "button()"
     },
     {
@@ -9171,7 +9297,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/avatar.tsx",
       "source_location": "L8",
       "id": "ui_avatar_avatar",
-      "community": 5,
+      "community": 10,
       "norm_label": "avatar()"
     },
     {
@@ -9234,7 +9360,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/table.tsx",
       "source_location": "L42",
       "id": "ui_table_tablefooter",
-      "community": 2,
+      "community": 22,
       "norm_label": "tablefooter()"
     },
     {
@@ -9270,7 +9396,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/table.tsx",
       "source_location": "L94",
       "id": "ui_table_tablecaption",
-      "community": 2,
+      "community": 22,
       "norm_label": "tablecaption()"
     },
     {
@@ -9558,7 +9684,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/spinner.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_ui_spinner_tsx",
-      "community": 41,
+      "community": 112,
       "norm_label": "spinner.tsx"
     },
     {
@@ -9567,7 +9693,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/spinner.tsx",
       "source_location": "L5",
       "id": "ui_spinner_spinner",
-      "community": 41,
+      "community": 112,
       "norm_label": "spinner()"
     },
     {
@@ -10161,7 +10287,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/progress.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_ui_progress_tsx",
-      "community": 74,
+      "community": 2,
       "norm_label": "progress.tsx"
     },
     {
@@ -10170,7 +10296,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/progress.tsx",
       "source_location": "L8",
       "id": "ui_progress_progressprops",
-      "community": 74,
+      "community": 2,
       "norm_label": "progressprops"
     },
     {
@@ -10179,7 +10305,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/progress.tsx",
       "source_location": "L12",
       "id": "ui_progress_progress",
-      "community": 74,
+      "community": 2,
       "norm_label": "progress()"
     },
     {
@@ -10188,7 +10314,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/field.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_ui_field_tsx",
-      "community": 10,
+      "community": 2,
       "norm_label": "field.tsx"
     },
     {
@@ -10197,7 +10323,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/field.tsx",
       "source_location": "L10",
       "id": "ui_field_fieldset",
-      "community": 10,
+      "community": 2,
       "norm_label": "fieldset()"
     },
     {
@@ -10206,7 +10332,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/field.tsx",
       "source_location": "L24",
       "id": "ui_field_fieldlegend",
-      "community": 10,
+      "community": 2,
       "norm_label": "fieldlegend()"
     },
     {
@@ -10215,7 +10341,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/field.tsx",
       "source_location": "L44",
       "id": "ui_field_fieldgroup",
-      "community": 10,
+      "community": 2,
       "norm_label": "fieldgroup()"
     },
     {
@@ -10224,7 +10350,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/field.tsx",
       "source_location": "L57",
       "id": "ui_field_fieldvariants",
-      "community": 10,
+      "community": 2,
       "norm_label": "fieldvariants"
     },
     {
@@ -10233,7 +10359,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/field.tsx",
       "source_location": "L81",
       "id": "ui_field_field",
-      "community": 10,
+      "community": 2,
       "norm_label": "field()"
     },
     {
@@ -10242,7 +10368,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/field.tsx",
       "source_location": "L97",
       "id": "ui_field_fieldcontent",
-      "community": 10,
+      "community": 2,
       "norm_label": "fieldcontent()"
     },
     {
@@ -10251,7 +10377,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/field.tsx",
       "source_location": "L110",
       "id": "ui_field_fieldlabel",
-      "community": 10,
+      "community": 2,
       "norm_label": "fieldlabel()"
     },
     {
@@ -10260,7 +10386,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/field.tsx",
       "source_location": "L128",
       "id": "ui_field_fieldtitle",
-      "community": 10,
+      "community": 2,
       "norm_label": "fieldtitle()"
     },
     {
@@ -10269,7 +10395,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/field.tsx",
       "source_location": "L141",
       "id": "ui_field_fielddescription",
-      "community": 10,
+      "community": 2,
       "norm_label": "fielddescription()"
     },
     {
@@ -10278,7 +10404,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/field.tsx",
       "source_location": "L156",
       "id": "ui_field_fieldseparator",
-      "community": 10,
+      "community": 2,
       "norm_label": "fieldseparator()"
     },
     {
@@ -10287,7 +10413,7 @@
       "source_file": "frontend/cohesiq-v0/components/ui/field.tsx",
       "source_location": "L186",
       "id": "ui_field_fielderror",
-      "community": 10,
+      "community": 2,
       "norm_label": "fielderror()"
     },
     {
@@ -10323,7 +10449,7 @@
       "source_file": "frontend/cohesiq-v0/components/campaign/CampaignStatusBadge.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_campaign_campaignstatusbadge_tsx",
-      "community": 112,
+      "community": 28,
       "norm_label": "campaignstatusbadge.tsx"
     },
     {
@@ -10332,7 +10458,7 @@
       "source_file": "frontend/cohesiq-v0/components/campaign/CampaignStatusBadge.tsx",
       "source_location": "L4",
       "id": "campaign_campaignstatusbadge_campaignstatusbadge",
-      "community": 112,
+      "community": 28,
       "norm_label": "campaignstatusbadge()"
     },
     {
@@ -10350,7 +10476,7 @@
       "source_file": "frontend/cohesiq-v0/components/campaign/CampaignFilters.tsx",
       "source_location": "L19",
       "id": "campaign_campaignfilters_campaignfilterscomponentprops",
-      "community": 11,
+      "community": 28,
       "norm_label": "campaignfilterscomponentprops"
     },
     {
@@ -10404,7 +10530,7 @@
       "source_file": "frontend/cohesiq-v0/components/campaign/CampaignCard.tsx",
       "source_location": "L11",
       "id": "campaign_campaigncard_campaigncardprops",
-      "community": 5,
+      "community": 28,
       "norm_label": "campaigncardprops"
     },
     {
@@ -10413,7 +10539,7 @@
       "source_file": "frontend/cohesiq-v0/components/campaign/CampaignCard.tsx",
       "source_location": "L16",
       "id": "campaign_campaigncard_campaigncard",
-      "community": 22,
+      "community": 5,
       "norm_label": "campaigncard()"
     },
     {
@@ -10476,7 +10602,7 @@
       "source_file": "frontend/cohesiq-v0/components/campaign/CampaignDetailView.tsx",
       "source_location": "L23",
       "id": "campaign_campaigndetailview_campaigndetailviewprops",
-      "community": 112,
+      "community": 22,
       "norm_label": "campaigndetailviewprops"
     },
     {
@@ -10485,7 +10611,7 @@
       "source_file": "frontend/cohesiq-v0/components/campaign/CampaignDetailView.tsx",
       "source_location": "L29",
       "id": "campaign_campaigndetailview_campaigndetailview",
-      "community": 112,
+      "community": 5,
       "norm_label": "campaigndetailview()"
     },
     {
@@ -10503,7 +10629,7 @@
       "source_file": "frontend/cohesiq-v0/components/application/ApplicationStatusBadge.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_application_applicationstatusbadge_tsx",
-      "community": 112,
+      "community": 22,
       "norm_label": "applicationstatusbadge.tsx"
     },
     {
@@ -10512,7 +10638,7 @@
       "source_file": "frontend/cohesiq-v0/components/application/ApplicationStatusBadge.tsx",
       "source_location": "L4",
       "id": "application_applicationstatusbadge_applicationstatusbadgeprops",
-      "community": 112,
+      "community": 22,
       "norm_label": "applicationstatusbadgeprops"
     },
     {
@@ -10521,7 +10647,7 @@
       "source_file": "frontend/cohesiq-v0/components/application/ApplicationStatusBadge.tsx",
       "source_location": "L8",
       "id": "application_applicationstatusbadge_statusconfig",
-      "community": 112,
+      "community": 22,
       "norm_label": "statusconfig"
     },
     {
@@ -10530,7 +10656,7 @@
       "source_file": "frontend/cohesiq-v0/components/application/ApplicationStatusBadge.tsx",
       "source_location": "L17",
       "id": "application_applicationstatusbadge_applicationstatusbadge",
-      "community": 112,
+      "community": 22,
       "norm_label": "applicationstatusbadge()"
     },
     {
@@ -10710,7 +10836,7 @@
       "source_file": "frontend/cohesiq-v0/components/shared/PlatformBadge.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_shared_platformbadge_tsx",
-      "community": 41,
+      "community": 5,
       "norm_label": "platformbadge.tsx"
     },
     {
@@ -10728,7 +10854,7 @@
       "source_file": "frontend/cohesiq-v0/components/shared/PlatformBadge.tsx",
       "source_location": "L18",
       "id": "shared_platformbadge_platformconfig",
-      "community": 41,
+      "community": 5,
       "norm_label": "platformconfig"
     },
     {
@@ -10737,7 +10863,7 @@
       "source_file": "frontend/cohesiq-v0/components/shared/PlatformBadge.tsx",
       "source_location": "L29",
       "id": "shared_platformbadge_sizeclasses",
-      "community": 41,
+      "community": 5,
       "norm_label": "sizeclasses"
     },
     {
@@ -10746,7 +10872,7 @@
       "source_file": "frontend/cohesiq-v0/components/shared/PlatformBadge.tsx",
       "source_location": "L35",
       "id": "shared_platformbadge_textsizeclasses",
-      "community": 41,
+      "community": 5,
       "norm_label": "textsizeclasses"
     },
     {
@@ -10764,7 +10890,7 @@
       "source_file": "frontend/cohesiq-v0/components/shared/PlatformBadge.tsx",
       "source_location": "L57",
       "id": "shared_platformbadge_getplatformlabel",
-      "community": 41,
+      "community": 5,
       "norm_label": "getplatformlabel()"
     },
     {
@@ -10773,7 +10899,7 @@
       "source_file": "frontend/cohesiq-v0/components/shared/StarRating.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_shared_starrating_tsx",
-      "community": 16,
+      "community": 10,
       "norm_label": "starrating.tsx"
     },
     {
@@ -10782,7 +10908,7 @@
       "source_file": "frontend/cohesiq-v0/components/shared/StarRating.tsx",
       "source_location": "L4",
       "id": "shared_starrating_starratingprops",
-      "community": 16,
+      "community": 10,
       "norm_label": "starratingprops"
     },
     {
@@ -10791,7 +10917,7 @@
       "source_file": "frontend/cohesiq-v0/components/shared/StarRating.tsx",
       "source_location": "L11",
       "id": "shared_starrating_sizeclasses",
-      "community": 16,
+      "community": 10,
       "norm_label": "sizeclasses"
     },
     {
@@ -10800,7 +10926,7 @@
       "source_file": "frontend/cohesiq-v0/components/shared/StarRating.tsx",
       "source_location": "L17",
       "id": "shared_starrating_textsizeclasses",
-      "community": 16,
+      "community": 10,
       "norm_label": "textsizeclasses"
     },
     {
@@ -10809,7 +10935,7 @@
       "source_file": "frontend/cohesiq-v0/components/shared/StarRating.tsx",
       "source_location": "L23",
       "id": "shared_starrating_starrating",
-      "community": 16,
+      "community": 10,
       "norm_label": "starrating()"
     },
     {
@@ -10818,7 +10944,7 @@
       "source_file": "frontend/cohesiq-v0/components/shared/FollowerCount.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_shared_followercount_tsx",
-      "community": 41,
+      "community": 5,
       "norm_label": "followercount.tsx"
     },
     {
@@ -10827,7 +10953,7 @@
       "source_file": "frontend/cohesiq-v0/components/shared/FollowerCount.tsx",
       "source_location": "L3",
       "id": "shared_followercount_followercountprops",
-      "community": 41,
+      "community": 5,
       "norm_label": "followercountprops"
     },
     {
@@ -10836,7 +10962,7 @@
       "source_file": "frontend/cohesiq-v0/components/shared/FollowerCount.tsx",
       "source_location": "L9",
       "id": "shared_followercount_followercount",
-      "community": 41,
+      "community": 5,
       "norm_label": "followercount()"
     },
     {
@@ -10944,7 +11070,7 @@
       "source_file": "frontend/cohesiq-v0/components/layout/Footer.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_layout_footer_tsx",
-      "community": 11,
+      "community": 116,
       "norm_label": "footer.tsx"
     },
     {
@@ -10953,7 +11079,7 @@
       "source_file": "frontend/cohesiq-v0/components/layout/Footer.tsx",
       "source_location": "L3",
       "id": "layout_footer_footer",
-      "community": 11,
+      "community": 116,
       "norm_label": "footer()"
     },
     {
@@ -10962,7 +11088,7 @@
       "source_file": "frontend/cohesiq-v0/components/layout/Navbar.tsx",
       "source_location": "L1",
       "id": "frontend_cohesiq_v0_components_layout_navbar_tsx",
-      "community": 11,
+      "community": 116,
       "norm_label": "navbar.tsx"
     },
     {
@@ -10971,7 +11097,7 @@
       "source_file": "frontend/cohesiq-v0/components/layout/Navbar.tsx",
       "source_location": "L11",
       "id": "layout_navbar_navlinks",
-      "community": 11,
+      "community": 116,
       "norm_label": "navlinks"
     },
     {
@@ -10980,7 +11106,7 @@
       "source_file": "frontend/cohesiq-v0/components/layout/Navbar.tsx",
       "source_location": "L16",
       "id": "layout_navbar_navbar",
-      "community": 11,
+      "community": 116,
       "norm_label": "navbar()"
     },
     {
@@ -14638,6 +14764,51 @@
       "norm_label": "iii. primary reference endpoints to query & cross-reference"
     },
     {
+      "label": "CreatorProfile",
+      "file_type": "code",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L50",
+      "community": 0,
+      "norm_label": "creatorprofile",
+      "id": "creatorprofile"
+    },
+    {
+      "label": "score_budget()",
+      "file_type": "code",
+      "source_file": "backend/app/services/matching.py",
+      "source_location": "L58",
+      "community": 47,
+      "norm_label": "score_budget()",
+      "id": "services_matching_score_budget"
+    },
+    {
+      "label": "Pure function. All inputs are pre-fetched primitives.     No database calls. Ful",
+      "file_type": "rationale",
+      "source_file": "backend/app/services/matching.py",
+      "source_location": "L105",
+      "community": 47,
+      "norm_label": "pure function. all inputs are pre-fetched primitives.     no database calls. ful",
+      "id": "services_matching_rationale_105"
+    },
+    {
+      "label": "Campaign",
+      "file_type": "code",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L44",
+      "community": 14,
+      "norm_label": "campaign",
+      "id": "campaign"
+    },
+    {
+      "label": "AIMatchScore",
+      "file_type": "code",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L469",
+      "community": 14,
+      "norm_label": "aimatchscore",
+      "id": "aimatchscore"
+    },
+    {
       "label": "Base",
       "file_type": "code",
       "source_file": "",
@@ -14717,114 +14888,6 @@
       "community": 13,
       "norm_label": "mock_messages",
       "id": "messages_page_mock_messages"
-    },
-    {
-      "label": "Niche",
-      "file_type": "code",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L26",
-      "community": 0,
-      "norm_label": "niche",
-      "id": "scripts_seed_db_niche"
-    },
-    {
-      "label": "Language",
-      "file_type": "code",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L33",
-      "community": 0,
-      "norm_label": "language",
-      "id": "scripts_seed_db_language"
-    },
-    {
-      "label": "clear_database()",
-      "file_type": "code",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L383",
-      "community": 17,
-      "norm_label": "clear_database()",
-      "id": "scripts_seed_db_clear_database"
-    },
-    {
-      "label": "AsyncSession",
-      "file_type": "code",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L383",
-      "community": 17,
-      "norm_label": "asyncsession",
-      "id": "backend_scripts_seed_db_py_asyncsession"
-    },
-    {
-      "label": "seed_niches_and_languages()",
-      "file_type": "code",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L398",
-      "community": 17,
-      "norm_label": "seed_niches_and_languages()",
-      "id": "scripts_seed_db_seed_niches_and_languages"
-    },
-    {
-      "label": "seed_creators()",
-      "file_type": "code",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L414",
-      "community": 17,
-      "norm_label": "seed_creators()",
-      "id": "scripts_seed_db_seed_creators"
-    },
-    {
-      "label": "seed_brands()",
-      "file_type": "code",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L551",
-      "community": 17,
-      "norm_label": "seed_brands()",
-      "id": "scripts_seed_db_seed_brands"
-    },
-    {
-      "label": "seed_campaigns()",
-      "file_type": "code",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L612",
-      "community": 17,
-      "norm_label": "seed_campaigns()",
-      "id": "scripts_seed_db_seed_campaigns"
-    },
-    {
-      "label": "seed_applications()",
-      "file_type": "code",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L646",
-      "community": 17,
-      "norm_label": "seed_applications()",
-      "id": "scripts_seed_db_seed_applications"
-    },
-    {
-      "label": "main()",
-      "file_type": "code",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L672",
-      "community": 17,
-      "norm_label": "main()",
-      "id": "scripts_seed_db_main"
-    },
-    {
-      "label": "code:bash (git clone <repository_url>)",
-      "file_type": "document",
-      "source_file": "README.md",
-      "source_location": "L22",
-      "community": 100,
-      "norm_label": "code:bash (git clone <repository_url>)",
-      "id": "cohesiq_readme_codeblock_1"
-    },
-    {
-      "label": "code:bash (docker compose up --build)",
-      "file_type": "document",
-      "source_file": "README.md",
-      "source_location": "L32",
-      "community": 100,
-      "norm_label": "code:bash (docker compose up --build)",
-      "id": "cohesiq_readme_codeblock_2"
     },
     {
       "label": "BrandProfileUpdate",
@@ -14930,7 +14993,7 @@
       "file_type": "code",
       "source_file": "backend/app/main.py",
       "source_location": "L57",
-      "community": 1,
+      "community": 37,
       "norm_label": "uuid",
       "id": "uuid"
     }
@@ -16061,6 +16124,16 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L18",
       "weight": 0.8,
+      "source": "backend_app_creators_service_py_creatorprofile",
+      "target": "creators_schemas_nicheref",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L18",
+      "weight": 0.8,
       "confidence_score": 0.5,
       "source": "backend_app_creators_service_py_creatorprofileupdate",
       "target": "creators_schemas_nicheref"
@@ -16611,6 +16684,16 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L18",
       "weight": 0.8,
+      "source": "backend_app_creators_service_py_creatorprofile",
+      "target": "creators_schemas_languageref",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L18",
+      "weight": 0.8,
       "confidence_score": 0.5,
       "source": "backend_app_creators_service_py_creatorprofileupdate",
       "target": "creators_schemas_languageref"
@@ -16931,6 +17014,16 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L18",
       "weight": 0.8,
+      "source": "backend_app_creators_service_py_creatorprofile",
+      "target": "creators_schemas_socialprofilecreate",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L18",
+      "weight": 0.8,
       "confidence_score": 0.5,
       "source": "backend_app_creators_service_py_creatorprofileupdate",
       "target": "creators_schemas_socialprofilecreate"
@@ -17251,6 +17344,16 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L18",
       "weight": 0.8,
+      "source": "backend_app_creators_service_py_creatorprofile",
+      "target": "creators_schemas_socialprofileupdate",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L18",
+      "weight": 0.8,
       "confidence_score": 0.5,
       "source": "backend_app_creators_service_py_creatorprofileupdate",
       "target": "creators_schemas_socialprofileupdate"
@@ -17731,6 +17834,16 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L18",
       "weight": 0.8,
+      "source": "backend_app_creators_service_py_creatorprofile",
+      "target": "creators_schemas_ratecardcreate",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L18",
+      "weight": 0.8,
       "confidence_score": 0.5,
       "source": "backend_app_creators_service_py_creatorprofileupdate",
       "target": "creators_schemas_ratecardcreate"
@@ -18051,6 +18164,16 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L18",
       "weight": 0.8,
+      "source": "backend_app_creators_service_py_creatorprofile",
+      "target": "creators_schemas_ratecardupdate",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L18",
+      "weight": 0.8,
       "confidence_score": 0.5,
       "source": "backend_app_creators_service_py_creatorprofileupdate",
       "target": "creators_schemas_ratecardupdate"
@@ -18531,6 +18654,16 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L18",
       "weight": 0.8,
+      "source": "backend_app_creators_service_py_creatorprofile",
+      "target": "creators_schemas_portfolioitemcreate",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L18",
+      "weight": 0.8,
       "confidence_score": 0.5,
       "source": "backend_app_creators_service_py_creatorprofileupdate",
       "target": "creators_schemas_portfolioitemcreate"
@@ -19011,6 +19144,16 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L18",
       "weight": 0.8,
+      "source": "backend_app_creators_service_py_creatorprofile",
+      "target": "creators_schemas_collabhistorycreate",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L18",
+      "weight": 0.8,
       "confidence_score": 0.5,
       "source": "backend_app_creators_service_py_creatorprofileupdate",
       "target": "creators_schemas_collabhistorycreate"
@@ -19484,6 +19627,16 @@
       "confidence_score": 0.5,
       "source": "backend_app_creators_service_py_collabhistorycreate",
       "target": "creators_schemas_creatorprofileupdate"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L18",
+      "weight": 0.8,
+      "source": "backend_app_creators_service_py_creatorprofile",
+      "target": "creators_schemas_creatorprofileupdate",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
@@ -20134,6 +20287,16 @@
       "confidence_score": 0.5,
       "source": "backend_app_creators_service_py_collabhistorycreate",
       "target": "creators_schemas_creatorfilters"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L18",
+      "weight": 0.8,
+      "source": "backend_app_creators_service_py_creatorprofile",
+      "target": "creators_schemas_creatorfilters",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
@@ -22252,6 +22415,17 @@
     },
     {
       "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "creators_service_get_creator",
+      "target": "backend_app_creators_service_py_creatorprofile",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/creators/service.py",
@@ -22748,9 +22922,9 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L9",
       "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "creatorprofile",
-      "target": "creators_models_creatorcollaborationhistory"
+      "source": "backend_app_creators_service_py_creatorprofile",
+      "target": "creators_models_creatorcollaborationhistory",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
@@ -22758,9 +22932,9 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L9",
       "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "creatorprofile",
-      "target": "creators_models_creatorlanguage"
+      "source": "backend_app_creators_service_py_creatorprofile",
+      "target": "creators_models_creatorlanguage",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
@@ -22768,9 +22942,9 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L9",
       "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "creatorprofile",
-      "target": "creators_models_creatorniche"
+      "source": "backend_app_creators_service_py_creatorprofile",
+      "target": "creators_models_creatorniche",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
@@ -22778,9 +22952,9 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L9",
       "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "creatorprofile",
-      "target": "creators_models_creatorportfolioitem"
+      "source": "backend_app_creators_service_py_creatorprofile",
+      "target": "creators_models_creatorportfolioitem",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
@@ -22788,9 +22962,9 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L9",
       "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "creatorprofile",
-      "target": "creators_models_creatorprofile"
+      "source": "backend_app_creators_service_py_creatorprofile",
+      "target": "creators_models_creatorprofile",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
@@ -22798,9 +22972,9 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L9",
       "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "creatorprofile",
-      "target": "creators_models_creatorratecard"
+      "source": "backend_app_creators_service_py_creatorprofile",
+      "target": "creators_models_creatorratecard",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
@@ -22808,9 +22982,9 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L9",
       "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "creatorprofile",
-      "target": "creators_models_creatorsocialprofile"
+      "source": "backend_app_creators_service_py_creatorprofile",
+      "target": "creators_models_creatorsocialprofile",
+      "confidence_score": 0.5
     },
     {
       "relation": "references",
@@ -22819,9 +22993,9 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L68",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "creators_service_create_creator_profile",
-      "target": "creatorprofile"
+      "target": "backend_app_creators_service_py_creatorprofile",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -22830,9 +23004,9 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L59",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "creators_service_get_creator_by_user_id",
-      "target": "creatorprofile"
+      "target": "backend_app_creators_service_py_creatorprofile",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -22841,9 +23015,9 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L107",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "creators_service_list_creators",
-      "target": "creatorprofile"
+      "target": "backend_app_creators_service_py_creatorprofile",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -22852,9 +23026,9 @@
       "source_file": "backend/app/creators/service.py",
       "source_location": "L78",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "creators_service_update_creator_profile",
-      "target": "creatorprofile"
+      "target": "backend_app_creators_service_py_creatorprofile",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -22890,6 +23064,17 @@
       "target": "creators_service_get_creator_by_user_id"
     },
     {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L59",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "creators_service_get_creator_by_user_id",
+      "target": "creatorprofile"
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "INFERRED",
@@ -22921,6 +23106,17 @@
       "confidence_score": 1.0,
       "source": "creators_service_create_creator_profile",
       "target": "backend_app_creators_service_py_str"
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L68",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "creators_service_create_creator_profile",
+      "target": "creatorprofile"
     },
     {
       "relation": "rationale_for",
@@ -23012,6 +23208,17 @@
       "confidence_score": 1.0,
       "source": "creators_service_update_creator_profile",
       "target": "backend_app_creators_service_py_creatorprofileupdate"
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L78",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "creators_service_update_creator_profile",
+      "target": "creatorprofile"
     },
     {
       "relation": "calls",
@@ -23115,6 +23322,17 @@
       "confidence_score": 1.0,
       "source": "creators_service_list_creators",
       "target": "creatorfilters"
+    },
+    {
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L107",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "creators_service_list_creators",
+      "target": "creatorprofile"
     },
     {
       "relation": "uses",
@@ -24239,6 +24457,16 @@
       "relation": "uses",
       "confidence": "INFERRED",
       "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L610",
+      "weight": 0.8,
+      "source": "backend_app_campaigns_service_py_aimatchscore",
+      "target": "creators_models_creatorprofile",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/campaigns/service.py",
       "source_location": "L397",
       "weight": 0.8,
       "confidence_score": 0.5,
@@ -24289,6 +24517,16 @@
       "relation": "uses",
       "confidence": "INFERRED",
       "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L610",
+      "weight": 0.8,
+      "source": "backend_app_campaigns_service_py_campaign",
+      "target": "creators_models_creatorprofile",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/campaigns/service.py",
       "source_location": "L397",
       "weight": 0.8,
       "confidence_score": 0.5,
@@ -24321,9 +24559,9 @@
       "source_file": "backend/app/campaigns/service.py",
       "source_location": "L471",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "backend_app_campaigns_service_py_float",
-      "target": "creators_models_creatorprofile",
-      "confidence_score": 0.5
+      "target": "creators_models_creatorprofile"
     },
     {
       "relation": "uses",
@@ -24358,12 +24596,52 @@
     {
       "relation": "uses",
       "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L13",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L12",
       "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "backend_scripts_seed_db_py_asyncsession",
-      "target": "creators_models_creatorprofile"
+      "source": "backend_app_services_llm_matching_py_aimatchscore",
+      "target": "creators_models_creatorprofile",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L12",
+      "weight": 0.8,
+      "source": "backend_app_services_llm_matching_py_asyncsession",
+      "target": "creators_models_creatorprofile",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L12",
+      "weight": 0.8,
+      "source": "backend_app_services_llm_matching_py_campaign",
+      "target": "creators_models_creatorprofile",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L12",
+      "weight": 0.8,
+      "source": "backend_app_services_llm_matching_py_creatorprofile",
+      "target": "creators_models_creatorprofile",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L12",
+      "weight": 0.8,
+      "source": "backend_app_services_llm_matching_py_uuid",
+      "target": "creators_models_creatorprofile",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
@@ -24466,6 +24744,16 @@
       "target": "creators_models_creatorprofile"
     },
     {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L9",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "creatorprofile",
+      "target": "creators_models_creatorprofile"
+    },
+    {
       "relation": "inherits",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/creators/models.py",
@@ -24503,26 +24791,6 @@
       "weight": 0.8,
       "confidence_score": 0.5,
       "source": "review",
-      "target": "creators_models_creatorprofile"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L13",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "scripts_seed_db_language",
-      "target": "creators_models_creatorprofile"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L13",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "scripts_seed_db_niche",
       "target": "creators_models_creatorprofile"
     },
     {
@@ -24588,11 +24856,61 @@
     {
       "relation": "uses",
       "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L13",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L12",
+      "weight": 0.8,
+      "source": "backend_app_services_llm_matching_py_aimatchscore",
+      "target": "creators_models_creatorsocialprofile",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L12",
+      "weight": 0.8,
+      "source": "backend_app_services_llm_matching_py_asyncsession",
+      "target": "creators_models_creatorsocialprofile",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L12",
+      "weight": 0.8,
+      "source": "backend_app_services_llm_matching_py_campaign",
+      "target": "creators_models_creatorsocialprofile",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L12",
+      "weight": 0.8,
+      "source": "backend_app_services_llm_matching_py_creatorprofile",
+      "target": "creators_models_creatorsocialprofile",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L12",
+      "weight": 0.8,
+      "source": "backend_app_services_llm_matching_py_uuid",
+      "target": "creators_models_creatorsocialprofile",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L9",
       "weight": 0.8,
       "confidence_score": 0.5,
-      "source": "backend_scripts_seed_db_py_asyncsession",
+      "source": "creatorprofile",
       "target": "creators_models_creatorsocialprofile"
     },
     {
@@ -24623,26 +24941,6 @@
       "weight": 0.8,
       "confidence_score": 0.5,
       "source": "onboardingrequest",
-      "target": "creators_models_creatorsocialprofile"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L13",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "scripts_seed_db_language",
-      "target": "creators_models_creatorsocialprofile"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L13",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "scripts_seed_db_niche",
       "target": "creators_models_creatorsocialprofile"
     },
     {
@@ -24719,11 +25017,11 @@
     {
       "relation": "uses",
       "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L13",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L9",
       "weight": 0.8,
       "confidence_score": 0.5,
-      "source": "backend_scripts_seed_db_py_asyncsession",
+      "source": "creatorprofile",
       "target": "creators_models_creatorniche"
     },
     {
@@ -24759,42 +25057,11 @@
     {
       "relation": "uses",
       "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L13",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L9",
       "weight": 0.8,
       "confidence_score": 0.5,
-      "source": "scripts_seed_db_language",
-      "target": "creators_models_creatorniche"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L13",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "scripts_seed_db_niche",
-      "target": "creators_models_creatorniche"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L148",
-      "weight": 1.0,
-      "source": "scripts_seed_db_seed_creators",
-      "target": "creators_models_creatorniche"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L13",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "backend_scripts_seed_db_py_asyncsession",
+      "source": "creatorprofile",
       "target": "creators_models_creatorlanguage"
     },
     {
@@ -24810,42 +25077,11 @@
     {
       "relation": "uses",
       "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L13",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L9",
       "weight": 0.8,
       "confidence_score": 0.5,
-      "source": "scripts_seed_db_language",
-      "target": "creators_models_creatorlanguage"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L13",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "scripts_seed_db_niche",
-      "target": "creators_models_creatorlanguage"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L154",
-      "weight": 1.0,
-      "source": "scripts_seed_db_seed_creators",
-      "target": "creators_models_creatorlanguage"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L13",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "backend_scripts_seed_db_py_asyncsession",
+      "source": "creatorprofile",
       "target": "creators_models_creatorratecard"
     },
     {
@@ -24861,22 +25097,12 @@
     {
       "relation": "uses",
       "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L13",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L9",
       "weight": 0.8,
       "confidence_score": 0.5,
-      "source": "scripts_seed_db_language",
-      "target": "creators_models_creatorratecard"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L13",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "scripts_seed_db_niche",
-      "target": "creators_models_creatorratecard"
+      "source": "creatorprofile",
+      "target": "creators_models_creatorportfolioitem"
     },
     {
       "relation": "inherits",
@@ -24887,6 +25113,16 @@
       "confidence_score": 1.0,
       "source": "creators_models_creatorportfolioitem",
       "target": "common_models_base"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/creators/service.py",
+      "source_location": "L9",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "creatorprofile",
+      "target": "creators_models_creatorcollaborationhistory"
     },
     {
       "relation": "inherits",
@@ -26989,28 +27225,6 @@
       "target": "auth_service_hash_password"
     },
     {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L180",
-      "weight": 1.0,
-      "source": "scripts_seed_db_seed_brands",
-      "target": "auth_service_hash_password"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L107",
-      "weight": 1.0,
-      "source": "scripts_seed_db_seed_creators",
-      "target": "auth_service_hash_password"
-    },
-    {
       "relation": "references",
       "context": "parameter_type",
       "confidence": "EXTRACTED",
@@ -27342,6 +27556,114 @@
       "target": "auth_models_user"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "backend_app_services_llm_matching_py",
+      "target": "backend_app_services_llm_matching_py_uuid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "backend_app_services_llm_matching_py",
+      "target": "services_llm_matching_generate_matches_with_llm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L117",
+      "weight": 1.0,
+      "source": "backend_app_services_llm_matching_py",
+      "target": "services_llm_matching_get_and_generate_matches",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "services_llm_matching_generate_matches_with_llm",
+      "target": "backend_app_services_llm_matching_py_campaign",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "services_llm_matching_generate_matches_with_llm",
+      "target": "backend_app_services_llm_matching_py_creatorprofile",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L148",
+      "weight": 1.0,
+      "source": "services_llm_matching_get_and_generate_matches",
+      "target": "services_llm_matching_generate_matches_with_llm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/scripts/test_matching.py",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "scripts_test_matching_test",
+      "target": "services_llm_matching_get_and_generate_matches"
+    },
+    {
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L117",
+      "weight": 1.0,
+      "source": "services_llm_matching_get_and_generate_matches",
+      "target": "backend_app_services_llm_matching_py_aimatchscore",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L117",
+      "weight": 1.0,
+      "source": "services_llm_matching_get_and_generate_matches",
+      "target": "backend_app_services_llm_matching_py_asyncsession",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/services/llm_matching.py",
+      "source_location": "L117",
+      "weight": 1.0,
+      "source": "services_llm_matching_get_and_generate_matches",
+      "target": "backend_app_services_llm_matching_py_uuid",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/services/matching.py",
@@ -27380,6 +27702,16 @@
       "confidence_score": 1.0,
       "source": "backend_app_services_matching_py",
       "target": "services_matching_score_budget"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/services/matching.py",
+      "source_location": "L71",
+      "weight": 1.0,
+      "source": "backend_app_services_matching_py",
+      "target": "services_matching_score_budget_with_tier",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -27443,6 +27775,17 @@
       "target": "services_matching_matchscores"
     },
     {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L572",
+      "weight": 1.0,
+      "source": "campaigns_service_run_campaign_matching",
+      "target": "services_matching_get_tier"
+    },
+    {
       "relation": "references",
       "context": "parameter_type",
       "confidence": "EXTRACTED",
@@ -27463,6 +27806,17 @@
       "confidence_score": 1.0,
       "source": "services_matching_get_tier",
       "target": "backend_app_services_matching_py_str"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/services/matching.py",
+      "source_location": "L85",
+      "weight": 1.0,
+      "source": "services_matching_score_budget_with_tier",
+      "target": "services_matching_get_tier",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -27496,6 +27850,17 @@
       "confidence_score": 1.0,
       "source": "services_matching_score_budget",
       "target": "backend_app_services_matching_py_int"
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/services/matching.py",
+      "source_location": "L71",
+      "weight": 1.0,
+      "source": "services_matching_score_budget_with_tier",
+      "target": "backend_app_services_matching_py_int",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -27575,6 +27940,16 @@
       "target": "services_matching_score_niche"
     },
     {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/services/matching.py",
+      "source_location": "L54",
+      "weight": 1.0,
+      "source": "services_matching_rationale_54",
+      "target": "services_matching_score_niche",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "references",
       "context": "return_type",
       "confidence": "EXTRACTED",
@@ -27606,6 +27981,17 @@
       "confidence_score": 1.0,
       "source": "services_matching_score_budget",
       "target": "backend_app_services_matching_py_float"
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/services/matching.py",
+      "source_location": "L71",
+      "weight": 1.0,
+      "source": "services_matching_score_budget_with_tier",
+      "target": "backend_app_services_matching_py_float",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -27656,22 +28042,32 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/services/matching.py",
-      "source_location": "L110",
+      "source_location": "L174",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "services_matching_compute_match_score",
-      "target": "services_matching_score_engagement"
+      "target": "services_matching_score_budget_with_tier",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/services/matching.py",
+      "source_location": "L76",
+      "weight": 1.0,
+      "source": "services_matching_rationale_76",
+      "target": "services_matching_score_budget_with_tier",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/services/matching.py",
-      "source_location": "L111",
+      "source_location": "L110",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "services_matching_compute_match_score",
-      "target": "services_matching_score_budget"
+      "target": "services_matching_score_engagement"
     },
     {
       "relation": "calls",
@@ -27718,6 +28114,17 @@
       "target": "services_matching_compute_match_score"
     },
     {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/services/matching.py",
+      "source_location": "L111",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "services_matching_compute_match_score",
+      "target": "services_matching_score_budget"
+    },
+    {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/services/matching.py",
@@ -27726,6 +28133,16 @@
       "confidence_score": 1.0,
       "source": "services_matching_rationale_105",
       "target": "services_matching_compute_match_score"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/services/matching.py",
+      "source_location": "L168",
+      "weight": 1.0,
+      "source": "services_matching_rationale_168",
+      "target": "services_matching_compute_match_score",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -31687,9 +32104,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_list_campaigns",
-      "target": "backend_app_campaigns_router_py_depends",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_depends"
     },
     {
       "relation": "references",
@@ -31698,9 +32115,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_list_campaigns",
-      "target": "backend_app_campaigns_router_py_get_db",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_db"
     },
     {
       "relation": "references",
@@ -31709,9 +32126,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_list_campaigns",
-      "target": "backend_app_campaigns_router_py_int",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_int"
     },
     {
       "relation": "references",
@@ -31905,9 +32322,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L24",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "backend_app_campaigns_router_py_depends",
-      "target": "backend_app_common_dependencies_py_get_db",
-      "confidence_score": 0.5
+      "target": "backend_app_common_dependencies_py_get_db"
     },
     {
       "relation": "references",
@@ -31916,9 +32333,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L123",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_apply_to_campaign",
-      "target": "backend_app_campaigns_router_py_depends",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_depends"
     },
     {
       "relation": "references",
@@ -31927,9 +32344,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_create_campaign",
-      "target": "backend_app_campaigns_router_py_depends",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_depends"
     },
     {
       "relation": "references",
@@ -31938,9 +32355,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L210",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_create_review",
-      "target": "backend_app_campaigns_router_py_depends",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_depends"
     },
     {
       "relation": "references",
@@ -31949,9 +32366,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L74",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_get_campaign",
-      "target": "backend_app_campaigns_router_py_depends",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_depends"
     },
     {
       "relation": "references",
@@ -31960,9 +32377,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L242",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_get_campaign_matches_endpoint",
-      "target": "backend_app_campaigns_router_py_depends",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_depends"
     },
     {
       "relation": "references",
@@ -31971,9 +32388,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L174",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_invite_creator_to_campaign",
-      "target": "backend_app_campaigns_router_py_depends",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_depends"
     },
     {
       "relation": "references",
@@ -31982,9 +32399,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L139",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_list_applications",
-      "target": "backend_app_campaigns_router_py_depends",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_depends"
     },
     {
       "relation": "references",
@@ -31993,9 +32410,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L191",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_respond_to_invitation",
-      "target": "backend_app_campaigns_router_py_depends",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_depends"
     },
     {
       "relation": "references",
@@ -32004,9 +32421,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L224",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_run_campaign_matching_endpoint",
-      "target": "backend_app_campaigns_router_py_depends",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_depends"
     },
     {
       "relation": "references",
@@ -32015,9 +32432,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L159",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_update_application_status",
-      "target": "backend_app_campaigns_router_py_depends",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_depends"
     },
     {
       "relation": "references",
@@ -32026,9 +32443,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L85",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_update_campaign",
-      "target": "backend_app_campaigns_router_py_depends",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_depends"
     },
     {
       "relation": "references",
@@ -32037,9 +32454,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L102",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_update_campaign_status",
-      "target": "backend_app_campaigns_router_py_depends",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_depends"
     },
     {
       "relation": "uses",
@@ -32047,9 +32464,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L24",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "backend_app_campaigns_router_py_get_db",
-      "target": "backend_app_common_dependencies_py_get_db",
-      "confidence_score": 0.5
+      "target": "backend_app_common_dependencies_py_get_db"
     },
     {
       "relation": "references",
@@ -32058,9 +32475,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L123",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_apply_to_campaign",
-      "target": "backend_app_campaigns_router_py_get_db",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_db"
     },
     {
       "relation": "references",
@@ -32069,9 +32486,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_create_campaign",
-      "target": "backend_app_campaigns_router_py_get_db",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_db"
     },
     {
       "relation": "references",
@@ -32080,9 +32497,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L210",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_create_review",
-      "target": "backend_app_campaigns_router_py_get_db",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_db"
     },
     {
       "relation": "references",
@@ -32091,9 +32508,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L74",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_get_campaign",
-      "target": "backend_app_campaigns_router_py_get_db",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_db"
     },
     {
       "relation": "references",
@@ -32102,9 +32519,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L242",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_get_campaign_matches_endpoint",
-      "target": "backend_app_campaigns_router_py_get_db",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_db"
     },
     {
       "relation": "references",
@@ -32113,9 +32530,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L174",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_invite_creator_to_campaign",
-      "target": "backend_app_campaigns_router_py_get_db",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_db"
     },
     {
       "relation": "references",
@@ -32124,9 +32541,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L139",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_list_applications",
-      "target": "backend_app_campaigns_router_py_get_db",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_db"
     },
     {
       "relation": "references",
@@ -32135,9 +32552,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L191",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_respond_to_invitation",
-      "target": "backend_app_campaigns_router_py_get_db",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_db"
     },
     {
       "relation": "references",
@@ -32146,9 +32563,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L224",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_run_campaign_matching_endpoint",
-      "target": "backend_app_campaigns_router_py_get_db",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_db"
     },
     {
       "relation": "references",
@@ -32157,9 +32574,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L159",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_update_application_status",
-      "target": "backend_app_campaigns_router_py_get_db",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_db"
     },
     {
       "relation": "references",
@@ -32168,9 +32585,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L85",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_update_campaign",
-      "target": "backend_app_campaigns_router_py_get_db",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_db"
     },
     {
       "relation": "references",
@@ -32179,9 +32596,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L102",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_update_campaign_status",
-      "target": "backend_app_campaigns_router_py_get_db",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_db"
     },
     {
       "relation": "uses",
@@ -32189,9 +32606,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L24",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "backend_app_campaigns_router_py_int",
-      "target": "backend_app_common_dependencies_py_get_db",
-      "confidence_score": 0.5
+      "target": "backend_app_common_dependencies_py_get_db"
     },
     {
       "relation": "uses",
@@ -32221,9 +32638,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_create_campaign",
-      "target": "backend_app_campaigns_router_py_get_current_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_current_user"
     },
     {
       "relation": "references",
@@ -32232,9 +32649,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_create_campaign",
-      "target": "backend_app_campaigns_router_py_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_user"
     },
     {
       "relation": "references",
@@ -32296,9 +32713,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L24",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "backend_app_campaigns_router_py_user",
-      "target": "backend_app_common_dependencies_py_get_db",
-      "confidence_score": 0.5
+      "target": "backend_app_common_dependencies_py_get_db"
     },
     {
       "relation": "references",
@@ -32307,9 +32724,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L123",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_apply_to_campaign",
-      "target": "backend_app_campaigns_router_py_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_user"
     },
     {
       "relation": "references",
@@ -32318,9 +32735,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L210",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_create_review",
-      "target": "backend_app_campaigns_router_py_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_user"
     },
     {
       "relation": "references",
@@ -32329,9 +32746,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L242",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_get_campaign_matches_endpoint",
-      "target": "backend_app_campaigns_router_py_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_user"
     },
     {
       "relation": "references",
@@ -32340,9 +32757,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L174",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_invite_creator_to_campaign",
-      "target": "backend_app_campaigns_router_py_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_user"
     },
     {
       "relation": "references",
@@ -32351,9 +32768,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L139",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_list_applications",
-      "target": "backend_app_campaigns_router_py_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_user"
     },
     {
       "relation": "references",
@@ -32362,9 +32779,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L191",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_respond_to_invitation",
-      "target": "backend_app_campaigns_router_py_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_user"
     },
     {
       "relation": "references",
@@ -32373,9 +32790,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L224",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_run_campaign_matching_endpoint",
-      "target": "backend_app_campaigns_router_py_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_user"
     },
     {
       "relation": "references",
@@ -32384,9 +32801,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L159",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_update_application_status",
-      "target": "backend_app_campaigns_router_py_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_user"
     },
     {
       "relation": "references",
@@ -32395,9 +32812,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L85",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_update_campaign",
-      "target": "backend_app_campaigns_router_py_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_user"
     },
     {
       "relation": "references",
@@ -32406,9 +32823,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L102",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_update_campaign_status",
-      "target": "backend_app_campaigns_router_py_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_user"
     },
     {
       "relation": "uses",
@@ -32416,9 +32833,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L24",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "backend_app_campaigns_router_py_get_current_user",
-      "target": "backend_app_common_dependencies_py_get_db",
-      "confidence_score": 0.5
+      "target": "backend_app_common_dependencies_py_get_db"
     },
     {
       "relation": "references",
@@ -32427,9 +32844,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L123",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_apply_to_campaign",
-      "target": "backend_app_campaigns_router_py_get_current_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_current_user"
     },
     {
       "relation": "references",
@@ -32438,9 +32855,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L210",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_create_review",
-      "target": "backend_app_campaigns_router_py_get_current_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_current_user"
     },
     {
       "relation": "references",
@@ -32449,9 +32866,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L242",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_get_campaign_matches_endpoint",
-      "target": "backend_app_campaigns_router_py_get_current_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_current_user"
     },
     {
       "relation": "references",
@@ -32460,9 +32877,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L174",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_invite_creator_to_campaign",
-      "target": "backend_app_campaigns_router_py_get_current_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_current_user"
     },
     {
       "relation": "references",
@@ -32471,9 +32888,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L139",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_list_applications",
-      "target": "backend_app_campaigns_router_py_get_current_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_current_user"
     },
     {
       "relation": "references",
@@ -32482,9 +32899,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L191",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_respond_to_invitation",
-      "target": "backend_app_campaigns_router_py_get_current_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_current_user"
     },
     {
       "relation": "references",
@@ -32493,9 +32910,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L224",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_run_campaign_matching_endpoint",
-      "target": "backend_app_campaigns_router_py_get_current_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_current_user"
     },
     {
       "relation": "references",
@@ -32504,9 +32921,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L159",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_update_application_status",
-      "target": "backend_app_campaigns_router_py_get_current_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_current_user"
     },
     {
       "relation": "references",
@@ -32515,9 +32932,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L85",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_update_campaign",
-      "target": "backend_app_campaigns_router_py_get_current_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_current_user"
     },
     {
       "relation": "references",
@@ -32526,9 +32943,9 @@
       "source_file": "backend/app/campaigns/router.py",
       "source_location": "L102",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_router_update_campaign_status",
-      "target": "backend_app_campaigns_router_py_get_current_user",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_router_py_get_current_user"
     },
     {
       "relation": "references",
@@ -33633,6 +34050,17 @@
     },
     {
       "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "campaigns_service_get_campaign",
+      "target": "backend_app_campaigns_service_py_campaign",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/campaigns/service.py",
@@ -34190,96 +34618,59 @@
       "target": "backend_app_campaigns_service_py_uuid"
     },
     {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L532",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "campaign",
-      "target": "campaigns_models_aimatchscore"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L10",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "campaign",
-      "target": "campaigns_models_campaign"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L10",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "campaign",
-      "target": "campaigns_models_campaignapplication"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L10",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "campaign",
-      "target": "campaigns_models_campaigndeliverablerequirement"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L10",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "campaign",
-      "target": "campaigns_models_campaignlanguagetarget"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L10",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "campaign",
-      "target": "campaigns_models_campaignnichetarget"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L10",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "campaign",
-      "target": "campaigns_models_review"
-    },
-    {
       "relation": "references",
       "context": "return_type",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L99",
+      "source_location": "L102",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "campaigns_service_create_campaign",
-      "target": "campaign"
+      "target": "backend_app_campaigns_service_py_campaign",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L90",
+      "source_location": "L93",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "campaigns_service_list_brand_campaigns",
-      "target": "campaign"
+      "target": "backend_app_campaigns_service_py_campaign",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "campaigns_service_list_campaigns",
+      "target": "backend_app_campaigns_service_py_campaign",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L155",
+      "weight": 1.0,
+      "source": "campaigns_service_update_campaign",
+      "target": "backend_app_campaigns_service_py_campaign",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L167",
+      "weight": 1.0,
+      "source": "campaigns_service_update_campaign_status",
+      "target": "backend_app_campaigns_service_py_campaign",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -34290,28 +34681,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "campaigns_service_list_campaigns",
-      "target": "campaign"
-    },
-    {
-      "relation": "references",
-      "context": "return_type",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L150",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "campaigns_service_update_campaign",
-      "target": "campaign"
-    },
-    {
-      "relation": "references",
-      "context": "return_type",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L160",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "campaigns_service_update_campaign_status",
       "target": "campaign"
     },
     {
@@ -34397,6 +34766,17 @@
     },
     {
       "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L90",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "campaigns_service_list_brand_campaigns",
+      "target": "campaign"
+    },
+    {
+      "relation": "references",
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/campaigns/service.py",
@@ -34405,6 +34785,17 @@
       "confidence_score": 1.0,
       "source": "campaigns_service_create_campaign",
       "target": "backend_app_campaigns_service_py_campaigncreate"
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L99",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "campaigns_service_create_campaign",
+      "target": "campaign"
     },
     {
       "relation": "calls",
@@ -34521,6 +34912,17 @@
       "target": "backend_app_campaigns_service_py_campaignupdate"
     },
     {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L150",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "campaigns_service_update_campaign",
+      "target": "campaign"
+    },
+    {
       "relation": "uses",
       "confidence": "INFERRED",
       "source_file": "backend/app/campaigns/service.py",
@@ -34600,6 +35002,17 @@
       "confidence_score": 1.0,
       "source": "campaigns_service_update_campaign_status",
       "target": "backend_app_campaigns_service_py_campaignstatusupdate"
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L160",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "campaigns_service_update_campaign_status",
+      "target": "campaign"
     },
     {
       "relation": "uses",
@@ -35343,9 +35756,9 @@
       "source_file": "backend/app/campaigns/service.py",
       "source_location": "L447",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "campaigns_service_generate_rationale",
-      "target": "backend_app_campaigns_service_py_float",
-      "confidence_score": 1.0
+      "target": "backend_app_campaigns_service_py_float"
     },
     {
       "relation": "references",
@@ -35462,74 +35875,37 @@
       "target": "aimatchscore"
     },
     {
-      "relation": "uses",
-      "confidence": "INFERRED",
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
       "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L532",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "aimatchscore",
-      "target": "campaigns_models_aimatchscore"
+      "source_location": "L471",
+      "weight": 1.0,
+      "source": "campaigns_service_run_campaign_matching",
+      "target": "backend_app_campaigns_service_py_aimatchscore",
+      "confidence_score": 1.0
     },
     {
-      "relation": "uses",
-      "confidence": "INFERRED",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
       "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L10",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "aimatchscore",
-      "target": "campaigns_models_campaign"
+      "source_location": "L605",
+      "weight": 1.0,
+      "source": "campaigns_service_run_campaign_matching",
+      "target": "campaigns_service_get_campaign_matches",
+      "confidence_score": 1.0
     },
     {
-      "relation": "uses",
-      "confidence": "INFERRED",
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
       "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L10",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "aimatchscore",
-      "target": "campaigns_models_campaignapplication"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L10",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "aimatchscore",
-      "target": "campaigns_models_campaigndeliverablerequirement"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L10",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "aimatchscore",
-      "target": "campaigns_models_campaignlanguagetarget"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L10",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "aimatchscore",
-      "target": "campaigns_models_campaignnichetarget"
-    },
-    {
-      "relation": "uses",
-      "confidence": "INFERRED",
-      "source_file": "backend/app/campaigns/service.py",
-      "source_location": "L10",
-      "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "aimatchscore",
-      "target": "campaigns_models_review"
+      "source_location": "L608",
+      "weight": 1.0,
+      "source": "campaigns_service_get_campaign_matches",
+      "target": "backend_app_campaigns_service_py_aimatchscore",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -35626,11 +36002,21 @@
     {
       "relation": "uses",
       "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L21",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L10",
       "weight": 0.8,
       "confidence_score": 0.5,
-      "source": "backend_scripts_seed_db_py_asyncsession",
+      "source": "aimatchscore",
+      "target": "campaigns_models_campaign"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L10",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "campaign",
       "target": "campaigns_models_campaign"
     },
     {
@@ -35666,22 +36052,22 @@
     {
       "relation": "uses",
       "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L21",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L10",
       "weight": 0.8,
       "confidence_score": 0.5,
-      "source": "scripts_seed_db_language",
-      "target": "campaigns_models_campaign"
+      "source": "aimatchscore",
+      "target": "campaigns_models_campaignnichetarget"
     },
     {
       "relation": "uses",
       "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L21",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L10",
       "weight": 0.8,
       "confidence_score": 0.5,
-      "source": "scripts_seed_db_niche",
-      "target": "campaigns_models_campaign"
+      "source": "campaign",
+      "target": "campaigns_models_campaignnichetarget"
     },
     {
       "relation": "inherits",
@@ -35714,6 +36100,26 @@
       "target": "campaigns_models_campaignnichetarget"
     },
     {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L10",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "aimatchscore",
+      "target": "campaigns_models_campaignlanguagetarget"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L10",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "campaign",
+      "target": "campaigns_models_campaignlanguagetarget"
+    },
+    {
       "relation": "inherits",
       "confidence": "EXTRACTED",
       "source_file": "backend/app/campaigns/models.py",
@@ -35742,6 +36148,26 @@
       "confidence_score": 0.5,
       "source": "float",
       "target": "campaigns_models_campaignlanguagetarget"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L10",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "aimatchscore",
+      "target": "campaigns_models_campaigndeliverablerequirement"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L10",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "campaign",
+      "target": "campaigns_models_campaigndeliverablerequirement"
     },
     {
       "relation": "inherits",
@@ -35776,11 +36202,21 @@
     {
       "relation": "uses",
       "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L21",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L10",
       "weight": 0.8,
       "confidence_score": 0.5,
-      "source": "backend_scripts_seed_db_py_asyncsession",
+      "source": "aimatchscore",
+      "target": "campaigns_models_campaignapplication"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L10",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "campaign",
       "target": "campaigns_models_campaignapplication"
     },
     {
@@ -35816,22 +36252,22 @@
     {
       "relation": "uses",
       "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L21",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L10",
       "weight": 0.8,
       "confidence_score": 0.5,
-      "source": "scripts_seed_db_language",
-      "target": "campaigns_models_campaignapplication"
+      "source": "aimatchscore",
+      "target": "campaigns_models_review"
     },
     {
       "relation": "uses",
       "confidence": "INFERRED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L21",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L10",
       "weight": 0.8,
       "confidence_score": 0.5,
-      "source": "scripts_seed_db_niche",
-      "target": "campaigns_models_campaignapplication"
+      "source": "campaign",
+      "target": "campaigns_models_review"
     },
     {
       "relation": "inherits",
@@ -35862,6 +36298,26 @@
       "confidence_score": 0.5,
       "source": "float",
       "target": "campaigns_models_review"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L532",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "aimatchscore",
+      "target": "campaigns_models_aimatchscore"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend/app/campaigns/service.py",
+      "source_location": "L532",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "campaign",
+      "target": "campaigns_models_aimatchscore"
     },
     {
       "relation": "inherits",
@@ -35961,26 +36417,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "common_models_niche",
-      "target": "common_models_base"
-    },
-    {
-      "relation": "inherits",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L33",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scripts_seed_db_language",
-      "target": "common_models_base"
-    },
-    {
-      "relation": "inherits",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L26",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scripts_seed_db_niche",
       "target": "common_models_base"
     },
     {
@@ -36484,21 +36920,11 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L75",
+      "source_location": "L111",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "backend_scripts_seed_db_py",
-      "target": "scripts_seed_db_clear_database"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L111",
-      "weight": 1.0,
-      "source": "backend_scripts_seed_db_py",
-      "target": "scripts_seed_db_insert_brand",
-      "confidence_score": 1.0
+      "target": "scripts_seed_db_insert_brand"
     },
     {
       "relation": "contains",
@@ -36506,79 +36932,9 @@
       "source_file": "backend/scripts/seed_db.py",
       "source_location": "L166",
       "weight": 1.0,
-      "source": "backend_scripts_seed_db_py",
-      "target": "scripts_seed_db_insert_creator",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L33",
-      "weight": 1.0,
       "confidence_score": 1.0,
       "source": "backend_scripts_seed_db_py",
-      "target": "scripts_seed_db_language"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L273",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "backend_scripts_seed_db_py",
-      "target": "scripts_seed_db_main"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L26",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "backend_scripts_seed_db_py",
-      "target": "scripts_seed_db_niche"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L247",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "backend_scripts_seed_db_py",
-      "target": "scripts_seed_db_seed_applications"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L178",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "backend_scripts_seed_db_py",
-      "target": "scripts_seed_db_seed_brands"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L213",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "backend_scripts_seed_db_py",
-      "target": "scripts_seed_db_seed_campaigns"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L105",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "backend_scripts_seed_db_py",
-      "target": "scripts_seed_db_seed_creators"
+      "target": "scripts_seed_db_insert_creator"
     },
     {
       "relation": "contains",
@@ -36586,19 +36942,9 @@
       "source_file": "backend/scripts/seed_db.py",
       "source_location": "L10",
       "weight": 1.0,
-      "source": "backend_scripts_seed_db_py",
-      "target": "scripts_seed_db_seed_db",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L89",
-      "weight": 1.0,
       "confidence_score": 1.0,
       "source": "backend_scripts_seed_db_py",
-      "target": "scripts_seed_db_seed_niches_and_languages"
+      "target": "scripts_seed_db_seed_db"
     },
     {
       "relation": "imports",
@@ -36618,9 +36964,9 @@
       "source_file": "backend/scripts/seed_db.py",
       "source_location": "L79",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_seed_db_seed_db",
-      "target": "scripts_seed_db_insert_brand",
-      "confidence_score": 1.0
+      "target": "scripts_seed_db_insert_brand"
     },
     {
       "relation": "calls",
@@ -36629,9 +36975,9 @@
       "source_file": "backend/scripts/seed_db.py",
       "source_location": "L82",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_seed_db_seed_db",
-      "target": "scripts_seed_db_insert_creator",
-      "confidence_score": 1.0
+      "target": "scripts_seed_db_insert_creator"
     },
     {
       "relation": "contains",
@@ -36639,9 +36985,9 @@
       "source_file": "backend/scripts/reset_db.py",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_scripts_reset_db_py",
-      "target": "scripts_reset_db_reset_db",
-      "confidence_score": 1.0
+      "target": "scripts_reset_db_reset_db"
     },
     {
       "relation": "contains",
@@ -36649,9 +36995,9 @@
       "source_file": "backend/scripts/generate_seed_data.py",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_scripts_generate_seed_data_py",
-      "target": "scripts_generate_seed_data_generate_real_creators",
-      "confidence_score": 1.0
+      "target": "scripts_generate_seed_data_generate_real_creators"
     },
     {
       "relation": "contains",
@@ -36659,9 +37005,9 @@
       "source_file": "backend/scripts/generate_seed_data.py",
       "source_location": "L157",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_scripts_generate_seed_data_py",
-      "target": "scripts_generate_seed_data_generate_synthetic_brands",
-      "confidence_score": 1.0
+      "target": "scripts_generate_seed_data_generate_synthetic_brands"
     },
     {
       "relation": "contains",
@@ -36669,8 +37015,18 @@
       "source_file": "backend/scripts/generate_seed_data.py",
       "source_location": "L113",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_scripts_generate_seed_data_py",
-      "target": "scripts_generate_seed_data_generate_synthetic_creators",
+      "target": "scripts_generate_seed_data_generate_synthetic_creators"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/scripts/test_matching.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "backend_scripts_test_matching_py",
+      "target": "scripts_test_matching_test",
       "confidence_score": 1.0
     },
     {
@@ -36679,9 +37035,9 @@
       "source_file": "backend/scripts/sync_clerk_users.py",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_scripts_sync_clerk_users_py",
-      "target": "scripts_sync_clerk_users_fetch_clerk_users",
-      "confidence_score": 1.0
+      "target": "scripts_sync_clerk_users_fetch_clerk_users"
     },
     {
       "relation": "contains",
@@ -36689,9 +37045,9 @@
       "source_file": "backend/scripts/sync_clerk_users.py",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_scripts_sync_clerk_users_py",
-      "target": "scripts_sync_clerk_users_sync_users",
-      "confidence_score": 1.0
+      "target": "scripts_sync_clerk_users_sync_users"
     },
     {
       "relation": "calls",
@@ -36700,9 +37056,9 @@
       "source_file": "backend/scripts/sync_clerk_users.py",
       "source_location": "L30",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_sync_clerk_users_sync_users",
-      "target": "scripts_sync_clerk_users_fetch_clerk_users",
-      "confidence_score": 1.0
+      "target": "scripts_sync_clerk_users_fetch_clerk_users"
     },
     {
       "relation": "contains",
@@ -42840,9 +43196,9 @@
       "source_file": "frontend/cohesiq-v0/app/(dashboard)/dashboard/brand/messages/page.tsx",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "frontend_cohesiq_v0_app_dashboard_dashboard_brand_messages_page_tsx",
-      "target": "frontend_cohesiq_v0_app_dashboard_dashboard_brand_messages_page_tsx_messages_page_mock_conversations",
-      "confidence_score": 1.0
+      "target": "frontend_cohesiq_v0_app_dashboard_dashboard_brand_messages_page_tsx_messages_page_mock_conversations"
     },
     {
       "relation": "contains",
@@ -42850,9 +43206,9 @@
       "source_file": "frontend/cohesiq-v0/app/(dashboard)/dashboard/brand/messages/page.tsx",
       "source_location": "L32",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "frontend_cohesiq_v0_app_dashboard_dashboard_brand_messages_page_tsx",
-      "target": "frontend_cohesiq_v0_app_dashboard_dashboard_brand_messages_page_tsx_messages_page_mock_messages",
-      "confidence_score": 1.0
+      "target": "frontend_cohesiq_v0_app_dashboard_dashboard_brand_messages_page_tsx_messages_page_mock_messages"
     },
     {
       "relation": "imports_from",
@@ -51697,6 +52053,26 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
+      "source_location": "L65",
+      "weight": 1.0,
+      "source": "frontend_cohesiq_v0_lib_api_campaigns_ts",
+      "target": "api_campaigns_mapcreatorfromraw",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
+      "source_location": "L89",
+      "weight": 1.0,
+      "source": "frontend_cohesiq_v0_lib_api_campaigns_ts",
+      "target": "api_campaigns_mapmatchscore",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
       "source_location": "L4",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -51851,6 +52227,17 @@
       "confidence_score": 1.0,
       "source": "api_campaigns_updatecampaignstatus",
       "target": "api_campaigns_mapcampaignresponse"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "frontend/cohesiq-v0/lib/api/campaigns.ts",
+      "source_location": "L101",
+      "weight": 1.0,
+      "source": "api_campaigns_mapmatchscore",
+      "target": "api_campaigns_mapcreatorfromraw",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -63033,9 +63420,9 @@
       "source_file": "AGENTS.md",
       "source_location": "L54",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "cohesiq_agents_ai_agent_instructions_for_cohesiq",
-      "target": "cohesiq_agents_data_seeding_mock_data",
-      "confidence_score": 1.0
+      "target": "cohesiq_agents_data_seeding_mock_data"
     },
     {
       "relation": "contains",
@@ -63093,9 +63480,9 @@
       "source_file": "README.md",
       "source_location": "L46",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "cohesiq_readme_cohesiq",
-      "target": "cohesiq_readme_data_seeding",
-      "confidence_score": 1.0
+      "target": "cohesiq_readme_data_seeding"
     },
     {
       "relation": "contains",
@@ -63146,26 +63533,6 @@
       "confidence_score": 1.0,
       "source": "cohesiq_readme_cohesiq",
       "target": "cohesiq_readme_tech_stack"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "README.md",
-      "source_location": "L22",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "cohesiq_readme_quick_start",
-      "target": "cohesiq_readme_codeblock_1"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "README.md",
-      "source_location": "L32",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "cohesiq_readme_quick_start",
-      "target": "cohesiq_readme_codeblock_2"
     },
     {
       "relation": "contains",
@@ -63823,9 +64190,9 @@
       "source_file": "docs/plan.md",
       "source_location": "L1053",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_plan_md",
-      "target": "docs_plan_major_architecture_data_seeding_decisions_may_2026",
-      "confidence_score": 1.0
+      "target": "docs_plan_major_architecture_data_seeding_decisions_may_2026"
     },
     {
       "relation": "contains",
@@ -63833,9 +64200,9 @@
       "source_file": "docs/plan.md",
       "source_location": "L1055",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_plan_major_architecture_data_seeding_decisions_may_2026",
-      "target": "docs_plan_1_separation_of_real_synthetic_creator_data",
-      "confidence_score": 1.0
+      "target": "docs_plan_1_separation_of_real_synthetic_creator_data"
     },
     {
       "relation": "contains",
@@ -63843,9 +64210,9 @@
       "source_file": "docs/plan.md",
       "source_location": "L1060",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_plan_major_architecture_data_seeding_decisions_may_2026",
-      "target": "docs_plan_2_transition_to_fast_llm_extraction_models",
-      "confidence_score": 1.0
+      "target": "docs_plan_2_transition_to_fast_llm_extraction_models"
     },
     {
       "relation": "contains",
@@ -63853,9 +64220,9 @@
       "source_file": "docs/plan.md",
       "source_location": "L1065",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_plan_major_architecture_data_seeding_decisions_may_2026",
-      "target": "docs_plan_3_business_data_reset_layer",
-      "confidence_score": 1.0
+      "target": "docs_plan_3_business_data_reset_layer"
     },
     {
       "relation": "contains",
@@ -63863,9 +64230,9 @@
       "source_file": "docs/plan.md",
       "source_location": "L1069",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_plan_major_architecture_data_seeding_decisions_may_2026",
-      "target": "docs_plan_4_diverse_seeding_profiles_for_demos",
-      "confidence_score": 1.0
+      "target": "docs_plan_4_diverse_seeding_profiles_for_demos"
     },
     {
       "relation": "contains",
@@ -65796,160 +66163,8 @@
       "confidence_score": 1.0,
       "source": "base_prompts_data_source_research_prompt_i_technical_architecture_summary_to_analyze",
       "target": "base_prompts_data_source_research_prompt_3_facebook_graph_api_pages_only_profiles_prohibited"
-    },
-    {
-      "relation": "inherits",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L33",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scripts_seed_db_language",
-      "target": "base"
-    },
-    {
-      "relation": "inherits",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L26",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scripts_seed_db_niche",
-      "target": "base"
-    },
-    {
-      "relation": "references",
-      "context": "parameter_type",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L75",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scripts_seed_db_clear_database",
-      "target": "backend_scripts_seed_db_py_asyncsession"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L275",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scripts_seed_db_main",
-      "target": "scripts_seed_db_clear_database"
-    },
-    {
-      "relation": "references",
-      "context": "parameter_type",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L247",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scripts_seed_db_seed_applications",
-      "target": "backend_scripts_seed_db_py_asyncsession"
-    },
-    {
-      "relation": "references",
-      "context": "parameter_type",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L178",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scripts_seed_db_seed_brands",
-      "target": "backend_scripts_seed_db_py_asyncsession"
-    },
-    {
-      "relation": "references",
-      "context": "parameter_type",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L213",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scripts_seed_db_seed_campaigns",
-      "target": "backend_scripts_seed_db_py_asyncsession"
-    },
-    {
-      "relation": "references",
-      "context": "parameter_type",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L105",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scripts_seed_db_seed_creators",
-      "target": "backend_scripts_seed_db_py_asyncsession"
-    },
-    {
-      "relation": "references",
-      "context": "parameter_type",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L89",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scripts_seed_db_seed_niches_and_languages",
-      "target": "backend_scripts_seed_db_py_asyncsession"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L276",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scripts_seed_db_main",
-      "target": "scripts_seed_db_seed_niches_and_languages"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L277",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scripts_seed_db_main",
-      "target": "scripts_seed_db_seed_creators"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L278",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scripts_seed_db_main",
-      "target": "scripts_seed_db_seed_brands"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L279",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scripts_seed_db_main",
-      "target": "scripts_seed_db_seed_campaigns"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/scripts/seed_db.py",
-      "source_location": "L280",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scripts_seed_db_main",
-      "target": "scripts_seed_db_seed_applications"
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "04f2da6065d2a18555d92489b58549d3381302da"
+  "built_at_commit": "ab2de3318e9c00868cc2e60fafc92e9163dfa0fd"
 }

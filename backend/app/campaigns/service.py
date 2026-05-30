@@ -27,6 +27,19 @@ from app.campaigns.schemas import (
     ApplicationInviteCreate,
     ApplicationRespondInvite,
 )
+from app.services.matching import (
+    TIER_BUDGET_RANGES,
+    compute_match_score,
+    get_tier,
+    score_niche,
+)
+from app.services.semantic_match import get_gemini_embedding, semantic_similarity
+
+SEMANTIC_SIMILARITY_THRESHOLD = 0.28
+SEMANTIC_BOOST_WEIGHT = 0.12
+TIER_MIN_FLOOR = 0.5
+BUDGET_RATE_HARD_CAP = 1.10
+BUDGET_ESTIMATE_CAP = 1.25
 
 
 def _campaign_options():
@@ -35,6 +48,58 @@ def _campaign_options():
         selectinload(Campaign.language_targets),
         selectinload(Campaign.deliverable_requirements),
     ]
+
+
+def _build_campaign_text(campaign: Campaign, campaign_niche_name: str) -> str:
+    parts = [
+        campaign.title,
+        campaign.description,
+        campaign.objectives,
+        campaign_niche_name,
+    ]
+    return " ".join([p for p in parts if p])
+
+
+def _build_creator_text(
+    creator_display_name: str,
+    creator_bio: str | None,
+    creator_tagline: str | None,
+    creator_city: str | None,
+    creator_primary: str,
+    creator_subs: list[str],
+) -> str:
+    parts = [
+        creator_display_name,
+        creator_bio,
+        creator_tagline,
+        creator_city,
+        creator_primary,
+        " ".join(creator_subs or []),
+    ]
+    return " ".join([p for p in parts if p])
+
+
+def _passes_budget_gate(
+    campaign_budget_max: int | None,
+    creator_rate: int | None,
+    follower_count: int,
+) -> bool:
+    if not campaign_budget_max or campaign_budget_max <= 0:
+        return True
+
+    tier = get_tier(follower_count)
+    tier_range = TIER_BUDGET_RANGES[tier]
+    tier_min = tier_range["min"]
+    tier_max = tier_range["max"]
+
+    if campaign_budget_max < int(tier_min * TIER_MIN_FLOOR):
+        return False
+
+    if creator_rate and creator_rate > 0:
+        return creator_rate <= int(campaign_budget_max * BUDGET_RATE_HARD_CAP)
+
+    estimated_rate = (tier_min + tier_max) // 2
+    return estimated_rate <= int(campaign_budget_max * BUDGET_ESTIMATE_CAP)
 
 
 # ------------------------------------------------------------------ #
@@ -444,24 +509,38 @@ async def list_brand_reviews(db: AsyncSession, brand_id: uuid.UUID) -> List[Revi
     return list(result.scalars().all())
 
 
-def generate_rationale(creator_name: str, niche_match: float, budget_match: float, engagement_match: float, campaign_title: str) -> str:
+def generate_rationale(
+    creator_name: str,
+    niche_match: float,
+    budget_match: float,
+    engagement_match: float,
+    campaign_title: str,
+    creator_tier: str = "",
+    semantic_similarity_score: float = 0.0,
+    semantic_used: bool = False,
+) -> str:
     parts = []
-    if niche_match >= 0.8:
-        parts.append(f"{creator_name} is a perfect match for {campaign_title} due to their strong alignment in content niche.")
+    if niche_match >= 1.0:
+        parts.append(f"{creator_name} is an excellent niche match for {campaign_title}.")
+    elif niche_match >= 0.6:
+        parts.append(f"{creator_name} has secondary niche overlap with {campaign_title}.")
     else:
-        parts.append(f"{creator_name} has content overlapping with the theme of {campaign_title}.")
+        parts.append(f"{creator_name}'s content niche does not align well with {campaign_title}.")
+
+    if semantic_used and niche_match < 0.6 and semantic_similarity_score >= SEMANTIC_SIMILARITY_THRESHOLD:
+        parts.append("Semantic similarity suggests content alignment despite limited niche overlap.")
     
+    if budget_match >= 0.8:
+        parts.append(f"Their {creator_tier} tier profile is a great fit for the campaign budget.")
+    elif budget_match >= 0.4:
+        parts.append(f"Budget alignment is partial — rates may require negotiation.")
+    else:
+        parts.append(f"Warning: Creator's typical rates or audience size may be mismatched with the campaign budget.")
+
     if engagement_match >= 0.7:
-        parts.append("They exhibit exceptional audience engagement rates that outpace industry benchmarks.")
-    else:
-        parts.append("Their audience is highly receptive with steady engagement patterns.")
-        
-    if budget_match >= 1.0:
-        parts.append("Their content delivery costs fit seamlessly within your campaign budget limits.")
-    elif budget_match >= 0.5:
-        parts.append("Their standard rates are negotiable and match well with your target pricing.")
-    else:
-        parts.append("Pricing is slightly higher but negotiable for premium quality delivery.")
+        parts.append("Engagement metrics are above the industry benchmark for their tier.")
+    elif engagement_match > 0:
+        parts.append("Engagement is within acceptable range.")
         
     return " ".join(parts)
 
@@ -469,7 +548,6 @@ def generate_rationale(creator_name: str, niche_match: float, budget_match: floa
 async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> List[AIMatchScore]:
     from app.common.models import Niche, Language
     from app.creators.models import CreatorProfile
-    from app.services.matching import compute_match_score
     from sqlalchemy import text
 
     # 1. Fetch Campaign
@@ -508,6 +586,9 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
     )
     creators = creators_result.scalars().all()
 
+    campaign_text = _build_campaign_text(campaign, campaign_niche_name)
+    campaign_embedding = get_gemini_embedding(campaign_text)
+
     # Compute matches
     matches = []
     for creator in creators:
@@ -531,7 +612,8 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             primary_profile = max(creator.social_profiles, key=lambda x: x.follower_count or 0)
 
         follower_count = primary_profile.follower_count if primary_profile else 0
-        engagement_rate = float(primary_profile.engagement_rate) if (primary_profile and primary_profile.engagement_rate is not None) else 0.0
+        follower_count = follower_count or 0
+        engagement_rate = float(primary_profile.engagement_rate) if (primary_profile and primary_profile.engagement_rate is not None) else None
         creator_platforms = [sp.platform for sp in creator.social_profiles]
 
         # Determine creator rate for campaign platforms
@@ -544,12 +626,49 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
         if creator_rate is None:
             creator_rate = creator.min_budget
 
+        campaign_plats = campaign.required_platforms or []
+        if campaign_plats and not any(p in creator_platforms for p in campaign_plats):
+            continue
+
+        min_followers = campaign.creator_min_followers or 0
+        max_followers = campaign.creator_max_followers
+        if follower_count < min_followers:
+            continue
+        if max_followers and follower_count > max_followers:
+            continue
+
+        if not _passes_budget_gate(campaign.budget_per_creator_max, creator_rate, follower_count):
+            continue
+
         # Language profile mapping
         creator_lang_profile = {}
         for cl in creator.languages:
             creator_lang_profile[cl.language_code] = 1.0
 
+        creator_text = _build_creator_text(
+            creator_display_name=creator.display_name,
+            creator_bio=creator.bio,
+            creator_tagline=creator.tagline,
+            creator_city=creator.city,
+            creator_primary=creator_primary,
+            creator_subs=creator_subs,
+        )
+
+        niche_score = score_niche(campaign_niche_name, creator_primary, creator_subs)
+        semantic_score = 0.0
+        semantic_used = False
+        if niche_score <= 0.0 and campaign_niche_name.lower() not in ("general", "unknown", "other"):
+            semantic_score = semantic_similarity(
+                campaign_text,
+                creator_text,
+                campaign_embedding=campaign_embedding,
+            )
+            semantic_used = semantic_score >= SEMANTIC_SIMILARITY_THRESHOLD
+            if not semantic_used:
+                continue
+
         # Compute match score using matching engine
+        from app.services.matching import get_tier  # noqa: PLC0415
         scores = compute_match_score(
             campaign_niche=campaign_niche_name,
             campaign_budget=campaign.budget_per_creator_max,
@@ -565,13 +684,19 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             creator_days_since_post=None,
         )
 
+        creator_tier = get_tier(follower_count)
+        total_score = min(scores.total + (semantic_score * SEMANTIC_BOOST_WEIGHT), 1.0)
+
         # Generate rationale
         rational_text = generate_rationale(
             creator_name=creator.display_name,
             niche_match=scores.niche,
             budget_match=scores.budget,
             engagement_match=scores.engagement,
-            campaign_title=campaign.title
+            campaign_title=campaign.title,
+            creator_tier=creator_tier,
+            semantic_similarity_score=semantic_score,
+            semantic_used=semantic_used,
         )
 
         match_score_obj = AIMatchScore(
@@ -581,7 +706,7 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             score_engagement=scores.engagement,
             score_budget=scores.budget,
             score_language=scores.language,
-            score_total=scores.total,
+            score_total=total_score,
             rationale=rational_text
         )
         matches.append(match_score_obj)
@@ -595,19 +720,23 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
         db.add(match)
     await db.commit()
 
-    # Refresh objects to load relationships
-    for match in top_matches:
-        await db.refresh(match, ["creator"])
-
-    return top_matches
+    return await get_campaign_matches(db, campaign_id)
 
 
 async def get_campaign_matches(db: AsyncSession, campaign_id: uuid.UUID) -> List[AIMatchScore]:
     from app.campaigns.models import AIMatchScore
+    from app.creators.models import CreatorProfile
+    
     result = await db.execute(
         select(AIMatchScore)
         .where(AIMatchScore.campaign_id == campaign_id)
         .order_by(AIMatchScore.score_total.desc())
-        .options(selectinload(AIMatchScore.creator))
+        .options(
+            selectinload(AIMatchScore.creator).selectinload(CreatorProfile.social_profiles),
+            selectinload(AIMatchScore.creator).selectinload(CreatorProfile.niches),
+            selectinload(AIMatchScore.creator).selectinload(CreatorProfile.languages),
+            selectinload(AIMatchScore.creator).selectinload(CreatorProfile.rate_cards),
+            selectinload(AIMatchScore.creator).selectinload(CreatorProfile.portfolio_items)
+        )
     )
     return list(result.scalars().all())

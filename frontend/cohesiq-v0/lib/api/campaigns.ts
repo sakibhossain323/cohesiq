@@ -2,9 +2,20 @@ import type { Campaign, CampaignFilters, PlatformType, CampaignStatus, AIMatchSc
 import { fetchApi } from "./client";
 
 export const NICHE_MAP: Record<number, string> = {
-  1: "technology", 2: "fashion", 3: "food", 4: "travel", 5: "lifestyle",
-  6: "finance", 7: "gaming", 8: "education", 9: "health", 10: "beauty",
-  11: "fitness", 12: "entertainment", 13: "sports"
+  1: "technology",
+  2: "gaming",
+  3: "fashion",
+  4: "beauty",
+  5: "food",
+  6: "travel",
+  7: "lifestyle",
+  8: "education",
+  9: "finance",
+  10: "fitness",
+  11: "parenting",
+  12: "entertainment",
+  13: "news",
+  14: "other",
 };
 
 let brandsCache: Record<string, any> = {};
@@ -49,6 +60,46 @@ async function mapCampaignResponse(c: any): Promise<Campaign> {
     status: c.status as CampaignStatus,
     application_count: 0,
   } as Campaign; // Typecast because UI expects application_count and some other optionals
+}
+
+function mapCreatorFromRaw(c: any) {
+  if (!c) return undefined;
+  const primaryNicheId = c.niches?.find((n: any) => n.is_primary)?.niche_id ?? c.niches?.[0]?.niche_id;
+  const primaryNicheName = primaryNicheId != null ? NICHE_MAP[primaryNicheId] || `Niche ${primaryNicheId}` : "other";
+
+  return {
+    id: c.id,
+    display_name: c.display_name,
+    tagline: c.tagline,
+    bio: c.bio,
+    profile_photo_url: c.profile_photo_url,
+    city: c.city,
+    primary_niche: primaryNicheName,
+    niches: c.niches ? c.niches.map((n: any) => NICHE_MAP[n.niche_id] || `Niche ${n.niche_id}`) : [],
+    languages: c.languages ? c.languages.map((l: any) => l.language_code) : [],
+    social_profiles: c.social_profiles || [],
+    rate_cards: c.rate_cards || [],
+    is_available: c.is_available ?? true,
+    total_collaborations: c.total_collaborations ?? 0,
+    average_rating: c.average_rating ? Number(c.average_rating) : undefined,
+    min_budget: c.min_budget,
+  };
+}
+
+function mapMatchScore(m: any): AIMatchScore {
+  return {
+    id: m.id,
+    campaign_id: m.campaign_id,
+    creator_id: m.creator_id,
+    score_niche: m.score_niche,
+    score_engagement: m.score_engagement,
+    score_budget: m.score_budget,
+    score_language: m.score_language,
+    score_total: m.score_total,
+    rationale: m.rationale,
+    generated_at: m.generated_at,
+    creator: mapCreatorFromRaw(m.creator),
+  };
 }
 
 export async function getCampaigns(filters?: CampaignFilters): Promise<Campaign[]> {
@@ -108,17 +159,19 @@ export async function getSuggestedCampaigns(creatorNiche: string, limit: number 
 }
 
 export async function runCampaignMatching(campaignId: string, token: string): Promise<AIMatchScore[]> {
-  return fetchApi<AIMatchScore[]>(`/campaigns/${campaignId}/run-matching`, {
+  const raw = await fetchApi<any[]>(`/campaigns/${campaignId}/run-matching`, {
     method: "POST",
     token,
   });
+  return raw.map(mapMatchScore);
 }
 
 export async function getCampaignMatches(campaignId: string, token: string): Promise<AIMatchScore[]> {
-  return fetchApi<AIMatchScore[]>(`/campaigns/${campaignId}/matches`, {
+  const raw = await fetchApi<any[]>(`/campaigns/${campaignId}/matches`, {
     method: "GET",
     token,
   });
+  return raw.map(mapMatchScore);
 }
 
 export async function createCampaign(data: any, token: string): Promise<Campaign> {
