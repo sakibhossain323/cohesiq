@@ -21,7 +21,7 @@ export function Navbar() {
   // Route signed-in users to their dashboard if onboarding is done, else /onboarding
   const onboardingComplete = user?.publicMetadata?.onboardingComplete as boolean | undefined;
   const role = user?.publicMetadata?.role as string | undefined;
-  const dashboardHref = onboardingComplete && role ? `/dashboard/${role}` : '/onboarding';
+  const dashboardHref = onboardingComplete && role ? `/${role}/dashboard` : '/onboarding';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

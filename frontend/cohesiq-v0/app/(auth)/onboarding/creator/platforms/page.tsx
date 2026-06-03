@@ -81,7 +81,7 @@ export default function PlatformsStep() {
         await user.reload();
       }
 
-      window.location.href = '/dashboard/creator';
+      window.location.href = '/creator/dashboard';
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred');
       setIsSubmitting(false);

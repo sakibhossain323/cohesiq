@@ -174,7 +174,7 @@ export function CampaignDetailView({
                             </div>
                           </div>
                           <Button variant="outline" size="sm" asChild className="shrink-0 bg-background">
-                            <Link href="/dashboard/creator/collaborations">
+                            <Link href="/creator/dashboard/collaborations">
                               Manage Application
                             </Link>
                           </Button>

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { completeOnboarding, submitBrandOnboarding } from '../_actions/onboarding';
+import { completeOnboarding, submitBrandOnboarding } from '../../_actions/onboarding';
 
 export default function BrandProfileStep() {
   const router = useRouter();
@@ -38,7 +38,7 @@ export default function BrandProfileStep() {
       
       // 1. Save data to backend via Server Action (runs on Next.js server using Docker-internal URL)
       const backendRes = await submitBrandOnboarding(token, {
-        role: data.role,
+        role: data.role || 'brand',
         brandProfile: formData as Record<string, unknown>,
       });
 
@@ -57,7 +57,7 @@ export default function BrandProfileStep() {
         await user.reload();
       }
 
-      window.location.href = '/dashboard/brand';
+      window.location.href = '/brand/dashboard';
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred');
       setIsSubmitting(false);
