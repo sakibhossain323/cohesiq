@@ -3,7 +3,12 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException, Query
 
 from app.youtube import service
-from app.youtube.schemas import YouTubeChannel, YouTubeSearchResponse, YouTubeVideo
+from app.youtube.schemas import (
+    YouTubeChannel,
+    YouTubeChannelEnrichment,
+    YouTubeSearchResponse,
+    YouTubeVideo,
+)
 
 router = APIRouter()
 
@@ -57,6 +62,20 @@ async def get_youtube_channel(
             channel_id=channel_id,
             handle=handle,
             username=username,
+        )
+    )
+
+
+@router.get("/channels/enrichment", response_model=YouTubeChannelEnrichment)
+async def get_youtube_channel_enrichment(
+    channel_ref: str = Query(..., min_length=1),
+    recent_video_limit: int = Query(10, ge=1, le=50),
+):
+    """Return creator-ready public metrics for a YouTube channel reference."""
+    return await _call_youtube(
+        service.get_channel_enrichment(
+            channel_ref=channel_ref,
+            recent_video_limit=recent_video_limit,
         )
     )
 

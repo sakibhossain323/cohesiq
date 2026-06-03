@@ -47,6 +47,10 @@ class YouTubeVideo(BaseModel):
     url: str
 
 
+class YouTubeRecentVideo(YouTubeVideo):
+    pass
+
+
 class YouTubeChannel(BaseModel):
     id: str
     title: str
@@ -60,3 +64,22 @@ class YouTubeChannel(BaseModel):
     view_count: int | None = None
     uploads_playlist_id: str | None = None
     url: str
+
+
+class YouTubeChannelEnrichment(BaseModel):
+    platform: Literal["youtube"] = "youtube"
+    platform_user_id: str
+    handle: str | None = None
+    profile_url: str
+    title: str
+    thumbnail_url: str | None = None
+    subscriber_count: int | None = None
+    total_views: int | None = None
+    video_count: int | None = None
+    uploads_playlist_id: str | None = None
+    recent_videos: list[YouTubeRecentVideo]
+    avg_views_recent: int | None = None
+    avg_likes_recent: int | None = None
+    avg_comments_recent: int | None = None
+    estimated_engagement_rate: float | None = None
+    uploads_per_month: float | None = None

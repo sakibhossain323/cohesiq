@@ -1,10 +1,14 @@
+from datetime import timezone
 from typing import Any, Literal
+from urllib.parse import parse_qs, urlparse
 
 import httpx
 
 from app.config import settings
 from app.youtube.schemas import (
     YouTubeChannel,
+    YouTubeChannelEnrichment,
+    YouTubeRecentVideo,
     YouTubeSearchResponse,
     YouTubeSearchResult,
     YouTubeThumbnail,
@@ -124,6 +128,72 @@ async def get_channel(
     return parse_channel_response(payload)
 
 
+async def get_channel_enrichment(
+    *,
+    channel_ref: str,
+    recent_video_limit: int = 10,
+) -> YouTubeChannelEnrichment:
+    channel = await get_channel(**parse_channel_ref(channel_ref))
+    if not channel.uploads_playlist_id:
+        return build_channel_enrichment(channel=channel, recent_videos=[])
+
+    playlist_payload = await _get(
+        "playlistItems",
+        {
+            "part": "snippet,contentDetails",
+            "playlistId": channel.uploads_playlist_id,
+            "maxResults": recent_video_limit,
+        },
+    )
+    video_ids = extract_playlist_video_ids(playlist_payload)
+    if not video_ids:
+        return build_channel_enrichment(channel=channel, recent_videos=[])
+
+    videos_payload = await _get(
+        "videos",
+        {
+            "part": "snippet,statistics,contentDetails",
+            "id": ",".join(video_ids),
+            "maxResults": len(video_ids),
+        },
+    )
+    recent_videos = parse_videos_response(videos_payload)
+    return build_channel_enrichment(channel=channel, recent_videos=recent_videos)
+
+
+def parse_channel_ref(channel_ref: str) -> dict[str, str]:
+    ref = channel_ref.strip()
+    if not ref:
+        raise ValueError("channel_ref is required")
+
+    parsed = urlparse(ref if "://" in ref else f"https://{ref}")
+    if parsed.netloc and "youtube.com" in parsed.netloc:
+        path_parts = [part for part in parsed.path.split("/") if part]
+        if not path_parts:
+            raise ValueError("Could not parse YouTube channel reference")
+
+        if path_parts[0].startswith("@"):
+            return {"handle": path_parts[0]}
+        if path_parts[0] == "channel" and len(path_parts) > 1:
+            return {"channel_id": path_parts[1]}
+        if path_parts[0] == "user" and len(path_parts) > 1:
+            return {"username": path_parts[1]}
+        if path_parts[0] == "c" and len(path_parts) > 1:
+            return {"handle": path_parts[1]}
+
+    if parsed.netloc and "youtu.be" in parsed.netloc:
+        query = parse_qs(parsed.query)
+        channel_id = query.get("channel_id", [None])[0]
+        if channel_id:
+            return {"channel_id": channel_id}
+
+    if ref.startswith("@"):
+        return {"handle": ref}
+    if ref.startswith("UC"):
+        return {"channel_id": ref}
+    return {"handle": ref}
+
+
 def parse_search_response(query: str, payload: dict[str, Any]) -> YouTubeSearchResponse:
     page_info = payload.get("pageInfo") or {}
     return YouTubeSearchResponse(
@@ -141,7 +211,17 @@ def parse_video_response(payload: dict[str, Any]) -> YouTubeVideo:
     if not items:
         raise YouTubeAPIError(404, "YouTube video not found")
 
-    item = items[0]
+    return _parse_video_item(items[0])
+
+
+def parse_videos_response(payload: dict[str, Any]) -> list[YouTubeRecentVideo]:
+    return [
+        YouTubeRecentVideo(**_parse_video_item(item).model_dump())
+        for item in payload.get("items", [])
+    ]
+
+
+def _parse_video_item(item: dict[str, Any]) -> YouTubeVideo:
     snippet = item.get("snippet") or {}
     statistics = item.get("statistics") or {}
     content_details = item.get("contentDetails") or {}
@@ -212,6 +292,89 @@ def _parse_search_item(item: dict[str, Any]) -> YouTubeSearchResult:
         playlist_id=playlist_id,
         url=_resource_url(resource_type, video_id, channel_id, playlist_id),
     )
+
+
+def extract_playlist_video_ids(payload: dict[str, Any]) -> list[str]:
+    video_ids: list[str] = []
+    for item in payload.get("items", []):
+        content_details = item.get("contentDetails") or {}
+        video_id = content_details.get("videoId")
+        if video_id:
+            video_ids.append(video_id)
+    return video_ids
+
+
+def build_channel_enrichment(
+    *,
+    channel: YouTubeChannel,
+    recent_videos: list[YouTubeRecentVideo],
+) -> YouTubeChannelEnrichment:
+    return YouTubeChannelEnrichment(
+        platform_user_id=channel.id,
+        handle=channel.custom_url,
+        profile_url=channel.url,
+        title=channel.title,
+        thumbnail_url=_best_thumbnail_url(channel.thumbnails),
+        subscriber_count=channel.subscriber_count,
+        total_views=channel.view_count,
+        video_count=channel.video_count,
+        uploads_playlist_id=channel.uploads_playlist_id,
+        recent_videos=recent_videos,
+        avg_views_recent=_avg([video.view_count for video in recent_videos]),
+        avg_likes_recent=_avg([video.like_count for video in recent_videos]),
+        avg_comments_recent=_avg([video.comment_count for video in recent_videos]),
+        estimated_engagement_rate=_estimate_engagement_rate(recent_videos),
+        uploads_per_month=_estimate_uploads_per_month(recent_videos),
+    )
+
+
+def _avg(values: list[int | None]) -> int | None:
+    real_values = [value for value in values if value is not None]
+    if not real_values:
+        return None
+    return round(sum(real_values) / len(real_values))
+
+
+def _estimate_engagement_rate(videos: list[YouTubeRecentVideo]) -> float | None:
+    total_views = sum(video.view_count or 0 for video in videos)
+    if total_views <= 0:
+        return None
+
+    total_engagements = sum(
+        (video.like_count or 0) + (video.comment_count or 0)
+        for video in videos
+    )
+    return round(total_engagements / total_views, 4)
+
+
+def _estimate_uploads_per_month(videos: list[YouTubeRecentVideo]) -> float | None:
+    published_dates = [
+        video.published_at
+        for video in videos
+        if video.published_at is not None
+    ]
+    if len(published_dates) < 2:
+        return None
+
+    newest = max(published_dates)
+    oldest = min(published_dates)
+    if newest.tzinfo is None:
+        newest = newest.replace(tzinfo=timezone.utc)
+    if oldest.tzinfo is None:
+        oldest = oldest.replace(tzinfo=timezone.utc)
+
+    days = max((newest - oldest).days, 1)
+    return round((len(published_dates) / days) * 30, 2)
+
+
+def _best_thumbnail_url(thumbnails: dict[str, YouTubeThumbnail]) -> str | None:
+    for name in ("high", "medium", "default"):
+        thumbnail = thumbnails.get(name)
+        if thumbnail:
+            return thumbnail.url
+    for thumbnail in thumbnails.values():
+        return thumbnail.url
+    return None
 
 
 def _resource_type(kind: str | None) -> Literal["video", "channel", "playlist"]:
