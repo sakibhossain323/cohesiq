@@ -26,7 +26,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard/creator" className="text-sm text-muted-foreground hover:text-foreground">
+                <Link href="/creator/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
                   Creator Dashboard
                 </Link>
               </li>
@@ -42,7 +42,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard/brand" className="text-sm text-muted-foreground hover:text-foreground">
+                <Link href="/brand/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
                   Brand Dashboard
                 </Link>
               </li>

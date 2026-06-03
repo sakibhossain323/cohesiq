@@ -1,14 +1,13 @@
-# 🚀 Cohesiq: EC2 Deployment Guide
+# 🚀 Cohesiq: Remote Server Deployment Guide
 
-This guide provides step-by-step instructions to deploy the Cohesiq platform (Next.js, FastAPI, PostgreSQL) onto an AWS EC2 instance using Docker Compose. The `m7i-flex.large` (2 vCPU, 8GB RAM) is a powerful, modern instance that will run this stack flawlessly without any memory issues during Next.js builds.
+This guide provides step-by-step instructions to deploy the Cohesiq platform (Next.js, FastAPI, PostgreSQL) onto a remote staging/production server using Docker Compose. A server with at least 2 vCPU and 8GB RAM is recommended to run this stack flawlessly without any memory issues during Next.js builds.
 
-*(Note: Ensure you have special credits or a promotional free trial for the `m7i-flex.large`, as it is not part of the standard 12-month AWS Free Tier. The standard free tier only covers `t2.micro`/`t3.micro`).*
 
 ---
 
-## Step 1: Launch the EC2 Instance
+## Step 1: Provision the Remote Server
 
-1. Go to the **AWS EC2 Console** and click **Launch Instance**.
+1. Provision a remote Linux server (e.g., Ubuntu 24.04 LTS).
 2. **Name:** `cohesiq-production-server`
 3. **AMI (OS):** Select **Ubuntu 24.04 LTS** (or 22.04 LTS).
 4. **Instance Type:** Select **m7i-flex.large**.
@@ -24,13 +23,13 @@ This guide provides step-by-step instructions to deploy the Cohesiq platform (Ne
 
 ## Step 2: Connect and Install Dependencies
 
-Open your terminal and SSH into your newly created EC2 instance:
+Open your terminal and SSH into your newly created server:
 ```bash
 # Update permissions on your key
 chmod 400 cohesiq-key.pem
 
 # SSH into the server
-ssh -i cohesiq-key.pem ubuntu@3.224.147.223
+ssh -i cohesiq-key.pem ubuntu@<server-ip>
 ```
 
 Once inside the server, update packages and install **Docker**, **Docker Compose**, and **Git**:
@@ -118,7 +117,7 @@ docker compose logs -f backend   # Follow backend logs to ensure DB migrations r
 
 Since you are accessing the app directly via your IP, we will use **Caddy** to route traffic so you don't have to type `:3000` in the browser.
 
-1. **Install Caddy on EC2:**
+1. **Install Caddy on the server:**
 ```bash
 sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
@@ -133,11 +132,11 @@ sudo nano /etc/caddy/Caddyfile
 ```
 Delete the existing contents and paste this configuration:
 ```text
-http://3.224.147.223 {
+http://<server-ip> {
     reverse_proxy localhost:3000
 }
 
-http://3.224.147.223:8000 {
+http://<server-ip>:8000 {
     reverse_proxy localhost:8000
 }
 ```
@@ -147,7 +146,7 @@ http://3.224.147.223:8000 {
 sudo systemctl restart caddy
 ```
 
-**Done!** Your Next.js frontend is now live at `http://3.224.147.223` and your FastAPI backend at `http://3.224.147.223:8000`. 
+**Done!** Your Next.js frontend is now live at `http://<server-ip>` and your FastAPI backend at `http://<server-ip>:8000`. 
 *(Note: Because you are not using a domain name, this is served over standard HTTP. Make sure your Clerk dashboard is in Development mode so cookies aren't blocked by missing SSL).*
 
 ---

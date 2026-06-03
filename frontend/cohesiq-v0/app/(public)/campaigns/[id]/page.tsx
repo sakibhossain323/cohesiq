@@ -1,13 +1,10 @@
-"use client";
-
-import { use } from "react";
 import { CampaignDetailView } from "@/components/campaign/CampaignDetailView";
 
 interface CampaignDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default function CampaignDetailPage({ params }: CampaignDetailPageProps) {
-  const { id } = use(params);
+export default async function CampaignDetailPage({ params }: CampaignDetailPageProps) {
+  const { id } = await params;
   return <CampaignDetailView campaignId={id} />;
 }

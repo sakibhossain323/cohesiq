@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { resetOnboarding } from "@/app/actions/onboarding";
+import { resetOnboarding } from "@/app/(auth)/onboarding/_actions/onboarding";
 
 export function ResetOnboardingButton() {
   const router = useRouter();
