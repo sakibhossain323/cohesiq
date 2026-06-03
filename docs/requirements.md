@@ -30,8 +30,8 @@
 
 #### 2. Acquisition Methods
 * **Checkboxes:** [ ] Web Scrapers, [ ] AI Extraction, [ ] MCP Servers, [ ] Bulk Upload, [ ] Automated Flows, [ ] API Pull, [ ] RSS, [ ] Email Inbox, [ ] OCR, [ ] Speech-to-Text
-* **Textareas:** * Scrapers/crawlers used (pre-filled: `Tavily Web Search`)
-  * MCP servers for data access (pre-filled: `Context7, Graphify`)
+* **Textareas:** * Scrapers/crawlers used
+  * MCP servers for data access
   * Additional acquisition details
 
 #### 3. Parsing, Formats & Cleaning
