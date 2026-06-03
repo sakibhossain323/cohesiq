@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { completeOnboarding } from '@/app/actions/onboarding';
+import { completeOnboarding, submitCreatorOnboarding } from '../../_actions/onboarding';
 
 export default function PlatformsStep() {
   const router = useRouter();
@@ -52,26 +52,22 @@ export default function PlatformsStep() {
 
     try {
       const token = await getToken();
+      if (!token) {
+        setError('Authentication token unavailable. Please try again.');
+        setIsSubmitting(false);
+        return;
+      }
       
-      // 1. Save all data to backend
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/onboarding`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          role: data.role || 'creator',
-          creatorProfile: data.creatorProfile,
-          creatorNiches: data.creatorNiches,
-          creatorPlatforms: finalPlatforms
-        })
+      // 1. Save all data to backend via Server Action (runs on Next.js server using Docker-internal URL)
+      const backendRes = await submitCreatorOnboarding(token, {
+        role: data.role || 'creator',
+        creatorProfile: data.creatorProfile as Record<string, unknown>,
+        creatorNiches: data.creatorNiches,
+        creatorPlatforms: finalPlatforms,
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => null);
-        console.error("Backend validation error:", errData);
-        throw new Error(errData?.detail ? JSON.stringify(errData.detail) : 'Failed to save profile data');
+      if ('error' in backendRes) {
+        throw new Error(backendRes.error);
       }
 
       // 2. Set Clerk onboardingComplete

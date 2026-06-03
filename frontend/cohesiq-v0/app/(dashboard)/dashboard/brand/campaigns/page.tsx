@@ -1,8 +1,8 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { auth } from "@clerk/nextjs/server";
+import { getCampaignsByBrandId } from "@/lib/api/campaigns";
+import { getMyBrandProfile } from "@/lib/api/brands";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -13,49 +13,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CampaignStatusBadge } from "@/components/campaign/CampaignStatusBadge";
-import { useAuth } from "@clerk/nextjs";
-import { getCampaignsByBrandId } from "@/lib/api/campaigns";
-import { getMyBrandProfile } from "@/lib/api/brands";
 import { formatBDT, formatDate, daysUntil } from "@/lib/utils";
-import { Briefcase, Plus, Loader2 } from "lucide-react";
-import type { Campaign } from "@/lib/types";
+import { Briefcase, Plus } from "lucide-react";
 
-export default function BrandCampaignsPage() {
-  const { getToken, isLoaded, isSignedIn } = useAuth();
-  
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default async function BrandCampaignsPage() {
+  const { getToken } = await auth();
+  const token = await getToken();
 
-  useEffect(() => {
-    if (!isLoaded || !isSignedIn) return;
-
-    async function loadData() {
-      setIsLoading(true);
-      try {
-        const token = await getToken();
-        if (!token) return;
-
-        const brandData = await getMyBrandProfile(token);
-        if (brandData) {
-          const campaignsData = await getCampaignsByBrandId(brandData.id);
-          setCampaigns(campaignsData);
-        }
-      } catch (err) {
-        console.error("Error loading campaigns:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadData();
-  }, [isLoaded, isSignedIn, getToken]);
-
-  if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center min-h-[50vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  const brand = token ? await getMyBrandProfile(token) : null;
+  const campaigns = brand ? await getCampaignsByBrandId(brand.id).catch(() => []) : [];
 
   return (
     <div className="flex flex-col bg-background min-h-full">
@@ -84,7 +50,9 @@ export default function BrandCampaignsPage() {
               <div className="flex flex-col items-center justify-center p-16 text-center text-muted-foreground border-dashed border-2 m-4 rounded-xl">
                 <Briefcase className="mb-4 h-12 w-12 opacity-20" />
                 <p className="font-medium text-foreground text-lg mb-2">No campaigns found</p>
-                <p className="text-sm max-w-sm mb-6">Create your first campaign to start receiving applications and matching with creators.</p>
+                <p className="text-sm max-w-sm mb-6">
+                  Create your first campaign to start receiving applications and matching with creators.
+                </p>
                 <Button asChild>
                   <Link href="/dashboard/brand/campaigns/new">
                     <Plus className="mr-2 h-4 w-4" />
@@ -105,7 +73,7 @@ export default function BrandCampaignsPage() {
                 </TableHeader>
                 <TableBody>
                   {campaigns.map(campaign => {
-                    const daysLeft = campaign.application_deadline 
+                    const daysLeft = campaign.application_deadline
                       ? daysUntil(campaign.application_deadline)
                       : null;
 
@@ -124,12 +92,16 @@ export default function BrandCampaignsPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="font-medium">
-                            {campaign.budget_per_creator_max ? formatBDT(campaign.budget_per_creator_max) : 'N/A'}
+                            {campaign.budget_per_creator_max
+                              ? formatBDT(campaign.budget_per_creator_max)
+                              : 'N/A'}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">
-                            {campaign.application_deadline ? formatDate(campaign.application_deadline) : 'No deadline'}
+                            {campaign.application_deadline
+                              ? formatDate(campaign.application_deadline)
+                              : 'No deadline'}
                           </div>
                           {campaign.status === "active" && daysLeft !== null && daysLeft > 0 && (
                             <div className="text-xs text-muted-foreground mt-1">

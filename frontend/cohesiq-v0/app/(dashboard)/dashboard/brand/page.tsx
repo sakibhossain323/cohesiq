@@ -1,97 +1,43 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { resetOnboarding } from "@/app/actions/onboarding";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { getCampaignsByBrandId } from "@/lib/api/campaigns";
 import { getMyBrandProfile } from "@/lib/api/brands";
-import { Briefcase, Users, MessageSquare, Plus, Search, Loader2 } from "lucide-react";
-import type { Campaign, Brand } from "@/lib/types";
+import { ResetOnboardingButton } from "@/components/onboarding/ResetOnboardingButton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Briefcase, Users, MessageSquare, Plus, Search } from "lucide-react";
+import type { Campaign } from "@/lib/types";
 
-export default function BrandDashboardPage() {
-  const { getToken, isLoaded, isSignedIn } = useAuth();
-  const router = useRouter();
-  
-  const [brand, setBrand] = useState<Brand | null>(null);
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isResetting, setIsResetting] = useState(false);
+export default async function BrandDashboardPage() {
+  const { getToken } = await auth();
+  const token = await getToken();
 
-  useEffect(() => {
-    if (!isLoaded) return;
-    if (!isSignedIn) {
-      setIsLoading(false);
-      return;
-    }
-
-    async function loadData() {
-      setIsLoading(true);
-      try {
-        const token = await getToken();
-        if (!token) return;
-
-        const brandData = await getMyBrandProfile(token);
-        if (brandData) {
-          setBrand(brandData);
-          const campaignsData = await getCampaignsByBrandId(brandData.id);
-          setCampaigns(campaignsData);
-        }
-      } catch (err) {
-        console.error("Error loading brand dashboard:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadData();
-  }, [isLoaded, isSignedIn]);
-
-  const handleResetOnboarding = async () => {
-    setIsResetting(true);
-    try {
-      const res = await resetOnboarding();
-      if (res.success) {
-        router.push("/onboarding");
-      } else {
-        alert(res.error || "Failed to reset onboarding.");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error resetting onboarding.");
-    } finally {
-      setIsResetting(false);
-    }
-  };
-
-  if (isLoading) {
+  if (!token) {
     return (
-      <div className="flex flex-col bg-background h-[calc(100vh-4rem)]">
-        <main className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </main>
+      <div className="flex min-h-[50vh] flex-col items-center justify-center p-8 text-center bg-background">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Access Denied</h2>
+        <p className="text-muted-foreground mb-6">Please log in to access your dashboard.</p>
+        <Button asChild><Link href="/sign-in">Log In</Link></Button>
       </div>
     );
   }
+
+  const brand = await getMyBrandProfile(token);
 
   if (!brand) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center p-8 text-center bg-background">
         <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Profile not found</h2>
-        <p className="text-muted-foreground mb-6">We couldn't find a brand profile for your account. Please complete the onboarding process.</p>
-        <Button onClick={handleResetOnboarding} disabled={isResetting}>
-          {isResetting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isResetting ? "Resetting..." : "Go to Onboarding"}
-        </Button>
+        <p className="text-muted-foreground mb-6">
+          We couldn&apos;t find a brand profile for your account. Please complete the onboarding process.
+        </p>
+        <ResetOnboardingButton />
       </div>
     );
   }
 
+  const campaigns: Campaign[] = await getCampaignsByBrandId(brand.id).catch(() => []);
   const activeCampaigns = campaigns.filter(c => c.status === "active").length;
-  // A simple placeholder for mock data until we load applications properly in this view
-  const pendingApplications = 0; 
 
   return (
     <div className="flex flex-col bg-background min-h-full">
@@ -103,7 +49,7 @@ export default function BrandDashboardPage() {
                 Welcome back, {brand.brand_name}
               </h1>
               <p className="mt-2 text-muted-foreground">
-                Here's what's happening with your influencer campaigns today.
+                Here&apos;s what&apos;s happening with your influencer campaigns today.
               </p>
             </div>
             <div className="flex gap-3">
@@ -130,9 +76,7 @@ export default function BrandDashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{activeCampaigns}</div>
-                <p className="text-xs text-muted-foreground">
-                  Out of {campaigns.length} total
-                </p>
+                <p className="text-xs text-muted-foreground">Out of {campaigns.length} total</p>
               </CardContent>
             </Card>
 
@@ -142,10 +86,8 @@ export default function BrandDashboardPage() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{pendingApplications}</div>
-                <p className="text-xs text-muted-foreground">
-                  Waiting for review
-                </p>
+                <div className="text-2xl font-bold">0</div>
+                <p className="text-xs text-muted-foreground">Waiting for review</p>
               </CardContent>
             </Card>
 
@@ -156,9 +98,7 @@ export default function BrandDashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">2</div>
-                <p className="text-xs text-muted-foreground">
-                  From active creators
-                </p>
+                <p className="text-xs text-muted-foreground">From active creators</p>
               </CardContent>
             </Card>
           </div>
@@ -197,7 +137,6 @@ export default function BrandDashboardPage() {
               </CardContent>
             </Card>
           </div>
-          
         </div>
       </main>
     </div>

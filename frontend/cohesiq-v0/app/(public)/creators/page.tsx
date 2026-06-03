@@ -1,28 +1,21 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { CreatorCard } from "@/components/creator/CreatorCard";
-import { CreatorFilters } from "@/components/creator/CreatorFilters";
-import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
-import { EmptyState } from "@/components/shared/EmptyState";
 import { getCreators } from "@/lib/api/creators";
-import { Users } from "lucide-react";
-import type { Creator, CreatorFilters as CreatorFiltersType } from "@/lib/types";
+import { CreatorsClient } from "./_components/CreatorsClient";
+import { parseCreatorFilters } from "@/lib/parsers";
+import type { SearchParams } from "@/lib/parsers";
 
-export default function BrowseCreatorsPage() {
-  const [creators, setCreators] = useState<Creator[]>([]);
-  const [filters, setFilters] = useState<CreatorFiltersType>({});
-  const [isLoading, setIsLoading] = useState(true);
+interface BrowseCreatorsPageProps {
+  searchParams: Promise<SearchParams>;
+}
 
-  useEffect(() => {
-    async function loadCreators() {
-      setIsLoading(true);
-      const data = await getCreators(filters);
-      setCreators(data);
-      setIsLoading(false);
-    }
-    loadCreators();
-  }, [filters]);
+export default async function BrowseCreatorsPage({ searchParams }: BrowseCreatorsPageProps) {
+  // Await searchParams (required in Next.js 15+)
+  const rawParams = await searchParams;
+  
+  // Parse string params into strongly typed filter object
+  const filters = parseCreatorFilters(rawParams);
+
+  // Fetch data server-side using the parsed filters
+  const creators = await getCreators(filters).catch(() => []);
 
   return (
     <div className="flex flex-col bg-background">
@@ -37,36 +30,7 @@ export default function BrowseCreatorsPage() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-8 lg:flex-row">
-            {/* Filters Sidebar */}
-            <aside className="w-full shrink-0 lg:w-72">
-              <CreatorFilters filters={filters} onFiltersChange={setFilters} />
-            </aside>
-
-            {/* Creator Grid */}
-            <div className="flex-1">
-              {isLoading ? (
-                <LoadingSkeleton variant="card" count={6} />
-              ) : creators.length === 0 ? (
-                <EmptyState
-                  icon={Users}
-                  title="No creators found"
-                  description="Try adjusting your filters to find more creators"
-                />
-              ) : (
-                <>
-                  <p className="mb-4 text-sm text-muted-foreground">
-                    Showing {creators.length} creator{creators.length !== 1 ? "s" : ""}
-                  </p>
-                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                    {creators.map(creator => (
-                      <CreatorCard key={creator.id} creator={creator} />
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+          <CreatorsClient creators={creators} activeFilters={filters} />
         </div>
       </main>
     </div>

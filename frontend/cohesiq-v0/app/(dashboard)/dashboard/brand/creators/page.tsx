@@ -1,28 +1,20 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { CreatorCard } from "@/components/creator/CreatorCard";
-import { CreatorFilters } from "@/components/creator/CreatorFilters";
-import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
-import { EmptyState } from "@/components/shared/EmptyState";
 import { getCreators } from "@/lib/api/creators";
-import { Search, Users } from "lucide-react";
-import type { Creator, CreatorFilters as CreatorFiltersType } from "@/lib/types";
+import { BrandCreatorsClient } from "./_components/BrandCreatorsClient";
+import { parseCreatorFilters } from "@/lib/parsers";
+import type { SearchParams } from "@/lib/parsers";
+import { Search } from "lucide-react";
 
-export default function BrandFindCreatorsPage() {
-  const [creators, setCreators] = useState<Creator[]>([]);
-  const [filters, setFilters] = useState<CreatorFiltersType>({});
-  const [isLoading, setIsLoading] = useState(true);
+interface BrandFindCreatorsPageProps {
+  searchParams: Promise<SearchParams>;
+}
 
-  useEffect(() => {
-    async function loadCreators() {
-      setIsLoading(true);
-      const data = await getCreators(filters);
-      setCreators(data);
-      setIsLoading(false);
-    }
-    loadCreators();
-  }, [filters]);
+export default async function BrandFindCreatorsPage({ searchParams }: BrandFindCreatorsPageProps) {
+  const rawParams = await searchParams;
+  const filters = parseCreatorFilters(rawParams);
+  
+  // Note: we don't strictly need auth token here since getCreators is public
+  // but if it ever becomes private we'd await auth().getToken() and pass it.
+  const creators = await getCreators(filters).catch(() => []);
 
   return (
     <div className="flex flex-col bg-background min-h-full">
@@ -38,36 +30,7 @@ export default function BrandFindCreatorsPage() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-8 lg:flex-row">
-          {/* Filters Sidebar */}
-          <aside className="w-full shrink-0 lg:w-72">
-            <CreatorFilters filters={filters} onFiltersChange={setFilters} />
-          </aside>
-
-          {/* Creator Grid */}
-          <div className="flex-1">
-            {isLoading ? (
-              <LoadingSkeleton variant="card" count={6} />
-            ) : creators.length === 0 ? (
-              <EmptyState
-                icon={Users}
-                title="No creators found"
-                description="Try adjusting your filters to find more creators"
-              />
-            ) : (
-              <>
-                <p className="mb-4 text-sm text-muted-foreground">
-                  Showing {creators.length} creator{creators.length !== 1 ? "s" : ""}
-                </p>
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {creators.map(creator => (
-                    <CreatorCard key={creator.id} creator={creator} basePath="/dashboard/brand/creators" />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+        <BrandCreatorsClient creators={creators} activeFilters={filters} />
       </main>
     </div>
   );

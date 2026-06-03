@@ -1,6 +1,11 @@
 # Cohesiq
 
-Cohesiq is a next-generation B2B SaaS Influencer Matching Platform designed to seamlessly connect brands with the right content creators. 
+Cohesiq is a next-generation B2B SaaS Influencer Matching Platform designed to seamlessly connect brands with the right content creators. It features a budget-aware matching engine, AI-powered semantic search, and an end-to-end campaign management dashboard.
+
+## Core Features
+- **Intelligent Matching**: Uses a tier-aware scoring system combining budget constraints, follower metrics, and AI embeddings for perfect brand-creator alignment.
+- **Dual Dashboards**: Dedicated portals for Brands (to discover creators, post campaigns, and track applications) and Creators (to build portfolios, discover campaigns, and manage contracts).
+- **Secure Authentication**: Fully managed authentication via Clerk, utilizing robust RS256 JWT validation on the backend.
 
 ## Tech Stack
 
@@ -24,25 +29,38 @@ Cohesiq is a next-generation B2B SaaS Influencer Matching Platform designed to s
    cd cohesiq
    ```
 
-2. **Set up Environment Variables:**
-   - Copy the example `.env` files for both the root and frontend directories (if applicable) and fill in your Clerk keys.
-   - Specifically, ensure `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are provided to the frontend container, and `CLERK_ISSUER_URL` is available to the backend container.
+2. **Environment Variables:**
+   - The platform requires environment variables for both the backend and frontend.
+   - **Frontend**: Navigate to `frontend/cohesiq-v0/`, copy `.env.example` to `.env.local`, and fill in your Clerk API keys (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`). Ensure you read the [Frontend README](frontend/cohesiq-v0/README.md) to understand the dual-variable API configuration.
+   - **Backend**: Navigate to `backend/`, copy `.env.example` to `.env` (if applicable), and configure your database and Clerk JWT verification keys.
 
-3. **Run the stack via Docker Compose:**
-   ```bash
-   docker compose up --build
-   ```
+3. **Running the Application:**
+   - The entire stack is containerized for consistency. Start it from the repository root:
+     ```bash
+     docker compose up --build
+     ```
 
 4. **Access the Application:**
    - **Frontend:** [http://localhost:3000](http://localhost:3000)
    - **Backend API Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
 
-## Project Structure
+## Project Architecture
 
-- `/frontend/cohesiq-v0/`: Contains the Next.js frontend application.
-- `/backend/`: Contains the FastAPI backend, structured using Domain-Driven Design (auth, creators, brands, campaigns).
-- `/docs/`: Contains detailed architecture and schema documentation, including `schema.md` (Database Truth) and `plan.md` (Roadmap).
+Cohesiq uses a decoupled full-stack architecture, utilizing Docker to orchestrate the environment.
 
+### 1. Frontend (`/frontend/cohesiq-v0/`)
+- **Next.js 16 App Router**: Heavily leverages React Server Components for performance.
+- **Strict Colocation**: Follows a strict "Server Component -> Client Island" pattern. Data fetching happens exclusively on the server (`page.tsx`), while interactive UI and Server Actions are colocated in `_components/` and `_actions/` directories.
+- 📖 **Read more**: [Frontend Architecture & Setup](frontend/cohesiq-v0/README.md)
+
+### 2. Backend (`/backend/`)
+- **FastAPI (Python 3.12)**: A performant, async API layer.
+- **Domain-Driven Design (DDD)**: Organized into distinct domains: `auth`, `brands`, `creators`, and `campaigns`.
+- **SQLAlchemy 2.0 Async**: Fully asynchronous database interactions.
+
+### 3. Database & Data Model
+- **PostgreSQL 16**: The single source of truth, managed via Alembic migrations.
+- **Documentation**: The complete schema map is available in `/docs/schema.md`. Always refer to this before altering models.
 ## Data Seeding
 
 To populate the database with realistic AI-generated demo data and sync your Clerk users, run the following commands sequentially inside the backend container:
@@ -59,6 +77,15 @@ To populate the database with realistic AI-generated demo data and sync your Cle
    ```bash
    docker compose exec backend python -m scripts.seed_db
    ```
+
+## AI & Agentic Tooling
+
+For developers using AI coding assistants (like Cursor, Windsurf, or Google AI), this repository utilizes **Model Context Protocol (MCP)** servers to enhance agent awareness:
+
+1. **Context7**: Used for fetching real-time, up-to-date documentation for Next.js, FastAPI, and other dependencies.
+2. **Graphify**: Used to generate and query an AST-based knowledge graph of the entire repository (`graphify-out/`).
+
+**Installation:** Ensure you have both the `context7` and `graphify` MCP servers configured in your agent environment before making large-scale architectural changes. 
 
 ## Documentation
 

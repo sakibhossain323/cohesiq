@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { completeOnboarding } from '@/app/actions/onboarding';
+import { completeOnboarding, submitBrandOnboarding } from '../_actions/onboarding';
 
 export default function BrandProfileStep() {
   const router = useRouter();
@@ -30,22 +30,20 @@ export default function BrandProfileStep() {
 
     try {
       const token = await getToken();
+      if (!token) {
+        setError('Authentication token unavailable. Please try again.');
+        setIsSubmitting(false);
+        return;
+      }
       
-      // 1. Save data to backend
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/onboarding`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          role: data.role,
-          brandProfile: formData
-        })
+      // 1. Save data to backend via Server Action (runs on Next.js server using Docker-internal URL)
+      const backendRes = await submitBrandOnboarding(token, {
+        role: data.role,
+        brandProfile: formData as Record<string, unknown>,
       });
 
-      if (!res.ok) {
-        throw new Error('Failed to save brand profile data');
+      if ('error' in backendRes) {
+        throw new Error(backendRes.error);
       }
 
       // 2. Set Clerk onboardingComplete

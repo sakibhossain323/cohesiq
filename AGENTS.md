@@ -6,11 +6,12 @@ This document contains strictly enforced conventions and rules for any AI agent 
 
 Cohesiq is a B2B SaaS Influencer Matching Platform. It utilizes a Modular Monolith architecture for the backend (FastAPI + PostgreSQL) and a modern frontend (Next.js App Router). Authentication is fully managed via Clerk.
 
-## Current Implementation Snapshot (May 30, 2026)
+## Current Implementation Snapshot (June 3, 2026)
 
 - Matching engine runs in the backend with strict budget gating, tier-aware scoring, and semantic similarity fallback (Gemini embeddings when available).
 - Brand campaign detail view now embeds Collaborations and Recommendations per campaign.
 - Neo4j graph matching and YouTube sync remain planned but not implemented yet.
+- API URL routing uses a two-variable strategy: `BACKEND_API_URL` (server-side) and `NEXT_PUBLIC_API_URL` (client/browser). See Environment Variables section.
 
 ## Core Architecture & Stack Conventions
 
@@ -18,8 +19,41 @@ Cohesiq is a B2B SaaS Influencer Matching Platform. It utilizes a Modular Monoli
    - Located in `/frontend/cohesiq-v0/`.
    - Uses `shadcn/ui` and `Tailwind CSS v4`.
    - Authentication is handled by `@clerk/nextjs`. Use `<SignedIn>`, `<SignedOut>`, and `auth()` server-side.
-   - Use Server Actions for data mutations, not raw API routes.
-   - For multi-step forms, use React Context Providers (e.g., `OnboardingProvider`) to manage state across routes before finalizing to the backend.
+
+   **Colocation Conventions (Official Next.js `_folderName` pattern):**
+   The `_` prefix opts a folder and all its subfolders out of the routing system at the compiler level. Use it to colocate non-route files inside `app/`:
+   - `_actions/` — Server Actions colocated with the feature they belong to
+   - `_components/` — Private Client Components colocated with the page that uses them
+   - `lib/` — Reserved for utilities genuinely shared across multiple feature areas (e.g., `fetchApi`, types)
+   - **NEVER put feature-specific actions in `app/actions/`** — use `_actions/` inside the relevant route segment
+
+   **Server Component → Client Island Pattern (required):**
+   ```tsx
+   // page.tsx (async Server Component)
+   export default async function Page({ searchParams }) {
+     const params = await searchParams;
+     const data = await fetchApi(`/data?q=${params.q}`);
+     return <PageClient initialData={data} />;
+   }
+   
+   // _components/PageClient.tsx (Client Component)
+   "use client";
+   export function PageClient({ initialData }) { ... }
+   ```
+   - `page.tsx` MUST be an async Server Component unless the page is entirely driven by interactive state (forms, dialogs, tab state).
+   - NEVER use `useEffect` or `useState` for data fetching, pagination, or searching.
+   - **URL-Driven Filtering:** When filters, search, or pagination are involved, use Next.js `searchParams` in the Server Component. Client islands must update the URL using `useRouter().push('?filter=value')` rather than storing filter state locally.
+   **When to use `"use client"` (legitimate cases only):**
+   - Multi-step forms with complex local state
+   - Pages with dialogs, dropdowns, confirmation flows
+   - Pages with optimistic mutations (e.g., campaign status change)
+   - Multi-step onboarding flows
+
+   **Data Mutation:** Use Server Actions (colocated in `_actions/`) for mutations. Client components that must call the backend directly MUST use `fetchApi()` from `lib/api/client.ts` — never raw `fetch(process.env.NEXT_PUBLIC_API_URL)`.
+
+   **STRICTLY FORBIDDEN:** Calling `fetch(process.env.NEXT_PUBLIC_API_URL + '/...')` directly from any `"use client"` component. Always use `fetchApi()` from `lib/api/client.ts`.
+
+   For multi-step forms, use React Context Providers (e.g., `OnboardingProvider`) to manage state across routes before finalizing to the backend.
 
 2. **Backend (FastAPI + SQLAlchemy 2.0 Async)**
    - Located in `/backend/`.
@@ -38,6 +72,21 @@ Cohesiq is a B2B SaaS Influencer Matching Platform. It utilizes a Modular Monoli
 - `.env` files must NEVER be committed.
 - Any time a new environment variable is added, it must also be added to `.env.example` in both `frontend` and `backend` (if applicable).
 - Critical variables include `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, and `DATABASE_URL`.
+
+### Frontend API URL — Two-Variable Contract
+
+The frontend uses **two separate env vars** to route API calls correctly based on execution context. `lib/api/client.ts` is the single source of truth and selects between them automatically using `typeof window === 'undefined'`.
+
+| Variable | Read By | Value (Local) | Value (Staging) |
+|---|---|---|---|
+| `BACKEND_API_URL` | Next.js server ONLY (Server Components, Server Actions, Route Handlers) | `http://backend:8000` | `http://backend:8000` (unchanged — Docker-internal) |
+| `NEXT_PUBLIC_API_URL` | Browser ONLY (client components) | `http://localhost:8000` | `http://<staging-server-ip>:8000` |
+
+**Rules agents MUST follow:**
+- NEVER read `process.env.BACKEND_API_URL` directly in a `"use client"` component. It will be `undefined` in the browser.
+- NEVER read `process.env.NEXT_PUBLIC_API_URL` in a Server Component or Server Action. Use `BACKEND_API_URL` there.
+- NEVER call `fetch(process.env.NEXT_PUBLIC_API_URL + '/endpoint')` directly from a client component. Always use `fetchApi()` from `lib/api/client.ts`.
+- ALWAYS update `.env.example` when adding a new env var.
 
 ## Development & Execution Rules
 
