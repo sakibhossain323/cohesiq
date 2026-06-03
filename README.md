@@ -31,6 +31,7 @@ Cohesiq is a next-generation B2B SaaS Influencer Matching Platform designed to s
 
 2. **Environment Variables:**
    - The platform requires environment variables for both the backend and frontend.
+   - **Docker Compose**: At the repository root, copy `.env.example` to `.env`. If your machine already has Postgres on `5432`, set `POSTGRES_HOST_PORT=5433` or another free port.
    - **Frontend**: Navigate to `frontend/cohesiq-v0/`, copy `.env.example` to `.env.local`, and fill in your Clerk API keys (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`). Ensure you read the [Frontend README](frontend/cohesiq-v0/README.md) to understand the dual-variable API configuration.
    - **Backend**: Navigate to `backend/`, copy `.env.example` to `.env` (if applicable), and configure your database and Clerk JWT verification keys.
 
