@@ -27,11 +27,13 @@ from app.auth.router import router as auth_router
 from app.creators.router import router as creators_router
 from app.brands.router import router as brands_router
 from app.campaigns.router import router as campaigns_router
+from app.youtube.router import router as youtube_router
 
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(creators_router, prefix="/creators", tags=["creators"])
 app.include_router(brands_router, prefix="/brands", tags=["brands"])
 app.include_router(campaigns_router, prefix="/campaigns", tags=["campaigns"])
+app.include_router(youtube_router, prefix="/youtube", tags=["youtube"])
 
 from app.webhooks.router import router as webhooks_router  # noqa: E402
 app.include_router(webhooks_router, prefix="/webhooks", tags=["webhooks"])
@@ -84,4 +86,3 @@ async def brand_reviews(
 ):
     """Public reviews for a brand."""
     return await campaign_service.list_brand_reviews(db, brand_id)
-
