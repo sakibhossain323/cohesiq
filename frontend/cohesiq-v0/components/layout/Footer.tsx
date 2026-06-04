@@ -1,73 +1,102 @@
 import Link from "next/link";
 
+const ink = "#100f0c";
+const paper = "#f4efe4";
+const accent = "#d8412a";
+const muted = "#9b9385";
+const hairline = "rgba(244,239,228,0.16)";
+
+const columns = [
+  {
+    head: "FOR CREATORS",
+    links: [
+      { href: "/campaigns", label: "Browse Campaigns" },
+      { href: "/creator/dashboard", label: "Creator Dashboard" },
+    ],
+  },
+  {
+    head: "FOR BRANDS",
+    links: [
+      { href: "/creators", label: "Find Creators" },
+      { href: "/brand/dashboard", label: "Brand Dashboard" },
+    ],
+  },
+  {
+    head: "STUDIO",
+    links: [
+      { href: "/#engine", label: "The Engine" },
+      { href: "/", label: "About" },
+      { href: "/", label: "Privacy" },
+    ],
+  },
+];
+
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-muted/30">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-8 md:grid-cols-4">
-          <div className="md:col-span-1">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <span className="text-sm font-bold text-primary-foreground">C</span>
-              </div>
-              <span className="text-xl font-bold text-foreground">Cohesiq</span>
+    <footer style={{ background: ink, color: paper }}>
+      <div className="mx-auto max-w-[1500px] px-6 pt-20 pb-8 sm:px-12">
+        <div className="grid gap-12 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
+          <div>
+            <Link href="/" className="font-serif text-3xl font-light tracking-tight">
+              Cohesiq
             </Link>
-            <p className="mt-4 text-sm text-muted-foreground">
-              The smart way to match creators and brands in Bangladesh.
+            <p
+              className="mt-5 max-w-xs text-[15px] leading-relaxed"
+              style={{ color: muted, fontFamily: "var(--font-sans)" }}
+            >
+              A B2B matchmaking studio pairing Bangladeshi brands with authentic
+              creators — scored, not guessed.
             </p>
+            <div
+              className="mt-6 inline-flex items-center gap-2 font-mono text-[10px] tracking-[0.24em]"
+              style={{ color: muted }}
+            >
+              <span style={{ color: accent }}>●</span> DHAKA · BANGLADESH
+            </div>
           </div>
-          
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">For Creators</h3>
-            <ul className="mt-4 space-y-3">
-              <li>
-                <Link href="/campaigns" className="text-sm text-muted-foreground hover:text-foreground">
-                  Browse Campaigns
-                </Link>
-              </li>
-              <li>
-                <Link href="/creator/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
-                  Creator Dashboard
-                </Link>
-              </li>
-            </ul>
-          </div>
-          
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">For Brands</h3>
-            <ul className="mt-4 space-y-3">
-              <li>
-                <Link href="/creators" className="text-sm text-muted-foreground hover:text-foreground">
-                  Find Creators
-                </Link>
-              </li>
-              <li>
-                <Link href="/brand/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
-                  Brand Dashboard
-                </Link>
-              </li>
-            </ul>
-          </div>
-          
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">Company</h3>
-            <ul className="mt-4 space-y-3">
-              <li>
-                <span className="text-sm text-muted-foreground">About Us</span>
-              </li>
-              <li>
-                <span className="text-sm text-muted-foreground">Contact</span>
-              </li>
-              <li>
-                <span className="text-sm text-muted-foreground">Privacy Policy</span>
-              </li>
-            </ul>
+
+          {columns.map((col) => (
+            <div key={col.head}>
+              <h3 className="font-mono text-[10px] tracking-[0.26em]" style={{ color: muted }}>
+                {col.head}
+              </h3>
+              <ul className="mt-5 space-y-3">
+                {col.links.map((l) => (
+                  <li key={l.label}>
+                    <Link
+                      href={l.href}
+                      className="font-serif text-lg font-light transition-colors hover:text-[var(--accent)]"
+                      style={{ ["--accent" as string]: accent }}
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        {/* oversized wordmark flourish */}
+        <div
+          className="mt-16 select-none overflow-hidden border-t pt-8"
+          style={{ borderColor: hairline }}
+          aria-hidden
+        >
+          <div
+            className="font-serif font-light leading-[0.8] tracking-[-0.03em]"
+            style={{ fontSize: "clamp(4rem,21vw,17rem)", color: "transparent", WebkitTextStroke: `1px ${hairline}` }}
+          >
+            Cohesiq
           </div>
         </div>
-        
-        <div className="mt-12 border-t border-border pt-8">
-          <p className="text-center text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Cohesiq. All rights reserved.
+
+        <div className="mt-6 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <p className="font-mono text-[10px] tracking-[0.22em]" style={{ color: muted }}>
+            © {new Date().getFullYear()} COHESIQ — ALL RIGHTS RESERVED
+          </p>
+          <p className="font-mono text-[10px] tracking-[0.22em]" style={{ color: muted }}>
+            DETERMINISTIC MATH · GUARDED BY SEMANTIC AI
           </p>
         </div>
       </div>
