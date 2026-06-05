@@ -3,6 +3,50 @@ export type CampaignStatus = "draft" | "active" | "in_progress" | "completed" | 
 export type ApplicationStatus = "invited" | "declined" | "pending" | "shortlisted" | "accepted" | "rejected" | "withdrawn" | "completed";
 export type DeliverableType = "dedicated_video" | "integrated_mention" | "short_video" | "photo_post" | "story" | "live_stream" | "blog_post" | "other";
 
+// Contract types — engagement type lives here, NOT on Campaign
+export type ContractType = "content_collaboration" | "product_seeding" | "talent_engagement";
+export type ContractStatus =
+  | "drafted" | "active" | "in_production" | "content_submitted"
+  | "content_approved" | "published" | "closed" | "disputed";
+export type PaymentSchedule = "upfront" | "on_delivery" | "milestone";
+export type ProductDisposition = "keep" | "return";
+
+export interface Contract {
+  id: string;
+  application_id: string;
+  brand_id: string;
+  creator_id: string;
+  contract_type: ContractType;
+  status: ContractStatus;
+  // Payment clause
+  payment_structure: "flat_fee" | "none";
+  payment_amount_bdt?: number;
+  payment_schedule?: PaymentSchedule;
+  // Product transfer clause
+  has_product_transfer: boolean;
+  product_disposition?: ProductDisposition;
+  // Other clauses
+  deliverable_notes?: string;
+  exclusivity_days?: number;
+  usage_rights_days?: number;
+  max_revision_rounds: number;
+  revisions_used: number;
+  kill_fee_percentage?: number;
+  // Content submission
+  draft_content_url?: string;
+  live_post_url?: string;
+  // Fee
+  platform_fee_percentage?: number;
+  // Timestamps
+  contracted_at: string;
+  in_production_at?: string;
+  submitted_at?: string;
+  approved_at?: string;
+  published_at?: string;
+  closed_at?: string;
+  updated_at: string;
+}
+
 export interface CreatorSocialProfile {
   id: string;
   platform: PlatformType;

@@ -430,6 +430,8 @@ Organised by module. **P0** = required for a presentable demo; **P1** = contest-
 
 # 8. User Stories & Story Points (4-Day Rapid Build)
 
+> **Revisions:** US-5, US-10, and US-16 have been revised, and US-5a/5b/5c added, by the Contract entity change request (2026-06-06). See [`docs/srs-revisions.md`](srs-revisions.md) for revised personas, INVEST-compliant stories, use cases, and happy/sad paths.
+
 ## 8.1 Estimation scale & philosophy
 
 Story points use a **modified Fibonacci** scale measuring effort + complexity + uncertainty (not hours):

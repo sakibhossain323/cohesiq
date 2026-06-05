@@ -144,3 +144,39 @@ ingestion, the matching engine internals, semantic/LLM services, and seeding (`t
 [x] D04 Rate Card Benchmark Widget — Server Component at `/brand/dashboard/campaigns/rate-benchmark`; fetches `/creators/?limit=200`, groups rate cards by `platform||deliverable_type||tier`, computes median/min/max per group; `RateBenchmarkClient` renders filterable table with tier dot, price range, and sample count. Linked from campaigns list header.
 
 [x] D05 Creator Comparison Tool — Server Component at `/brand/dashboard/creators/compare`; reads `?ids=` param, fetches up to 3 creators in parallel via `getCreatorById`; `CompareClient` renders side-by-side CSS grid (Rating, Collaborations, Available, Platforms, Min Rate, Rate Cards, Niches rows) plus AI brief textarea (placeholder pending N05). Selection UI (checkbox overlay + sticky compare bar) added to `BrandCreatorsClient`; JSX parse error fixed by wrapping return in Fragment.
+
+---
+
+## Phase E — Contract Entity (Change Request 2026-06-06)
+
+> Supersedes the old campaign_type-based collaboration model. See `docs/srs-revisions.md` for full user stories, personas, and FR mapping.
+
+[x] E01 Documentation — `docs/srs-revisions.md` (INVEST user stories, personas, use cases, happy/sad paths, deprecation notice §8); `docs/srs.md` revision pointer; `docs/concepts/campaign.md` overhaul (plain language, 7 sections); `docs/concepts/contract.md` new file (3 engagement types, clause structure, state machine, fee table).
+
+[x] E02 Backend migration — `0015_add_contract_model.py`: `contract_type`, `contract_status`, `payment_schedule_type`, `product_disposition_type` enums; `contracts` table with all clause fields + audit trail; `campaigns.campaign_type` made nullable (DEPRECATED).
+
+[x] E03 Backend model — `Contract` SQLAlchemy model + `CONTRACT_FEE_MAP` in `campaigns/models.py`; `contract` relationship on `CampaignApplication` (uselist=False).
+
+[x] E04 Backend schemas — `ContractCreate`, `ContractOut`, `ContentDraftSubmit`, `ContentPublishSubmit` in `campaigns/schemas.py`.
+
+[x] E05 Backend service — `create_contract`, `get_contract_by_application`, `get_contract`, `list_contracts_for_brand`, `list_contracts_for_creator`, `submit_content_draft`, `approve_content`, `request_revision`, `publish_content`, `close_contract` in `campaigns/service.py`.
+
+[x] E06 Backend router — 9 contract endpoints on `/campaigns/` router (POST/GET contract per application, PATCH state transitions, GET brand/creator contract lists).
+
+[x] E07 Frontend types — `ContractType`, `ContractStatus`, `PaymentSchedule`, `ProductDisposition` union types + `Contract` interface in `lib/types.ts`; removed `campaign_type` from wizard/edit form state.
+
+[x] E08 Frontend API client — `lib/api/contracts.ts` (createContract, getContractByApplication, listBrandContracts, listCreatorContracts, submitContentDraft, approveContent, requestRevision, publishContent, closeContract).
+
+[x] E09 Campaign wizard redesign — `campaigns/new/page.tsx`: removed Campaign Type card; replaced with Reach Strategy card (Public/Private visual selector); moved KPIs/hashtags/tracking into Goals & Tracking card; AI Brief Analyzer updated to suggest `suggested_visibility` instead of `campaign_type`; submission footer shows next-step context.
+
+[x] E10 Contract creation modal — `ContractCreateModal.tsx`: 3-step Dialog (choose type → configure clauses → summary with fee breakdown); triggered from ApplicationDrawer Accept button; on success switches CampaignDetailClient to Contracts tab.
+
+[x] E11 CampaignDetailClient redesign — 4 top-level tabs: Pipeline (kanban: Invited/Needs Review/Shortlisted/Accepted) | Contracts (real Contract entities) | Matches | Details; `initialContracts` prop fetched server-side; visibility badge replaces campaign_type display; fee estimate removed from Details tab.
+
+[x] E12 ContractCard (brand POV) — `ContractCard.tsx`: status chip + type pill + clause summary + 6-step state machine progress bar; inline approve/request-revision/close actions; expandable clause breakdown + content URL display.
+
+[x] E13 Creator contracts page — `creator/dashboard/contracts/page.tsx` + `_components/CreatorContractsClient.tsx`: Active/Completed tabs; per-contract next-action callout; inline draft URL and live URL submission; "My Contracts" added to creator sidebar nav.
+
+[x] E14 Collaborations page update — "Active Contracts" tab replaced with a banner linking to `/creator/dashboard/contracts`; accepted applications still listed below.
+
+[x] E15 Cleanup — `campaign_type` removed from all frontend state/payload/display (wizard, edit form, campaigns list table, campaign detail); `getCampaignFee` import removed; `docs/plan.md` D12 + §3.1 updated; `docs/schema.md` contracts table documented.

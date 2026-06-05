@@ -232,6 +232,70 @@ class ReviewOut(BaseModel):
 from app.creators.schemas import CreatorProfileOut
 
 
+# ------------------------------------------------------------------ #
+# Contract schemas                                                     #
+# ------------------------------------------------------------------ #
+
+class ContractCreate(BaseModel):
+    contract_type: str  # content_collaboration | product_seeding | talent_engagement
+    # Payment clause
+    payment_structure: str = "none"       # flat_fee | none
+    payment_amount_bdt: Optional[int] = None
+    payment_schedule: Optional[str] = None  # upfront | on_delivery | milestone
+    # Product transfer clause
+    has_product_transfer: bool = False
+    product_disposition: Optional[str] = None  # keep | return
+    # Deliverable clause
+    deliverable_notes: Optional[str] = None
+    # Exclusivity clause
+    exclusivity_days: Optional[int] = None
+    usage_rights_days: Optional[int] = None
+    # Revision clause
+    max_revision_rounds: int = 2
+    # Kill fee clause
+    kill_fee_percentage: Optional[int] = None
+
+
+class ContentDraftSubmit(BaseModel):
+    draft_content_url: str
+
+
+class ContentPublishSubmit(BaseModel):
+    live_post_url: str
+
+
+class ContractOut(BaseModel):
+    id: uuid.UUID
+    application_id: uuid.UUID
+    brand_id: uuid.UUID
+    creator_id: uuid.UUID
+    contract_type: str
+    status: str
+    payment_structure: str
+    payment_amount_bdt: Optional[int] = None
+    payment_schedule: Optional[str] = None
+    has_product_transfer: bool
+    product_disposition: Optional[str] = None
+    deliverable_notes: Optional[str] = None
+    exclusivity_days: Optional[int] = None
+    usage_rights_days: Optional[int] = None
+    max_revision_rounds: int
+    revisions_used: int
+    kill_fee_percentage: Optional[int] = None
+    draft_content_url: Optional[str] = None
+    live_post_url: Optional[str] = None
+    platform_fee_percentage: Optional[int] = None
+    contracted_at: datetime
+    in_production_at: Optional[datetime] = None
+    submitted_at: Optional[datetime] = None
+    approved_at: Optional[datetime] = None
+    published_at: Optional[datetime] = None
+    closed_at: Optional[datetime] = None
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 class AIMatchScoreOut(BaseModel):
     id: uuid.UUID
     campaign_id: uuid.UUID

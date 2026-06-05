@@ -20,6 +20,10 @@ from app.campaigns.schemas import (
     AIMatchScoreOut,
     ApplicationInviteCreate,
     ApplicationRespondInvite,
+    ContractCreate,
+    ContractOut,
+    ContentDraftSubmit,
+    ContentPublishSubmit,
 )
 from app.common.dependencies import get_current_user, get_db
 
@@ -236,6 +240,137 @@ async def run_campaign_matching_endpoint(
         raise HTTPException(status_code=403, detail="Not your campaign")
     
     return await service.run_campaign_matching(db, campaign_id)
+
+
+# ------------------------------------------------------------------ #
+# Contracts                                                            #
+# ------------------------------------------------------------------ #
+
+@router.post(
+    "/{campaign_id}/applications/{application_id}/contract",
+    response_model=ContractOut,
+    status_code=201,
+)
+async def create_contract(
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    data: ContractCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+    brand = await get_brand_by_user_id(db, current_user.id)
+    if not brand:
+        raise HTTPException(status_code=403, detail="Only brands can create contracts")
+    return await service.create_contract(db, application_id, data, brand.id)
+
+
+@router.get(
+    "/{campaign_id}/applications/{application_id}/contract",
+    response_model=ContractOut,
+)
+async def get_contract_by_application(
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    contract = await service.get_contract_by_application(db, application_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="No contract found for this application")
+    return contract
+
+
+@router.patch("/contracts/{contract_id}/submit-draft", response_model=ContractOut)
+async def submit_content_draft(
+    contract_id: uuid.UUID,
+    data: ContentDraftSubmit,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    from app.creators.service import get_creator_by_user_id  # noqa: PLC0415
+    creator = await get_creator_by_user_id(db, current_user.id)
+    if not creator:
+        raise HTTPException(status_code=403, detail="Only creators can submit content")
+    return await service.submit_content_draft(db, contract_id, data.draft_content_url, creator.id)
+
+
+@router.patch("/contracts/{contract_id}/approve", response_model=ContractOut)
+async def approve_content(
+    contract_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+    brand = await get_brand_by_user_id(db, current_user.id)
+    if not brand:
+        raise HTTPException(status_code=403, detail="Only brands can approve content")
+    return await service.approve_content(db, contract_id, brand.id)
+
+
+@router.patch("/contracts/{contract_id}/request-revision", response_model=ContractOut)
+async def request_revision(
+    contract_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+    brand = await get_brand_by_user_id(db, current_user.id)
+    if not brand:
+        raise HTTPException(status_code=403, detail="Only brands can request revisions")
+    return await service.request_revision(db, contract_id, brand.id)
+
+
+@router.patch("/contracts/{contract_id}/publish", response_model=ContractOut)
+async def publish_content(
+    contract_id: uuid.UUID,
+    data: ContentPublishSubmit,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    from app.creators.service import get_creator_by_user_id  # noqa: PLC0415
+    creator = await get_creator_by_user_id(db, current_user.id)
+    if not creator:
+        raise HTTPException(status_code=403, detail="Only creators can publish content")
+    return await service.publish_content(db, contract_id, data.live_post_url, creator.id)
+
+
+@router.patch("/contracts/{contract_id}/close", response_model=ContractOut)
+async def close_contract(
+    contract_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+    brand = await get_brand_by_user_id(db, current_user.id)
+    if not brand:
+        raise HTTPException(status_code=403, detail="Only brands can close contracts")
+    return await service.close_contract(db, contract_id, brand.id)
+
+
+@router.get("/brands/me/contracts", response_model=List[ContractOut])
+async def list_brand_contracts(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    campaign_id: Optional[uuid.UUID] = Query(None),
+):
+    from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+    brand = await get_brand_by_user_id(db, current_user.id)
+    if not brand:
+        raise HTTPException(status_code=403, detail="Brand profile not found")
+    return await service.list_contracts_for_brand(db, brand.id, campaign_id)
+
+
+@router.get("/creators/me/contracts", response_model=List[ContractOut])
+async def list_creator_contracts(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    from app.creators.service import get_creator_by_user_id  # noqa: PLC0415
+    creator = await get_creator_by_user_id(db, current_user.id)
+    if not creator:
+        raise HTTPException(status_code=403, detail="Creator profile not found")
+    return await service.list_contracts_for_creator(db, creator.id)
 
 
 @router.get("/{campaign_id}/matches", response_model=List[AIMatchScoreOut])
