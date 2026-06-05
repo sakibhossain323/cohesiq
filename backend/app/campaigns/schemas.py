@@ -9,6 +9,14 @@ from pydantic import BaseModel
 # Campaign sub-schemas                                                 #
 # ------------------------------------------------------------------ #
 
+class KpiTargets(BaseModel):
+    reach: Optional[int] = None
+    engagement_rate: Optional[float] = None
+    conversions: Optional[int] = None
+    roi_target: Optional[float] = None
+    model_config = {"from_attributes": True}
+
+
 class NicheTargetRef(BaseModel):
     niche_id: int
     model_config = {"from_attributes": True}
@@ -47,6 +55,7 @@ class CampaignCreate(BaseModel):
     primary_niche_id: Optional[int] = None
     required_platforms: List[str] = ["youtube"]
     visibility: str = "public"
+    campaign_type: Optional[str] = None
     budget_per_creator_min: Optional[int] = None
     budget_per_creator_max: int
     creator_min_followers: int = 1000
@@ -60,6 +69,9 @@ class CampaignCreate(BaseModel):
     number_of_creators: int = 1
     application_deadline: Optional[date] = None
     content_deadline: Optional[date] = None
+    kpi_targets: Optional[KpiTargets] = None
+    hashtags: List[str] = []
+    tracking_notes: Optional[str] = None
     # Additional targets
     niche_targets: List[int] = []              # additional niche_ids
     language_targets: List[LanguageTargetRef] = []
@@ -73,6 +85,7 @@ class CampaignUpdate(BaseModel):
     primary_niche_id: Optional[int] = None
     required_platforms: Optional[List[str]] = None
     visibility: Optional[str] = None
+    campaign_type: Optional[str] = None
     budget_per_creator_min: Optional[int] = None
     budget_per_creator_max: Optional[int] = None
     creator_min_followers: Optional[int] = None
@@ -86,6 +99,9 @@ class CampaignUpdate(BaseModel):
     number_of_creators: Optional[int] = None
     application_deadline: Optional[date] = None
     content_deadline: Optional[date] = None
+    kpi_targets: Optional[KpiTargets] = None
+    hashtags: Optional[List[str]] = None
+    tracking_notes: Optional[str] = None
 
 
 class CampaignStatusUpdate(BaseModel):
@@ -101,6 +117,7 @@ class CampaignOut(BaseModel):
     objectives: Optional[str] = None
     primary_niche_id: Optional[int] = None
     required_platforms: List[str]
+    campaign_type: Optional[str] = None
     budget_per_creator_min: Optional[int] = None
     budget_per_creator_max: int
     creator_min_followers: int
@@ -114,6 +131,9 @@ class CampaignOut(BaseModel):
     number_of_creators: int
     application_deadline: Optional[date] = None
     content_deadline: Optional[date] = None
+    kpi_targets: Optional[KpiTargets] = None
+    hashtags: List[str] = []
+    tracking_notes: Optional[str] = None
     status: str
     niche_targets: List[NicheTargetRef] = []
     language_targets: List[LanguageTargetRef] = []
@@ -220,6 +240,9 @@ class AIMatchScoreOut(BaseModel):
     score_engagement: Optional[float] = None
     score_budget: Optional[float] = None
     score_language: Optional[float] = None
+    score_platform: Optional[float] = None
+    score_recency: Optional[float] = None
+    score_semantic: Optional[float] = None
     score_total: Optional[float] = None
     rationale: Optional[str] = None
     generated_at: datetime

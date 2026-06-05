@@ -15,52 +15,28 @@ import {
   SidebarTrigger,
   SidebarFooter,
 } from '@/components/ui/sidebar'
-import {
-  Users,
-  Megaphone,
-  BarChart3,
-  LogIn,
-  Share2,
-  FileText,
-  MessageSquare,
-  Search,
-  Building2,
-} from 'lucide-react'
+import { LogIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+
+export interface NavItem {
+  href: string
+  label: string
+  icon: React.ReactNode
+}
 
 interface DashboardLayoutProps {
   children: React.ReactNode
+  navItems: NavItem[]
 }
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
   const pathname = usePathname()
-
-  const isCreatorDashboard = pathname.startsWith('/dashboard/creator')
-  const isBrandDashboard = pathname.startsWith('/dashboard/brand')
-
-  const navItems = isCreatorDashboard
-    ? [
-        { href: '/dashboard/creator', label: 'Home', icon: <BarChart3 className="h-4 w-4" /> },
-        { href: '/dashboard/creator/campaigns', label: 'Discover Campaigns', icon: <Megaphone className="h-4 w-4" /> },
-        { href: '/dashboard/creator/collaborations', label: 'Collaborations', icon: <FileText className="h-4 w-4" /> },
-        { href: '/dashboard/creator/messages', label: 'Messages', icon: <MessageSquare className="h-4 w-4" /> },
-        { href: '/dashboard/creator/profile', label: 'My Platforms', icon: <Share2 className="h-4 w-4" /> },
-      ]
-    : isBrandDashboard
-    ? [
-        { href: '/dashboard/brand', label: 'Home', icon: <BarChart3 className="h-4 w-4" /> },
-        { href: '/dashboard/brand/campaigns', label: 'Campaigns', icon: <Megaphone className="h-4 w-4" /> },
-        { href: '/dashboard/brand/creators', label: 'Find Creators', icon: <Search className="h-4 w-4" /> },
-        { href: '/dashboard/brand/messages', label: 'Messages', icon: <MessageSquare className="h-4 w-4" /> },
-        { href: '/dashboard/brand/profile', label: 'Brand Profile', icon: <Building2 className="h-4 w-4" /> },
-      ]
-    : []
 
   // A nav item is active if the path exactly matches OR the path starts with the href
   // (for section roots), but the Dashboard root must be an exact match to avoid
   // always being active when inside /campaigns, /messages, etc.
   function isActive(href: string): boolean {
-    if (href === '/dashboard/creator' || href === '/dashboard/brand') {
+    if (href === '/creator/dashboard' || href === '/brand/dashboard') {
       return pathname === href
     }
     return pathname === href || pathname.startsWith(href + '/')
@@ -116,7 +92,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </Show>
 
           <Show when="signed-out">
-            <SignInButton mode="modal">
+            <SignInButton mode="modal" forceRedirectUrl="/onboarding">
               <Button variant="outline" size="sm" className="w-full gap-2">
                 <LogIn className="h-4 w-4" />
                 Sign In

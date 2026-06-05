@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { StarRating } from "@/components/shared/StarRating";
 import { getCreatorById } from "@/lib/api/creators";
-import { getPublicReviews } from "@/lib/api/reviews";
+import { getCreatorReviews } from "@/lib/api/reviews";
 import { formatDate } from "@/lib/utils";
 
 interface CreatorDetailViewProps {
@@ -21,12 +21,9 @@ export async function CreatorDetailView({ creatorId, actionSlot }: CreatorDetail
     notFound();
   }
 
-  const reviews = await getPublicReviews();
-  // Filter reviews that mention the creator's name (simulated)
-  const creatorReviews = reviews.filter(r => 
-    r.reviewer_name.toLowerCase().includes(creator.display_name.split(" ")[0].toLowerCase()) ||
-    r.review_text?.toLowerCase().includes(creator.display_name.split(" ")[0].toLowerCase())
-  ).slice(0, 4);
+  const creatorReviews = (await getCreatorReviews(creatorId))
+    .filter(r => r.is_public)
+    .slice(0, 4);
 
   return (
     <div className="flex flex-col bg-background w-full">
@@ -72,32 +69,39 @@ export async function CreatorDetailView({ creatorId, actionSlot }: CreatorDetail
             <section className="mt-8">
               <h2 className="mb-4 text-lg font-semibold text-foreground">Reviews</h2>
               <div className="grid gap-4 sm:grid-cols-2">
-                {creatorReviews.map(review => (
-                  <Card key={review.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={review.reviewer_photo} alt={review.reviewer_name} />
-                          <AvatarFallback className="text-xs">
-                            {review.reviewer_name.slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <p className="font-medium text-foreground">{review.reviewer_name}</p>
-                            <StarRating rating={review.rating} size="sm" showValue={false} />
+                {creatorReviews.map(review => {
+                  const reviewerLabel = review.reviewer_brand_id ? "Verified Brand" : "Verified Creator";
+                  const seed = review.reviewer_brand_id ?? review.reviewer_creator_id ?? review.id;
+                  return (
+                    <Card key={review.id}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage
+                              src={`https://api.dicebear.com/9.x/initials/svg?seed=${seed}`}
+                              alt={reviewerLabel}
+                            />
+                            <AvatarFallback className="text-xs">
+                              {review.reviewer_brand_id ? "BR" : "CR"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <p className="font-medium text-foreground">{reviewerLabel}</p>
+                              <StarRating rating={review.rating} size="sm" showValue={false} />
+                            </div>
+                            {review.review_text && (
+                              <p className="mt-2 text-sm text-muted-foreground">{review.review_text}</p>
+                            )}
+                            <p className="mt-2 text-xs text-muted-foreground">
+                              {formatDate(review.created_at)}
+                            </p>
                           </div>
-                          {review.review_text && (
-                            <p className="mt-2 text-sm text-muted-foreground">{review.review_text}</p>
-                          )}
-                          <p className="mt-2 text-xs text-muted-foreground">
-                            {formatDate(review.created_at)}
-                          </p>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </section>
           )}

@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PlatformBadge, getPlatformLabel } from "@/components/shared/PlatformBadge";
 import { FollowerCount } from "@/components/shared/FollowerCount";
+import { EstimatedTag } from "@/components/shared/EstimatedTag";
 import { ExternalLink, TrendingUp, Eye } from "lucide-react";
 import { formatFollowerCount } from "@/lib/utils";
 import type { CreatorSocialProfile } from "@/lib/types";
@@ -64,18 +65,20 @@ export function SocialProfileCard({ profile }: SocialProfileCardProps) {
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <TrendingUp className="h-3 w-3" />
                 <span>Engagement</span>
+                <EstimatedTag variant="self-reported" />
               </div>
               <p className="text-lg font-semibold text-foreground">
                 {profile.engagement_rate}%
               </p>
             </div>
           )}
-          
+
           {profile.avg_views_per_post && (
             <div className="space-y-1">
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Eye className="h-3 w-3" />
                 <span>Avg Views</span>
+                <EstimatedTag variant="self-reported" />
               </div>
               <p className="text-lg font-semibold text-foreground">
                 {formatFollowerCount(profile.avg_views_per_post)}

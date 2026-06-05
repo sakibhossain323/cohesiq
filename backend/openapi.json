@@ -1,0 +1,3661 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Cohesiq API",
+    "description": "Influencer Matching Platform — Phase 1",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["health"],
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Register",
+        "description": "Register a new creator or brand account. Returns a JWT on success.",
+        "operationId": "register_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TokenResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Login",
+        "description": "Authenticate and return a JWT access token.",
+        "operationId": "login_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TokenResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["auth"],
+        "summary": "Me",
+        "description": "Return the currently authenticated user's info.",
+        "operationId": "me_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserOut" }
+              }
+            }
+          }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      }
+    },
+    "/auth/onboarding": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Onboarding Sync",
+        "description": "Sync onboarding data and create necessary profiles.",
+        "operationId": "onboarding_sync_auth_onboarding_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OnboardingRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      }
+    },
+    "/creators/": {
+      "get": {
+        "tags": ["creators"],
+        "summary": "List Creators",
+        "description": "Browse creators with optional filters.",
+        "operationId": "list_creators_creators__get",
+        "parameters": [
+          {
+            "name": "niche",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer" }, { "type": "null" }],
+              "title": "Niche"
+            }
+          },
+          {
+            "name": "platform",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "title": "Platform"
+            }
+          },
+          {
+            "name": "min_followers",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer" }, { "type": "null" }],
+              "title": "Min Followers"
+            }
+          },
+          {
+            "name": "max_followers",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer" }, { "type": "null" }],
+              "title": "Max Followers"
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "title": "Language"
+            }
+          },
+          {
+            "name": "city",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "title": "City"
+            }
+          },
+          {
+            "name": "is_available",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+              "title": "Is Available"
+            }
+          },
+          {
+            "name": "max_rate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer" }, { "type": "null" }],
+              "title": "Max Rate"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 0, "title": "Offset" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CreatorProfileOut" },
+                  "title": "Response List Creators Creators  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creators/me": {
+      "get": {
+        "tags": ["creators"],
+        "summary": "Get My Creator Profile",
+        "description": "Retrieve the creator profile for the currently authenticated user.",
+        "operationId": "get_my_creator_profile_creators_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CreatorProfileOut" }
+              }
+            }
+          }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      }
+    },
+    "/creators/{creator_id}": {
+      "get": {
+        "tags": ["creators"],
+        "summary": "Get Creator",
+        "description": "Public creator profile.",
+        "operationId": "get_creator_creators__creator_id__get",
+        "parameters": [
+          {
+            "name": "creator_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Creator Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CreatorProfileOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["creators"],
+        "summary": "Update Creator",
+        "description": "Update own profile (auth required).",
+        "operationId": "update_creator_creators__creator_id__put",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "creator_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Creator Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreatorProfileUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CreatorProfileOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creators/{creator_id}/platforms": {
+      "post": {
+        "tags": ["creators"],
+        "summary": "Add Platform",
+        "operationId": "add_platform_creators__creator_id__platforms_post",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "creator_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Creator Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SocialProfileCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SocialProfileOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creators/{creator_id}/platforms/{platform_id}": {
+      "put": {
+        "tags": ["creators"],
+        "summary": "Update Platform",
+        "operationId": "update_platform_creators__creator_id__platforms__platform_id__put",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "creator_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Creator Id"
+            }
+          },
+          {
+            "name": "platform_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Platform Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SocialProfileUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SocialProfileOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["creators"],
+        "summary": "Delete Platform",
+        "operationId": "delete_platform_creators__creator_id__platforms__platform_id__delete",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "creator_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Creator Id"
+            }
+          },
+          {
+            "name": "platform_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Platform Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Successful Response" },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creators/{creator_id}/rate-cards": {
+      "post": {
+        "tags": ["creators"],
+        "summary": "Add Rate Card",
+        "operationId": "add_rate_card_creators__creator_id__rate_cards_post",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "creator_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Creator Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RateCardCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RateCardOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creators/{creator_id}/rate-cards/{rate_card_id}": {
+      "put": {
+        "tags": ["creators"],
+        "summary": "Update Rate Card",
+        "operationId": "update_rate_card_creators__creator_id__rate_cards__rate_card_id__put",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "creator_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Creator Id"
+            }
+          },
+          {
+            "name": "rate_card_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rate Card Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RateCardUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RateCardOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["creators"],
+        "summary": "Delete Rate Card",
+        "operationId": "delete_rate_card_creators__creator_id__rate_cards__rate_card_id__delete",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "creator_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Creator Id"
+            }
+          },
+          {
+            "name": "rate_card_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rate Card Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Successful Response" },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creators/{creator_id}/portfolio": {
+      "post": {
+        "tags": ["creators"],
+        "summary": "Add Portfolio Item",
+        "operationId": "add_portfolio_item_creators__creator_id__portfolio_post",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "creator_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Creator Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PortfolioItemCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PortfolioItemOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creators/{creator_id}/portfolio/{item_id}": {
+      "delete": {
+        "tags": ["creators"],
+        "summary": "Delete Portfolio Item",
+        "operationId": "delete_portfolio_item_creators__creator_id__portfolio__item_id__delete",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "creator_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Creator Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid", "title": "Item Id" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Successful Response" },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creators/{creator_id}/history": {
+      "post": {
+        "tags": ["creators"],
+        "summary": "Add Collab History",
+        "operationId": "add_collab_history_creators__creator_id__history_post",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "creator_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Creator Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CollabHistoryCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CollabHistoryOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creators/{creator_id}/history/{history_id}": {
+      "delete": {
+        "tags": ["creators"],
+        "summary": "Delete Collab History",
+        "operationId": "delete_collab_history_creators__creator_id__history__history_id__delete",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "creator_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Creator Id"
+            }
+          },
+          {
+            "name": "history_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "History Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Successful Response" },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/brands/": {
+      "get": {
+        "tags": ["brands"],
+        "summary": "List Brands",
+        "operationId": "list_brands_brands__get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 0, "title": "Offset" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/BrandProfileOut" },
+                  "title": "Response List Brands Brands  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/brands/me": {
+      "get": {
+        "tags": ["brands"],
+        "summary": "Get My Brand Profile",
+        "description": "Retrieve the brand profile for the currently authenticated user.",
+        "operationId": "get_my_brand_profile_brands_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BrandProfileOut" }
+              }
+            }
+          }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      }
+    },
+    "/brands/{brand_id}": {
+      "get": {
+        "tags": ["brands"],
+        "summary": "Get Brand",
+        "operationId": "get_brand_brands__brand_id__get",
+        "parameters": [
+          {
+            "name": "brand_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Brand Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BrandProfileOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["brands"],
+        "summary": "Update Brand",
+        "operationId": "update_brand_brands__brand_id__put",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "brand_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Brand Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BrandProfileUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BrandProfileOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/brands/{brand_id}/campaigns": {
+      "get": {
+        "tags": ["brands"],
+        "summary": "Get Brand Campaigns",
+        "description": "Return campaigns for this brand. Delegates to campaigns service.",
+        "operationId": "get_brand_campaigns_brands__brand_id__campaigns_get",
+        "parameters": [
+          {
+            "name": "brand_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Brand Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/brands/{brand_id}/applications": {
+      "get": {
+        "tags": ["brands"],
+        "summary": "Get Brand Applications",
+        "description": "All applications across the brand's campaigns.",
+        "operationId": "get_brand_applications_brands__brand_id__applications_get",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "brand_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Brand Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaigns/": {
+      "get": {
+        "tags": ["campaigns"],
+        "summary": "List Campaigns",
+        "operationId": "list_campaigns_campaigns__get",
+        "parameters": [
+          {
+            "name": "niche",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer" }, { "type": "null" }],
+              "title": "Niche"
+            }
+          },
+          {
+            "name": "platform",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "title": "Platform"
+            }
+          },
+          {
+            "name": "min_budget",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer" }, { "type": "null" }],
+              "title": "Min Budget"
+            }
+          },
+          {
+            "name": "max_budget",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer" }, { "type": "null" }],
+              "title": "Max Budget"
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "title": "Language"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "active",
+              "title": "Status"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 0, "title": "Offset" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CampaignOut" },
+                  "title": "Response List Campaigns Campaigns  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["campaigns"],
+        "summary": "Create Campaign",
+        "operationId": "create_campaign_campaigns__post",
+        "security": [{ "HTTPBearer": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CampaignCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CampaignOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaigns/{campaign_id}": {
+      "get": {
+        "tags": ["campaigns"],
+        "summary": "Get Campaign",
+        "operationId": "get_campaign_campaigns__campaign_id__get",
+        "parameters": [
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Campaign Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CampaignOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["campaigns"],
+        "summary": "Update Campaign",
+        "operationId": "update_campaign_campaigns__campaign_id__put",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Campaign Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CampaignUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CampaignOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaigns/{campaign_id}/status": {
+      "patch": {
+        "tags": ["campaigns"],
+        "summary": "Update Campaign Status",
+        "operationId": "update_campaign_status_campaigns__campaign_id__status_patch",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Campaign Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CampaignStatusUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CampaignOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaigns/{campaign_id}/apply": {
+      "post": {
+        "tags": ["campaigns"],
+        "summary": "Apply To Campaign",
+        "operationId": "apply_to_campaign_campaigns__campaign_id__apply_post",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Campaign Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ApplicationCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApplicationOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaigns/{campaign_id}/applications": {
+      "get": {
+        "tags": ["campaigns"],
+        "summary": "List Applications",
+        "description": "Brand views all applications for their campaign.",
+        "operationId": "list_applications_campaigns__campaign_id__applications_get",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Campaign Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ApplicationOut" },
+                  "title": "Response List Applications Campaigns  Campaign Id  Applications Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaigns/{campaign_id}/applications/{application_id}/status": {
+      "patch": {
+        "tags": ["campaigns"],
+        "summary": "Update Application Status",
+        "operationId": "update_application_status_campaigns__campaign_id__applications__application_id__status_patch",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Campaign Id"
+            }
+          },
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationStatusUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApplicationOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaigns/{campaign_id}/invite": {
+      "post": {
+        "tags": ["campaigns"],
+        "summary": "Invite Creator To Campaign",
+        "operationId": "invite_creator_to_campaign_campaigns__campaign_id__invite_post",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Campaign Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationInviteCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApplicationOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaigns/{campaign_id}/applications/{application_id}/respond-invite": {
+      "patch": {
+        "tags": ["campaigns"],
+        "summary": "Respond To Invitation",
+        "operationId": "respond_to_invitation_campaigns__campaign_id__applications__application_id__respond_invite_patch",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Campaign Id"
+            }
+          },
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationRespondInvite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApplicationOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaigns/reviews/": {
+      "post": {
+        "tags": ["campaigns"],
+        "summary": "Create Review",
+        "description": "Submit a review. Only allowed when the application status is 'completed'.",
+        "operationId": "create_review_campaigns_reviews__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReviewCreate" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReviewOut" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      }
+    },
+    "/campaigns/{campaign_id}/run-matching": {
+      "post": {
+        "tags": ["campaigns"],
+        "summary": "Run Campaign Matching Endpoint",
+        "description": "Run AI matching algorithm for a campaign to find the best creators.",
+        "operationId": "run_campaign_matching_endpoint_campaigns__campaign_id__run_matching_post",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Campaign Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AIMatchScoreOut" },
+                  "title": "Response Run Campaign Matching Endpoint Campaigns  Campaign Id  Run Matching Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaigns/{campaign_id}/matches": {
+      "get": {
+        "tags": ["campaigns"],
+        "summary": "Get Campaign Matches Endpoint",
+        "description": "Retrieve existing AI match scores for a campaign.",
+        "operationId": "get_campaign_matches_endpoint_campaigns__campaign_id__matches_get",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Campaign Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AIMatchScoreOut" },
+                  "title": "Response Get Campaign Matches Endpoint Campaigns  Campaign Id  Matches Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/clerk": {
+      "post": {
+        "tags": ["webhooks"],
+        "summary": "Clerk Webhook",
+        "description": "Clerk sends signed POST requests here for user lifecycle events.\nWe sync the user record into our DB so the rest of the app can reference it.",
+        "operationId": "clerk_webhook_webhooks_clerk_post",
+        "parameters": [
+          {
+            "name": "svix-id",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string", "title": "Svix-Id" }
+          },
+          {
+            "name": "svix-timestamp",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string", "title": "Svix-Timestamp" }
+          },
+          {
+            "name": "svix-signature",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string", "title": "Svix-Signature" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creators/{creator_id}/applications": {
+      "get": {
+        "tags": ["creators"],
+        "summary": "Creator Applications",
+        "description": "Creator views their own application history.",
+        "operationId": "creator_applications_creators__creator_id__applications_get",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "creator_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Creator Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ApplicationOut" },
+                  "title": "Response Creator Applications Creators  Creator Id  Applications Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creators/{creator_id}/reviews": {
+      "get": {
+        "tags": ["creators"],
+        "summary": "Creator Reviews",
+        "description": "Public reviews for a creator.",
+        "operationId": "creator_reviews_creators__creator_id__reviews_get",
+        "parameters": [
+          {
+            "name": "creator_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Creator Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ReviewOut" },
+                  "title": "Response Creator Reviews Creators  Creator Id  Reviews Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/brands/{brand_id}/reviews": {
+      "get": {
+        "tags": ["brands"],
+        "summary": "Brand Reviews",
+        "description": "Public reviews for a brand.",
+        "operationId": "brand_reviews_brands__brand_id__reviews_get",
+        "parameters": [
+          {
+            "name": "brand_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Brand Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ReviewOut" },
+                  "title": "Response Brand Reviews Brands  Brand Id  Reviews Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AIMatchScoreOut": {
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "title": "Id" },
+          "campaign_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Campaign Id"
+          },
+          "creator_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Creator Id"
+          },
+          "score_niche": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Score Niche"
+          },
+          "score_engagement": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Score Engagement"
+          },
+          "score_budget": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Score Budget"
+          },
+          "score_language": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Score Language"
+          },
+          "score_total": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Score Total"
+          },
+          "rationale": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Rationale"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          },
+          "creator": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/CreatorProfileOut" },
+              { "type": "null" }
+            ]
+          }
+        },
+        "type": "object",
+        "required": ["id", "campaign_id", "creator_id", "generated_at"],
+        "title": "AIMatchScoreOut"
+      },
+      "ApplicationCreate": {
+        "properties": {
+          "proposal_text": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Proposal Text"
+          },
+          "proposed_rate": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Proposed Rate"
+          }
+        },
+        "type": "object",
+        "title": "ApplicationCreate"
+      },
+      "ApplicationInviteCreate": {
+        "properties": {
+          "creator_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Creator Id"
+          },
+          "brand_notes": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Brand Notes"
+          }
+        },
+        "type": "object",
+        "required": ["creator_id"],
+        "title": "ApplicationInviteCreate"
+      },
+      "ApplicationOut": {
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "title": "Id" },
+          "campaign_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Campaign Id"
+          },
+          "creator_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Creator Id"
+          },
+          "initiated_by": { "type": "string", "title": "Initiated By" },
+          "proposal_text": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Proposal Text"
+          },
+          "proposed_rate": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Proposed Rate"
+          },
+          "status": { "type": "string", "title": "Status" },
+          "rejection_reason": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Rejection Reason"
+          },
+          "agreed_rate": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Agreed Rate"
+          },
+          "agreed_deliverables": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Agreed Deliverables"
+          },
+          "applied_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Applied At"
+          },
+          "responded_at": {
+            "anyOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ],
+            "title": "Responded At"
+          },
+          "accepted_at": {
+            "anyOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ],
+            "title": "Accepted At"
+          },
+          "completed_at": {
+            "anyOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ],
+            "title": "Completed At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "campaign_id",
+          "creator_id",
+          "initiated_by",
+          "status",
+          "applied_at",
+          "updated_at"
+        ],
+        "title": "ApplicationOut"
+      },
+      "ApplicationRespondInvite": {
+        "properties": {
+          "action": { "type": "string", "title": "Action" },
+          "proposal_text": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Proposal Text"
+          },
+          "proposed_rate": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Proposed Rate"
+          }
+        },
+        "type": "object",
+        "required": ["action"],
+        "title": "ApplicationRespondInvite"
+      },
+      "ApplicationStatusUpdate": {
+        "properties": {
+          "status": { "type": "string", "title": "Status" },
+          "brand_notes": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Brand Notes"
+          },
+          "rejection_reason": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Rejection Reason"
+          },
+          "agreed_rate": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Agreed Rate"
+          },
+          "agreed_deliverables": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Agreed Deliverables"
+          }
+        },
+        "type": "object",
+        "required": ["status"],
+        "title": "ApplicationStatusUpdate"
+      },
+      "BrandProfileOut": {
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "title": "Id" },
+          "user_id": { "type": "string", "format": "uuid", "title": "User Id" },
+          "brand_name": { "type": "string", "title": "Brand Name" },
+          "legal_name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Legal Name"
+          },
+          "logo_url": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Logo Url"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description"
+          },
+          "tagline": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Tagline"
+          },
+          "website": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Website"
+          },
+          "facebook_page_url": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Facebook Page Url"
+          },
+          "instagram_url": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Instagram Url"
+          },
+          "niche_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Niche Id"
+          },
+          "company_size": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Company Size"
+          },
+          "country_code": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Country Code"
+          },
+          "city": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "City"
+          },
+          "contact_name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Contact Name"
+          },
+          "contact_whatsapp": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Contact Whatsapp"
+          },
+          "is_verified": { "type": "boolean", "title": "Is Verified" },
+          "total_campaigns": { "type": "integer", "title": "Total Campaigns" },
+          "average_rating": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Average Rating"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "brand_name",
+          "is_verified",
+          "total_campaigns",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "BrandProfileOut"
+      },
+      "BrandProfileUpdate": {
+        "properties": {
+          "brand_name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Brand Name"
+          },
+          "legal_name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Legal Name"
+          },
+          "logo_url": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Logo Url"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description"
+          },
+          "tagline": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Tagline"
+          },
+          "website": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Website"
+          },
+          "facebook_page_url": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Facebook Page Url"
+          },
+          "instagram_url": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Instagram Url"
+          },
+          "niche_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Niche Id"
+          },
+          "company_size": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Company Size"
+          },
+          "country_code": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Country Code"
+          },
+          "city": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "City"
+          },
+          "contact_name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Contact Name"
+          },
+          "contact_phone": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Contact Phone"
+          },
+          "contact_whatsapp": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Contact Whatsapp"
+          }
+        },
+        "type": "object",
+        "title": "BrandProfileUpdate"
+      },
+      "CampaignCreate": {
+        "properties": {
+          "title": { "type": "string", "title": "Title" },
+          "description": { "type": "string", "title": "Description" },
+          "objectives": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Objectives"
+          },
+          "primary_niche_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Primary Niche Id"
+          },
+          "required_platforms": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Required Platforms",
+            "default": ["youtube"]
+          },
+          "visibility": {
+            "type": "string",
+            "title": "Visibility",
+            "default": "public"
+          },
+          "budget_per_creator_min": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Budget Per Creator Min"
+          },
+          "budget_per_creator_max": {
+            "type": "integer",
+            "title": "Budget Per Creator Max"
+          },
+          "creator_min_followers": {
+            "type": "integer",
+            "title": "Creator Min Followers",
+            "default": 1000
+          },
+          "creator_max_followers": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Creator Max Followers"
+          },
+          "target_countries": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Target Countries",
+            "default": ["BD"]
+          },
+          "target_cities": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Target Cities",
+            "default": []
+          },
+          "target_age_min": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Target Age Min"
+          },
+          "target_age_max": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Target Age Max"
+          },
+          "target_gender": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Target Gender"
+          },
+          "deliverables_description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Deliverables Description"
+          },
+          "number_of_creators": {
+            "type": "integer",
+            "title": "Number Of Creators",
+            "default": 1
+          },
+          "application_deadline": {
+            "anyOf": [
+              { "type": "string", "format": "date" },
+              { "type": "null" }
+            ],
+            "title": "Application Deadline"
+          },
+          "content_deadline": {
+            "anyOf": [
+              { "type": "string", "format": "date" },
+              { "type": "null" }
+            ],
+            "title": "Content Deadline"
+          },
+          "niche_targets": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Niche Targets",
+            "default": []
+          },
+          "language_targets": {
+            "items": { "$ref": "#/components/schemas/LanguageTargetRef" },
+            "type": "array",
+            "title": "Language Targets",
+            "default": []
+          },
+          "deliverable_requirements": {
+            "items": {
+              "$ref": "#/components/schemas/DeliverableRequirementCreate"
+            },
+            "type": "array",
+            "title": "Deliverable Requirements",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": ["title", "description", "budget_per_creator_max"],
+        "title": "CampaignCreate"
+      },
+      "CampaignOut": {
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "title": "Id" },
+          "brand_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Brand Id"
+          },
+          "title": { "type": "string", "title": "Title" },
+          "description": { "type": "string", "title": "Description" },
+          "visibility": { "type": "string", "title": "Visibility" },
+          "objectives": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Objectives"
+          },
+          "primary_niche_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Primary Niche Id"
+          },
+          "required_platforms": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Required Platforms"
+          },
+          "budget_per_creator_min": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Budget Per Creator Min"
+          },
+          "budget_per_creator_max": {
+            "type": "integer",
+            "title": "Budget Per Creator Max"
+          },
+          "creator_min_followers": {
+            "type": "integer",
+            "title": "Creator Min Followers"
+          },
+          "creator_max_followers": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Creator Max Followers"
+          },
+          "target_countries": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Target Countries"
+          },
+          "target_cities": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Target Cities"
+          },
+          "target_age_min": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Target Age Min"
+          },
+          "target_age_max": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Target Age Max"
+          },
+          "target_gender": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Target Gender"
+          },
+          "deliverables_description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Deliverables Description"
+          },
+          "number_of_creators": {
+            "type": "integer",
+            "title": "Number Of Creators"
+          },
+          "application_deadline": {
+            "anyOf": [
+              { "type": "string", "format": "date" },
+              { "type": "null" }
+            ],
+            "title": "Application Deadline"
+          },
+          "content_deadline": {
+            "anyOf": [
+              { "type": "string", "format": "date" },
+              { "type": "null" }
+            ],
+            "title": "Content Deadline"
+          },
+          "status": { "type": "string", "title": "Status" },
+          "niche_targets": {
+            "items": { "$ref": "#/components/schemas/NicheTargetRef" },
+            "type": "array",
+            "title": "Niche Targets",
+            "default": []
+          },
+          "language_targets": {
+            "items": { "$ref": "#/components/schemas/LanguageTargetRef" },
+            "type": "array",
+            "title": "Language Targets",
+            "default": []
+          },
+          "deliverable_requirements": {
+            "items": {
+              "$ref": "#/components/schemas/DeliverableRequirementOut"
+            },
+            "type": "array",
+            "title": "Deliverable Requirements",
+            "default": []
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "brand_id",
+          "title",
+          "description",
+          "visibility",
+          "required_platforms",
+          "budget_per_creator_max",
+          "creator_min_followers",
+          "target_countries",
+          "target_cities",
+          "number_of_creators",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CampaignOut"
+      },
+      "CampaignStatusUpdate": {
+        "properties": { "status": { "type": "string", "title": "Status" } },
+        "type": "object",
+        "required": ["status"],
+        "title": "CampaignStatusUpdate"
+      },
+      "CampaignUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description"
+          },
+          "objectives": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Objectives"
+          },
+          "primary_niche_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Primary Niche Id"
+          },
+          "required_platforms": {
+            "anyOf": [
+              { "items": { "type": "string" }, "type": "array" },
+              { "type": "null" }
+            ],
+            "title": "Required Platforms"
+          },
+          "visibility": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Visibility"
+          },
+          "budget_per_creator_min": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Budget Per Creator Min"
+          },
+          "budget_per_creator_max": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Budget Per Creator Max"
+          },
+          "creator_min_followers": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Creator Min Followers"
+          },
+          "creator_max_followers": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Creator Max Followers"
+          },
+          "target_countries": {
+            "anyOf": [
+              { "items": { "type": "string" }, "type": "array" },
+              { "type": "null" }
+            ],
+            "title": "Target Countries"
+          },
+          "target_cities": {
+            "anyOf": [
+              { "items": { "type": "string" }, "type": "array" },
+              { "type": "null" }
+            ],
+            "title": "Target Cities"
+          },
+          "target_age_min": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Target Age Min"
+          },
+          "target_age_max": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Target Age Max"
+          },
+          "target_gender": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Target Gender"
+          },
+          "deliverables_description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Deliverables Description"
+          },
+          "number_of_creators": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Number Of Creators"
+          },
+          "application_deadline": {
+            "anyOf": [
+              { "type": "string", "format": "date" },
+              { "type": "null" }
+            ],
+            "title": "Application Deadline"
+          },
+          "content_deadline": {
+            "anyOf": [
+              { "type": "string", "format": "date" },
+              { "type": "null" }
+            ],
+            "title": "Content Deadline"
+          }
+        },
+        "type": "object",
+        "title": "CampaignUpdate"
+      },
+      "CollabHistoryCreate": {
+        "properties": {
+          "brand_name": { "type": "string", "title": "Brand Name" },
+          "brand_website": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Brand Website"
+          },
+          "niche_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Niche Id"
+          },
+          "platform": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Platform"
+          },
+          "collaboration_type": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Collaboration Type"
+          },
+          "collaborated_on": {
+            "anyOf": [
+              { "type": "string", "format": "date" },
+              { "type": "null" }
+            ],
+            "title": "Collaborated On"
+          },
+          "deliverable_description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Deliverable Description"
+          },
+          "content_url": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Content Url"
+          }
+        },
+        "type": "object",
+        "required": ["brand_name"],
+        "title": "CollabHistoryCreate"
+      },
+      "CollabHistoryOut": {
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "title": "Id" },
+          "brand_name": { "type": "string", "title": "Brand Name" },
+          "brand_website": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Brand Website"
+          },
+          "niche_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Niche Id"
+          },
+          "platform": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Platform"
+          },
+          "collaboration_type": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Collaboration Type"
+          },
+          "collaborated_on": {
+            "anyOf": [
+              { "type": "string", "format": "date" },
+              { "type": "null" }
+            ],
+            "title": "Collaborated On"
+          },
+          "deliverable_description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Deliverable Description"
+          },
+          "content_url": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Content Url"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": ["id", "brand_name", "created_at"],
+        "title": "CollabHistoryOut"
+      },
+      "CreatorProfileOut": {
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "title": "Id" },
+          "user_id": { "type": "string", "format": "uuid", "title": "User Id" },
+          "display_name": { "type": "string", "title": "Display Name" },
+          "full_name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Full Name"
+          },
+          "profile_photo_url": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Profile Photo Url"
+          },
+          "bio": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Bio"
+          },
+          "tagline": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Tagline"
+          },
+          "country_code": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Country Code"
+          },
+          "city": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "City"
+          },
+          "timezone": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Timezone"
+          },
+          "gender": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Gender"
+          },
+          "is_available": { "type": "boolean", "title": "Is Available" },
+          "min_budget": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Min Budget"
+          },
+          "response_time_hours": {
+            "type": "integer",
+            "title": "Response Time Hours"
+          },
+          "preferred_collaboration_types": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Preferred Collaboration Types"
+          },
+          "contact_whatsapp": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Contact Whatsapp"
+          },
+          "contact_email": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Contact Email"
+          },
+          "is_identity_verified": {
+            "type": "boolean",
+            "title": "Is Identity Verified"
+          },
+          "total_collaborations": {
+            "type": "integer",
+            "title": "Total Collaborations"
+          },
+          "average_rating": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Average Rating"
+          },
+          "social_profiles": {
+            "items": { "$ref": "#/components/schemas/SocialProfileOut" },
+            "type": "array",
+            "title": "Social Profiles",
+            "default": []
+          },
+          "niches": {
+            "items": { "$ref": "#/components/schemas/NicheRef" },
+            "type": "array",
+            "title": "Niches",
+            "default": []
+          },
+          "languages": {
+            "items": { "$ref": "#/components/schemas/LanguageRef" },
+            "type": "array",
+            "title": "Languages",
+            "default": []
+          },
+          "rate_cards": {
+            "items": { "$ref": "#/components/schemas/RateCardOut" },
+            "type": "array",
+            "title": "Rate Cards",
+            "default": []
+          },
+          "portfolio_items": {
+            "items": { "$ref": "#/components/schemas/PortfolioItemOut" },
+            "type": "array",
+            "title": "Portfolio Items",
+            "default": []
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "display_name",
+          "is_available",
+          "response_time_hours",
+          "preferred_collaboration_types",
+          "is_identity_verified",
+          "total_collaborations",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CreatorProfileOut"
+      },
+      "CreatorProfileUpdate": {
+        "properties": {
+          "display_name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Display Name"
+          },
+          "full_name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Full Name"
+          },
+          "profile_photo_url": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Profile Photo Url"
+          },
+          "bio": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Bio"
+          },
+          "tagline": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Tagline"
+          },
+          "country_code": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Country Code"
+          },
+          "city": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "City"
+          },
+          "timezone": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Timezone"
+          },
+          "gender": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Gender"
+          },
+          "date_of_birth": {
+            "anyOf": [
+              { "type": "string", "format": "date" },
+              { "type": "null" }
+            ],
+            "title": "Date Of Birth"
+          },
+          "is_available": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Is Available"
+          },
+          "min_budget": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Min Budget"
+          },
+          "response_time_hours": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Response Time Hours"
+          },
+          "preferred_collaboration_types": {
+            "anyOf": [
+              { "items": { "type": "string" }, "type": "array" },
+              { "type": "null" }
+            ],
+            "title": "Preferred Collaboration Types"
+          },
+          "contact_whatsapp": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Contact Whatsapp"
+          },
+          "contact_email": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Contact Email"
+          },
+          "niches": {
+            "anyOf": [
+              {
+                "items": { "$ref": "#/components/schemas/NicheRef" },
+                "type": "array"
+              },
+              { "type": "null" }
+            ],
+            "title": "Niches"
+          },
+          "languages": {
+            "anyOf": [
+              {
+                "items": { "$ref": "#/components/schemas/LanguageRef" },
+                "type": "array"
+              },
+              { "type": "null" }
+            ],
+            "title": "Languages"
+          }
+        },
+        "type": "object",
+        "title": "CreatorProfileUpdate"
+      },
+      "DeliverableRequirementCreate": {
+        "properties": {
+          "platform": { "type": "string", "title": "Platform" },
+          "deliverable_type": { "type": "string", "title": "Deliverable Type" },
+          "quantity": { "type": "integer", "title": "Quantity", "default": 1 },
+          "notes": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": ["platform", "deliverable_type"],
+        "title": "DeliverableRequirementCreate"
+      },
+      "DeliverableRequirementOut": {
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "title": "Id" },
+          "platform": { "type": "string", "title": "Platform" },
+          "deliverable_type": { "type": "string", "title": "Deliverable Type" },
+          "quantity": { "type": "integer", "title": "Quantity" },
+          "notes": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": ["id", "platform", "deliverable_type", "quantity"],
+        "title": "DeliverableRequirementOut"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": { "$ref": "#/components/schemas/ValidationError" },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LanguageRef": {
+        "properties": {
+          "language_code": { "type": "string", "title": "Language Code" },
+          "is_primary": {
+            "type": "boolean",
+            "title": "Is Primary",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": ["language_code"],
+        "title": "LanguageRef"
+      },
+      "LanguageTargetRef": {
+        "properties": {
+          "language_code": { "type": "string", "title": "Language Code" },
+          "is_required": {
+            "type": "boolean",
+            "title": "Is Required",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": ["language_code"],
+        "title": "LanguageTargetRef"
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": { "type": "string", "format": "email", "title": "Email" },
+          "password": { "type": "string", "title": "Password" }
+        },
+        "type": "object",
+        "required": ["email", "password"],
+        "title": "LoginRequest"
+      },
+      "NicheRef": {
+        "properties": {
+          "niche_id": { "type": "integer", "title": "Niche Id" },
+          "is_primary": {
+            "type": "boolean",
+            "title": "Is Primary",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": ["niche_id"],
+        "title": "NicheRef"
+      },
+      "NicheTargetRef": {
+        "properties": {
+          "niche_id": { "type": "integer", "title": "Niche Id" }
+        },
+        "type": "object",
+        "required": ["niche_id"],
+        "title": "NicheTargetRef"
+      },
+      "OnboardingRequest": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["creator", "brand"],
+            "title": "Role"
+          },
+          "creatorProfile": {
+            "anyOf": [{ "type": "object" }, { "type": "null" }],
+            "title": "Creatorprofile"
+          },
+          "creatorNiches": {
+            "anyOf": [{ "type": "object" }, { "type": "null" }],
+            "title": "Creatorniches"
+          },
+          "creatorPlatforms": {
+            "anyOf": [
+              { "items": { "type": "object" }, "type": "array" },
+              { "type": "null" }
+            ],
+            "title": "Creatorplatforms"
+          },
+          "brandProfile": {
+            "anyOf": [{ "type": "object" }, { "type": "null" }],
+            "title": "Brandprofile"
+          }
+        },
+        "type": "object",
+        "required": ["role"],
+        "title": "OnboardingRequest"
+      },
+      "PortfolioItemCreate": {
+        "properties": {
+          "platform": { "type": "string", "title": "Platform" },
+          "content_url": { "type": "string", "title": "Content Url" },
+          "title": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Title"
+          },
+          "thumbnail_url": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Thumbnail Url"
+          },
+          "niche_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Niche Id"
+          },
+          "views": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Views"
+          },
+          "likes": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Likes"
+          },
+          "comments": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Comments"
+          },
+          "published_at": {
+            "anyOf": [
+              { "type": "string", "format": "date" },
+              { "type": "null" }
+            ],
+            "title": "Published At"
+          },
+          "is_featured": {
+            "type": "boolean",
+            "title": "Is Featured",
+            "default": false
+          },
+          "sort_order": {
+            "type": "integer",
+            "title": "Sort Order",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": ["platform", "content_url"],
+        "title": "PortfolioItemCreate"
+      },
+      "PortfolioItemOut": {
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "title": "Id" },
+          "platform": { "type": "string", "title": "Platform" },
+          "content_url": { "type": "string", "title": "Content Url" },
+          "title": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Title"
+          },
+          "thumbnail_url": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Thumbnail Url"
+          },
+          "niche_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Niche Id"
+          },
+          "views": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Views"
+          },
+          "likes": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Likes"
+          },
+          "comments": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Comments"
+          },
+          "published_at": {
+            "anyOf": [
+              { "type": "string", "format": "date" },
+              { "type": "null" }
+            ],
+            "title": "Published At"
+          },
+          "is_featured": { "type": "boolean", "title": "Is Featured" },
+          "sort_order": { "type": "integer", "title": "Sort Order" },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "platform",
+          "content_url",
+          "is_featured",
+          "sort_order",
+          "created_at"
+        ],
+        "title": "PortfolioItemOut"
+      },
+      "RateCardCreate": {
+        "properties": {
+          "platform": { "type": "string", "title": "Platform" },
+          "deliverable_type": { "type": "string", "title": "Deliverable Type" },
+          "price_bdt": { "type": "integer", "title": "Price Bdt" },
+          "price_usd": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Price Usd"
+          },
+          "includes": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Includes"
+          },
+          "excludes": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Excludes"
+          },
+          "turnaround_days": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Turnaround Days"
+          },
+          "is_negotiable": {
+            "type": "boolean",
+            "title": "Is Negotiable",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": ["platform", "deliverable_type", "price_bdt"],
+        "title": "RateCardCreate"
+      },
+      "RateCardOut": {
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "title": "Id" },
+          "platform": { "type": "string", "title": "Platform" },
+          "deliverable_type": { "type": "string", "title": "Deliverable Type" },
+          "price_bdt": { "type": "integer", "title": "Price Bdt" },
+          "price_usd": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Price Usd"
+          },
+          "includes": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Includes"
+          },
+          "excludes": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Excludes"
+          },
+          "turnaround_days": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Turnaround Days"
+          },
+          "is_negotiable": { "type": "boolean", "title": "Is Negotiable" },
+          "is_active": { "type": "boolean", "title": "Is Active" },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "platform",
+          "deliverable_type",
+          "price_bdt",
+          "is_negotiable",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "RateCardOut"
+      },
+      "RateCardUpdate": {
+        "properties": {
+          "price_bdt": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Price Bdt"
+          },
+          "price_usd": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Price Usd"
+          },
+          "includes": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Includes"
+          },
+          "excludes": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Excludes"
+          },
+          "turnaround_days": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Turnaround Days"
+          },
+          "is_negotiable": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Is Negotiable"
+          },
+          "is_active": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "RateCardUpdate"
+      },
+      "RegisterRequest": {
+        "properties": {
+          "email": { "type": "string", "format": "email", "title": "Email" },
+          "password": { "type": "string", "title": "Password" },
+          "role": {
+            "type": "string",
+            "enum": ["creator", "brand"],
+            "title": "Role"
+          },
+          "display_name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Display Name"
+          },
+          "brand_name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Brand Name"
+          }
+        },
+        "type": "object",
+        "required": ["email", "password", "role"],
+        "title": "RegisterRequest"
+      },
+      "ReviewCreate": {
+        "properties": {
+          "application_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Application Id"
+          },
+          "rating": { "type": "integer", "title": "Rating" },
+          "review_text": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Review Text"
+          },
+          "is_public": {
+            "type": "boolean",
+            "title": "Is Public",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": ["application_id", "rating"],
+        "title": "ReviewCreate"
+      },
+      "ReviewOut": {
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "title": "Id" },
+          "application_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Application Id"
+          },
+          "reviewer_brand_id": {
+            "anyOf": [
+              { "type": "string", "format": "uuid" },
+              { "type": "null" }
+            ],
+            "title": "Reviewer Brand Id"
+          },
+          "reviewer_creator_id": {
+            "anyOf": [
+              { "type": "string", "format": "uuid" },
+              { "type": "null" }
+            ],
+            "title": "Reviewer Creator Id"
+          },
+          "reviewee_brand_id": {
+            "anyOf": [
+              { "type": "string", "format": "uuid" },
+              { "type": "null" }
+            ],
+            "title": "Reviewee Brand Id"
+          },
+          "reviewee_creator_id": {
+            "anyOf": [
+              { "type": "string", "format": "uuid" },
+              { "type": "null" }
+            ],
+            "title": "Reviewee Creator Id"
+          },
+          "rating": { "type": "integer", "title": "Rating" },
+          "review_text": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Review Text"
+          },
+          "is_public": { "type": "boolean", "title": "Is Public" },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "application_id",
+          "rating",
+          "is_public",
+          "created_at"
+        ],
+        "title": "ReviewOut"
+      },
+      "SocialProfileCreate": {
+        "properties": {
+          "platform": { "type": "string", "title": "Platform" },
+          "handle": { "type": "string", "title": "Handle" },
+          "profile_url": { "type": "string", "title": "Profile Url" },
+          "platform_user_id": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Platform User Id"
+          },
+          "display_name_on_platform": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Display Name On Platform"
+          },
+          "follower_count": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Follower Count"
+          },
+          "following_count": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Following Count"
+          },
+          "avg_views_per_post": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Avg Views Per Post"
+          },
+          "avg_likes_per_post": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Avg Likes Per Post"
+          },
+          "avg_comments_per_post": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Avg Comments Per Post"
+          },
+          "avg_shares_per_post": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Avg Shares Per Post"
+          },
+          "engagement_rate": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Engagement Rate"
+          },
+          "posts_per_month": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Posts Per Month"
+          },
+          "is_primary_platform": {
+            "type": "boolean",
+            "title": "Is Primary Platform",
+            "default": false
+          },
+          "account_created_year": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Account Created Year"
+          },
+          "is_monetized": {
+            "type": "boolean",
+            "title": "Is Monetized",
+            "default": false
+          },
+          "has_verified_badge": {
+            "type": "boolean",
+            "title": "Has Verified Badge",
+            "default": false
+          },
+          "audience_country_primary": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Audience Country Primary"
+          },
+          "audience_city_primary": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Audience City Primary"
+          },
+          "audience_age_range_min": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Audience Age Range Min"
+          },
+          "audience_age_range_max": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Audience Age Range Max"
+          },
+          "audience_gender_majority": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Audience Gender Majority"
+          },
+          "audience_gender_pct": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Audience Gender Pct"
+          },
+          "content_languages": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Content Languages",
+            "default": ["bn"]
+          },
+          "notes": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Notes"
+          },
+          "stats_reported_for_period": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Stats Reported For Period"
+          }
+        },
+        "type": "object",
+        "required": ["platform", "handle", "profile_url"],
+        "title": "SocialProfileCreate"
+      },
+      "SocialProfileOut": {
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "title": "Id" },
+          "platform": { "type": "string", "title": "Platform" },
+          "handle": { "type": "string", "title": "Handle" },
+          "profile_url": { "type": "string", "title": "Profile Url" },
+          "follower_count": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Follower Count"
+          },
+          "following_count": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Following Count"
+          },
+          "avg_views_per_post": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Avg Views Per Post"
+          },
+          "avg_likes_per_post": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Avg Likes Per Post"
+          },
+          "avg_comments_per_post": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Avg Comments Per Post"
+          },
+          "avg_shares_per_post": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Avg Shares Per Post"
+          },
+          "engagement_rate": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Engagement Rate"
+          },
+          "posts_per_month": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Posts Per Month"
+          },
+          "is_primary_platform": {
+            "type": "boolean",
+            "title": "Is Primary Platform"
+          },
+          "is_monetized": { "type": "boolean", "title": "Is Monetized" },
+          "has_verified_badge": {
+            "type": "boolean",
+            "title": "Has Verified Badge"
+          },
+          "audience_country_primary": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Audience Country Primary"
+          },
+          "audience_city_primary": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Audience City Primary"
+          },
+          "audience_age_range_min": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Audience Age Range Min"
+          },
+          "audience_age_range_max": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Audience Age Range Max"
+          },
+          "audience_gender_majority": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Audience Gender Majority"
+          },
+          "audience_gender_pct": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Audience Gender Pct"
+          },
+          "content_languages": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Content Languages"
+          },
+          "stats_reported_at": {
+            "anyOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ],
+            "title": "Stats Reported At"
+          },
+          "stats_reported_for_period": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Stats Reported For Period"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "platform",
+          "handle",
+          "profile_url",
+          "is_primary_platform",
+          "is_monetized",
+          "has_verified_badge",
+          "content_languages",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "SocialProfileOut"
+      },
+      "SocialProfileUpdate": {
+        "properties": {
+          "handle": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Handle"
+          },
+          "profile_url": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Profile Url"
+          },
+          "follower_count": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Follower Count"
+          },
+          "following_count": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Following Count"
+          },
+          "avg_views_per_post": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Avg Views Per Post"
+          },
+          "avg_likes_per_post": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Avg Likes Per Post"
+          },
+          "avg_comments_per_post": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Avg Comments Per Post"
+          },
+          "avg_shares_per_post": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Avg Shares Per Post"
+          },
+          "engagement_rate": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Engagement Rate"
+          },
+          "posts_per_month": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Posts Per Month"
+          },
+          "is_primary_platform": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Is Primary Platform"
+          },
+          "is_monetized": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Is Monetized"
+          },
+          "has_verified_badge": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Has Verified Badge"
+          },
+          "audience_country_primary": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Audience Country Primary"
+          },
+          "audience_city_primary": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Audience City Primary"
+          },
+          "audience_age_range_min": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Audience Age Range Min"
+          },
+          "audience_age_range_max": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Audience Age Range Max"
+          },
+          "audience_gender_majority": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Audience Gender Majority"
+          },
+          "audience_gender_pct": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Audience Gender Pct"
+          },
+          "content_languages": {
+            "anyOf": [
+              { "items": { "type": "string" }, "type": "array" },
+              { "type": "null" }
+            ],
+            "title": "Content Languages"
+          },
+          "notes": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Notes"
+          },
+          "stats_reported_for_period": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Stats Reported For Period"
+          }
+        },
+        "type": "object",
+        "title": "SocialProfileUpdate"
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": { "type": "string", "title": "Access Token" },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          }
+        },
+        "type": "object",
+        "required": ["access_token"],
+        "title": "TokenResponse"
+      },
+      "UserOut": {
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "title": "Id" },
+          "email": { "type": "string", "title": "Email" },
+          "role": { "type": "string", "title": "Role" },
+          "is_active": { "type": "boolean", "title": "Is Active" },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": ["id", "email", "role", "is_active", "created_at"],
+        "title": "UserOut"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": { "type": "string", "title": "Message" },
+          "type": { "type": "string", "title": "Error Type" }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": { "HTTPBearer": { "type": "http", "scheme": "bearer" } }
+  }
+}

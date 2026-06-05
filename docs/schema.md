@@ -779,9 +779,60 @@ languages (1) ── (many) campaign_language_targets
 
 ---
 
-## Extension Points
+## Implemented Since Phase 1 (live in the database)
 
-These columns and tables are intentionally absent from Phase 1.
+> These were originally listed below as future extension points. They are now **migrated and
+> live**. Kept here so this schema reference matches the running DB. See `docs/plan.md` §2.3.
+
+### `campaigns` — campaign type & KPI columns (migration `0013_add_campaign_type_and_kpis`)
+```sql
+-- The six collaboration models (brand demand side). Distinct from the creator-side
+-- `collaboration_type` enum — see docs/plan.md §3.1. Do NOT merge the two.
+CREATE TYPE campaign_type AS ENUM (
+    'paid_content', 'product_gifting', 'affiliate',
+    'brand_ambassador', 'talent_booking', 'ugc_only'
+);
+ALTER TABLE campaigns
+    ADD COLUMN campaign_type   campaign_type DEFAULT 'paid_content',
+    ADD COLUMN kpi_targets     JSONB,              -- {reach, engagement_rate, conversions, roi_target}
+    ADD COLUMN hashtags        TEXT[] DEFAULT '{}',
+    ADD COLUMN tracking_notes  TEXT;
+```
+
+### `ai_match_scores` — AI matching results (migration `53f8d9a8a155`)
+```sql
+-- Live table. One row per (campaign, creator) ranked match.
+-- NOTE: platform/recency/semantic_similarity/rank are planned but not yet persisted
+-- here — see docs/plan.md Phase C. Current columns:
+CREATE TABLE ai_match_scores (
+    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    campaign_id       UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+    creator_id        UUID NOT NULL REFERENCES creator_profiles(id) ON DELETE CASCADE,
+    score_niche       FLOAT,
+    score_engagement  FLOAT,
+    score_budget      FLOAT,
+    score_language    FLOAT,
+    score_total       FLOAT,
+    rationale         TEXT,
+    generated_at      TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(campaign_id, creator_id)
+);
+```
+
+### `campaign_status` — extra states (migrations `959ef947cd0f`, `fd300ea6267e`)
+`campaign_visibility` plus `archived` were added to the campaign lifecycle; `application_status`
+gained `invited` / `declined` for brand-initiated invitations.
+
+### YouTube ingestion (no schema yet — stateless wrapper)
+`app/youtube/` is a **read-only public-API client**; it does not persist. The next unit maps its
+`enrichment` output onto `creator_social_profiles` (overwriting the self-reported metric columns,
+plus the `is_api_verified` flag below). See `docs/tasks/tasks-navid.md`.
+
+---
+
+## Extension Points (still future)
+
+These columns and tables are intentionally absent.
 Add them without modifying existing tables.
 
 ### Adding API-verified social stats (no schema change)
@@ -809,23 +860,9 @@ Neo4j syncs from PostgreSQL. No schema change here.
 `campaign_applications` becomes the COLLABORATED_WITH edge.
 
 ### Adding AI match scores
-```sql
--- New table, does not touch any existing table:
-CREATE TABLE ai_match_scores (
-    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    campaign_id       UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-    creator_id        UUID NOT NULL REFERENCES creator_profiles(id) ON DELETE CASCADE,
-    score_niche       FLOAT,
-    score_engagement  FLOAT,
-    score_budget      FLOAT,
-    score_language    FLOAT,
-    score_total       FLOAT,
-    rationale         TEXT,
-    generated_at      TIMESTAMPTZ DEFAULT NOW(),
-
-    UNIQUE(campaign_id, creator_id)
-);
-```
+> ✅ **Implemented** — see "Implemented Since Phase 1" above (`ai_match_scores`, migration `53f8d9a8a155`).
+> Remaining work (persist `score_platform`, `score_recency`, `semantic_similarity`, `rank`) is
+> tracked in `docs/plan.md` Phase C.
 
 ### Adding payments and escrow
 ```sql
