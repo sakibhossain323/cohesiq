@@ -16,7 +16,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID, ENUM
+from sqlalchemy.dialects.postgresql import UUID, ENUM, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.common.models import Base
@@ -79,6 +79,19 @@ class Campaign(Base):
         ),
         nullable=True,
     )
+    campaign_type: Mapped[Optional[str]] = mapped_column(
+        ENUM(
+            "paid_content", "product_gifting", "affiliate",
+            "brand_ambassador", "talent_booking", "ugc_only",
+            name="campaign_type",
+            create_type=False,
+        ),
+        nullable=True,
+        server_default="paid_content",
+    )
+    kpi_targets: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    hashtags: Mapped[List[str]] = mapped_column(ARRAY(Text), server_default="{}")
+    tracking_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     deliverables_description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     number_of_creators: Mapped[int] = mapped_column(Integer, server_default="1")
     application_deadline: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
@@ -293,6 +306,9 @@ class AIMatchScore(Base):
     score_engagement: Mapped[Optional[float]] = mapped_column(nullable=True)
     score_budget: Mapped[Optional[float]] = mapped_column(nullable=True)
     score_language: Mapped[Optional[float]] = mapped_column(nullable=True)
+    score_platform: Mapped[Optional[float]] = mapped_column(nullable=True)
+    score_recency: Mapped[Optional[float]] = mapped_column(nullable=True)
+    score_semantic: Mapped[Optional[float]] = mapped_column(nullable=True)
     score_total: Mapped[Optional[float]] = mapped_column(nullable=True)
     rationale: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     generated_at: Mapped[datetime] = mapped_column(

@@ -2,7 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
 const isProtectedRoute = createRouteMatcher([
-  '/dashboard(.*)',
+  '/(brand|creator)/dashboard(.*)',
 ])
 const isOnboardingRoute = createRouteMatcher([
   '/onboarding(.*)',
@@ -29,7 +29,7 @@ export default clerkMiddleware(async (auth, req) => {
   // Onboarding complete but trying to access /onboarding → send to dashboard
   if (isOnboardingRoute(req) && sessionClaims?.metadata?.onboardingComplete) {
     const role = sessionClaims?.metadata?.role || 'creator'
-    return NextResponse.redirect(new URL(`/dashboard/${role}`, req.url))
+    return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url))
   }
 })
 

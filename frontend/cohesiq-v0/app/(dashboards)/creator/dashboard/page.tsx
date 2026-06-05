@@ -16,6 +16,7 @@ import {
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StarRating } from "@/components/shared/StarRating";
 import { NicheBadge } from "@/components/shared/NicheBadge";
+import { ProfileStrengthMeter } from "@/components/creator/ProfileStrengthMeter";
 import { auth } from "@clerk/nextjs/server";
 import { getApplicationsByCreatorId } from "@/lib/api/applications";
 import { getSuggestedCampaigns } from "@/lib/api/campaigns";
@@ -200,6 +201,8 @@ export default async function CreatorDashboardPage() {
                         <p className="text-xs text-muted-foreground">Applications</p>
                       </div>
                     </div>
+
+                    <ProfileStrengthMeter creator={creator} />
 
                     <Button variant="outline" className="mt-6 w-full" asChild>
                       <Link href={`/creators/${creator.id}`}>

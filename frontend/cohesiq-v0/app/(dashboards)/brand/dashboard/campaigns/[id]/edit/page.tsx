@@ -29,11 +29,18 @@ export default function EditCampaignPage() {
     title: "",
     description: "",
     visibility: "public",
+    campaign_type: "",
     budget_per_creator_max: "",
     creator_min_followers: "",
     number_of_creators: "",
     primary_niche_id: "",
     application_deadline: "",
+    hashtags: "",
+    tracking_notes: "",
+    kpi_reach: "",
+    kpi_engagement_rate: "",
+    kpi_conversions: "",
+    kpi_roi_target: "",
   });
 
   useEffect(() => {
@@ -44,15 +51,23 @@ export default function EditCampaignPage() {
       try {
         const campaignData = await getCampaignById(id);
         if (campaignData) {
+          const kpi = (campaignData as any).kpi_targets;
           setFormData({
             title: campaignData.title,
             description: campaignData.description || "",
             visibility: (campaignData as any).visibility || "public",
+            campaign_type: (campaignData as any).campaign_type || "",
             budget_per_creator_max: campaignData.budget_per_creator_max ? campaignData.budget_per_creator_max.toString() : "",
             creator_min_followers: campaignData.creator_min_followers ? campaignData.creator_min_followers.toString() : "",
             number_of_creators: (campaignData as any).number_of_creators ? (campaignData as any).number_of_creators.toString() : "",
             primary_niche_id: (campaignData as any).primary_niche_id ? (campaignData as any).primary_niche_id.toString() : "",
             application_deadline: campaignData.application_deadline ? campaignData.application_deadline.split('T')[0] : "",
+            hashtags: ((campaignData as any).hashtags ?? []).join(", "),
+            tracking_notes: (campaignData as any).tracking_notes || "",
+            kpi_reach: kpi?.reach != null ? String(kpi.reach) : "",
+            kpi_engagement_rate: kpi?.engagement_rate != null ? String(kpi.engagement_rate) : "",
+            kpi_conversions: kpi?.conversions != null ? String(kpi.conversions) : "",
+            kpi_roi_target: kpi?.roi_target != null ? String(kpi.roi_target) : "",
           });
         }
       } catch (err) {
@@ -111,14 +126,29 @@ export default function EditCampaignPage() {
       const token = await getToken();
       if (!token) return;
 
+      const kpiTargets = {
+        reach: formData.kpi_reach ? parseInt(formData.kpi_reach, 10) : null,
+        engagement_rate: formData.kpi_engagement_rate ? parseFloat(formData.kpi_engagement_rate) : null,
+        conversions: formData.kpi_conversions ? parseInt(formData.kpi_conversions, 10) : null,
+        roi_target: formData.kpi_roi_target ? parseFloat(formData.kpi_roi_target) : null,
+      };
+      const hasKpi = Object.values(kpiTargets).some(v => v !== null);
+
       const payload = {
-        ...formData,
+        title: formData.title,
+        description: formData.description,
+        visibility: formData.visibility,
+        campaign_type: formData.campaign_type || null,
         budget_per_creator_max: budget,
         creator_min_followers: minFollowers,
         number_of_creators: numCreators,
         primary_niche_id: formData.primary_niche_id ? parseInt(formData.primary_niche_id, 10) : undefined,
-        required_platforms: ["youtube"], // Simplified for now
         application_deadline: formData.application_deadline || null,
+        hashtags: formData.hashtags
+          ? formData.hashtags.split(",").map(h => h.trim()).filter(Boolean)
+          : [],
+        tracking_notes: formData.tracking_notes || null,
+        kpi_targets: hasKpi ? kpiTargets : null,
       };
 
       const updatedCampaign = await updateCampaign(id, payload, token);
@@ -246,6 +276,108 @@ export default function EditCampaignPage() {
                   <SelectItem value="private">Private (Invite-Only)</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Campaign Type & Goals</CardTitle>
+            <CardDescription>Define the collaboration model, KPI targets, and tracking notes.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="campaign_type">Campaign Type</Label>
+              <Select
+                value={formData.campaign_type || "none"}
+                onValueChange={(val) => setFormData({ ...formData, campaign_type: val === "none" ? "" : val })}
+              >
+                <SelectTrigger id="campaign_type">
+                  <SelectValue placeholder="Select campaign type (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Not specified</SelectItem>
+                  <SelectItem value="paid_content">Paid Content</SelectItem>
+                  <SelectItem value="product_gifting">Product Gifting</SelectItem>
+                  <SelectItem value="affiliate">Affiliate</SelectItem>
+                  <SelectItem value="brand_ambassador">Brand Ambassador</SelectItem>
+                  <SelectItem value="talent_booking">Talent Booking</SelectItem>
+                  <SelectItem value="ugc_only">UGC Only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="hashtags">Campaign Hashtags</Label>
+              <Input
+                id="hashtags"
+                value={formData.hashtags}
+                onChange={(e) => setFormData({ ...formData, hashtags: e.target.value })}
+                placeholder="#BrandName, #CampaignTag (comma-separated)"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tracking_notes">Tracking Notes</Label>
+              <Textarea
+                id="tracking_notes"
+                rows={2}
+                value={formData.tracking_notes}
+                onChange={(e) => setFormData({ ...formData, tracking_notes: e.target.value })}
+                placeholder="e.g. Use UTM links, submit content 48 h before publish..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>KPI Targets <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="kpi_reach" className="text-xs text-muted-foreground">Target Reach</Label>
+                  <Input
+                    id="kpi_reach"
+                    type="number"
+                    min="0"
+                    value={formData.kpi_reach}
+                    onChange={(e) => setFormData({ ...formData, kpi_reach: e.target.value })}
+                    placeholder="e.g. 50000"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="kpi_engagement_rate" className="text-xs text-muted-foreground">Engagement Rate (%)</Label>
+                  <Input
+                    id="kpi_engagement_rate"
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={formData.kpi_engagement_rate}
+                    onChange={(e) => setFormData({ ...formData, kpi_engagement_rate: e.target.value })}
+                    placeholder="e.g. 3.5"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="kpi_conversions" className="text-xs text-muted-foreground">Target Conversions</Label>
+                  <Input
+                    id="kpi_conversions"
+                    type="number"
+                    min="0"
+                    value={formData.kpi_conversions}
+                    onChange={(e) => setFormData({ ...formData, kpi_conversions: e.target.value })}
+                    placeholder="e.g. 200"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="kpi_roi_target" className="text-xs text-muted-foreground">ROI Target (×)</Label>
+                  <Input
+                    id="kpi_roi_target"
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={formData.kpi_roi_target}
+                    onChange={(e) => setFormData({ ...formData, kpi_roi_target: e.target.value })}
+                    placeholder="e.g. 2.5"
+                  />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
