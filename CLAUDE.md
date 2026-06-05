@@ -2,6 +2,40 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Mandatory agent workflow
+
+> These rules apply to Claude and every subagent spawned in this repo. Follow them in order — they prevent hallucination, merge conflicts, and drift between docs and code.
+
+### Step 1 — Understand before acting (graphify-first)
+
+Before planning, proposing changes, or touching any file:
+
+1. Check `graphify-out/wiki/index.md` for broad architecture navigation.
+2. Run `graphify query "<question>"` to locate relevant nodes — this returns a scoped subgraph and is faster than grepping source files.
+3. Use `graphify explain "<concept>"` to understand a module or pattern.
+4. Use `graphify path "<A>" "<B>"` to trace relationships between two files or symbols.
+5. Only open raw source files to modify or debug specific code, or when the graph does not surface enough detail.
+
+**The graphify skill (`/graphify`) is available in this project. Use it for any codebase exploration query.**
+
+### Step 2 — Check the task backlog before implementing
+
+Before writing any code:
+
+- Confirm the work item exists in `docs/tasks/tasks-sakib.md` (campaign UI / marketplace) or `docs/tasks/tasks-navid.md` (data / YouTube / matching engine).
+- If it is not tracked, add it to the correct file before starting.
+- Check `docs/plan.md` for phase, status, and known divergences — avoid duplicating or conflicting with in-progress items.
+- Read `docs/schema.md` before altering any SQLAlchemy model.
+
+### Step 3 — After every meaningful change
+
+1. Mark the finished task `[x]` (done), `[~]` (partial), or `[!]` (broken) in `docs/tasks/tasks-*.md`.
+2. If the change creates a new divergence from `docs/srs.md`, record it in `docs/plan.md` §3 Divergence Ledger — never silently edit the SRS.
+3. Update `docs/schema.md` if any SQLAlchemy model or Alembic migration changed.
+4. Run `graphify update .` to keep the knowledge graph current (AST-only, no API cost, takes ~5 s).
+
+---
+
 ## Running the stack
 
 ```bash
@@ -106,10 +140,28 @@ If the code forces a new divergence from the SRS, record it in `docs/plan.md` §
 
 ## graphify
 
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+This project has a live knowledge graph at `graphify-out/` (2 533 nodes, 7 806 edges, 158 communities as of 2026-06-05). **Always use graphify before reading source files** — see §Mandatory agent workflow Step 1.
 
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+### CLI quick-reference
+
+```bash
+graphify query "how does campaign matching work"   # scoped subgraph for a question
+graphify explain "semantic_match"                  # deep dive on a module/concept
+graphify path "matching.py" "campaigns/service.py" # trace relationships
+graphify update .                                  # rebuild graph after code changes (AST-only, ~5 s, no API cost)
+```
+
+### When to use each tool
+
+| Signal | Use |
+|---|---|
+| Broad navigation ("what files handle auth?") | `graphify-out/wiki/index.md` |
+| Targeted question ("where is budget scored?") | `graphify query` |
+| Module deep-dive | `graphify explain` |
+| Cross-file dependency | `graphify path` |
+| Full architecture review | `graphify-out/GRAPH_REPORT.md` (last resort — large) |
+| Modifying specific code | Read the raw file directly |
+
+### Skill
+
+`/graphify` — invokable from the Claude Code CLI. Trigger it for any complex codebase exploration that spans multiple files.
