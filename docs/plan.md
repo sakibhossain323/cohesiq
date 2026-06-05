@@ -119,22 +119,26 @@ SRS honest without rewriting it. Each entry is a *decision*, not an accident.
 | D8 | YouTube discovery avoids `Search.list` (100 units; SRS §4.3 #5 wants a circuit-breaker) | `/youtube/search` exists and uses `Search.list` | **Allowed for demo, flagged.** Seeding/discovery should prefer `channels?handle=` (1 unit). Add a quota guard before any automated/looped search. Tracked in `tasks-navid.md`. |
 | D9 | Authenticity engine (4 signals + BanglaBERT) | not implemented | **Phase D.** Ship the engagement-vs-tier proxy first (FR-12 partial), expand signals as data allows. |
 | D10 | Full Bangla UI toggle (FR-24, P0) | not implemented (no i18n library) | **Phase C.** Currency/date already BDT/Asia-Dhaka; needs an i18n layer. High rubric value (localization), keep on the demo cut-line. |
-| D11 | Escrow + per-type fee (FR-18/19, US-16) | fee % defined per `campaign_type` (reference only); no ledger | **Phase D, simulated.** Compute-and-display fees; no real bKash/Nagad in the hackathon window. |
+| D11 | Escrow + per-type fee (FR-18/19, US-16) | fee % defined per `contract_type` on Contract entity; no real ledger | **Phase D, simulated.** Fee locked at contract creation (content_collaboration=15%, product_seeding=10%, talent_engagement=18%); displayed as escrow simulation. No real bKash/Nagad in the hackathon window. |
+| D12 | `campaign_type` on Campaign (FR-6/7) | `contract_type` on Contract entity; `campaigns.campaign_type` **DEPRECATED** (nullable, no new writes) | **Contract as first-class entity.** Engagement type (Content Collaboration / Product Seeding / Talent Engagement) now lives on `Contract`, not `Campaign`. Campaign is type-agnostic with a `visibility` flag (public/private). `campaign_type` column kept nullable for backward compat — safe to DROP once all references are confirmed gone. See `docs/srs-revisions.md` for full change request. |
 
-### 3.1 The two type taxonomies (resolves D6 — do not merge these)
+### 3.1 Type taxonomies — three systems, do not merge
 
-The codebase deliberately has **two** type systems serving different sides of the marketplace:
+The codebase has **three** type systems serving different concerns:
 
-- **`campaigns.campaign_type`** *(brand demand side — what a campaign IS)* — the canonical realization
-  of the SRS "six collaboration models": `paid_content`, `product_gifting`, `affiliate`,
-  `brand_ambassador`, `talent_booking`, `ugc_only`. Drives the wizard, badges, and fee logic.
+- **`contracts.contract_type`** *(engagement type — what a bilateral deal IS)* — introduced by D12.
+  Three values: `content_collaboration`, `product_seeding`, `talent_engagement`. Lives on the
+  `Contract` entity. Drives clause configuration, platform fee, and state machine semantics.
+  **Do not write new `campaign_type` values — use `contract_type` instead.**
+- **`campaigns.campaign_type`** *(DEPRECATED — brand demand intent)*: `paid_content`,
+  `product_gifting`, `affiliate`, `brand_ambassador`, `talent_booking`, `ugc_only`. Column is now
+  nullable with no default. Kept for backward compat only; will be DROPped once the final reference
+  (`lib/campaignFees.ts`) is either removed or migrated.
+  To find remaining references: `grep -r "campaign_type" backend/ frontend/`
 - **`collaboration_type`** *(creator supply side — what deals a creator ACCEPTS)*:
   `sponsored_post`, `product_review`, `brand_ambassador`, `affiliate`, `gifted_product`,
   `event_coverage`, `other`. Used by `creator_profiles.preferred_collaboration_types` and
-  `creator_collaboration_history`.
-
-They overlap semantically (both have `affiliate`, `brand_ambassador`) but are **not** the same enum
-and must not be unified — one expresses demand, the other supply. Matching may later map between them.
+  `creator_collaboration_history`. Separate from the other two — do not merge.
 
 ---
 

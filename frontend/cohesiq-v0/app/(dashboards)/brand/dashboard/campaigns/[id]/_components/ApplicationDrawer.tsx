@@ -26,6 +26,7 @@ interface ApplicationDrawerProps {
   campaignId: string;
   onClose: () => void;
   onStatusChange: (applicationId: string, newStatus: ApplicationStatus) => void;
+  onAcceptAndContract?: (app: Application) => void;
 }
 
 const PLATFORM_LABELS: Record<string, string> = {
@@ -42,6 +43,7 @@ export function ApplicationDrawer({
   campaignId,
   onClose,
   onStatusChange,
+  onAcceptAndContract,
 }: ApplicationDrawerProps) {
   const [isPending, startTransition] = useTransition();
   const [showRejectForm, setShowRejectForm] = useState(false);
@@ -71,6 +73,9 @@ export function ApplicationDrawer({
         onStatusChange(application.id, newStatus);
         setShowRejectForm(false);
         setRejectionReason("");
+        if (newStatus === "accepted" && onAcceptAndContract) {
+          onAcceptAndContract(application);
+        }
       }
     });
   };
@@ -183,7 +188,7 @@ export function ApplicationDrawer({
                 onClick={() => handleAction("accepted")}
               >
                 {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
-                Accept
+                {onAcceptAndContract ? "Accept & Set Contract Terms" : "Accept"}
               </Button>
             )}
             {canReject && (

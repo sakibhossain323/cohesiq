@@ -3,7 +3,7 @@
 export interface BriefAnalysisResult {
   title?: string;
   description?: string;
-  campaign_type?: string;
+  suggested_visibility?: "public" | "private";
   primary_niche_id?: number;
   budget_per_creator_max?: number;
   number_of_creators?: number;
@@ -32,7 +32,7 @@ Output schema (return ALL fields, infer reasonable defaults when not explicitly 
 {
   "title": string (short punchy campaign title, max 60 chars, based on the brand/product/goal),
   "description": string (2-3 sentence campaign brief expanding on the user's input — include product, target audience, and creator expectations),
-  "campaign_type": one of ["paid_content","product_gifting","affiliate","brand_ambassador","talent_booking","ugc_only"],
+  "suggested_visibility": "public" or "private" (public = open influencer program anyone can apply to; private = brand reaches out to specific hand-picked creators),
   "primary_niche": one of ["technology","gaming","fashion","beauty","food","travel","lifestyle","education","finance","fitness","parenting","entertainment","news","other"],
   "budget_per_creator_max": integer in BDT (infer a reasonable amount if not stated — small brands ~5000-15000, mid ~15000-50000, large ~50000-150000),
   "number_of_creators": integer (default 3 if unclear),
@@ -48,13 +48,10 @@ Output schema (return ALL fields, infer reasonable defaults when not explicitly 
   "summary": string (1-sentence summary of what you extracted and inferred)
 }
 
-Campaign type rules:
-- "cashback", "commission", "affiliate link" → affiliate
-- "gifting", "free product", "send product" → product_gifting
-- "ambassador", "long-term", "ongoing" → brand_ambassador
-- "talent booking", "event", "appearance" → talent_booking
-- "ugc", "user generated content" → ugc_only
-- payment mentioned or implied → paid_content (default)
+Visibility rules:
+- "invite", "specific creators", "direct outreach", "hand-pick", "exclusive" → private
+- "open application", "any creator", "influencer program", "open call" → public
+- default → public
 
 Return only the JSON object, no markdown, no explanation.`;
 
@@ -128,7 +125,7 @@ export async function analyzeBriefAction(brief: string): Promise<BriefAnalysisRe
   return {
     title: parsed.title,
     description: parsed.description,
-    campaign_type: parsed.campaign_type,
+    suggested_visibility: parsed.suggested_visibility === "private" ? "private" : "public",
     primary_niche_id: nicheId,
     budget_per_creator_max: parsed.budget_per_creator_max,
     number_of_creators: parsed.number_of_creators,

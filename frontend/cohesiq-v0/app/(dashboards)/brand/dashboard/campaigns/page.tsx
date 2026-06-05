@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/table";
 import { CampaignStatusBadge } from "./_components/CampaignStatusBadge";
 import { formatBDT, formatDate, daysUntil } from "@/lib/utils";
-import { getCampaignFee } from "@/lib/campaignFees";
 import { Briefcase, Plus, Calculator, BarChart3 } from "lucide-react";
 
 export default async function BrandCampaignsPage() {
@@ -82,7 +81,6 @@ export default async function BrandCampaignsPage() {
                     <TableHead>Title</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Budget Max</TableHead>
-                    <TableHead className="text-right">Platform Fee</TableHead>
                     <TableHead>Deadline</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -112,16 +110,6 @@ export default async function BrandCampaignsPage() {
                               ? formatBDT(campaign.budget_per_creator_max)
                               : 'N/A'}
                           </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {(() => {
-                            const fee = getCampaignFee(campaign.campaign_type);
-                            return (
-                              <span className="text-sm font-medium text-amber-600">
-                                {fee.label}
-                              </span>
-                            );
-                          })()}
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">

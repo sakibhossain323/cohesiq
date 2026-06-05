@@ -733,7 +733,7 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
 async def get_campaign_matches(db: AsyncSession, campaign_id: uuid.UUID) -> List[AIMatchScore]:
     from app.campaigns.models import AIMatchScore
     from app.creators.models import CreatorProfile
-    
+
     result = await db.execute(
         select(AIMatchScore)
         .where(AIMatchScore.campaign_id == campaign_id)
@@ -747,3 +747,212 @@ async def get_campaign_matches(db: AsyncSession, campaign_id: uuid.UUID) -> List
         )
     )
     return list(result.scalars().all())
+
+
+# ------------------------------------------------------------------ #
+# Contracts                                                            #
+# ------------------------------------------------------------------ #
+
+async def create_contract(
+    db: AsyncSession,
+    application_id: uuid.UUID,
+    data: "ContractCreate",
+    brand_id: uuid.UUID,
+) -> "Contract":
+    from app.campaigns.models import Contract, CONTRACT_FEE_MAP
+    from app.campaigns.schemas import ContractCreate
+
+    result = await db.execute(
+        select(CampaignApplication).where(CampaignApplication.id == application_id)
+    )
+    app = result.scalar_one_or_none()
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found")
+    if app.status != "accepted":
+        raise HTTPException(status_code=400, detail="Contract can only be created for accepted applications")
+
+    existing = await db.execute(
+        select(Contract).where(Contract.application_id == application_id)
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="A contract already exists for this application")
+
+    fee = CONTRACT_FEE_MAP.get(data.contract_type, 15)
+    contract = Contract(
+        application_id=application_id,
+        brand_id=brand_id,
+        creator_id=app.creator_id,
+        contract_type=data.contract_type,
+        status="active",
+        payment_structure=data.payment_structure,
+        payment_amount_bdt=data.payment_amount_bdt,
+        payment_schedule=data.payment_schedule,
+        has_product_transfer=data.has_product_transfer,
+        product_disposition=data.product_disposition,
+        deliverable_notes=data.deliverable_notes,
+        exclusivity_days=data.exclusivity_days,
+        usage_rights_days=data.usage_rights_days,
+        max_revision_rounds=data.max_revision_rounds,
+        kill_fee_percentage=data.kill_fee_percentage,
+        platform_fee_percentage=fee,
+    )
+    db.add(contract)
+    await db.commit()
+    await db.refresh(contract)
+    return contract
+
+
+async def get_contract_by_application(
+    db: AsyncSession, application_id: uuid.UUID
+) -> "Contract | None":
+    from app.campaigns.models import Contract
+    result = await db.execute(
+        select(Contract).where(Contract.application_id == application_id)
+    )
+    return result.scalar_one_or_none()
+
+
+async def get_contract(db: AsyncSession, contract_id: uuid.UUID) -> "Contract | None":
+    from app.campaigns.models import Contract
+    result = await db.execute(select(Contract).where(Contract.id == contract_id))
+    return result.scalar_one_or_none()
+
+
+async def list_contracts_for_brand(
+    db: AsyncSession, brand_id: uuid.UUID, campaign_id: uuid.UUID | None = None
+) -> list:
+    from app.campaigns.models import Contract
+    query = select(Contract).where(Contract.brand_id == brand_id)
+    if campaign_id:
+        query = query.join(CampaignApplication).where(
+            CampaignApplication.campaign_id == campaign_id
+        )
+    result = await db.execute(query.order_by(Contract.contracted_at.desc()))
+    return list(result.scalars().all())
+
+
+async def list_contracts_for_creator(db: AsyncSession, creator_id: uuid.UUID) -> list:
+    from app.campaigns.models import Contract
+    result = await db.execute(
+        select(Contract)
+        .where(Contract.creator_id == creator_id)
+        .order_by(Contract.contracted_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+async def submit_content_draft(
+    db: AsyncSession, contract_id: uuid.UUID, draft_url: str, creator_id: uuid.UUID
+) -> "Contract":
+    from app.campaigns.models import Contract
+    contract = await get_contract(db, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if contract.creator_id != creator_id:
+        raise HTTPException(status_code=403, detail="Not your contract")
+    if contract.status not in ("active", "in_production"):
+        raise HTTPException(status_code=400, detail=f"Cannot submit draft in '{contract.status}' state")
+
+    contract.draft_content_url = draft_url
+    contract.status = "content_submitted"
+    contract.submitted_at = datetime.now(timezone.utc)
+    contract.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(contract)
+    return contract
+
+
+async def approve_content(
+    db: AsyncSession, contract_id: uuid.UUID, brand_id: uuid.UUID
+) -> "Contract":
+    from app.campaigns.models import Contract
+    contract = await get_contract(db, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if contract.brand_id != brand_id:
+        raise HTTPException(status_code=403, detail="Not your contract")
+    if contract.status != "content_submitted":
+        raise HTTPException(status_code=400, detail="Content must be submitted before approval")
+
+    contract.status = "content_approved"
+    contract.approved_at = datetime.now(timezone.utc)
+    contract.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(contract)
+    return contract
+
+
+async def request_revision(
+    db: AsyncSession, contract_id: uuid.UUID, brand_id: uuid.UUID
+) -> "Contract":
+    from app.campaigns.models import Contract
+    contract = await get_contract(db, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if contract.brand_id != brand_id:
+        raise HTTPException(status_code=403, detail="Not your contract")
+    if contract.status != "content_submitted":
+        raise HTTPException(status_code=400, detail="Content must be submitted to request revision")
+    if contract.revisions_used >= contract.max_revision_rounds:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Revision limit reached ({contract.max_revision_rounds} rounds). You must approve or raise a dispute."
+        )
+
+    contract.revisions_used += 1
+    contract.status = "in_production"
+    contract.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(contract)
+    return contract
+
+
+async def publish_content(
+    db: AsyncSession, contract_id: uuid.UUID, live_url: str, creator_id: uuid.UUID
+) -> "Contract":
+    from app.campaigns.models import Contract
+    contract = await get_contract(db, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if contract.creator_id != creator_id:
+        raise HTTPException(status_code=403, detail="Not your contract")
+    if contract.status != "content_approved":
+        raise HTTPException(status_code=400, detail="Content must be approved before publishing")
+
+    contract.live_post_url = live_url
+    contract.status = "published"
+    contract.published_at = datetime.now(timezone.utc)
+    contract.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(contract)
+    return contract
+
+
+async def close_contract(
+    db: AsyncSession, contract_id: uuid.UUID, brand_id: uuid.UUID
+) -> "Contract":
+    from app.campaigns.models import Contract
+    contract = await get_contract(db, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if contract.brand_id != brand_id:
+        raise HTTPException(status_code=403, detail="Not your contract")
+    if contract.status != "published":
+        raise HTTPException(status_code=400, detail="Contract must be published before closing")
+
+    contract.status = "closed"
+    contract.closed_at = datetime.now(timezone.utc)
+    contract.updated_at = datetime.now(timezone.utc)
+
+    # Mark application completed so reviews become eligible
+    result = await db.execute(
+        select(CampaignApplication).where(CampaignApplication.id == contract.application_id)
+    )
+    app = result.scalar_one_or_none()
+    if app:
+        app.status = "completed"
+        app.completed_at = datetime.now(timezone.utc)
+
+    await db.commit()
+    await db.refresh(contract)
+    return contract

@@ -786,17 +786,82 @@ languages (1) ── (many) campaign_language_targets
 
 ### `campaigns` — campaign type & KPI columns (migration `0013_add_campaign_type_and_kpis`)
 ```sql
--- The six collaboration models (brand demand side). Distinct from the creator-side
--- `collaboration_type` enum — see docs/plan.md §3.1. Do NOT merge the two.
+-- ⚠️  DEPRECATED: campaign_type is soft-deprecated as of migration 0015 (2026-06-06).
+-- Engagement type now lives on the Contract entity (contracts.contract_type).
+-- campaign_type is nullable with no default — do NOT write new values here.
+-- Safe to DROP once all remaining code references are removed.
+-- See docs/plan.md §3.1 and docs/srs-revisions.md §8 for the deprecation policy.
 CREATE TYPE campaign_type AS ENUM (
     'paid_content', 'product_gifting', 'affiliate',
     'brand_ambassador', 'talent_booking', 'ugc_only'
 );
 ALTER TABLE campaigns
-    ADD COLUMN campaign_type   campaign_type DEFAULT 'paid_content',
+    ADD COLUMN campaign_type   campaign_type,      -- nullable, no default (deprecated)
     ADD COLUMN kpi_targets     JSONB,              -- {reach, engagement_rate, conversions, roi_target}
     ADD COLUMN hashtags        TEXT[] DEFAULT '{}',
     ADD COLUMN tracking_notes  TEXT;
+```
+
+### `contracts` — engagement contracts (migration `0015_add_contract_model`)
+```sql
+-- First-class contract entity. One contract per accepted campaign application.
+-- Absorbs engagement type (formerly campaign_type) and owns the execution state machine.
+-- Navid-safe: Contract FKs to campaign_applications.id — no changes to matching fields.
+
+CREATE TYPE contract_type AS ENUM (
+    'content_collaboration',   -- creator publishes branded content on their channels
+    'product_seeding',         -- brand sends product; creator engages authentically
+    'talent_engagement'        -- creator appears at or hosts a live event/activation
+);
+CREATE TYPE contract_status AS ENUM (
+    'drafted', 'active', 'in_production', 'content_submitted',
+    'content_approved', 'published', 'closed', 'disputed'
+);
+CREATE TYPE payment_schedule_type AS ENUM ('upfront', 'on_delivery', 'milestone');
+CREATE TYPE product_disposition_type AS ENUM ('keep', 'return');
+
+CREATE TABLE contracts (
+    id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    application_id          UUID NOT NULL UNIQUE REFERENCES campaign_applications(id) ON DELETE CASCADE,
+    brand_id                UUID NOT NULL REFERENCES brand_profiles(id) ON DELETE CASCADE,
+    creator_id              UUID NOT NULL REFERENCES creator_profiles(id) ON DELETE CASCADE,
+    contract_type           contract_type NOT NULL,
+    status                  contract_status NOT NULL DEFAULT 'active',
+    -- Payment clause
+    payment_structure       VARCHAR(20) NOT NULL DEFAULT 'none',   -- 'flat_fee' | 'none'
+    payment_amount_bdt      INTEGER,
+    payment_schedule        payment_schedule_type,
+    -- Product transfer clause (product_seeding only)
+    has_product_transfer    BOOLEAN NOT NULL DEFAULT false,
+    product_disposition     product_disposition_type,
+    -- Deliverable clause
+    deliverable_notes       TEXT,
+    -- Exclusivity clause
+    exclusivity_days        SMALLINT,
+    usage_rights_days       SMALLINT,
+    -- Revision clause
+    max_revision_rounds     SMALLINT NOT NULL DEFAULT 2,
+    revisions_used          SMALLINT NOT NULL DEFAULT 0,
+    -- Kill fee clause
+    kill_fee_percentage     SMALLINT,
+    -- Content submission
+    draft_content_url       TEXT,
+    live_post_url           TEXT,
+    -- Platform fee locked at contract creation
+    platform_fee_percentage SMALLINT,  -- content_collaboration=15, product_seeding=10, talent_engagement=18
+    -- Audit trail timestamps
+    contracted_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
+    in_production_at        TIMESTAMPTZ,
+    submitted_at            TIMESTAMPTZ,
+    approved_at             TIMESTAMPTZ,
+    published_at            TIMESTAMPTZ,
+    closed_at               TIMESTAMPTZ,
+    updated_at              TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX ix_contracts_brand_id   ON contracts(brand_id);
+CREATE INDEX ix_contracts_creator_id ON contracts(creator_id);
+CREATE INDEX ix_contracts_status     ON contracts(status);
 ```
 
 ### `ai_match_scores` — AI matching results (migration `53f8d9a8a155`)

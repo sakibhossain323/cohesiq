@@ -241,6 +241,9 @@ class CampaignApplication(Base):
     reviews: Mapped[List["Review"]] = relationship(
         "Review", back_populates="application", cascade="all, delete-orphan"
     )
+    contract: Mapped[Optional["Contract"]] = relationship(
+        "Contract", back_populates="application", uselist=False
+    )
 
 
 class Review(Base):
@@ -283,6 +286,98 @@ class Review(Base):
 
     application: Mapped["CampaignApplication"] = relationship(
         "CampaignApplication", back_populates="reviews"
+    )
+
+
+# Fee locked at contract creation — do not recalculate after active.
+CONTRACT_FEE_MAP = {
+    "content_collaboration": 15,
+    "product_seeding": 10,
+    "talent_engagement": 18,
+}
+
+
+class Contract(Base):
+    """
+    Bilateral agreement created when a brand accepts a creator's application.
+    Owns engagement type, all clause data, and the full execution state machine.
+
+    REPLACES: campaigns.campaign_type (deprecated — see docs/srs-revisions.md §8)
+    """
+    __tablename__ = "contracts"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
+    )
+    application_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("campaign_applications.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+    brand_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("brand_profiles.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    creator_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("creator_profiles.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    contract_type: Mapped[str] = mapped_column(
+        ENUM("content_collaboration", "product_seeding", "talent_engagement",
+             name="contract_type", create_type=False),
+        nullable=False,
+    )
+    status: Mapped[str] = mapped_column(
+        ENUM("drafted", "active", "in_production", "content_submitted",
+             "content_approved", "published", "closed", "disputed",
+             name="contract_status", create_type=False),
+        nullable=False,
+        server_default="active",
+    )
+    # Payment clause
+    payment_structure: Mapped[str] = mapped_column(String(20), nullable=False, server_default="none")
+    payment_amount_bdt: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    payment_schedule: Mapped[Optional[str]] = mapped_column(
+        ENUM("upfront", "on_delivery", "milestone", name="payment_schedule_type", create_type=False),
+        nullable=True,
+    )
+    # Product transfer clause
+    has_product_transfer: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    product_disposition: Mapped[Optional[str]] = mapped_column(
+        ENUM("keep", "return", name="product_disposition_type", create_type=False),
+        nullable=True,
+    )
+    # Deliverable clause
+    deliverable_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Exclusivity clause
+    exclusivity_days: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+    usage_rights_days: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+    # Revision clause
+    max_revision_rounds: Mapped[int] = mapped_column(SmallInteger, nullable=False, server_default="2")
+    revisions_used: Mapped[int] = mapped_column(SmallInteger, nullable=False, server_default="0")
+    # Kill fee clause
+    kill_fee_percentage: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+    # Content submission
+    draft_content_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    live_post_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Platform fee locked at creation
+    platform_fee_percentage: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+    # Audit trail
+    contracted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    in_production_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    submitted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    closed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    application: Mapped["CampaignApplication"] = relationship(
+        "CampaignApplication", back_populates="contract"
     )
 
 
