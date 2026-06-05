@@ -3,7 +3,7 @@
 **Bangladesh's Creator & Talent Marketplace, powered by Graph AI**
 The Infinity AI BuildFest 2026 · MarTech Track · Influencer Matching Engine
 
-> **Status:** Living document · Last unified **2026-06-05** · Supersedes the original
+> **Status:** Living document · Last unified **2026-06-05** · Phase B complete · Phase D partially done (D03/D04/D05 shipped) · Supersedes the original
 > "Phase 1 YouTube-only" plan (archived in git history at commit before this rewrite).
 
 ---
@@ -151,34 +151,38 @@ FRs it satisfies and its current status.
 - `[x]` Multi-step onboarding (brand + creator), dashboard layouts
 - `[x]` Creator profile + manual social-profile CRUD, niches, languages, rate cards, portfolio
 - `[~]` FR-3 "submit YouTube Channel ID → fetch public stats": the wrapper exists (`/youtube/channels/enrichment`); **persisting it onto the profile is the open item** (Phase D, Navid)
-- `[ ]` FR-5 profile-strength meter
+- `[x]` FR-5 profile-strength meter — 9-item weighted checklist (photo/bio/tagline/city/niche/language/social/stats/rate card), 0–100 score, four levels (Starter→Rising→Pro→Elite), shown in creator dashboard sidebar with actionable next-step tips
 
-### Phase B — Brand campaign system *(SRS US-5, US-10; FR-6, FR-7, FR-14, FR-15)* — **[~] partial (Sakib)**
+### Phase B — Brand campaign system *(SRS US-5, US-10; FR-6, FR-7, FR-14, FR-15)* — **[x] done (Sakib)**
 - `[x]` 4-step campaign wizard UI: Type → Requirements → Budget/Timeline → Brief/KPIs (steps render correctly)
-- `[!]` **`campaign_type`, `kpi_targets`, `hashtags`, `tracking_notes` silently dropped by the API** — migration `0013` applied (DB columns exist) but `Campaign` SQLAlchemy model (`backend/app/campaigns/models.py`) and all Pydantic schemas (`CampaignCreate`/`CampaignUpdate`/`CampaignOut`) have not been updated; these four fields are absent from the ORM and API layer, so values are lost on every create/update. Fix before any wizard E2E test.
+- `[x]` `campaign_type`, `kpi_targets`, `hashtags`, `tracking_notes` — SQLAlchemy model, Pydantic schemas (`CampaignCreate`/`CampaignUpdate`/`CampaignOut`), and service layer all updated; values round-trip correctly through the API
 - `[x]` `CampaignTypeBadge` component; type column in campaign list
 - `[x]` Kanban (Invited → Needs Review → Shortlisted → Accepted) with clickable cards
-- `[!]` `ApplicationDrawer.tsx` built (`campaigns/[id]/_components/`) but **not imported in `CampaignDetailClient.tsx`**; Kanban shows a read-only inline card with "View Profile" link only — Shortlist/Accept/Reject controls are unreachable from the board. `updateApplicationStatusAction` is correct; just needs to be wired into the drawer.
-- `[~]` Active Contracts tab renders (tab UI present) but badge count hardcoded to 0 and shows empty placeholder — not filtered from real accepted applications.
+- `[x]` `ApplicationDrawer` imported and wired in `CampaignDetailClient.tsx`; opens on card click; Shortlist/Accept/Reject controls + rejection reason textarea fully reachable; status changes update Kanban optimistically via `localApplications` state
+- `[x]` Active Contracts tab wired to `localApplications.filter(a => a.status === 'accepted' || a.status === 'completed')`; Sent Invitations tab wired to `initiated_by === 'brand'`
+- `[x]` Edit form parity with the wizard (`campaigns/[id]/edit`) — "Campaign Type & Goals" card with campaign_type, hashtags, tracking_notes, KPI grid added (A11)
 - `[ ]` FR-15 explicit state machine with timestamped audit-trail transitions (currently status-field only)
-- `[ ]` Edit form parity with the wizard (`campaigns/[id]/edit`)
 
 ### Phase C — Matching transparency + localization *(SRS US-6, US-7, US-8, US-9; FR-9…FR-11, FR-24)* — **[~] partial**
 - `[x]` `POST /campaigns/{id}/run-matching` + `GET /campaigns/{id}/matches`, persisted to `ai_match_scores`
 - `[x]` Pure deterministic scorer (`services/matching.py`): niche .30 / engagement .20 / budget .20 / platform .15 / language .10 / recency .05
-- `[~]` Sub-score breakdown UI: `ai_match_scores` persists niche/engagement/budget/language/total; **platform + recency + semantic_similarity + rank not yet persisted/rendered** (FR-10 needs all six bars)
+- `[x]` Sub-score breakdown UI: all six sub-scores now persisted (`score_niche`, `score_engagement`, `score_budget`, `score_language`, `score_platform`, `score_recency`) + `score_semantic` in `ai_match_scores` (migration 0014); `MatchesClient` renders Platform Fit, Recency, and Semantic Similarity bars alongside the original four
 - `[~]` Rationale is heuristic; Gemini path is optional — formalize a bounded LLM rationale (FR-9)
 - `[~]` Live discovery grid + profile drawer (matches page + creator detail exist; live-filter URL grid partial)
 - `[ ]` **FR-24 full Bangla UI toggle** (D10) — add i18n, translate core flows
 
-### Phase D — Differentiators: trust, real data, fees *(SRS US-3, US-4, US-11, US-12, US-16, US-19, US-20)* — **[~] early**
-- `[~]` US-20 ROI summary: brand-dashboard ROI cards done (Sakib C01); per-campaign Day-7/14/30 snapshots pending
+### Phase D — Differentiators: trust, real data, fees *(SRS US-3, US-4, US-11, US-12, US-16, US-19, US-20)* — **[~] partial**
+- `[~]` US-20 ROI summary: brand-dashboard ROI cards done (Sakib C01); per-campaign Day-7/14/30 snapshots pending (C02, blocked on Navid N01/N02)
+- `[x]` C03 Creator performance comparison — table in Active Contracts tab comparing accepted creators by niche, followers, proposed vs agreed rate (with savings diff), deliverables, and status; sorted by agreed rate; shown only when 2+ creators accepted
+- `[x]` Budget & ROI Calculator — `/brand/dashboard/campaigns/roi-calculator`; pure client widget; per-tier (nano/micro/macro/mega) reach, engagements, conversions, revenue, ROI % — zero API calls (Sakib D03)
+- `[x]` Rate Card Benchmark — `/brand/dashboard/campaigns/rate-benchmark`; Server Component fetches `/creators/?limit=200`, groups by `platform||deliverable_type||tier`, computes median/min/max; filterable client table (Sakib D04)
+- `[x]` Creator Comparison Tool — `/brand/dashboard/creators/compare`; reads `?ids=` param, fetches up to 3 creators in parallel; side-by-side stat grid (Rating, Collaborations, Available, Platforms, Min Rate, Rate Cards, Niches) + AI brief placeholder pending N05; selection UI with checkbox overlay + sticky compare bar on Find Creators page (Sakib D05)
 - `[ ]` US-2/US-3/US-4 **persist YouTube enrichment** → `creator_social_profiles`; seed 18–20 real BD channels via `channels?handle=`; normalize niche/language/tier at ingestion (Navid, Phase D core)
 - `[ ]` US-11/FR-12 Authenticity/Trust Score (engagement-vs-tier proxy first; expand signals)
 - `[~]` US-12 five-stage gated pipeline: hard filter + weighted score + optional semantic exist; **formalize the funnel** (Stage labels, top-N gating) and document which stages are active
-- `[ ]` US-16/FR-19 simulated per-type fee compute + display (no real payment rail)
-- `[ ]` US-19 ethical-AI safeguards: "Estimated"/"Uncategorized %" tags, under-18 audience flag, staleness timestamps
-- `[ ]` US-14/FR-8 AI Brief Generator (Gemini → pre-filled wizard)
+- `[x]` US-16/FR-19 simulated per-type fee compute + display — `lib/campaignFees.ts` maps each `campaign_type` to a fee %; campaign list shows fee % column; campaign detail shows 3-cell breakdown (Budget / Platform Fee / Net to Creator) with "Simulated · No real payment" badge
+- `[x]` US-19 ethical-AI safeguards: `EstimatedTag` component (3 variants: self-reported/estimated/ai-scored, each with tooltip explanation) applied to engagement rate and avg views on creator cards and profile, and to Overall Match + Engagement Strength on match cards
+- `[ ]` US-14/FR-8 AI Brief Generator (Gemini → pre-filled wizard; coordinate with Navid N05)
 
 ### Phase E — Optional heavy layers *(SRS US-13, US-15; FR-13, FR-17; NFR-3/4)* — **[ ] deferred by design (D1–D5)**
 - `[ ]` Neo4j graph + conflict-of-interest (FR-13) — *or* relational 90-day conflict check as a lighter first cut

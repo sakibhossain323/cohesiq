@@ -92,7 +92,7 @@ export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
           </Show>
 
           <Show when="signed-out">
-            <SignInButton mode="modal">
+            <SignInButton mode="modal" forceRedirectUrl="/onboarding">
               <Button variant="outline" size="sm" className="w-full gap-2">
                 <LogIn className="h-4 w-4" />
                 Sign In

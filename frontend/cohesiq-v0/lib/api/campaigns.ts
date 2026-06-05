@@ -199,6 +199,20 @@ export async function respondToInvitation(campaignId: string, applicationId: str
   });
 }
 
+export async function updateApplicationStatus(
+  campaignId: string,
+  applicationId: string,
+  status: string,
+  token: string,
+  rejectionReason?: string,
+): Promise<any> {
+  return fetchApi<any>(`/campaigns/${campaignId}/applications/${applicationId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status, rejection_reason: rejectionReason ?? null }),
+    token,
+  });
+}
+
 export async function updateCampaign(campaignId: string, data: any, token: string): Promise<Campaign> {
   const result = await fetchApi<any>(`/campaigns/${campaignId}`, {
     method: "PUT",

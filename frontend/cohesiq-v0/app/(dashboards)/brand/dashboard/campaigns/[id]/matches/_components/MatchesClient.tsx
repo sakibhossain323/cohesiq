@@ -11,15 +11,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { NicheBadge } from "@/components/shared/NicheBadge";
-import { 
-  Sparkles, 
-  Brain, 
-  ChevronLeft, 
-  TrendingUp, 
-  Target, 
-  DollarSign, 
-  Globe2, 
-  Briefcase
+import { EstimatedTag } from "@/components/shared/EstimatedTag";
+import {
+  Sparkles,
+  Brain,
+  ChevronLeft,
+  TrendingUp,
+  Target,
+  DollarSign,
+  Globe2,
+  Briefcase,
+  MonitorSmartphone,
+  Clock,
+  Cpu,
 } from "lucide-react";
 
 interface MatchesClientProps {
@@ -234,6 +238,7 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
                             <div className="flex justify-between text-xs">
                               <span className="text-muted-foreground flex items-center gap-1">
                                 <TrendingUp className="h-3.5 w-3.5" /> Engagement Strength
+                                <EstimatedTag variant="estimated" />
                               </span>
                               <span className="font-semibold">{Math.round((match.score_engagement || 0) * 100)}%</span>
                             </div>
@@ -261,6 +266,41 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
                             </div>
                             <Progress value={(match.score_language || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_language || 0)} />
                           </div>
+
+                          {/* Platform Fit */}
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground flex items-center gap-1">
+                                <MonitorSmartphone className="h-3.5 w-3.5" /> Platform Fit
+                              </span>
+                              <span className="font-semibold">{Math.round((match.score_platform || 0) * 100)}%</span>
+                            </div>
+                            <Progress value={(match.score_platform || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_platform || 0)} />
+                          </div>
+
+                          {/* Recency */}
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground flex items-center gap-1">
+                                <Clock className="h-3.5 w-3.5" /> Recency
+                              </span>
+                              <span className="font-semibold">{Math.round((match.score_recency || 0) * 100)}%</span>
+                            </div>
+                            <Progress value={(match.score_recency || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_recency || 0)} />
+                          </div>
+
+                          {/* Semantic Similarity */}
+                          {(match.score_semantic ?? 0) > 0 && (
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-xs">
+                                <span className="text-muted-foreground flex items-center gap-1">
+                                  <Cpu className="h-3.5 w-3.5" /> Semantic Similarity
+                                </span>
+                                <span className="font-semibold">{Math.round((match.score_semantic || 0) * 100)}%</span>
+                              </div>
+                              <Progress value={(match.score_semantic || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_semantic || 0)} />
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -268,7 +308,10 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
                     {/* Overall Score & Rationale Column */}
                     <div className="p-6 md:col-span-3 flex flex-col justify-between items-center text-center">
                       <div className="flex flex-col items-center">
-                        <span className="text-xxs uppercase tracking-wider font-semibold text-muted-foreground mb-2">Overall Match</span>
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <span className="text-xxs uppercase tracking-wider font-semibold text-muted-foreground">Overall Match</span>
+                          <EstimatedTag variant="ai-scored" />
+                        </div>
                         <div className={`h-20 w-20 rounded-full border-4 flex flex-col items-center justify-center shadow-sm ${getScoreBgClass(match.score_total || 0)}`}>
                           <span className="text-2xl font-extrabold">{pctScore}%</span>
                         </div>

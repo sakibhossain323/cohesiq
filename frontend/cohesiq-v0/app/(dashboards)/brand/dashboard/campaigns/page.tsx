@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/table";
 import { CampaignStatusBadge } from "./_components/CampaignStatusBadge";
 import { formatBDT, formatDate, daysUntil } from "@/lib/utils";
-import { Briefcase, Plus } from "lucide-react";
+import { getCampaignFee } from "@/lib/campaignFees";
+import { Briefcase, Plus, Calculator, BarChart3 } from "lucide-react";
 
 export default async function BrandCampaignsPage() {
   const { getToken } = await auth();
@@ -36,12 +37,26 @@ export default async function BrandCampaignsPage() {
               Manage your active campaigns, review applications, and find creators.
             </p>
           </div>
-          <Button asChild>
-            <Link href="/brand/dashboard/campaigns/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Campaign
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/brand/dashboard/campaigns/rate-benchmark">
+                <BarChart3 className="mr-2 h-4 w-4" />
+                Rate Benchmarks
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/brand/dashboard/campaigns/roi-calculator">
+                <Calculator className="mr-2 h-4 w-4" />
+                ROI Calculator
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link href="/brand/dashboard/campaigns/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Campaign
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <Card>
@@ -67,6 +82,7 @@ export default async function BrandCampaignsPage() {
                     <TableHead>Title</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Budget Max</TableHead>
+                    <TableHead className="text-right">Platform Fee</TableHead>
                     <TableHead>Deadline</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -96,6 +112,16 @@ export default async function BrandCampaignsPage() {
                               ? formatBDT(campaign.budget_per_creator_max)
                               : 'N/A'}
                           </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {(() => {
+                            const fee = getCampaignFee(campaign.campaign_type);
+                            return (
+                              <span className="text-sm font-medium text-amber-600">
+                                {fee.label}
+                              </span>
+                            );
+                          })()}
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">

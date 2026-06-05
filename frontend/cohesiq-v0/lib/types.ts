@@ -54,6 +54,7 @@ export interface Creator {
   total_collaborations: number;
   average_rating?: number;
   min_budget?: number;
+  trust_score?: number;
 }
 
 export interface Brand {
@@ -118,12 +119,15 @@ export interface Application {
 
 export interface Review {
   id: string;
+  application_id: string;
+  reviewer_brand_id?: string;
+  reviewer_creator_id?: string;
+  reviewee_brand_id?: string;
+  reviewee_creator_id?: string;
   rating: number;
   review_text?: string;
   is_public: boolean;
   created_at: string;
-  reviewer_name: string;
-  reviewer_photo?: string;
 }
 
 export interface CreatorFilters {
@@ -156,6 +160,9 @@ export interface AIMatchScore {
   score_engagement?: number;
   score_budget?: number;
   score_language?: number;
+  score_platform?: number;
+  score_recency?: number;
+  score_semantic?: number;
   score_total?: number;
   rationale?: string;
   generated_at: string;

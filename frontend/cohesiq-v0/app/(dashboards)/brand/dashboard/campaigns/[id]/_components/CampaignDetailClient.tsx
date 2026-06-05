@@ -9,12 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ApplicationStatusBadge } from "@/components/application/ApplicationStatusBadge";
 import { CampaignStatusBadge } from "../../_components/CampaignStatusBadge";
-import { ArrowLeft, Users, Sparkles, Settings, Loader2, CheckCircle2, XCircle, Edit, Archive, PlayCircle, Handshake, Send, FileSignature } from "lucide-react";
+import { ArrowLeft, Users, Sparkles, Settings, Loader2, CheckCircle2, XCircle, Edit, Archive, PlayCircle, Handshake, Send, FileSignature, Receipt, BarChart2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { formatBDT, formatDate } from "@/lib/utils";
-import type { Campaign, Application, AIMatchScore } from "@/lib/types";
+import { computeFeeAmounts } from "@/lib/campaignFees";
+import type { Campaign, Application, AIMatchScore, ApplicationStatus } from "@/lib/types";
 import { updateCampaignStatusAction, runMatchingAction } from "../_actions/campaign-actions";
+import { ApplicationDrawer } from "./ApplicationDrawer";
+import { CreatorPerformanceComparison } from "./CreatorPerformanceComparison";
+import { CampaignAnalyticsTab } from "./CampaignAnalyticsTab";
 
 interface CampaignDetailClientProps {
   campaign: Campaign;
@@ -24,10 +28,19 @@ interface CampaignDetailClientProps {
 
 export function CampaignDetailClient({ campaign, applications, initialMatches }: CampaignDetailClientProps) {
   const [matches, setMatches] = useState<AIMatchScore[]>(initialMatches);
+  const [localApplications, setLocalApplications] = useState<Application[]>(applications);
+  const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [isPending, startTransition] = useTransition();
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<"active" | "cancelled" | "completed" | "archived" | null>(null);
   const [statusDialogMessage, setStatusDialogMessage] = useState("");
+
+  const handleAppStatusChange = (applicationId: string, newStatus: ApplicationStatus) => {
+    setLocalApplications(prev =>
+      prev.map(a => a.id === applicationId ? { ...a, status: newStatus } : a)
+    );
+    setSelectedApp(prev => prev?.id === applicationId ? { ...prev, status: newStatus } : prev);
+  };
 
   const handleStatusChange = () => {
     if (!pendingStatus) return;
@@ -128,12 +141,12 @@ export function CampaignDetailClient({ campaign, applications, initialMatches }:
       </div>
 
       <Tabs defaultValue="collaborations" className="w-full">
-        <TabsList className="mb-8 bg-muted/50 w-full sm:w-auto p-1 h-auto grid grid-cols-3 sm:flex">
+        <TabsList className="mb-8 bg-muted/50 w-full sm:w-auto p-1 h-auto grid grid-cols-4 sm:flex">
           <TabsTrigger value="collaborations" className="py-2 px-6 flex gap-2">
             <Handshake className="h-4 w-4" />
             <span className="hidden sm:inline">Collaborations</span>
             <Badge variant="secondary" className="bg-primary/10 text-primary px-1.5 py-0 h-5">
-              {applications.length}
+              {localApplications.length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="recommendations" className="py-2 px-6 flex gap-2">
@@ -142,6 +155,10 @@ export function CampaignDetailClient({ campaign, applications, initialMatches }:
             <Badge variant="secondary" className="bg-primary/10 text-primary px-1.5 py-0 h-5">
               {matches.length}
             </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="py-2 px-6 flex gap-2">
+            <BarChart2 className="h-4 w-4 text-green-500" />
+            <span className="hidden sm:inline">Analytics</span>
           </TabsTrigger>
           <TabsTrigger value="details" className="py-2 px-6">
             Details
@@ -156,49 +173,74 @@ export function CampaignDetailClient({ campaign, applications, initialMatches }:
             <TabsList className="mb-6 w-full sm:w-auto h-auto p-1 bg-muted/50">
               <TabsTrigger value="invitations" className="py-2 px-4 flex gap-2">
                 Sent Invitations
-                <Badge variant="secondary" className="px-1.5 py-0 h-5">0</Badge>
+                <Badge variant="secondary" className="px-1.5 py-0 h-5">
+                  {localApplications.filter(a => a.initiated_by === 'brand').length}
+                </Badge>
               </TabsTrigger>
               <TabsTrigger value="active" className="py-2 px-4 flex gap-2">
                 Active Contracts
-                <Badge variant="secondary" className="px-1.5 py-0 h-5">0</Badge>
+                <Badge variant="secondary" className="px-1.5 py-0 h-5">
+                  {localApplications.filter(a => a.status === 'accepted' || a.status === 'completed').length}
+                </Badge>
               </TabsTrigger>
               <TabsTrigger value="applications" className="py-2 px-4 flex gap-2">
                 Applications
-                <Badge variant="secondary" className="px-1.5 py-0 h-5">{applications.length}</Badge>
+                <Badge variant="secondary" className="px-1.5 py-0 h-5">{localApplications.length}</Badge>
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="invitations" className="space-y-6">
-              <Card className="min-h-[40vh] flex items-center justify-center border-dashed">
-                <CardContent className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
-                  <Send className="mb-4 h-12 w-12 opacity-20" />
-                  <p className="font-medium text-foreground text-lg">No sent invitations</p>
-                  <p className="mt-2 text-sm max-w-sm text-balance">
-                    When you invite a creator to a campaign from the Find Creators page, it will appear here.
-                  </p>
-                  <Button variant="outline" className="mt-6" asChild>
-                    <Link href={`/brand/dashboard/campaigns/${campaign.id}/matches`}>
-                      Open Recommendations
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+              {localApplications.filter(a => a.initiated_by === 'brand').length === 0 ? (
+                <Card className="min-h-[40vh] flex items-center justify-center border-dashed">
+                  <CardContent className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
+                    <Send className="mb-4 h-12 w-12 opacity-20" />
+                    <p className="font-medium text-foreground text-lg">No sent invitations</p>
+                    <p className="mt-2 text-sm max-w-sm text-balance">
+                      When you invite a creator to a campaign from the Find Creators page, it will appear here.
+                    </p>
+                    <Button variant="outline" className="mt-6" asChild>
+                      <Link href={`/brand/dashboard/campaigns/${campaign.id}/matches`}>
+                        Open Recommendations
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {localApplications.filter(a => a.initiated_by === 'brand').map(app => (
+                    <ApplicationCard key={app.id} app={app} onClick={() => setSelectedApp(app)} />
+                  ))}
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="active" className="space-y-6">
-              <Card className="min-h-[40vh] flex items-center justify-center border-dashed">
-                <CardContent className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
-                  <FileSignature className="mb-4 h-12 w-12 opacity-20" />
-                  <p className="font-medium text-foreground text-lg">No active contracts</p>
-                  <p className="mt-2 text-sm max-w-sm text-balance">
-                    When you accept a creator's application, it will move here so you can track deliverables.
-                  </p>
-                </CardContent>
-              </Card>
+              {localApplications.filter(a => a.status === 'accepted' || a.status === 'completed').length === 0 ? (
+                <Card className="min-h-[40vh] flex items-center justify-center border-dashed">
+                  <CardContent className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
+                    <FileSignature className="mb-4 h-12 w-12 opacity-20" />
+                    <p className="font-medium text-foreground text-lg">No active contracts</p>
+                    <p className="mt-2 text-sm max-w-sm text-balance">
+                      When you accept a creator's application, it will move here so you can track deliverables.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  <div className="space-y-3">
+                    {localApplications.filter(a => a.status === 'accepted' || a.status === 'completed').map(app => (
+                      <ApplicationCard key={app.id} app={app} onClick={() => setSelectedApp(app)} />
+                    ))}
+                  </div>
+                  <CreatorPerformanceComparison
+                    applications={localApplications.filter(a => a.status === 'accepted' || a.status === 'completed')}
+                  />
+                </>
+              )}
             </TabsContent>
 
             <TabsContent value="applications" className="m-0">
-              {applications.length === 0 ? (
+              {localApplications.length === 0 ? (
                 <Card className="border-dashed">
                   <CardContent className="flex flex-col items-center justify-center p-16 text-center text-muted-foreground">
                     <Users className="mb-4 h-12 w-12 opacity-20" />
@@ -214,11 +256,11 @@ export function CampaignDetailClient({ campaign, applications, initialMatches }:
                         <span className="w-2 h-2 rounded-full bg-purple-400"></span>
                         Invited
                       </h3>
-                      <Badge variant="secondary">{applications.filter(a => a.status === 'invited').length}</Badge>
+                      <Badge variant="secondary">{localApplications.filter(a => a.status === 'invited').length}</Badge>
                     </div>
                     <div className="space-y-3">
-                      {applications.filter(a => a.status === 'invited').map(app => (
-                        <ApplicationCard key={app.id} app={app} />
+                      {localApplications.filter(a => a.status === 'invited').map(app => (
+                        <ApplicationCard key={app.id} app={app} onClick={() => setSelectedApp(app)} />
                       ))}
                     </div>
                   </div>
@@ -229,11 +271,11 @@ export function CampaignDetailClient({ campaign, applications, initialMatches }:
                         <span className="w-2 h-2 rounded-full bg-yellow-400"></span>
                         Needs Review
                       </h3>
-                      <Badge variant="secondary">{applications.filter(a => a.status === 'pending').length}</Badge>
+                      <Badge variant="secondary">{localApplications.filter(a => a.status === 'pending').length}</Badge>
                     </div>
                     <div className="space-y-3">
-                      {applications.filter(a => a.status === 'pending').map(app => (
-                        <ApplicationCard key={app.id} app={app} />
+                      {localApplications.filter(a => a.status === 'pending').map(app => (
+                        <ApplicationCard key={app.id} app={app} onClick={() => setSelectedApp(app)} />
                       ))}
                     </div>
                   </div>
@@ -244,11 +286,11 @@ export function CampaignDetailClient({ campaign, applications, initialMatches }:
                         <span className="w-2 h-2 rounded-full bg-blue-400"></span>
                         Shortlisted
                       </h3>
-                      <Badge variant="secondary">{applications.filter(a => a.status === 'shortlisted').length}</Badge>
+                      <Badge variant="secondary">{localApplications.filter(a => a.status === 'shortlisted').length}</Badge>
                     </div>
                     <div className="space-y-3">
-                      {applications.filter(a => a.status === 'shortlisted').map(app => (
-                        <ApplicationCard key={app.id} app={app} />
+                      {localApplications.filter(a => a.status === 'shortlisted').map(app => (
+                        <ApplicationCard key={app.id} app={app} onClick={() => setSelectedApp(app)} />
                       ))}
                     </div>
                   </div>
@@ -259,11 +301,11 @@ export function CampaignDetailClient({ campaign, applications, initialMatches }:
                         <span className="w-2 h-2 rounded-full bg-green-400"></span>
                         Accepted
                       </h3>
-                      <Badge variant="secondary">{applications.filter(a => a.status === 'accepted' || a.status === 'completed').length}</Badge>
+                      <Badge variant="secondary">{localApplications.filter(a => a.status === 'accepted' || a.status === 'completed').length}</Badge>
                     </div>
                     <div className="space-y-3">
-                      {applications.filter(a => a.status === 'accepted' || a.status === 'completed').map(app => (
-                        <ApplicationCard key={app.id} app={app} />
+                      {localApplications.filter(a => a.status === 'accepted' || a.status === 'completed').map(app => (
+                        <ApplicationCard key={app.id} app={app} onClick={() => setSelectedApp(app)} />
                       ))}
                     </div>
                   </div>
@@ -333,7 +375,11 @@ export function CampaignDetailClient({ campaign, applications, initialMatches }:
           </Card>
         </TabsContent>
 
-        <TabsContent value="details" className="m-0">
+        <TabsContent value="analytics" className="m-0">
+          <CampaignAnalyticsTab campaign={campaign} />
+        </TabsContent>
+
+        <TabsContent value="details" className="m-0 space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Campaign Brief</CardTitle>
@@ -365,6 +411,41 @@ export function CampaignDetailClient({ campaign, applications, initialMatches }:
               </div>
             </CardContent>
           </Card>
+
+          {/* Fee Estimate Card */}
+          {campaign.budget_per_creator_max && (() => {
+            const fee = computeFeeAmounts(campaign.budget_per_creator_max, campaign.campaign_type);
+            return (
+              <Card className="border-amber-200 bg-amber-50/40 dark:border-amber-900 dark:bg-amber-950/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Receipt className="h-4 w-4 text-amber-600" />
+                    Platform Fee Estimate
+                    <Badge variant="outline" className="ml-auto text-amber-700 border-amber-300 bg-amber-100 dark:bg-amber-900/30">
+                      Simulated · No real payment
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription>{fee.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="rounded-lg bg-background border border-border p-3 text-center">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Creator Budget</p>
+                      <p className="text-lg font-bold text-foreground">{formatBDT(campaign.budget_per_creator_max)}</p>
+                    </div>
+                    <div className="rounded-lg bg-amber-100/60 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 text-center">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Platform Fee ({fee.label})</p>
+                      <p className="text-lg font-bold text-amber-700 dark:text-amber-400">− {formatBDT(fee.feeAmount)}</p>
+                    </div>
+                    <div className="rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 text-center">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Net to Creator</p>
+                      <p className="text-lg font-bold text-green-700 dark:text-green-400">{formatBDT(fee.netPayout)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
         </TabsContent>
       </Tabs>
 
@@ -387,16 +468,26 @@ export function CampaignDetailClient({ campaign, applications, initialMatches }:
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ApplicationDrawer
+        application={selectedApp}
+        campaignId={campaign.id}
+        onClose={() => setSelectedApp(null)}
+        onStatusChange={handleAppStatusChange}
+      />
     </>
   );
 }
 
-function ApplicationCard({ app }: { app: Application }) {
+function ApplicationCard({ app, onClick }: { app: Application; onClick: () => void }) {
   const creatorName = app.creator?.display_name || "Unknown Creator";
   const initials = creatorName.slice(0, 2).toUpperCase();
-  
+
   return (
-    <Card className="shadow-sm overflow-hidden hover:border-primary/50 transition-colors">
+    <Card
+      className="shadow-sm overflow-hidden hover:border-primary/50 transition-colors cursor-pointer"
+      onClick={onClick}
+    >
       <div className="p-4 bg-card">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-3">
@@ -409,21 +500,15 @@ function ApplicationCard({ app }: { app: Application }) {
               <p className="text-xs text-muted-foreground">{formatDate(app.applied_at)}</p>
             </div>
           </div>
+          <ApplicationStatusBadge status={app.status as ApplicationStatus} />
         </div>
-        
+
         {app.proposed_rate && (
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
             <span className="text-xs text-muted-foreground">Proposed Rate</span>
             <span className="text-sm font-semibold">{formatBDT(app.proposed_rate)}</span>
           </div>
         )}
-      </div>
-      <div className="bg-muted/40 p-3 border-t border-border flex justify-between gap-2">
-        <Button variant="outline" size="sm" className="w-full text-xs h-8" asChild>
-          <Link href={`/brand/dashboard/creators/${app.creator_id || 'unknown'}`}>
-            View Profile
-          </Link>
-        </Button>
       </div>
     </Card>
   );

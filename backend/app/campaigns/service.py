@@ -174,6 +174,7 @@ async def create_campaign(
         objectives=data.objectives,
         primary_niche_id=data.primary_niche_id,
         required_platforms=data.required_platforms,
+        campaign_type=data.campaign_type,
         budget_per_creator_min=data.budget_per_creator_min,
         budget_per_creator_max=data.budget_per_creator_max,
         creator_min_followers=data.creator_min_followers,
@@ -187,6 +188,9 @@ async def create_campaign(
         number_of_creators=data.number_of_creators,
         application_deadline=data.application_deadline,
         content_deadline=data.content_deadline,
+        kpi_targets=data.kpi_targets.model_dump() if data.kpi_targets else None,
+        hashtags=data.hashtags,
+        tracking_notes=data.tracking_notes,
     )
     db.add(campaign)
     await db.flush()
@@ -706,6 +710,9 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             score_engagement=scores.engagement,
             score_budget=scores.budget,
             score_language=scores.language,
+            score_platform=scores.platform,
+            score_recency=scores.recency,
+            score_semantic=round(semantic_score, 4),
             score_total=total_score,
             rationale=rational_text
         )

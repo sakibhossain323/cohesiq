@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/shared/StarRating";
 import { NicheBadge } from "@/components/shared/NicheBadge";
 import { MapPin, MessageCircle } from "lucide-react";
+import { AuthenticityBadge } from "@/components/creator/AuthenticityBadge";
 import type { Creator } from "@/lib/types";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -77,6 +78,7 @@ export function CreatorProfileHeader({ creator, actionSlot }: CreatorProfileHead
                 {creator.average_rating && (
                   <StarRating rating={creator.average_rating} size="sm" />
                 )}
+                <AuthenticityBadge score={creator.trust_score} size="md" />
                 <span className="text-sm text-muted-foreground">
                   {creator.total_collaborations} collaborations
                 </span>

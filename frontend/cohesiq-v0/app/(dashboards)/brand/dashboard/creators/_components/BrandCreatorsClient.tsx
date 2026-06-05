@@ -1,12 +1,13 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { CreatorCard } from "@/components/creator/CreatorCard";
 import { CreatorFilters } from "@/components/creator/CreatorFilters";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, GitCompareArrows, X } from "lucide-react";
 import type { Creator, CreatorFilters as CreatorFiltersType } from "@/lib/types";
 
 interface BrandCreatorsClientProps {
@@ -19,6 +20,17 @@ export function BrandCreatorsClient({ creators, activeFilters }: BrandCreatorsCl
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) { next.delete(id); return next; }
+      if (next.size >= 3) return prev;
+      next.add(id);
+      return next;
+    });
+  };
 
   const handleFiltersChange = (newFilters: CreatorFiltersType) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -45,39 +57,86 @@ export function BrandCreatorsClient({ creators, activeFilters }: BrandCreatorsCl
   };
 
   return (
-    <div className="flex flex-col gap-8 lg:flex-row">
-      {/* Filters Sidebar */}
-      <aside className="w-full shrink-0 lg:w-72">
-        <CreatorFilters filters={activeFilters} onFiltersChange={handleFiltersChange} />
-      </aside>
+    <>
+      <div className="flex flex-col gap-8 lg:flex-row">
+        {/* Filters Sidebar */}
+        <aside className="w-full shrink-0 lg:w-72">
+          <CreatorFilters filters={activeFilters} onFiltersChange={handleFiltersChange} />
+        </aside>
 
-      {/* Creator Grid */}
-      <div className="flex-1 relative">
-        {isPending ? (
-          <div className="absolute inset-0 z-10 bg-background/50 backdrop-blur-sm transition-all" />
-        ) : null}
+        {/* Creator Grid */}
+        <div className="flex-1 relative">
+          {isPending ? (
+            <div className="absolute inset-0 z-10 bg-background/50 backdrop-blur-sm transition-all" />
+          ) : null}
 
-        {isPending && creators.length === 0 ? (
-          <LoadingSkeleton variant="card" count={6} />
-        ) : creators.length === 0 ? (
-          <EmptyState
-            icon={Users}
-            title="No creators found"
-            description="Try adjusting your filters to find more creators"
-          />
-        ) : (
-          <>
-            <p className="mb-4 text-sm text-muted-foreground">
-              Showing {creators.length} creator{creators.length !== 1 ? "s" : ""}
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {creators.map(creator => (
-                <CreatorCard key={creator.id} creator={creator} basePath="/brand/dashboard/creators" />
-              ))}
-            </div>
-          </>
-        )}
+          {isPending && creators.length === 0 ? (
+            <LoadingSkeleton variant="card" count={6} />
+          ) : creators.length === 0 ? (
+            <EmptyState
+              icon={Users}
+              title="No creators found"
+              description="Try adjusting your filters to find more creators"
+            />
+          ) : (
+            <>
+              <p className="mb-4 text-sm text-muted-foreground">
+                Showing {creators.length} creator{creators.length !== 1 ? "s" : ""}
+                {selectedIds.size > 0 && (
+                  <span className="ml-2 text-primary font-medium">· {selectedIds.size} selected</span>
+                )}
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {creators.map(creator => {
+                  const isSelected = selectedIds.has(creator.id);
+                  return (
+                    <div key={creator.id} className="relative group">
+                      <div className={`rounded-xl transition-all ${isSelected ? "ring-2 ring-primary shadow-md" : "ring-1 ring-transparent"}`}>
+                        <CreatorCard creator={creator} basePath="/brand/dashboard/creators" />
+                      </div>
+                      <button
+                        onClick={() => toggleSelect(creator.id)}
+                        className={`absolute top-3 right-3 z-10 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all text-xs font-bold
+                          ${isSelected
+                            ? "bg-primary border-primary text-white"
+                            : "bg-background/80 border-muted-foreground/40 text-transparent group-hover:border-primary/60"
+                          }`}
+                        aria-label={isSelected ? "Deselect" : "Select for comparison"}
+                        title={selectedIds.size >= 3 && !isSelected ? "Max 3 creators" : isSelected ? "Deselect" : "Select to compare"}
+                      >
+                        {isSelected ? "✓" : ""}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+
+      {selectedIds.size >= 2 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-background border border-border shadow-xl rounded-full px-5 py-3">
+          <GitCompareArrows className="h-5 w-5 text-primary" />
+          <span className="text-sm font-medium">{selectedIds.size} creators selected</span>
+          <Button
+            size="sm"
+            onClick={() => {
+              const ids = Array.from(selectedIds).join(",");
+              router.push(`/brand/dashboard/creators/compare?ids=${ids}`);
+            }}
+          >
+            Compare
+          </Button>
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Clear selection"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+    </>
   );
 }

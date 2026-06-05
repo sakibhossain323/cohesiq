@@ -7,6 +7,8 @@ import { PlatformBadge } from "@/components/shared/PlatformBadge";
 import { NicheBadge } from "@/components/shared/NicheBadge";
 import { FollowerCount } from "@/components/shared/FollowerCount";
 import { MapPin } from "lucide-react";
+import { EstimatedTag } from "@/components/shared/EstimatedTag";
+import { AuthenticityBadge } from "@/components/creator/AuthenticityBadge";
 import type { Creator } from "@/lib/types";
 
 interface CreatorCardProps {
@@ -80,16 +82,21 @@ export function CreatorCard({ creator, basePath = "/creators" }: CreatorCardProp
           )}
 
           {primaryProfile?.engagement_rate && (
-            <div className="mt-2 text-sm text-muted-foreground">
+            <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
               <span className="font-medium text-foreground">
                 {primaryProfile.engagement_rate}%
               </span>{" "}
               engagement rate
+              <EstimatedTag variant="self-reported" />
             </div>
           )}
 
+          <div className="mt-3 flex items-center gap-2 flex-wrap">
+            <AuthenticityBadge score={creator.trust_score} size="sm" />
+          </div>
+
           {creator.average_rating && (
-            <div className="mt-4 border-t border-border pt-4">
+            <div className="mt-3 border-t border-border pt-3">
               <StarRating rating={creator.average_rating} size="sm" />
             </div>
           )}
