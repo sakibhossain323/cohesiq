@@ -153,13 +153,13 @@ FRs it satisfies and its current status.
 - `[~]` FR-3 "submit YouTube Channel ID → fetch public stats": the wrapper exists (`/youtube/channels/enrichment`); **persisting it onto the profile is the open item** (Phase D, Navid)
 - `[ ]` FR-5 profile-strength meter
 
-### Phase B — Brand campaign system *(SRS US-5, US-10; FR-6, FR-7, FR-14, FR-15)* — **[x] done (Sakib)**
-- `[x]` 4-step campaign wizard: Type → Requirements → Budget/Timeline → Brief/KPIs
-- `[x]` `campaign_type` (six models), `kpi_targets`, `hashtags`, deliverable builder
-- `[x]` Campaign list with type badges; detail view surfaces type/KPIs/hashtags
+### Phase B — Brand campaign system *(SRS US-5, US-10; FR-6, FR-7, FR-14, FR-15)* — **[~] partial (Sakib)**
+- `[x]` 4-step campaign wizard UI: Type → Requirements → Budget/Timeline → Brief/KPIs (steps render correctly)
+- `[!]` **`campaign_type`, `kpi_targets`, `hashtags`, `tracking_notes` silently dropped by the API** — migration `0013` applied (DB columns exist) but `Campaign` SQLAlchemy model (`backend/app/campaigns/models.py`) and all Pydantic schemas (`CampaignCreate`/`CampaignUpdate`/`CampaignOut`) have not been updated; these four fields are absent from the ORM and API layer, so values are lost on every create/update. Fix before any wizard E2E test.
+- `[x]` `CampaignTypeBadge` component; type column in campaign list
 - `[x]` Kanban (Invited → Needs Review → Shortlisted → Accepted) with clickable cards
-- `[x]` Application review drawer: creator stats + Shortlist/Accept/Reject + rejection reason
-- `[x]` Active Contracts tab (accepted creators, agreed rate, deadline)
+- `[!]` `ApplicationDrawer.tsx` built (`campaigns/[id]/_components/`) but **not imported in `CampaignDetailClient.tsx`**; Kanban shows a read-only inline card with "View Profile" link only — Shortlist/Accept/Reject controls are unreachable from the board. `updateApplicationStatusAction` is correct; just needs to be wired into the drawer.
+- `[~]` Active Contracts tab renders (tab UI present) but badge count hardcoded to 0 and shows empty placeholder — not filtered from real accepted applications.
 - `[ ]` FR-15 explicit state machine with timestamped audit-trail transitions (currently status-field only)
 - `[ ]` Edit form parity with the wizard (`campaigns/[id]/edit`)
 
