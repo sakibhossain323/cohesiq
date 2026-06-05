@@ -43,94 +43,95 @@ flowchart LR
 ```mermaid
 flowchart TB
     %% ── EXTERNAL ENTITIES ──────────────────────────────────────
-    Brand([Brand])
-    Creator([Creator])
-    Operator([Operator])
-    Clerk([Clerk Auth])
-    YouTube([YouTube API])
-    Gemini([Gemini API])
+    Brand[Brand]
+    Creator[Creator]
+    Operator[Operator]
+    Clerk[Clerk Auth]
+    YouTube[YouTube API]
+    Gemini[Gemini API]
 
     %% ── DATA STORES ────────────────────────────────────────────
-    DS1[(D1 · Users &\nProfiles)]
-    DS2[(D2 · Campaigns &\nApplications)]
-    DS3[(D3 · Contracts)]
-    DS4[(D4 · Match Scores)]
-    DS5[(D5 · Reviews)]
+    DS1[(D1 Users and Profiles)]
+    DS2[(D2 Campaigns and Applications)]
+    DS3[(D3 Contracts)]
+    DS4[(D4 Match Scores)]
+    DS5[(D5 Reviews)]
 
     %% ── PROCESSES ──────────────────────────────────────────────
-    P1([P1 · Auth &\nOnboarding])
-    P2([P2 · Campaign\nCreation])
-    P3([P3 · Creator\nProfile Build])
-    P4([P4 · AI\nMatching Engine])
-    P5([P5 · Application\nPipeline])
-    P6([P6 · Contract\nManagement])
-    P7([P7 · Content\nExecution])
-    P8([P8 · Data\nIngestion])
+    P1([P1 Auth and Onboarding])
+    P2([P2 Campaign Creation])
+    P3([P3 Creator Profile Build])
+    P4([P4 AI Matching Engine])
+    P5([P5 Application Pipeline])
+    P6([P6 Contract Management])
+    P7([P7 Content Execution])
+    P8([P8 Data Ingestion])
 
     %% ── P1: AUTH & ONBOARDING ──────────────────────────────────
-    Brand   -->|register / login| P1
-    Creator -->|register / login| P1
-    P1      <-->|RS256 JWT validation, user sync webhook| Clerk
-    P1      -->|user record + role| DS1
+    Brand   -->|register or login| P1
+    Creator -->|register or login| P1
+    P1      -->|JWT validation request| Clerk
+    Clerk   -->|verified identity + role| P1
+    Clerk   -->|user.created webhook| P1
+    P1      -->|user record and role| DS1
 
     %% ── P2: CAMPAIGN CREATION ──────────────────────────────────
     Brand   -->|title, brief, budget, visibility, requirements| P2
-    P2      -->|AI brief analysis request| Gemini
+    P2      -->|brief text for analysis| Gemini
     Gemini  -->|suggested visibility, niche, hashtags| P2
+    DS1     -->|brand profile| P2
     P2      -->|campaign record| DS2
-    DS1     -->|brand profile (brand_id)| P2
 
     %% ── P3: CREATOR PROFILE BUILD ──────────────────────────────
     Creator -->|display name, niches, languages, social handles, rate cards| P3
-    P3      -->|creator profile + social profiles| DS1
+    P3      -->|creator profile and social profiles| DS1
 
     %% ── P4: AI MATCHING ENGINE ─────────────────────────────────
-    Brand   -->|"Run Matching" trigger| P4
-    DS2     -->|campaign requirements (niche, budget, platform, language)| P4
-    DS1     -->|creator profiles (followers, engagement, niches, rate cards)| P4
-    P4      -->|niche · engagement · budget · platform · language · recency scores| P4
-    P4      -->|top-N creator IDs + scores| Gemini
+    Brand   -->|run matching trigger| P4
+    DS2     -->|campaign niche, budget, platform, language| P4
+    DS1     -->|creator followers, engagement, niches, rate cards| P4
+    P4      -->|top-N creator IDs for rationale| Gemini
     Gemini  -->|match rationale text| P4
-    P4      -->|scored + ranked results| DS4
-    DS4     -->|ranked creator cards + rationale| Brand
+    P4      -->|scored and ranked results| DS4
+    DS4     -->|ranked creator cards with rationale| Brand
 
     %% ── P5: APPLICATION PIPELINE ───────────────────────────────
-    Creator -->|proposal text + proposed rate| P5
-    Brand   -->|invitation message| P5
-    P5      -->|application record (status: pending / invited)| DS2
-    Brand   -->|shortlist / accept / reject decision| P5
-    Creator -->|accept / decline invitation| P5
+    Creator -->|proposal text and proposed rate| P5
+    Brand   -->|invitation to creator| P5
+    Brand   -->|shortlist or accept or reject decision| P5
+    Creator -->|accept or decline invitation| P5
+    P5      -->|application record| DS2
     P5      -->|updated application status| DS2
-    DS2     -->|application list (kanban)| Brand
-    DS2     -->|my applications / invitations| Creator
+    DS2     -->|kanban application list| Brand
+    DS2     -->|my applications and invitations| Creator
 
     %% ── P6: CONTRACT MANAGEMENT ────────────────────────────────
-    Brand   -->|contract type + clause configuration| P6
-    DS2     -->|accepted application (application_id, creator_id, brand_id)| P6
-    P6      -->|contract record (status: active)| DS3
-    P6      -->|platform fee % locked at creation| DS3
-    DS3     -->|contract details + state| Brand
-    DS3     -->|contract details + next action| Creator
+    Brand   -->|contract type and clause configuration| P6
+    DS2     -->|accepted application with IDs| P6
+    P6      -->|contract record — status active| DS3
+    P6      -->|platform fee locked at creation| DS3
+    DS3     -->|contract details and state| Brand
+    DS3     -->|contract details and next action| Creator
 
     %% ── P7: CONTENT EXECUTION ──────────────────────────────────
     Creator -->|draft content URL| P7
-    P7      -->|status → content_submitted; draft_url stored| DS3
+    P7      -->|draft URL — status content_submitted| DS3
     DS3     -->|draft URL for review| Brand
     Brand   -->|approve or request revision| P7
-    P7      -->|status → content_approved / in_production; revisions_used++| DS3
+    P7      -->|status update and revision count| DS3
     Creator -->|live post URL| P7
-    P7      -->|status → published; live_url stored| DS3
+    P7      -->|live URL — status published| DS3
     Brand   -->|close contract| P7
-    P7      -->|status → closed; application.status → completed| DS3
-    P7      -->|application.status = completed| DS2
-    Brand   -->|rating + review text| P7
-    Creator -->|rating + review text| P7
+    P7      -->|status closed| DS3
+    P7      -->|application status completed| DS2
+    Brand   -->|rating and review text| P7
+    Creator -->|rating and review text| P7
     P7      -->|review record| DS5
-    DS5     -->|average_rating update| DS1
+    DS5     -->|average rating update| DS1
 
     %% ── P8: DATA INGESTION ─────────────────────────────────────
-    Operator  -->|seed / sync commands| P8
-    YouTube   -->|channel stats (followers, views, engagement)| P8
+    Operator  -->|seed and sync commands| P8
+    YouTube   -->|channel stats: followers, views, engagement| P8
     P8        -->|creator social profile data| DS1
 ```
 
