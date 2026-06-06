@@ -21,6 +21,7 @@ from app.creators.schemas import (
     SocialProfileCreate,
     SocialProfileOut,
     SocialProfileUpdate,
+    YouTubeEnrichmentRequest,
 )
 
 router = APIRouter()
@@ -125,6 +126,24 @@ async def add_platform(
     if not creator or creator.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not your profile")
     return await service.add_social_profile(db, creator_id, data)
+
+
+@router.post("/{creator_id}/platforms/youtube/enrich", response_model=SocialProfileOut)
+async def enrich_youtube_platform(
+    creator_id: uuid.UUID,
+    data: YouTubeEnrichmentRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    creator = await service.get_creator(db, creator_id)
+    if not creator or creator.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not your profile")
+    return await service.enrich_youtube_social_profile(
+        db,
+        creator_id,
+        channel_ref=data.channel_ref,
+        recent_video_limit=data.recent_video_limit,
+    )
 
 
 @router.put("/{creator_id}/platforms/{platform_id}", response_model=SocialProfileOut)

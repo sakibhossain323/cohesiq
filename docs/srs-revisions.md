@@ -340,7 +340,7 @@ Browse Public Campaigns (Opportunities tab)
 
 **`Campaign.campaign_type` is deprecated as of 2026-06-06.**
 
-- The column is **nullable** (NOT NULL constraint dropped, default removed) via migration `0016`.
+- The column is **nullable** (NOT NULL constraint dropped, default removed) via migration `0015`.
 - Do **not** read or write `campaign_type` in any new code. Type information now lives on `Contract.contract_type`.
 - Do **not** propagate `campaign_type` to new API endpoints, frontend components, or Pydantic schemas.
 - Existing references (D06 fee simulation, `CampaignTypeBadge`, wizard form) will be migrated as part of this change request.

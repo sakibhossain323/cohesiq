@@ -2,7 +2,7 @@ import uuid
 from datetime import date, datetime
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 # ------------------------------------------------------------------ #
@@ -86,6 +86,9 @@ class SocialProfileOut(BaseModel):
     platform: str
     handle: str
     profile_url: str
+    platform_user_id: Optional[str] = None
+    api_channel_id: Optional[str] = None
+    display_name_on_platform: Optional[str] = None
     follower_count: Optional[int] = None
     following_count: Optional[int] = None
     avg_views_per_post: Optional[int] = None
@@ -97,6 +100,9 @@ class SocialProfileOut(BaseModel):
     is_primary_platform: bool
     is_monetized: bool
     has_verified_badge: bool
+    is_api_verified: bool = False
+    api_verified_at: Optional[datetime] = None
+    data_source: str = "self_reported"
     audience_country_primary: Optional[str] = None
     audience_city_primary: Optional[str] = None
     audience_age_range_min: Optional[int] = None
@@ -110,6 +116,11 @@ class SocialProfileOut(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class YouTubeEnrichmentRequest(BaseModel):
+    channel_ref: str = Field(..., min_length=1)
+    recent_video_limit: int = Field(10, ge=1, le=50)
 
 
 # ------------------------------------------------------------------ #

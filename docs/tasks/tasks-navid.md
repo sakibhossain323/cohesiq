@@ -19,10 +19,10 @@ graph/vector layers. Sakib owns the brand/creator marketplace UI & campaign work
 | YouTube Tier-0 public read wrapper | `[x]` | `app/youtube/{router,service,schemas}.py`, mounted `/youtube` |
 | Channel enrichment (creator-ready metrics) | `[x]` | `GET /youtube/channels/enrichment` → subs, avg views/likes/comments, est. engagement, uploads/month |
 | YouTube unit + smoke tests | `[x]` | `tests/test_youtube_service.py`, `scripts/test_youtube_api.py` |
-| Pure deterministic scorer | `[x]` | `services/matching.py` — 6 weights per SRS §5.2: niche .30 / engagement .20 / budget .20 / platform .15 / language .10 / recency .05 |
-| `run-matching` + `matches` endpoints | `[~]` | `app/campaigns/` — relational, heuristic rationale, partial score persistence (platform/recency/semantic/rank missing — N04) |
-| Semantic similarity (Gemini + token fallback) | `[~]` | `services/semantic_match.py` — computed on the fly, not persisted |
-| Seed pipeline (synthetic) | `[~]` | `scripts/generate_seed_data.py` (Tavily+Groq), `seed_db.py`, `reset_db.py`, `sync_clerk_users.py` — real BD channels not yet seeded (N02) |
+| Pure deterministic scorer | `[x]` | `services/matching.py` + `services/matching_config.py` — current weights: niche .35 / budget .30 / platform .15 / engagement .10 / language .08 / recency .02 |
+| `run-matching` + `matches` endpoints | `[~]` | `app/campaigns/` — relational, heuristic rationale, persisted score breakdown; rank column still pending if UI needs stored rank |
+| Semantic similarity (Gemini + token fallback) | `[~]` | `services/semantic_match.py` — computed on the fly, persisted as `score_semantic`; wrong-niche rescue is capped in `score_niche` |
+| Seed pipeline (synthetic + real YouTube script) | `[~]` | `scripts/generate_seed_data.py` (Tavily+Groq), `seed_db.py`, `reset_db.py`, `sync_clerk_users.py`, `seed_real_youtube_creators.py` — live API run pending |
 
 ---
 
@@ -31,30 +31,37 @@ graph/vector layers. Sakib owns the brand/creator marketplace UI & campaign work
 **Goal:** turn the stateless YouTube wrapper into persisted, matchable creator data; make the
 matching pipeline transparent end-to-end; ship authenticity scoring and ethical-AI data tags.
 
-[ ] N01 [P] Persist YouTube enrichment → `creator_social_profiles`
+[x] N01 [P] Persist YouTube enrichment → `creator_social_profiles`
   - Add `POST /creators/{creator_id}/platforms/youtube/enrich` (body: `channel_ref`, `recent_video_limit`)
   - Map enrichment output → social profile columns per `youtube_implementation.md` "Recommended mapping", plus two fields the recommended mapping omits:
     - `posts_per_month = enrichment.uploads_per_month` (schema column exists, mapping doc skips it)
     - `api_channel_id = enrichment.platform_user_id` (the YouTube channel ID)
-  - Add `is_api_verified`, `api_verified_at`, `api_channel_id` columns via migration `0014` (schema.md extension point)
+  - Add `is_api_verified`, `api_verified_at`, `api_channel_id` columns via migration `0016` (schema.md extension point)
   - Keep persistence in `app/creators/` — the YouTube wrapper stays stateless
-  - Unit-test mapping + update-vs-create before route test (Docker)
+  - Verified with `docker compose exec backend python -m unittest tests.test_creator_youtube_enrichment tests.test_youtube_service -v`
 
-[ ] N02 Seed 18–20 **real** BD YouTube channels (SRS US-3)
+[x] N02 Seed 18–20 **real** BD YouTube channels (SRS US-3)
   - Discover via `GET /youtube/channels?handle=` (1 unit each), **never** `Search.list` (D8 — 100 units)
   - Hardcode researched channel handles by niche; run enrichment → persist as API-verified creators
   - Add proportional synthetic IG/TikTok companion profiles labelled `"Estimated"` (N09, US-19)
+  - Verified with `docker compose exec backend python -m scripts.seed_real_youtube_creators`: 19 succeeded, 0 failed.
+  - Verified DB counts: 19 YouTube `verified`, 19 Instagram `estimated`, 19 TikTok `estimated`.
+  - Seed bios are generated from public channel descriptions plus the last five recent-video descriptions; city is left unset to avoid confusing creator location with audience/content location.
+  - Generated-bio behavior verified with `docker compose exec backend python -m unittest tests.test_creator_youtube_enrichment tests.test_youtube_service -v`.
 
-[ ] N03 Normalization at ingestion (SRS US-4, FR-26)
+[x] N03 Normalization at ingestion (SRS US-4, FR-26)
   - Niche: YouTube `topicCategories` Wikipedia URL → internal `niches` table via `YOUTUBE_CATEGORY_MAP` dict
-  - Language: detect Bangla/English/Banglish from video **titles+descriptions** using `langdetect`/`fasttext`; store on `creator_social_profiles.content_languages`. Note: full captions require a separate `captions.list` API call not in the Tier-0 enrichment endpoint — detection on titles+descriptions is the correct Tier-0 scope.
+  - Optional Groq classifier: when `GROQ_API_KEY` exists, classify niche from channel description plus last five video titles/descriptions; invalid/missing Groq output falls back to YouTube topic categories, then generic `Lifestyle`.
+  - Language: detect Bangla/English/Banglish from video **titles+descriptions**; current implementation uses deterministic script/keyword heuristics and stores on `creator_social_profiles.content_languages`. Note: full captions require a separate `captions.list` API call not in the Tier-0 enrichment endpoint — detection on titles+descriptions is the correct Tier-0 scope.
   - Tier: map follower count → nano/micro/macro/mega; compute engagement vs tier benchmark for N06
   - City: unrecognised city strings → `unknown_location` bucket, never silently dropped (SRS §4.4)
+  - Implemented as deterministic Tier-0 normalization in `app/creators/normalization.py`: topic-category niche map, Bangla/English/Banglish heuristic from titles/descriptions, city fallback, and engagement-vs-tier ratio helper.
+  - Verified with `docker compose exec backend python -m unittest tests.test_creator_youtube_enrichment tests.test_youtube_service -v`
 
 [ ] N04 Persist full score breakdown to `ai_match_scores` (SRS FR-10, plan Phase C)
-  - Add `score_platform`, `score_recency`, `semantic_similarity`, `rank` columns via migration `0015`
-  - Update `AIMatchScoreOut` Pydantic schema to include all six sub-scores + rank
-  - Update `services/matching.py` / `run_campaign_matching` to write all six values + rank on every run
+  - `score_platform`, `score_recency`, `score_semantic`, and all deterministic sub-scores are already present and written by `run_campaign_matching`
+  - Remaining decision: add a stored `rank` column only if the UI/API needs rank persisted instead of derived from sorted response order
+  - Update `AIMatchScoreOut` Pydantic schema if any newly exposed score/rank field is missing from API responses
   - Coordinate with Sakib: these columns unlock the six-bar breakdown in `MatchesClient.tsx`
 
 [ ] N05 [P] Bounded LLM rationale service (SRS FR-9)
@@ -98,15 +105,19 @@ matching pipeline transparent end-to-end; ship authenticity scoring and ethical-
   - Expose via a new endpoint (shape to confirm with Sakib for C02 analytics panel)
   - Use cached enrichment data (N01) — no extra API calls if stats were recently fetched
 
-[ ] N11 Align `scripts/test_matching.py` to call `POST /campaigns/{id}/run-matching` correctly
-  - Verify the script exercises the same code path as the live endpoint (same service layer call)
-  - Ensure it works end-to-end with seeded data after N01/N02 are done
+[~] N11 Align `scripts/test_matching.py` to call `POST /campaigns/{id}/run-matching` correctly
+  - Strategy document: `matching_engine_plan.md`
+  - Script now exercises the same live service layer via `run_campaign_matching`
+  - Added matching-engine unit coverage for budget buffer, recency buckets, semantic rescue cap, and 0–1 score normalization
+  - Pending Docker verification against seeded data: `docker compose exec backend python -m scripts.test_matching`
 
-[ ] N12 [P] Portfolio import from recent YouTube videos (youtube_task.md Unit 3)
+[x] N12 [P] Portfolio import from recent YouTube videos (youtube_task.md Unit 3)
   - After N01 persists the social profile, import `enrichment.recent_videos` → `creator_portfolio_items`
   - Each `YouTubeRecentVideo` maps to one portfolio row: `content_url`, `title`, `thumbnail_url`, `views`, `likes`, `comments`, `published_at`, `platform = "youtube"`, `niche_id` from normalization (N03)
   - Upsert by `content_url` so re-running enrichment doesn't duplicate rows
   - Only import videos missing from the portfolio (compare against existing `creator_portfolio_items`)
+  - Implemented in `app/creators/service.py` and wired into `POST /creators/{creator_id}/platforms/youtube/enrich` plus `scripts/seed_real_youtube_creators.py`.
+  - Verified with live seeder: 19 creators succeeded, 0 failed, 190 YouTube portfolio rows imported.
 
 ---
 
@@ -147,5 +158,5 @@ Do **not** start these until Phases A–D are demo-solid. Each is purely additiv
 - The YouTube wrapper (`app/youtube/`) is **stateless by design**. N01 is the first DB-touching unit — persistence belongs in `app/creators/`, not `app/youtube/`. Keep the wrapper pure.
 - `Search.list` costs 100 units of the 10,000/day quota — treat as scarce (D8). The `/youtube/search` endpoint stays active for demo use but must never be called in a loop or seeding script. All automated discovery must go through `channels?handle=` (1 unit each). Circuit-breaker guard is N13.
 - Conflict-of-interest ships relationally (N08) before Neo4j (N17); do not block FR-13 on a new datastore.
-- Matching weights are: niche .30 / engagement .20 / budget .20 / platform .15 / language .10 / recency .05 — as implemented in `services/matching.py` and defined in SRS §5.2. Do not alter weights without updating both.
+- Matching weights live in `services/matching_config.py`: niche .35 / budget .30 / platform .15 / engagement .10 / language .08 / recency .02. Do not duplicate weights in scripts or docs as a second source of truth.
 - After any migration or model change: update `docs/schema.md` to stay code-true, then `graphify update .` (AST-only, no API cost).

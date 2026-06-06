@@ -27,9 +27,9 @@ and a new row.
 
 **4. All fields in `creator_social_profiles` are manually enterable.**
 No field in this table requires an API call. A creator fills in their own stats.
-Later, a sync layer can overwrite the same columns with API-verified values
-by adding `is_verified BOOLEAN` and `last_verified_at TIMESTAMPTZ` columns.
-The data model does not change.
+The YouTube enrichment sync can overwrite the same metric columns with API-verified values
+and marks those rows with `is_api_verified`, `api_verified_at`, `api_channel_id`, and
+`data_source = 'verified'`.
 
 **5. Soft deletes only where recovery matters.**
 `users`, `creator_profiles`, `brand_profiles` use `deleted_at` for soft delete.
@@ -291,9 +291,7 @@ CREATE INDEX idx_creator_profiles_country ON creator_profiles(country_code);
 
 ```sql
 -- One row per platform per creator.
--- All metric fields are SELF-REPORTED by the creator.
--- Later: add is_api_verified + last_verified_at columns to mark API-confirmed values.
--- The columns themselves do not change — only the verification flag gets added.
+-- Metric fields start as self-reported, then can be overwritten by API-verified enrichment.
 CREATE TABLE creator_social_profiles (
     id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     creator_id           UUID NOT NULL REFERENCES creator_profiles(id) ON DELETE CASCADE,
@@ -303,6 +301,7 @@ CREATE TABLE creator_social_profiles (
     handle               VARCHAR(255) NOT NULL,   -- @username or channel name
     profile_url          TEXT NOT NULL,            -- Full URL to their profile
     platform_user_id     VARCHAR(255),             -- Platform's internal ID (if known)
+    api_channel_id       VARCHAR(255),             -- API-confirmed channel/account ID
     display_name_on_platform VARCHAR(120),         -- Name as shown on the platform
 
     -- Audience size (self-reported, approximate)
@@ -327,6 +326,9 @@ CREATE TABLE creator_social_profiles (
     account_created_year SMALLINT,                 -- Year they joined the platform
     is_monetized         BOOLEAN DEFAULT FALSE,    -- YouTube Partner, Meta Stars, etc.
     has_verified_badge   BOOLEAN DEFAULT FALSE,    -- Blue tick / checkmark
+    is_api_verified      BOOLEAN DEFAULT FALSE,    -- Public API confirmed this row's stats
+    api_verified_at      TIMESTAMPTZ,              -- When the public API last confirmed stats
+    data_source          VARCHAR(30) DEFAULT 'self_reported', -- self_reported|verified|estimated
 
     -- Audience demographics (self-assessed by creator from their analytics)
     audience_country_primary   CHAR(2) DEFAULT 'BD',   -- ISO: primary audience country
@@ -888,28 +890,23 @@ CREATE TABLE ai_match_scores (
 `campaign_visibility` plus `archived` were added to the campaign lifecycle; `application_status`
 gained `invited` / `declined` for brand-initiated invitations.
 
-### YouTube ingestion (no schema yet — stateless wrapper)
-`app/youtube/` is a **read-only public-API client**; it does not persist. The next unit maps its
-`enrichment` output onto `creator_social_profiles` (overwriting the self-reported metric columns,
-plus the `is_api_verified` flag below). See `docs/tasks/tasks-navid.md`.
+### YouTube ingestion
+`app/youtube/` is a **read-only public-API client**; it does not persist. The creator domain exposes
+`POST /creators/{creator_id}/platforms/youtube/enrich`, which maps its `enrichment` output onto
+`creator_social_profiles` and sets `is_api_verified`, `api_verified_at`, `api_channel_id`, and
+`data_source = 'verified'`.
+
+### `creator_social_profiles` — unique platform row restored (migration `0017`)
+Migration `53f8d9a8a155` unintentionally dropped `uq_social_creator_platform`; migration `0017`
+restores `UNIQUE(creator_id, platform)` so enrichment and seed scripts can safely upsert one row
+per creator/platform.
 
 ---
 
 ## Extension Points (still future)
 
-These columns and tables are intentionally absent.
+These remaining columns and tables are intentionally absent.
 Add them without modifying existing tables.
-
-### Adding API-verified social stats (no schema change)
-```sql
--- Add to creator_social_profiles:
-ALTER TABLE creator_social_profiles
-    ADD COLUMN is_api_verified    BOOLEAN DEFAULT FALSE,
-    ADD COLUMN api_verified_at    TIMESTAMPTZ,
-    ADD COLUMN api_channel_id     VARCHAR(255);  -- Platform's internal channel ID
--- The existing metric columns (follower_count, avg_views, etc.) get overwritten
--- by the sync service. Same columns, now API-sourced instead of self-reported.
-```
 
 ### Adding content embeddings for semantic matching (pgvector)
 ```sql
