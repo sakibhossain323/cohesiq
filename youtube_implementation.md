@@ -481,7 +481,74 @@ OK
 
 ## Later Units
 
-Unit 3: Portfolio import from recent YouTube videos.
+## Unit 3 Implemented: Portfolio Import From Recent Videos
+
+Recent YouTube uploads are imported into:
+
+```text
+creator_portfolio_items
+```
+
+Import is wired into:
+
+- `POST /creators/{creator_id}/platforms/youtube/enrich`
+- `backend/scripts/seed_real_youtube_creators.py`
+
+Mapping:
+
+```text
+platform = "youtube"
+content_url = recent_video.url
+title = recent_video.title
+thumbnail_url = best available thumbnail URL
+views = recent_video.view_count
+likes = recent_video.like_count
+comments = recent_video.comment_count
+published_at = recent_video.published_at.date()
+niche_id = first normalized YouTube topic niche when available
+is_featured = true for the newest imported video
+sort_order = recent video index
+```
+
+Idempotence:
+
+```text
+Existing creator YouTube portfolio URLs are selected first.
+Only missing content URLs are inserted.
+Re-running enrichment or seeding does not duplicate portfolio rows.
+```
+
+Focused test command:
+
+```bash
+docker compose exec backend python -m unittest tests.test_creator_youtube_enrichment tests.test_youtube_service -v
+```
+
+Expected after Unit 3:
+
+```text
+Ran 10 tests
+OK
+```
+
+Verified live seeder result:
+
+```text
+Real YouTube creator seeding complete: 19 succeeded, 0 failed.
+creator_portfolio_items: youtube = 190
+```
+
+Live seeder check:
+
+```bash
+docker compose exec backend python -m scripts.seed_real_youtube_creators
+docker compose exec postgres psql -U cohesiq -d cohesiq -c "
+SELECT platform, count(*)
+FROM creator_portfolio_items
+GROUP BY platform
+ORDER BY platform;
+"
+```
 
 Unit 4: Matching signal integration using recent views, engagement, upload consistency, and content relevance.
 

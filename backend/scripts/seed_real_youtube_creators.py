@@ -5,7 +5,13 @@ from datetime import datetime, timezone
 
 from sqlalchemy import text
 
-from app.creators.service import build_youtube_social_profile_values
+from app.auth import models as auth_models  # noqa: F401
+from app.brands import models as brand_models  # noqa: F401
+from app.campaigns import models as campaign_models  # noqa: F401
+from app.creators.service import (
+    build_youtube_social_profile_values,
+    import_youtube_recent_videos_to_portfolio,
+)
 from app.creators.normalization import (
     classify_niche_with_groq,
     detect_content_languages,
@@ -94,6 +100,12 @@ async def seed_real_youtube_creators(recent_video_limit: int = 10) -> None:
                     creator_id=creator_id,
                     enrichment=enrichment,
                 )
+                imported_videos = await import_youtube_recent_videos_to_portfolio(
+                    session,
+                    creator_id=creator_id,
+                    enrichment=enrichment,
+                    niche_name=selected_niche,
+                )
                 await _upsert_estimated_companion_profiles(
                     session,
                     creator_id=creator_id,
@@ -104,7 +116,10 @@ async def seed_real_youtube_creators(recent_video_limit: int = 10) -> None:
                 )
                 await session.commit()
                 successes += 1
-                print(f"Seeded {enrichment.title} ({seed.handle})")
+                print(
+                    f"Seeded {enrichment.title} ({seed.handle}); "
+                    f"imported {imported_videos} portfolio videos"
+                )
             except Exception as exc:
                 await session.rollback()
                 failures.append((seed.handle, str(exc)))

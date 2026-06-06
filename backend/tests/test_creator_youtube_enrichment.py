@@ -16,6 +16,7 @@ from app.creators.normalization import (
 from app.creators.service import (
     apply_youtube_enrichment_to_social_profile,
     build_youtube_social_profile_values,
+    build_youtube_portfolio_item_values,
 )
 from app.youtube.schemas import YouTubeChannelEnrichment, YouTubeRecentVideo
 from scripts.seed_real_youtube_creators import _build_creator_bio
@@ -42,6 +43,10 @@ class CreatorYouTubeEnrichmentTests(unittest.TestCase):
                     description="Recent upload description about learning and creator growth.",
                     channel_id="UC_test",
                     published_at="2026-01-01T00:00:00Z",
+                    thumbnails={
+                        "default": {"url": "https://example.com/default.jpg", "width": 120},
+                        "high": {"url": "https://example.com/high.jpg", "width": 480},
+                    },
                     view_count=1000,
                     like_count=100,
                     comment_count=10,
@@ -159,6 +164,27 @@ class CreatorYouTubeEnrichmentTests(unittest.TestCase):
         )
         self.assertIsNone(parse_groq_niche_response('{"niche":"Astrology"}'))
         self.assertIsNone(parse_groq_niche_response("not json"))
+
+    def test_build_youtube_portfolio_item_values_maps_recent_video(self):
+        video = self._enrichment().recent_videos[0]
+
+        values = build_youtube_portfolio_item_values(
+            video,
+            niche_id=8,
+            sort_order=0,
+        )
+
+        self.assertEqual(values["platform"], "youtube")
+        self.assertEqual(values["content_url"], "https://www.youtube.com/watch?v=video-1")
+        self.assertEqual(values["title"], "Video 1")
+        self.assertEqual(values["thumbnail_url"], "https://example.com/high.jpg")
+        self.assertEqual(values["niche_id"], 8)
+        self.assertEqual(values["views"], 1000)
+        self.assertEqual(values["likes"], 100)
+        self.assertEqual(values["comments"], 10)
+        self.assertEqual(str(values["published_at"]), "2026-01-01")
+        self.assertTrue(values["is_featured"])
+        self.assertEqual(values["sort_order"], 0)
 
     def test_youtube_values_can_create_new_profile(self):
         reported_at = datetime(2026, 6, 6, tzinfo=timezone.utc)

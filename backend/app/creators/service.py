@@ -34,7 +34,7 @@ from app.creators.schemas import (
     SocialProfileUpdate,
 )
 from app.youtube import service as youtube_service
-from app.youtube.schemas import YouTubeChannelEnrichment
+from app.youtube.schemas import YouTubeChannelEnrichment, YouTubeRecentVideo
 
 
 # ------------------------------------------------------------------ #
@@ -294,6 +294,11 @@ async def enrich_youtube_social_profile(
         creator_id=creator_id,
         enrichment=enrichment,
     )
+    await import_youtube_recent_videos_to_portfolio(
+        db,
+        creator_id=creator_id,
+        enrichment=enrichment,
+    )
     await db.commit()
     await db.refresh(social_profile)
     return social_profile
@@ -351,6 +356,99 @@ async def sync_youtube_ingestion_normalization(
                         is_primary=index == 0,
                     )
                 )
+
+
+async def import_youtube_recent_videos_to_portfolio(
+    db: AsyncSession,
+    *,
+    creator_id: uuid.UUID,
+    enrichment: YouTubeChannelEnrichment,
+    niche_name: str | None = None,
+) -> int:
+    existing_result = await db.execute(
+        select(CreatorPortfolioItem.content_url).where(
+            CreatorPortfolioItem.creator_id == creator_id,
+            CreatorPortfolioItem.platform == "youtube",
+        )
+    )
+    existing_urls = set(existing_result.scalars().all())
+    niche_id = await _resolve_youtube_portfolio_niche_id(
+        db,
+        enrichment,
+        niche_name=niche_name,
+    )
+
+    imported_count = 0
+    for index, video in enumerate(enrichment.recent_videos):
+        values = build_youtube_portfolio_item_values(
+            video,
+            niche_id=niche_id,
+            sort_order=index,
+        )
+        if values["content_url"] in existing_urls:
+            continue
+        db.add(CreatorPortfolioItem(creator_id=creator_id, **values))
+        existing_urls.add(values["content_url"])
+        imported_count += 1
+    return imported_count
+
+
+def build_youtube_portfolio_item_values(
+    video: YouTubeRecentVideo,
+    *,
+    niche_id: int | None,
+    sort_order: int = 0,
+) -> dict:
+    return {
+        "platform": "youtube",
+        "content_url": video.url,
+        "title": _truncate(video.title, 255),
+        "thumbnail_url": _best_thumbnail_url(video),
+        "niche_id": niche_id,
+        "views": video.view_count,
+        "likes": video.like_count,
+        "comments": video.comment_count,
+        "published_at": video.published_at.date() if video.published_at else None,
+        "is_featured": sort_order == 0,
+        "sort_order": sort_order,
+    }
+
+
+async def _resolve_youtube_portfolio_niche_id(
+    db: AsyncSession,
+    enrichment: YouTubeChannelEnrichment,
+    *,
+    niche_name: str | None = None,
+) -> int | None:
+    if niche_name:
+        result = await db.execute(select(Niche).where(Niche.name == niche_name))
+        niche = result.scalar_one_or_none()
+        if niche:
+            return niche.id
+
+    niche_names = map_youtube_topic_categories(enrichment.topic_categories)
+    if not niche_names:
+        return None
+    result = await db.execute(select(Niche).where(Niche.name == niche_names[0]))
+    niche = result.scalar_one_or_none()
+    return niche.id if niche else None
+
+
+def _best_thumbnail_url(video: YouTubeRecentVideo) -> str | None:
+    if not video.thumbnails:
+        return None
+    thumbnails = sorted(
+        video.thumbnails.values(),
+        key=lambda thumbnail: thumbnail.width or 0,
+        reverse=True,
+    )
+    return thumbnails[0].url if thumbnails else None
+
+
+def _truncate(value: str | None, max_length: int) -> str | None:
+    if value is None or len(value) <= max_length:
+        return value
+    return value[: max_length - 1].rstrip()
 
 
 # ------------------------------------------------------------------ #

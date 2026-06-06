@@ -1,5 +1,6 @@
 import uuid
-from datetime import datetime, timezone
+import logging
+from datetime import date, datetime, timezone
 from typing import List
 
 from fastapi import HTTPException, status
@@ -33,13 +34,16 @@ from app.services.matching import (
     get_tier,
     score_niche,
 )
+from app.services.matching_config import (
+    BUDGET_RATE_HARD_CAP,
+    SEMANTIC_RESCUE_NICHE_CAP,
+    SEMANTIC_SIMILARITY_THRESHOLD,
+    TIER_MIN_FLOOR,
+    TOP_MATCH_LIMIT,
+)
 from app.services.semantic_match import get_gemini_embedding, semantic_similarity
 
-SEMANTIC_SIMILARITY_THRESHOLD = 0.28
-SEMANTIC_BOOST_WEIGHT = 0.12
-TIER_MIN_FLOOR = 0.5
-BUDGET_RATE_HARD_CAP = 1.10
-BUDGET_ESTIMATE_CAP = 1.25
+logger = logging.getLogger(__name__)
 
 
 def _campaign_options():
@@ -99,7 +103,40 @@ def _passes_budget_gate(
         return creator_rate <= int(campaign_budget_max * BUDGET_RATE_HARD_CAP)
 
     estimated_rate = (tier_min + tier_max) // 2
-    return estimated_rate <= int(campaign_budget_max * BUDGET_ESTIMATE_CAP)
+    return estimated_rate <= int(campaign_budget_max * BUDGET_RATE_HARD_CAP)
+
+
+def _select_matching_social_profile(social_profiles, required_platforms: list[str]):
+    if not social_profiles:
+        return None
+
+    required = set(required_platforms or [])
+
+    def sort_key(profile):
+        platform_matches = 1 if required and profile.platform in required else 0
+        verified_source = 1 if (profile.data_source or "") == "verified" else 0
+        primary_platform = 1 if profile.is_primary_platform else 0
+        followers = profile.follower_count or 0
+        return (platform_matches, verified_source, primary_platform, followers)
+
+    return max(social_profiles, key=sort_key)
+
+
+def _days_since_latest_portfolio_item(portfolio_items, required_platforms: list[str]) -> int | None:
+    today = date.today()
+    required = set(required_platforms or [])
+    dated_items = [
+        item
+        for item in portfolio_items
+        if item.published_at is not None and (not required or item.platform in required)
+    ]
+    if not dated_items and required:
+        dated_items = [item for item in portfolio_items if item.published_at is not None]
+    if not dated_items:
+        return None
+
+    latest = max(item.published_at for item in dated_items)
+    return max((today - latest).days, 0)
 
 
 # ------------------------------------------------------------------ #
@@ -585,7 +622,8 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             selectinload(CreatorProfile.niches),
             selectinload(CreatorProfile.languages),
             selectinload(CreatorProfile.social_profiles),
-            selectinload(CreatorProfile.rate_cards)
+            selectinload(CreatorProfile.rate_cards),
+            selectinload(CreatorProfile.portfolio_items),
         )
     )
     creators = creators_result.scalars().all()
@@ -595,7 +633,11 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
 
     # Compute matches
     matches = []
+    match_sort_followers = {}
     for creator in creators:
+        if not creator.is_available or creator.deleted_at is not None:
+            continue
+
         # Determine niche names
         creator_primary = "general"
         creator_subs = []
@@ -606,14 +648,8 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             else:
                 creator_subs.append(n_name)
 
-        # Get social profiles info
-        primary_profile = None
-        for sp in creator.social_profiles:
-            if sp.is_primary_platform:
-                primary_profile = sp
-                break
-        if not primary_profile and creator.social_profiles:
-            primary_profile = max(creator.social_profiles, key=lambda x: x.follower_count or 0)
+        campaign_plats = campaign.required_platforms or []
+        primary_profile = _select_matching_social_profile(creator.social_profiles, campaign_plats)
 
         follower_count = primary_profile.follower_count if primary_profile else 0
         follower_count = follower_count or 0
@@ -622,7 +658,6 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
 
         # Determine creator rate for campaign platforms
         creator_rate = None
-        campaign_plats = campaign.required_platforms or []
         for rc in creator.rate_cards:
             if rc.platform in campaign_plats:
                 creator_rate = rc.price_bdt
@@ -630,7 +665,6 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
         if creator_rate is None:
             creator_rate = creator.min_budget
 
-        campaign_plats = campaign.required_platforms or []
         if campaign_plats and not any(p in creator_platforms for p in campaign_plats):
             continue
 
@@ -661,6 +695,7 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
         niche_score = score_niche(campaign_niche_name, creator_primary, creator_subs)
         semantic_score = 0.0
         semantic_used = False
+        semantic_niche_score = None
         if niche_score <= 0.0 and campaign_niche_name.lower() not in ("general", "unknown", "other"):
             semantic_score = semantic_similarity(
                 campaign_text,
@@ -670,9 +705,21 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             semantic_used = semantic_score >= SEMANTIC_SIMILARITY_THRESHOLD
             if not semantic_used:
                 continue
+            semantic_niche_score = min(semantic_score, SEMANTIC_RESCUE_NICHE_CAP)
+            logger.info(
+                "Semantic niche rescue used for creator %s on campaign %s: similarity=%.4f capped_niche=%.4f",
+                creator.id,
+                campaign.id,
+                semantic_score,
+                semantic_niche_score,
+            )
 
         # Compute match score using matching engine
         from app.services.matching import get_tier  # noqa: PLC0415
+        days_since_post = _days_since_latest_portfolio_item(
+            creator.portfolio_items,
+            campaign_plats,
+        )
         scores = compute_match_score(
             campaign_niche=campaign_niche_name,
             campaign_budget=campaign.budget_per_creator_max,
@@ -685,11 +732,12 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             creator_rate=creator_rate,
             creator_platforms=creator_platforms,
             creator_language_profile=creator_lang_profile,
-            creator_days_since_post=None,
+            creator_days_since_post=days_since_post,
+            niche_score_override=semantic_niche_score,
         )
 
         creator_tier = get_tier(follower_count)
-        total_score = min(scores.total + (semantic_score * SEMANTIC_BOOST_WEIGHT), 1.0)
+        total_score = scores.total
 
         # Generate rationale
         rational_text = generate_rationale(
@@ -717,10 +765,18 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             rationale=rational_text
         )
         matches.append(match_score_obj)
+        match_sort_followers[creator.id] = follower_count
 
-    # Sort matches by total score DESC and take top 10
-    matches.sort(key=lambda x: x.score_total, reverse=True)
-    top_matches = matches[:10]
+    # Sort by score, then selected audience size, then creator id for stable rankings.
+    matches.sort(
+        key=lambda x: (
+            x.score_total or 0.0,
+            match_sort_followers.get(x.creator_id, 0),
+            str(x.creator_id),
+        ),
+        reverse=True,
+    )
+    top_matches = matches[:TOP_MATCH_LIMIT]
 
     # Save to db
     for match in top_matches:
@@ -734,10 +790,12 @@ async def get_campaign_matches(db: AsyncSession, campaign_id: uuid.UUID) -> List
     from app.campaigns.models import AIMatchScore
     from app.creators.models import CreatorProfile
 
+    campaign = await get_campaign(db, campaign_id)
+    campaign_plats = campaign.required_platforms if campaign else []
+
     result = await db.execute(
         select(AIMatchScore)
         .where(AIMatchScore.campaign_id == campaign_id)
-        .order_by(AIMatchScore.score_total.desc())
         .options(
             selectinload(AIMatchScore.creator).selectinload(CreatorProfile.social_profiles),
             selectinload(AIMatchScore.creator).selectinload(CreatorProfile.niches),
@@ -746,7 +804,15 @@ async def get_campaign_matches(db: AsyncSession, campaign_id: uuid.UUID) -> List
             selectinload(AIMatchScore.creator).selectinload(CreatorProfile.portfolio_items)
         )
     )
-    return list(result.scalars().all())
+    matches = list(result.scalars().all())
+
+    def sort_key(match: AIMatchScore):
+        social_profiles = match.creator.social_profiles if match.creator else []
+        selected_profile = _select_matching_social_profile(social_profiles, campaign_plats)
+        follower_count = selected_profile.follower_count if selected_profile else 0
+        return (match.score_total or 0.0, follower_count or 0, str(match.creator_id))
+
+    return sorted(matches, key=sort_key, reverse=True)
 
 
 # ------------------------------------------------------------------ #
