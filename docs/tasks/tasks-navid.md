@@ -22,7 +22,8 @@ graph/vector layers. Sakib owns the brand/creator marketplace UI & campaign work
 | Pure deterministic scorer | `[x]` | `services/matching.py` + `services/matching_config.py` — current weights: niche .35 / budget .30 / platform .15 / engagement .10 / language .08 / recency .02 |
 | `run-matching` + `matches` endpoints | `[~]` | `app/campaigns/` — relational, heuristic rationale, persisted score breakdown; rank column still pending if UI needs stored rank |
 | Semantic similarity (Gemini + token fallback) | `[~]` | `services/semantic_match.py` — computed on the fly, persisted as `score_semantic`; wrong-niche rescue is capped in `score_niche` |
-| Seed pipeline (synthetic + real YouTube script) | `[~]` | `scripts/generate_seed_data.py` (Tavily+Groq), `seed_db.py`, `reset_db.py`, `sync_clerk_users.py`, `seed_real_youtube_creators.py` — live API run pending |
+| Seed pipeline (synthetic + real YouTube script) | `[x]` | `scripts/generate_seed_data.py` (Tavily+Groq), `seed_db.py`, `reset_db.py`, `sync_clerk_users.py`, `seed_real_youtube_creators.py` — live run verified: 19 channels succeeded, 0 failed |
+| YouTube enrichment persistence + normalization | `[x]` | N01/N02/N03/N12 all verified. `POST /creators/{id}/platforms/youtube/enrich` persists to `creator_social_profiles`; `normalization.py` handles niche/language/city/tier; 19 YouTube `verified` + 38 estimated profiles + 190 portfolio items seeded. See `docs/revisions/srs-revisions-26-06-07.md` §3. |
 
 ---
 
