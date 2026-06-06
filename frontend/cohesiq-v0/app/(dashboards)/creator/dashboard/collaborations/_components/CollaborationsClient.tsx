@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { formatBDT, formatDate } from "@/lib/utils";
 import Link from "next/link";
-import { ArrowRight, Inbox, FileText, CheckCircle2, Clock, XCircle, FileSignature } from "lucide-react";
+import { ArrowRight, Inbox, FileText, CheckCircle2, Clock, XCircle, FileSignature, ChevronRight } from "lucide-react";
 import type { Application, ApplicationStatus } from "@/lib/types";
 import { respondToInvitationAction } from "../_actions/collaboration-actions";
 
@@ -192,8 +192,9 @@ export function CollaborationsClient({ invitations, myApplications, activeContra
           <TabsTrigger value="my_applications" className="py-2 px-4">
             My Applications
           </TabsTrigger>
-          <TabsTrigger value="active" className="py-2 px-4">
-            Active Contracts
+          <TabsTrigger value="active" className="py-2 px-4 flex gap-2">
+            <FileSignature className="h-4 w-4" />
+            Contracts
           </TabsTrigger>
         </TabsList>
         
@@ -242,19 +243,30 @@ export function CollaborationsClient({ invitations, myApplications, activeContra
           )}
         </TabsContent>
         
-        <TabsContent value="active" className="space-y-6">
-          {activeContracts.length === 0 ? (
-            <Card className="min-h-[40vh] flex items-center justify-center border-dashed">
-              <CardContent className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
-                <FileSignature className="mb-4 h-12 w-12 opacity-20" />
-                <p className="font-medium text-foreground text-lg">No active contracts</p>
-                <p className="mt-2 text-sm max-w-sm text-balance">
-                  When a brand accepts your application, it will move here so you can track your deliverables and payment status.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
+        <TabsContent value="active" className="space-y-4">
+          <Card className="border-primary/20 bg-primary/[0.02]">
+            <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6">
+              <div className="flex items-start gap-4">
+                <FileSignature className="h-8 w-8 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-foreground">Track deliverables on My Contracts</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Submit draft content, view brand feedback, publish your posts, and track payment — all in one place.
+                  </p>
+                </div>
+              </div>
+              <Button asChild className="shrink-0">
+                <Link href="/creator/dashboard/contracts">
+                  My Contracts <ChevronRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+          {activeContracts.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-muted-foreground px-1">
+                Accepted applications ({activeContracts.length})
+              </p>
               {activeContracts.map(app => (
                 <ApplicationCard key={app.id} app={app} />
               ))}

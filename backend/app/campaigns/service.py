@@ -1,5 +1,6 @@
 import uuid
-from datetime import datetime, timezone
+import logging
+from datetime import date, datetime, timezone
 from typing import List
 
 from fastapi import HTTPException, status
@@ -33,13 +34,16 @@ from app.services.matching import (
     get_tier,
     score_niche,
 )
+from app.services.matching_config import (
+    BUDGET_RATE_HARD_CAP,
+    SEMANTIC_RESCUE_NICHE_CAP,
+    SEMANTIC_SIMILARITY_THRESHOLD,
+    TIER_MIN_FLOOR,
+    TOP_MATCH_LIMIT,
+)
 from app.services.semantic_match import get_gemini_embedding, semantic_similarity
 
-SEMANTIC_SIMILARITY_THRESHOLD = 0.28
-SEMANTIC_BOOST_WEIGHT = 0.12
-TIER_MIN_FLOOR = 0.5
-BUDGET_RATE_HARD_CAP = 1.10
-BUDGET_ESTIMATE_CAP = 1.25
+logger = logging.getLogger(__name__)
 
 
 def _campaign_options():
@@ -99,7 +103,40 @@ def _passes_budget_gate(
         return creator_rate <= int(campaign_budget_max * BUDGET_RATE_HARD_CAP)
 
     estimated_rate = (tier_min + tier_max) // 2
-    return estimated_rate <= int(campaign_budget_max * BUDGET_ESTIMATE_CAP)
+    return estimated_rate <= int(campaign_budget_max * BUDGET_RATE_HARD_CAP)
+
+
+def _select_matching_social_profile(social_profiles, required_platforms: list[str]):
+    if not social_profiles:
+        return None
+
+    required = set(required_platforms or [])
+
+    def sort_key(profile):
+        platform_matches = 1 if required and profile.platform in required else 0
+        verified_source = 1 if (profile.data_source or "") == "verified" else 0
+        primary_platform = 1 if profile.is_primary_platform else 0
+        followers = profile.follower_count or 0
+        return (platform_matches, verified_source, primary_platform, followers)
+
+    return max(social_profiles, key=sort_key)
+
+
+def _days_since_latest_portfolio_item(portfolio_items, required_platforms: list[str]) -> int | None:
+    today = date.today()
+    required = set(required_platforms or [])
+    dated_items = [
+        item
+        for item in portfolio_items
+        if item.published_at is not None and (not required or item.platform in required)
+    ]
+    if not dated_items and required:
+        dated_items = [item for item in portfolio_items if item.published_at is not None]
+    if not dated_items:
+        return None
+
+    latest = max(item.published_at for item in dated_items)
+    return max((today - latest).days, 0)
 
 
 # ------------------------------------------------------------------ #
@@ -585,7 +622,8 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             selectinload(CreatorProfile.niches),
             selectinload(CreatorProfile.languages),
             selectinload(CreatorProfile.social_profiles),
-            selectinload(CreatorProfile.rate_cards)
+            selectinload(CreatorProfile.rate_cards),
+            selectinload(CreatorProfile.portfolio_items),
         )
     )
     creators = creators_result.scalars().all()
@@ -595,7 +633,11 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
 
     # Compute matches
     matches = []
+    match_sort_followers = {}
     for creator in creators:
+        if not creator.is_available or creator.deleted_at is not None:
+            continue
+
         # Determine niche names
         creator_primary = "general"
         creator_subs = []
@@ -606,14 +648,8 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             else:
                 creator_subs.append(n_name)
 
-        # Get social profiles info
-        primary_profile = None
-        for sp in creator.social_profiles:
-            if sp.is_primary_platform:
-                primary_profile = sp
-                break
-        if not primary_profile and creator.social_profiles:
-            primary_profile = max(creator.social_profiles, key=lambda x: x.follower_count or 0)
+        campaign_plats = campaign.required_platforms or []
+        primary_profile = _select_matching_social_profile(creator.social_profiles, campaign_plats)
 
         follower_count = primary_profile.follower_count if primary_profile else 0
         follower_count = follower_count or 0
@@ -622,7 +658,6 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
 
         # Determine creator rate for campaign platforms
         creator_rate = None
-        campaign_plats = campaign.required_platforms or []
         for rc in creator.rate_cards:
             if rc.platform in campaign_plats:
                 creator_rate = rc.price_bdt
@@ -630,7 +665,6 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
         if creator_rate is None:
             creator_rate = creator.min_budget
 
-        campaign_plats = campaign.required_platforms or []
         if campaign_plats and not any(p in creator_platforms for p in campaign_plats):
             continue
 
@@ -661,6 +695,7 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
         niche_score = score_niche(campaign_niche_name, creator_primary, creator_subs)
         semantic_score = 0.0
         semantic_used = False
+        semantic_niche_score = None
         if niche_score <= 0.0 and campaign_niche_name.lower() not in ("general", "unknown", "other"):
             semantic_score = semantic_similarity(
                 campaign_text,
@@ -670,9 +705,21 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             semantic_used = semantic_score >= SEMANTIC_SIMILARITY_THRESHOLD
             if not semantic_used:
                 continue
+            semantic_niche_score = min(semantic_score, SEMANTIC_RESCUE_NICHE_CAP)
+            logger.info(
+                "Semantic niche rescue used for creator %s on campaign %s: similarity=%.4f capped_niche=%.4f",
+                creator.id,
+                campaign.id,
+                semantic_score,
+                semantic_niche_score,
+            )
 
         # Compute match score using matching engine
         from app.services.matching import get_tier  # noqa: PLC0415
+        days_since_post = _days_since_latest_portfolio_item(
+            creator.portfolio_items,
+            campaign_plats,
+        )
         scores = compute_match_score(
             campaign_niche=campaign_niche_name,
             campaign_budget=campaign.budget_per_creator_max,
@@ -685,11 +732,12 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             creator_rate=creator_rate,
             creator_platforms=creator_platforms,
             creator_language_profile=creator_lang_profile,
-            creator_days_since_post=None,
+            creator_days_since_post=days_since_post,
+            niche_score_override=semantic_niche_score,
         )
 
         creator_tier = get_tier(follower_count)
-        total_score = min(scores.total + (semantic_score * SEMANTIC_BOOST_WEIGHT), 1.0)
+        total_score = scores.total
 
         # Generate rationale
         rational_text = generate_rationale(
@@ -717,10 +765,18 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             rationale=rational_text
         )
         matches.append(match_score_obj)
+        match_sort_followers[creator.id] = follower_count
 
-    # Sort matches by total score DESC and take top 10
-    matches.sort(key=lambda x: x.score_total, reverse=True)
-    top_matches = matches[:10]
+    # Sort by score, then selected audience size, then creator id for stable rankings.
+    matches.sort(
+        key=lambda x: (
+            x.score_total or 0.0,
+            match_sort_followers.get(x.creator_id, 0),
+            str(x.creator_id),
+        ),
+        reverse=True,
+    )
+    top_matches = matches[:TOP_MATCH_LIMIT]
 
     # Save to db
     for match in top_matches:
@@ -733,11 +789,13 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
 async def get_campaign_matches(db: AsyncSession, campaign_id: uuid.UUID) -> List[AIMatchScore]:
     from app.campaigns.models import AIMatchScore
     from app.creators.models import CreatorProfile
-    
+
+    campaign = await get_campaign(db, campaign_id)
+    campaign_plats = campaign.required_platforms if campaign else []
+
     result = await db.execute(
         select(AIMatchScore)
         .where(AIMatchScore.campaign_id == campaign_id)
-        .order_by(AIMatchScore.score_total.desc())
         .options(
             selectinload(AIMatchScore.creator).selectinload(CreatorProfile.social_profiles),
             selectinload(AIMatchScore.creator).selectinload(CreatorProfile.niches),
@@ -746,4 +804,221 @@ async def get_campaign_matches(db: AsyncSession, campaign_id: uuid.UUID) -> List
             selectinload(AIMatchScore.creator).selectinload(CreatorProfile.portfolio_items)
         )
     )
+    matches = list(result.scalars().all())
+
+    def sort_key(match: AIMatchScore):
+        social_profiles = match.creator.social_profiles if match.creator else []
+        selected_profile = _select_matching_social_profile(social_profiles, campaign_plats)
+        follower_count = selected_profile.follower_count if selected_profile else 0
+        return (match.score_total or 0.0, follower_count or 0, str(match.creator_id))
+
+    return sorted(matches, key=sort_key, reverse=True)
+
+
+# ------------------------------------------------------------------ #
+# Contracts                                                            #
+# ------------------------------------------------------------------ #
+
+async def create_contract(
+    db: AsyncSession,
+    application_id: uuid.UUID,
+    data: "ContractCreate",
+    brand_id: uuid.UUID,
+) -> "Contract":
+    from app.campaigns.models import Contract, CONTRACT_FEE_MAP
+    from app.campaigns.schemas import ContractCreate
+
+    result = await db.execute(
+        select(CampaignApplication).where(CampaignApplication.id == application_id)
+    )
+    app = result.scalar_one_or_none()
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found")
+    if app.status != "accepted":
+        raise HTTPException(status_code=400, detail="Contract can only be created for accepted applications")
+
+    existing = await db.execute(
+        select(Contract).where(Contract.application_id == application_id)
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="A contract already exists for this application")
+
+    fee = CONTRACT_FEE_MAP.get(data.contract_type, 15)
+    contract = Contract(
+        application_id=application_id,
+        brand_id=brand_id,
+        creator_id=app.creator_id,
+        contract_type=data.contract_type,
+        status="active",
+        payment_structure=data.payment_structure,
+        payment_amount_bdt=data.payment_amount_bdt,
+        payment_schedule=data.payment_schedule,
+        has_product_transfer=data.has_product_transfer,
+        product_disposition=data.product_disposition,
+        deliverable_notes=data.deliverable_notes,
+        exclusivity_days=data.exclusivity_days,
+        usage_rights_days=data.usage_rights_days,
+        max_revision_rounds=data.max_revision_rounds,
+        kill_fee_percentage=data.kill_fee_percentage,
+        platform_fee_percentage=fee,
+    )
+    db.add(contract)
+    await db.commit()
+    await db.refresh(contract)
+    return contract
+
+
+async def get_contract_by_application(
+    db: AsyncSession, application_id: uuid.UUID
+) -> "Contract | None":
+    from app.campaigns.models import Contract
+    result = await db.execute(
+        select(Contract).where(Contract.application_id == application_id)
+    )
+    return result.scalar_one_or_none()
+
+
+async def get_contract(db: AsyncSession, contract_id: uuid.UUID) -> "Contract | None":
+    from app.campaigns.models import Contract
+    result = await db.execute(select(Contract).where(Contract.id == contract_id))
+    return result.scalar_one_or_none()
+
+
+async def list_contracts_for_brand(
+    db: AsyncSession, brand_id: uuid.UUID, campaign_id: uuid.UUID | None = None
+) -> list:
+    from app.campaigns.models import Contract
+    query = select(Contract).where(Contract.brand_id == brand_id)
+    if campaign_id:
+        query = query.join(CampaignApplication).where(
+            CampaignApplication.campaign_id == campaign_id
+        )
+    result = await db.execute(query.order_by(Contract.contracted_at.desc()))
     return list(result.scalars().all())
+
+
+async def list_contracts_for_creator(db: AsyncSession, creator_id: uuid.UUID) -> list:
+    from app.campaigns.models import Contract
+    result = await db.execute(
+        select(Contract)
+        .where(Contract.creator_id == creator_id)
+        .order_by(Contract.contracted_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+async def submit_content_draft(
+    db: AsyncSession, contract_id: uuid.UUID, draft_url: str, creator_id: uuid.UUID
+) -> "Contract":
+    from app.campaigns.models import Contract
+    contract = await get_contract(db, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if contract.creator_id != creator_id:
+        raise HTTPException(status_code=403, detail="Not your contract")
+    if contract.status not in ("active", "in_production"):
+        raise HTTPException(status_code=400, detail=f"Cannot submit draft in '{contract.status}' state")
+
+    contract.draft_content_url = draft_url
+    contract.status = "content_submitted"
+    contract.submitted_at = datetime.now(timezone.utc)
+    contract.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(contract)
+    return contract
+
+
+async def approve_content(
+    db: AsyncSession, contract_id: uuid.UUID, brand_id: uuid.UUID
+) -> "Contract":
+    from app.campaigns.models import Contract
+    contract = await get_contract(db, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if contract.brand_id != brand_id:
+        raise HTTPException(status_code=403, detail="Not your contract")
+    if contract.status != "content_submitted":
+        raise HTTPException(status_code=400, detail="Content must be submitted before approval")
+
+    contract.status = "content_approved"
+    contract.approved_at = datetime.now(timezone.utc)
+    contract.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(contract)
+    return contract
+
+
+async def request_revision(
+    db: AsyncSession, contract_id: uuid.UUID, brand_id: uuid.UUID
+) -> "Contract":
+    from app.campaigns.models import Contract
+    contract = await get_contract(db, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if contract.brand_id != brand_id:
+        raise HTTPException(status_code=403, detail="Not your contract")
+    if contract.status != "content_submitted":
+        raise HTTPException(status_code=400, detail="Content must be submitted to request revision")
+    if contract.revisions_used >= contract.max_revision_rounds:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Revision limit reached ({contract.max_revision_rounds} rounds). You must approve or raise a dispute."
+        )
+
+    contract.revisions_used += 1
+    contract.status = "in_production"
+    contract.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(contract)
+    return contract
+
+
+async def publish_content(
+    db: AsyncSession, contract_id: uuid.UUID, live_url: str, creator_id: uuid.UUID
+) -> "Contract":
+    from app.campaigns.models import Contract
+    contract = await get_contract(db, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if contract.creator_id != creator_id:
+        raise HTTPException(status_code=403, detail="Not your contract")
+    if contract.status != "content_approved":
+        raise HTTPException(status_code=400, detail="Content must be approved before publishing")
+
+    contract.live_post_url = live_url
+    contract.status = "published"
+    contract.published_at = datetime.now(timezone.utc)
+    contract.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(contract)
+    return contract
+
+
+async def close_contract(
+    db: AsyncSession, contract_id: uuid.UUID, brand_id: uuid.UUID
+) -> "Contract":
+    from app.campaigns.models import Contract
+    contract = await get_contract(db, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if contract.brand_id != brand_id:
+        raise HTTPException(status_code=403, detail="Not your contract")
+    if contract.status != "published":
+        raise HTTPException(status_code=400, detail="Contract must be published before closing")
+
+    contract.status = "closed"
+    contract.closed_at = datetime.now(timezone.utc)
+    contract.updated_at = datetime.now(timezone.utc)
+
+    # Mark application completed so reviews become eligible
+    result = await db.execute(
+        select(CampaignApplication).where(CampaignApplication.id == contract.application_id)
+    )
+    app = result.scalar_one_or_none()
+    if app:
+        app.status = "completed"
+        app.completed_at = datetime.now(timezone.utc)
+
+    await db.commit()
+    await db.refresh(contract)
+    return contract

@@ -3,7 +3,7 @@
 **Bangladesh's Creator & Talent Marketplace, powered by Graph AI**
 The Infinity AI BuildFest 2026 · MarTech Track · Influencer Matching Engine
 
-> **Status:** Living document · Last unified **2026-06-05** · Phase B complete · Phase D partially done (D03/D04/D05 shipped) · Supersedes the original
+> **Status:** Living document · Last unified **2026-06-07** · Phase B complete · Phase C partial · Phase D partially done (D03/D04/D05 + N01–N03/N12 shipped) · Supersedes the original
 > "Phase 1 YouTube-only" plan (archived in git history at commit before this rewrite).
 
 ---
@@ -54,10 +54,10 @@ This is what actually runs today — the baseline every new task builds on.
 | Time-series | **none** | TimescaleDB | not deployed |
 | Cache | **none** | Redis (score cache, quota) | not deployed |
 | Auth | Clerk RS256 JWT (`common.dependencies.get_current_user`) | email/password in SRS ER | Clerk chosen instead — **better**, keep |
-| LLM | Google Gemini (semantic + optional rationale) | Gemini 1.5 Flash | aligned |
-| Embeddings | Gemini embeddings with token-similarity fallback (`services/semantic_match.py`) | sentence-transformers + pgvector | not persisted; computed on the fly |
-| YouTube | **Tier-0 public read wrapper** (`app/youtube/`) | YouTube Data API v3 Tier-0 | aligned; persistence pending |
-| Seeding | Tavily + Groq synthetic generator + DB seeder (`backend/scripts/`) | 18–20 real channels via `Channels.list` | synthetic-first; real-YT seeding now unblocked by the wrapper |
+| LLM (generative) | **Groq LLaMA-3.1-8b-instant (primary)** for match rationale, brief analyzer, niche classification; Gemini 1.5 Flash (matching fallback); Gemini 2.0 Flash (brief fallback) | Gemini 1.5 Flash | Groq is primary — not documented in SRS |
+| Embeddings | Gemini `text-embedding-004` with token-similarity fallback (`services/semantic_match.py`) | sentence-transformers + pgvector | not persisted; computed on the fly |
+| YouTube | **Tier-0 public read wrapper** (`app/youtube/`) + persistence via `creators/normalization.py` | YouTube Data API v3 Tier-0 | wrapper aligned; persistence layer shipped (N01–N03/N12) |
+| Seeding | Tavily + Groq LLaMA-3.1-8b-instant synthetic generator + DB seeder (`backend/scripts/`) | 18–20 real channels via `Channels.list` | real-YT seeding done: 19 channels verified |
 | Containerization | Docker Compose (`postgres`, `backend`, `frontend`) | + neo4j/redis | 3 services only |
 
 **Consequence:** the platform is a **relational marketplace with AI matching**, not the full
@@ -66,9 +66,10 @@ graph/vector/timeseries are **additive layers** (see §4 phases), never MVP bloc
 
 ### 2.2 Backend domains (DDD, `backend/app/`)
 
-`auth/` · `brands/` · `creators/` · `campaigns/` · `youtube/` *(new, Navid)* · `common/` (shared deps)
-· `services/` (cross-domain: `matching.py`, `semantic_match.py`, `llm_matching.py`) · `webhooks/` (Clerk).
+`auth/` · `brands/` · `creators/` *(+ `normalization.py`)* · `campaigns/` · `youtube/` *(stateless API client, Navid)* · `common/` (shared deps)
+· `services/` (cross-domain: `matching.py`, `matching_config.py`, `semantic_match.py`, `llm_matching.py`) · `webhooks/` (Clerk).
 Routers parse/return only; logic lives in services; no cross-domain imports in routers.
+**LLM stack (as-built):** Groq LLaMA-3.1-8b-instant is the primary generative model for all AI features; Gemini APIs serve embeddings (`text-embedding-004`) and generative fallback (`1.5 Flash` for matching, `2.0 Flash` for brief analyzer).
 
 ### 2.3 Live data model (authoritative: `docs/schema.md`)
 
@@ -82,6 +83,12 @@ lookup tables `niches`, `languages`.
 
 **Migration 0013 (Sakib) added to `campaigns`:** `campaign_type` enum (six values),
 `kpi_targets` JSONB, `hashtags` TEXT[], `tracking_notes` TEXT.
+
+**Migrations 0014–0017 (Navid):**
+- `0014_add_platform_recency_semantic_to_match_scores` — adds `score_platform`, `score_recency`, `score_semantic` (FLOAT, nullable) to `ai_match_scores`
+- `0015_add_contract_model` — Contract as first-class entity (Sakib)
+- `0016_add_api_verified_social_profile_fields` — adds `is_api_verified`, `api_verified_at`, `api_channel_id`, `data_source` to `creator_social_profiles`
+- `0017_restore_social_creator_platform_unique` — restores `UNIQUE(creator_id, platform)` constraint accidentally dropped by an earlier migration
 
 ### 2.4 Navid's YouTube module — exact scope
 
@@ -97,8 +104,9 @@ lookup tables `niches`, `languages`.
 
 It accepts channel IDs, `@handles`, legacy usernames, or full URLs (`parse_channel_ref`), and is
 unit-tested (`tests/test_youtube_service.py`, `scripts/test_youtube_api.py`). **This is the Tier-0
-ingestion primitive the SRS §4.2 calls for** — the next unit is persisting `enrichment` onto
-`creator_social_profiles` (see §4 Phase D and `tasks-navid.md`).
+ingestion primitive the SRS §4.2 calls for.**
+
+**Persistence layer (shipped, Navid N01–N03/N12):** `backend/app/creators/normalization.py` maps enrichment output onto `creator_social_profiles` — niche classification (Groq + YouTube topic categories fallback), Bangla/English/Banglish language detection, city normalization, and engagement-vs-tier ratio. `POST /creators/{creator_id}/platforms/youtube/enrich` persists the result and imports recent videos to `creator_portfolio_items`. `backend/scripts/seed_real_youtube_creators.py` seeded 19 real BD channels: 19 verified YouTube rows + 38 estimated companion profiles + 190 portfolio items.
 
 ---
 
@@ -119,22 +127,27 @@ SRS honest without rewriting it. Each entry is a *decision*, not an accident.
 | D8 | YouTube discovery avoids `Search.list` (100 units; SRS §4.3 #5 wants a circuit-breaker) | `/youtube/search` exists and uses `Search.list` | **Allowed for demo, flagged.** Seeding/discovery should prefer `channels?handle=` (1 unit). Add a quota guard before any automated/looped search. Tracked in `tasks-navid.md`. |
 | D9 | Authenticity engine (4 signals + BanglaBERT) | not implemented | **Phase D.** Ship the engagement-vs-tier proxy first (FR-12 partial), expand signals as data allows. |
 | D10 | Full Bangla UI toggle (FR-24, P0) | not implemented (no i18n library) | **Phase C.** Currency/date already BDT/Asia-Dhaka; needs an i18n layer. High rubric value (localization), keep on the demo cut-line. |
-| D11 | Escrow + per-type fee (FR-18/19, US-16) | fee % defined per `campaign_type` (reference only); no ledger | **Phase D, simulated.** Compute-and-display fees; no real bKash/Nagad in the hackathon window. |
+| D11 | Escrow + per-type fee (FR-18/19, US-16) | fee % defined per `contract_type` on Contract entity; no real ledger | **Phase D, simulated.** Fee locked at contract creation (content_collaboration=15%, product_seeding=10%, talent_engagement=18%); displayed as escrow simulation. No real bKash/Nagad in the hackathon window. |
+| D12 | `campaign_type` on Campaign (FR-6/7) | `contract_type` on Contract entity; `campaigns.campaign_type` **DEPRECATED** (nullable, no new writes) | **Contract as first-class entity.** Engagement type (Content Collaboration / Product Seeding / Talent Engagement) now lives on `Contract`, not `Campaign`. Campaign is type-agnostic with a `visibility` flag (public/private). `campaign_type` column kept nullable for backward compat — safe to DROP once all references are confirmed gone. See `docs/revisions/srs-revisions-26-06-06.md` for full change request. |
+| D13 | SRS FR-11 matching weights: niche .30 / engagement .20 / budget .20 / platform .15 / language .10 / recency .05 | As-built (`matching_config.py`): niche .35 / budget .30 / platform .15 / engagement .10 / language .08 / recency .02 | **Weight rebalance for BD market.** Budget and niche raised; engagement reduced (noisy at micro tier). Source of truth: `SCORE_WEIGHTS` in `backend/app/services/matching_config.py`. See `docs/revisions/srs-revisions-26-06-07.md` §2. |
 
-### 3.1 The two type taxonomies (resolves D6 — do not merge these)
+### 3.1 Type taxonomies — three systems, do not merge
 
-The codebase deliberately has **two** type systems serving different sides of the marketplace:
+The codebase has **three** type systems serving different concerns:
 
-- **`campaigns.campaign_type`** *(brand demand side — what a campaign IS)* — the canonical realization
-  of the SRS "six collaboration models": `paid_content`, `product_gifting`, `affiliate`,
-  `brand_ambassador`, `talent_booking`, `ugc_only`. Drives the wizard, badges, and fee logic.
+- **`contracts.contract_type`** *(engagement type — what a bilateral deal IS)* — introduced by D12.
+  Three values: `content_collaboration`, `product_seeding`, `talent_engagement`. Lives on the
+  `Contract` entity. Drives clause configuration, platform fee, and state machine semantics.
+  **Do not write new `campaign_type` values — use `contract_type` instead.**
+- **`campaigns.campaign_type`** *(DEPRECATED — brand demand intent)*: `paid_content`,
+  `product_gifting`, `affiliate`, `brand_ambassador`, `talent_booking`, `ugc_only`. Column is now
+  nullable with no default. Kept for backward compat only; will be DROPped once the final reference
+  (`lib/campaignFees.ts`) is either removed or migrated.
+  To find remaining references: `grep -r "campaign_type" backend/ frontend/`
 - **`collaboration_type`** *(creator supply side — what deals a creator ACCEPTS)*:
   `sponsored_post`, `product_review`, `brand_ambassador`, `affiliate`, `gifted_product`,
   `event_coverage`, `other`. Used by `creator_profiles.preferred_collaboration_types` and
-  `creator_collaboration_history`.
-
-They overlap semantically (both have `affiliate`, `brand_ambassador`) but are **not** the same enum
-and must not be unified — one expresses demand, the other supply. Matching may later map between them.
+  `creator_collaboration_history`. Separate from the other two — do not merge.
 
 ---
 
@@ -165,19 +178,19 @@ FRs it satisfies and its current status.
 
 ### Phase C — Matching transparency + localization *(SRS US-6, US-7, US-8, US-9; FR-9…FR-11, FR-24)* — **[~] partial**
 - `[x]` `POST /campaigns/{id}/run-matching` + `GET /campaigns/{id}/matches`, persisted to `ai_match_scores`
-- `[x]` Pure deterministic scorer (`services/matching.py`): niche .30 / engagement .20 / budget .20 / platform .15 / language .10 / recency .05
+- `[x]` Pure deterministic scorer (`services/matching.py`) with weights externalised to `services/matching_config.py`: niche .35 / budget .30 / platform .15 / engagement .10 / language .08 / recency .02 (rebalanced from SRS FR-11 — see plan §3 D13 and `docs/revisions/srs-revisions-26-06-07.md`)
 - `[x]` Sub-score breakdown UI: all six sub-scores now persisted (`score_niche`, `score_engagement`, `score_budget`, `score_language`, `score_platform`, `score_recency`) + `score_semantic` in `ai_match_scores` (migration 0014); `MatchesClient` renders Platform Fit, Recency, and Semantic Similarity bars alongside the original four
 - `[~]` Rationale is heuristic; Gemini path is optional — formalize a bounded LLM rationale (FR-9)
 - `[~]` Live discovery grid + profile drawer (matches page + creator detail exist; live-filter URL grid partial)
 - `[ ]` **FR-24 full Bangla UI toggle** (D10) — add i18n, translate core flows
 
 ### Phase D — Differentiators: trust, real data, fees *(SRS US-3, US-4, US-11, US-12, US-16, US-19, US-20)* — **[~] partial**
-- `[~]` US-20 ROI summary: brand-dashboard ROI cards done (Sakib C01); per-campaign Day-7/14/30 snapshots pending (C02, blocked on Navid N01/N02)
+- `[~]` US-20 ROI summary: brand-dashboard ROI cards done (Sakib C01); per-campaign Day-7/14/30 snapshots pending (C02 UI done with estimate data; real snapshot data blocked on N10 — engagement snapshots table)
 - `[x]` C03 Creator performance comparison — table in Active Contracts tab comparing accepted creators by niche, followers, proposed vs agreed rate (with savings diff), deliverables, and status; sorted by agreed rate; shown only when 2+ creators accepted
 - `[x]` Budget & ROI Calculator — `/brand/dashboard/campaigns/roi-calculator`; pure client widget; per-tier (nano/micro/macro/mega) reach, engagements, conversions, revenue, ROI % — zero API calls (Sakib D03)
 - `[x]` Rate Card Benchmark — `/brand/dashboard/campaigns/rate-benchmark`; Server Component fetches `/creators/?limit=200`, groups by `platform||deliverable_type||tier`, computes median/min/max; filterable client table (Sakib D04)
 - `[x]` Creator Comparison Tool — `/brand/dashboard/creators/compare`; reads `?ids=` param, fetches up to 3 creators in parallel; side-by-side stat grid (Rating, Collaborations, Available, Platforms, Min Rate, Rate Cards, Niches) + AI brief placeholder pending N05; selection UI with checkbox overlay + sticky compare bar on Find Creators page (Sakib D05)
-- `[ ]` US-2/US-3/US-4 **persist YouTube enrichment** → `creator_social_profiles`; seed 18–20 real BD channels via `channels?handle=`; normalize niche/language/tier at ingestion (Navid, Phase D core)
+- `[x]` US-2/US-3/US-4 **persist YouTube enrichment + real-data seeding + Tier-0 normalization** → `creator_social_profiles` verified via `POST /creators/{creator_id}/platforms/youtube/enrich`; deterministic topic niche, content language, city fallback, and engagement-vs-tier ratio are verified; `backend/scripts/seed_real_youtube_creators.py` seeded 19 real BD YouTube channels plus 38 estimated companion profiles and 190 YouTube portfolio items. Seed bios come from channel/recent-video descriptions, and city is intentionally unset for real YouTube seeds.
 - `[ ]` US-11/FR-12 Authenticity/Trust Score (engagement-vs-tier proxy first; expand signals)
 - `[~]` US-12 five-stage gated pipeline: hard filter + weighted score + optional semantic exist; **formalize the funnel** (Stage labels, top-N gating) and document which stages are active
 - `[x]` US-16/FR-19 simulated per-type fee compute + display — `lib/campaignFees.ts` maps each `campaign_type` to a fee %; campaign list shows fee % column; campaign detail shows 3-cell breakdown (Budget / Platform Fee / Net to Creator) with "Simulated · No real payment" badge

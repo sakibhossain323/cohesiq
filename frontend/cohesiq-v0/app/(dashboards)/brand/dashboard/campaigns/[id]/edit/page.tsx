@@ -29,7 +29,6 @@ export default function EditCampaignPage() {
     title: "",
     description: "",
     visibility: "public",
-    campaign_type: "",
     budget_per_creator_max: "",
     creator_min_followers: "",
     number_of_creators: "",
@@ -56,7 +55,6 @@ export default function EditCampaignPage() {
             title: campaignData.title,
             description: campaignData.description || "",
             visibility: (campaignData as any).visibility || "public",
-            campaign_type: (campaignData as any).campaign_type || "",
             budget_per_creator_max: campaignData.budget_per_creator_max ? campaignData.budget_per_creator_max.toString() : "",
             creator_min_followers: campaignData.creator_min_followers ? campaignData.creator_min_followers.toString() : "",
             number_of_creators: (campaignData as any).number_of_creators ? (campaignData as any).number_of_creators.toString() : "",
@@ -138,7 +136,6 @@ export default function EditCampaignPage() {
         title: formData.title,
         description: formData.description,
         visibility: formData.visibility,
-        campaign_type: formData.campaign_type || null,
         budget_per_creator_max: budget,
         creator_min_followers: minFollowers,
         number_of_creators: numCreators,
@@ -282,31 +279,10 @@ export default function EditCampaignPage() {
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Campaign Type & Goals</CardTitle>
-            <CardDescription>Define the collaboration model, KPI targets, and tracking notes.</CardDescription>
+            <CardTitle>Goals & Tracking</CardTitle>
+            <CardDescription>KPI targets, hashtags, and tracking notes. Engagement type is set on each creator's contract.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="campaign_type">Campaign Type</Label>
-              <Select
-                value={formData.campaign_type || "none"}
-                onValueChange={(val) => setFormData({ ...formData, campaign_type: val === "none" ? "" : val })}
-              >
-                <SelectTrigger id="campaign_type">
-                  <SelectValue placeholder="Select campaign type (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Not specified</SelectItem>
-                  <SelectItem value="paid_content">Paid Content</SelectItem>
-                  <SelectItem value="product_gifting">Product Gifting</SelectItem>
-                  <SelectItem value="affiliate">Affiliate</SelectItem>
-                  <SelectItem value="brand_ambassador">Brand Ambassador</SelectItem>
-                  <SelectItem value="talent_booking">Talent Booking</SelectItem>
-                  <SelectItem value="ugc_only">UGC Only</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="hashtags">Campaign Hashtags</Label>
               <Input

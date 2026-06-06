@@ -67,6 +67,31 @@ Cohesiq is a B2B SaaS Influencer Matching Platform. It utilizes a Modular Monoli
    - User identity is managed by Clerk. The `users` table maps `clerk_id` to our internal `user_id`.
    - Avoid nullable enums; use lookup tables (`niches`, `languages`) for extensible properties.
 
+## Design System
+
+Cohesiq has a defined design system. **All frontend UI work must use design tokens — never hardcode colors, font sizes, spacing, or shadows.**
+
+Full token reference: `docs/design-system.md`
+Live visual showcase: start the stack and visit `/design-system`
+
+### Token files
+
+| File | Purpose |
+|---|---|
+| `frontend/cohesiq-v0/frontend/design/cohesiq.css` | Token definitions (source) |
+| `frontend/cohesiq-v0/app/globals.css` | Tailwind v4 `@theme inline` — exposes all tokens as utility classes |
+| `frontend/cohesiq-v0/app/layout.tsx` | Font loading — `Plus Jakarta Sans` (`--font-display`) + `DM Sans` (`--font-body`) |
+| `frontend/cohesiq-v0/app/(public)/design-system/` | Interactive token showcase |
+
+### Rules
+
+1. **Colors:** use `--brand-primary`, `--brand-secondary`, `--n-*` warm neutral scale, or `--color-*` semantic tokens. No hex literals in new CSS or `style={}` props.
+2. **Typography:** `font-display` for headings, `font-body` for UI text (Tailwind utilities). Font sizes from the `--text-*` modular scale.
+3. **Spacing:** `--space-*` 4px-grid tokens or their Tailwind equivalents. No arbitrary `px` values.
+4. **Dark mode:** all tokens remap automatically in dark mode — do not add `dark:` utility overrides unless handling a genuine one-off that cannot use a token.
+5. **shadcn/ui components** are already wired to the design system bridge tokens — do not override their CSS variables (`--background`, `--primary`, `--ring`, etc.).
+6. Before writing new styles, check `docs/design-system.md` for the correct token name.
+
 ## Environment Variables
 
 - `.env` files must NEVER be committed.

@@ -1,0 +1,77 @@
+/*
+ * DESIGN SYSTEM — specific styles
+ * Mirrors the styles from frontend/design/Cohesiq Design System.html
+ */
+
+.hero-ds { padding-block: var(--space-20) var(--space-12); }
+.hero-ds h1 { font-size: clamp(2.4rem, 5vw, var(--text-6xl)); }
+.hero-ds .grad { background: linear-gradient(100deg, var(--brand-primary), var(--brand-secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero-ds p { color: var(--color-text-secondary); font-size: var(--text-xl); max-width: 56ch; margin-top: var(--space-4); }
+
+.block { padding-block: var(--space-12); border-top: 1px solid var(--color-border); }
+.block > .container-cohesiq > .blabel { display: flex; align-items: baseline; gap: var(--space-4); margin-bottom: var(--space-8); }
+.blabel h2 { font-size: var(--text-3xl); }
+.blabel span { font-family: ui-monospace, monospace; font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.panel { background: var(--color-surface-elevated); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--space-6); box-shadow: var(--shadow-sm); }
+
+/* swatches */
+.swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-4); }
+.swatch { border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--color-border); background: var(--color-surface-elevated); box-shadow: var(--shadow-sm); }
+.swatch .chip { height: 84px; }
+.swatch .meta { padding: var(--space-3); }
+.swatch .nm { font-family: var(--font-display); font-weight: 700; font-size: var(--text-sm); }
+.swatch .vr { font-family: ui-monospace, monospace; font-size: 11px; color: var(--color-text-muted); }
+.scale-row { display: grid; grid-template-columns: repeat(11, 1fr); gap: 8px; }
+.scale-row .s { border-radius: var(--radius-md); border: 1px solid var(--color-border); overflow: hidden; }
+.scale-row .s .c { height: 56px; }
+.scale-row .s .l { font-family: ui-monospace, monospace; font-size: 10px; text-align: center; padding: 4px 0; color: var(--color-text-muted); }
+
+.tokrow { display: grid; grid-template-columns: 28px 1fr auto; gap: var(--space-3); align-items: center; padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border-subtle); }
+.tokrow:last-child { border-bottom: none; }
+.tokrow .sw { width: 28px; height: 28px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); }
+.tokrow code { font-family: ui-monospace, monospace; font-size: var(--text-sm); }
+.tokrow .hex { font-family: ui-monospace, monospace; font-size: var(--text-xs); color: var(--color-text-muted); }
+.tok2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); }
+
+/* type specimens */
+.type-spec { display: flex; flex-direction: column; gap: var(--space-5); }
+.type-row { display: grid; grid-template-columns: 110px 1fr; gap: var(--space-5); align-items: baseline; border-bottom: 1px solid var(--color-border-subtle); padding-bottom: var(--space-4); }
+.type-row .tk { font-family: ui-monospace, monospace; font-size: var(--text-xs); color: var(--color-text-muted); }
+.type-row .smp { font-family: var(--font-display); font-weight: 800; line-height: 1.1; color: var(--color-text-primary); }
+
+/* spacing */
+.space-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.space-row { display: flex; align-items: center; gap: var(--space-4); }
+.space-row .bar { height: 16px; background: var(--brand-primary); border-radius: var(--radius-sm); }
+.space-row code { font-family: ui-monospace, monospace; font-size: var(--text-sm); width: 90px; }
+.space-row .px { font-family: ui-monospace, monospace; font-size: var(--text-xs); color: var(--color-text-muted); }
+
+/* radius + shadow */
+.demo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: var(--space-5); }
+.radius-demo { aspect-ratio: 1; background: var(--brand-primary-soft); border: 2px solid var(--brand-primary); display: grid; place-items: end center; padding-bottom: var(--space-2); }
+.radius-demo span, .shadow-demo span { font-family: ui-monospace, monospace; font-size: 11px; color: var(--color-text-secondary); }
+.shadow-demo { aspect-ratio: 1.4; background: var(--color-surface-elevated); border-radius: var(--radius-lg); display: grid; place-items: end center; padding-bottom: var(--space-2); }
+
+/* components showcase */
+.comp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: var(--space-6); }
+.comp { display: flex; flex-direction: column; gap: var(--space-4); }
+.comp .cl { font-family: ui-monospace, monospace; font-size: var(--text-xs); color: var(--color-text-muted); }
+.row-comp { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
+
+/* Avoid conflicting with landing CSS */
+.badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: var(--radius-full); }
+.badge.primary { background: var(--brand-primary-soft); color: var(--brand-primary); }
+.badge.warm { background: var(--brand-secondary-soft); color: var(--brand-secondary); }
+.badge.neutral { background: var(--color-surface-sunken); color: var(--color-text-secondary); }
+
+.av { width: 46px; height: 46px; border-radius: var(--radius-md); flex: none; background: repeating-linear-gradient(135deg, var(--brand-primary) 0 6px, var(--brand-primary-strong) 6px 12px); }
+.match-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); }
+.match-row .mn { font-family: var(--font-display); font-weight: 700; }
+.match-row .sub { font-size: var(--text-xs); color: var(--color-text-muted); }
+.scoreb { margin-left: auto; text-align: right; }
+.scoreb .pct { font-family: var(--font-display); font-weight: 800; color: var(--brand-primary); }
+.scoreb .bar { width: 64px; height: 6px; border-radius: 3px; background: var(--color-surface-sunken); overflow: hidden; margin-top: 4px; }
+.scoreb .bar i { display: block; height: 100%; width: 92%; background: linear-gradient(90deg, var(--brand-primary), var(--brand-secondary)); }
+
+@media (max-width: 720px){ .tok2 { grid-template-columns: 1fr; } .scale-row { grid-template-columns: repeat(6, 1fr); } .type-row { grid-template-columns: 1fr; } }

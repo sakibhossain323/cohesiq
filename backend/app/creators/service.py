@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 from typing import List
 
 from fastapi import HTTPException, status
@@ -15,6 +16,11 @@ from app.creators.models import (
     CreatorRateCard,
     CreatorSocialProfile,
 )
+from app.common.models import Niche
+from app.creators.normalization import (
+    detect_content_languages,
+    map_youtube_topic_categories,
+)
 from app.creators.schemas import (
     CollabHistoryCreate,
     CreatorFilters,
@@ -27,6 +33,8 @@ from app.creators.schemas import (
     SocialProfileCreate,
     SocialProfileUpdate,
 )
+from app.youtube import service as youtube_service
+from app.youtube.schemas import YouTubeChannelEnrichment, YouTubeRecentVideo
 
 
 # ------------------------------------------------------------------ #
@@ -200,6 +208,247 @@ async def delete_social_profile(
     sp = await get_social_profile(db, creator_id, platform_id)
     await db.delete(sp)
     await db.commit()
+
+
+def build_youtube_social_profile_values(
+    enrichment: YouTubeChannelEnrichment,
+    *,
+    reported_at: datetime,
+) -> dict:
+    handle = enrichment.handle or enrichment.title or enrichment.platform_user_id
+    return {
+        "platform": "youtube",
+        "handle": handle,
+        "profile_url": enrichment.profile_url,
+        "platform_user_id": enrichment.platform_user_id,
+        "api_channel_id": enrichment.platform_user_id,
+        "display_name_on_platform": enrichment.title,
+        "follower_count": enrichment.subscriber_count,
+        "avg_views_per_post": enrichment.avg_views_recent,
+        "avg_likes_per_post": enrichment.avg_likes_recent,
+        "avg_comments_per_post": enrichment.avg_comments_recent,
+        "engagement_rate": enrichment.estimated_engagement_rate,
+        "posts_per_month": enrichment.uploads_per_month,
+        "is_api_verified": True,
+        "api_verified_at": reported_at,
+        "data_source": "verified",
+        "content_languages": enrichment.detected_content_languages
+        or detect_content_languages(enrichment),
+        "stats_reported_at": reported_at,
+        "stats_reported_for_period": f"recent {len(enrichment.recent_videos)} uploads",
+    }
+
+
+def apply_youtube_enrichment_to_social_profile(
+    social_profile: CreatorSocialProfile,
+    enrichment: YouTubeChannelEnrichment,
+    *,
+    reported_at: datetime,
+) -> CreatorSocialProfile:
+    for field, value in build_youtube_social_profile_values(
+        enrichment,
+        reported_at=reported_at,
+    ).items():
+        setattr(social_profile, field, value)
+    return social_profile
+
+
+async def enrich_youtube_social_profile(
+    db: AsyncSession,
+    creator_id: uuid.UUID,
+    *,
+    channel_ref: str,
+    recent_video_limit: int,
+) -> CreatorSocialProfile:
+    try:
+        enrichment = await youtube_service.get_channel_enrichment(
+            channel_ref=channel_ref,
+            recent_video_limit=recent_video_limit,
+        )
+    except youtube_service.YouTubeConfigError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except youtube_service.YouTubeAPIError as exc:
+        status_code = exc.status_code if exc.status_code < 500 else 502
+        raise HTTPException(status_code=status_code, detail=exc.detail) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    result = await db.execute(
+        select(CreatorSocialProfile).where(
+            CreatorSocialProfile.creator_id == creator_id,
+            CreatorSocialProfile.platform == "youtube",
+        )
+    )
+    social_profile = result.scalar_one_or_none()
+    if not social_profile:
+        social_profile = CreatorSocialProfile(creator_id=creator_id, platform="youtube")
+        db.add(social_profile)
+
+    apply_youtube_enrichment_to_social_profile(
+        social_profile,
+        enrichment,
+        reported_at=datetime.now(timezone.utc),
+    )
+    await sync_youtube_ingestion_normalization(
+        db,
+        creator_id=creator_id,
+        enrichment=enrichment,
+    )
+    await import_youtube_recent_videos_to_portfolio(
+        db,
+        creator_id=creator_id,
+        enrichment=enrichment,
+    )
+    await db.commit()
+    await db.refresh(social_profile)
+    return social_profile
+
+
+async def sync_youtube_ingestion_normalization(
+    db: AsyncSession,
+    *,
+    creator_id: uuid.UUID,
+    enrichment: YouTubeChannelEnrichment,
+) -> None:
+    languages = enrichment.detected_content_languages or detect_content_languages(enrichment)
+    for language_code in languages:
+        result = await db.execute(
+            select(CreatorLanguage).where(
+                CreatorLanguage.creator_id == creator_id,
+                CreatorLanguage.language_code == language_code,
+            )
+        )
+        creator_language = result.scalar_one_or_none()
+        if creator_language:
+            creator_language.is_primary = language_code == languages[0]
+        else:
+            db.add(
+                CreatorLanguage(
+                    creator_id=creator_id,
+                    language_code=language_code,
+                    is_primary=language_code == languages[0],
+                )
+            )
+
+    niche_names = map_youtube_topic_categories(enrichment.topic_categories)
+    if not niche_names:
+        return
+
+    result = await db.execute(select(Niche).where(Niche.name.in_(niche_names)))
+    niche_by_name = {niche.name: niche for niche in result.scalars().all()}
+    for index, niche_name in enumerate(niche_names):
+        niche = niche_by_name.get(niche_name)
+        if niche:
+            existing_result = await db.execute(
+                select(CreatorNiche).where(
+                    CreatorNiche.creator_id == creator_id,
+                    CreatorNiche.niche_id == niche.id,
+                )
+            )
+            creator_niche = existing_result.scalar_one_or_none()
+            if creator_niche:
+                creator_niche.is_primary = index == 0
+            else:
+                db.add(
+                    CreatorNiche(
+                        creator_id=creator_id,
+                        niche_id=niche.id,
+                        is_primary=index == 0,
+                    )
+                )
+
+
+async def import_youtube_recent_videos_to_portfolio(
+    db: AsyncSession,
+    *,
+    creator_id: uuid.UUID,
+    enrichment: YouTubeChannelEnrichment,
+    niche_name: str | None = None,
+) -> int:
+    existing_result = await db.execute(
+        select(CreatorPortfolioItem.content_url).where(
+            CreatorPortfolioItem.creator_id == creator_id,
+            CreatorPortfolioItem.platform == "youtube",
+        )
+    )
+    existing_urls = set(existing_result.scalars().all())
+    niche_id = await _resolve_youtube_portfolio_niche_id(
+        db,
+        enrichment,
+        niche_name=niche_name,
+    )
+
+    imported_count = 0
+    for index, video in enumerate(enrichment.recent_videos):
+        values = build_youtube_portfolio_item_values(
+            video,
+            niche_id=niche_id,
+            sort_order=index,
+        )
+        if values["content_url"] in existing_urls:
+            continue
+        db.add(CreatorPortfolioItem(creator_id=creator_id, **values))
+        existing_urls.add(values["content_url"])
+        imported_count += 1
+    return imported_count
+
+
+def build_youtube_portfolio_item_values(
+    video: YouTubeRecentVideo,
+    *,
+    niche_id: int | None,
+    sort_order: int = 0,
+) -> dict:
+    return {
+        "platform": "youtube",
+        "content_url": video.url,
+        "title": _truncate(video.title, 255),
+        "thumbnail_url": _best_thumbnail_url(video),
+        "niche_id": niche_id,
+        "views": video.view_count,
+        "likes": video.like_count,
+        "comments": video.comment_count,
+        "published_at": video.published_at.date() if video.published_at else None,
+        "is_featured": sort_order == 0,
+        "sort_order": sort_order,
+    }
+
+
+async def _resolve_youtube_portfolio_niche_id(
+    db: AsyncSession,
+    enrichment: YouTubeChannelEnrichment,
+    *,
+    niche_name: str | None = None,
+) -> int | None:
+    if niche_name:
+        result = await db.execute(select(Niche).where(Niche.name == niche_name))
+        niche = result.scalar_one_or_none()
+        if niche:
+            return niche.id
+
+    niche_names = map_youtube_topic_categories(enrichment.topic_categories)
+    if not niche_names:
+        return None
+    result = await db.execute(select(Niche).where(Niche.name == niche_names[0]))
+    niche = result.scalar_one_or_none()
+    return niche.id if niche else None
+
+
+def _best_thumbnail_url(video: YouTubeRecentVideo) -> str | None:
+    if not video.thumbnails:
+        return None
+    thumbnails = sorted(
+        video.thumbnails.values(),
+        key=lambda thumbnail: thumbnail.width or 0,
+        reverse=True,
+    )
+    return thumbnails[0].url if thumbnails else None
+
+
+def _truncate(value: str | None, max_length: int) -> str | None:
+    if value is None or len(value) <= max_length:
+        return value
+    return value[: max_length - 1].rstrip()
 
 
 # ------------------------------------------------------------------ #

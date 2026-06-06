@@ -1,0 +1,564 @@
+# Cohesiq Matching Engine Plan
+
+> **Moved from repo root `matching_engine_plan.md` on 2026-06-07.**
+> This is the working reference document for the matching engine architecture, stage strategy, and safe iteration guidance. See also [`srs-revisions-26-06-07.md`](srs-revisions-26-06-07.md) §2 for the formal SRS divergence record on weight changes.
+
+## Purpose
+
+This document is the working plan for touching the matching engine. The matching path is demo-critical:
+brands will judge the product by whether recommended creators feel explainable, locally relevant, and
+commercially plausible. We should not change scoring casually.
+
+The immediate task is N11: align `backend/scripts/test_matching.py` with the live
+`POST /campaigns/{id}/run-matching` path. Before doing that, this plan records what data we have,
+how matching currently works, and what strategy we should use for safe iteration.
+
+## Current Data Available
+
+### Real creator supply
+
+The YouTube pipeline has now seeded:
+
+- 19 real Bangladesh-oriented YouTube channels
+- 19 verified YouTube social profiles
+- 19 estimated Instagram companion profiles
+- 19 estimated TikTok companion profiles
+- 190 YouTube portfolio items from recent uploads
+
+Important source labels:
+
+```text
+youtube   -> data_source = "verified"
+instagram -> data_source = "estimated"
+tiktok    -> data_source = "estimated"
+```
+
+### Creator profile fields now useful for matching
+
+`creator_profiles`:
+
+- `display_name`
+- generated `bio` from public channel and recent-video descriptions
+- `city` intentionally unset for real YouTube seeds, because creator location and content audience are not the same thing
+- `is_available`
+- optional `min_budget`
+
+`creator_social_profiles`:
+
+- platform coverage
+- follower/subscriber count
+- average recent views, likes, comments
+- engagement rate
+- posts per month
+- content languages
+- API verification metadata
+- data source labels
+
+`creator_niches` and `creator_languages`:
+
+- niche from optional Groq classifier, YouTube topic categories, or generic fallback
+- language from deterministic Bangla/English/Banglish detection over recent titles/descriptions
+
+`creator_portfolio_items`:
+
+- recent YouTube content URLs
+- titles
+- thumbnails
+- views, likes, comments
+- published dates
+- normalized niche when available
+
+### Campaign demand data
+
+The matching endpoint uses:
+
+- `campaigns.primary_niche_id`
+- `campaigns.required_platforms`
+- `campaigns.budget_per_creator_max`
+- `campaigns.creator_min_followers`
+- `campaigns.creator_max_followers`
+- `campaign_language_targets`
+- campaign title/description for semantic fallback
+
+## Current Matching Code Path
+
+The live endpoint is:
+
+```text
+POST /campaigns/{campaign_id}/run-matching
+```
+
+Router path:
+
+```text
+backend/app/campaigns/router.py
+```
+
+Service path:
+
+```text
+backend/app/campaigns/service.py::run_campaign_matching
+```
+
+Pure scoring functions:
+
+```text
+backend/app/services/matching.py
+backend/app/services/matching_config.py
+```
+
+Semantic fallback:
+
+```text
+backend/app/services/semantic_match.py
+```
+
+Old experimental script path:
+
+```text
+backend/scripts/test_matching.py
+```
+
+That script used to import `app.services.llm_matching.get_and_generate_matches`, which was not the live path.
+It now exercises `run_campaign_matching`, the same service function used by the live endpoint.
+
+## Current Matching Stages
+
+The current backend is already close to a gated funnel.
+
+### Stage 1: Hard SQL / relational filter
+
+Active today:
+
+- campaign must exist
+- creators loaded with niches, languages, social profiles, and rate cards
+- required platform filter
+- follower min/max filter
+- budget gate via `_passes_budget_gate`
+
+Needed improvements:
+
+- skip unavailable creators when `creator_profiles.is_available = false`
+- prefer verified profile data over estimated/self-reported data when choosing primary matching metrics
+- avoid using city as a hard gate for real YouTube seeds unless campaign explicitly asks for city and the creator has reliable city data
+- keep hard failures hard: missing required platform, unavailable creator, follower range failure, and future direct-competitor conflict should never be rescued by semantic scoring
+- replace exact-budget binary filtering with a hard ceiling plus soft scoring buffer, described below
+
+### Stage 2: Conflict check
+
+Not active yet.
+
+Planned N08:
+
+- check `creator_collaboration_history`
+- detect direct competitor collaboration in the relevant category/window
+- hard-exclude direct competitor conflicts before scoring
+
+This should be relational first, not Neo4j.
+
+Threat model:
+
+- `same niche` is not enough to define a competitor. A food creator who worked with Domino's is not automatically conflicted for every restaurant campaign.
+- competitor logic should compare explicit brand/category metadata, not only creator niche.
+- the 90-day window is a demo default, not a verified Bangladesh market standard. Keep it configurable and document it as a product assumption.
+- for demo trust, direct competitor conflict should be a hard exclude, not a penalty. A brand should not see a creator who is actively tied to a direct competitor.
+
+### Stage 3: Niche and semantic relevance
+
+Active today:
+
+- deterministic niche score
+- if deterministic niche score is zero, semantic similarity can rescue the creator
+- semantic similarity uses Gemini embeddings when available, token fallback otherwise
+
+Strategy:
+
+- keep deterministic niche score primary
+- use semantic fallback only when campaign niche is specific and exact niche match fails
+- do not let semantic similarity override budget/platform gates
+- cap semantic rescue: if deterministic niche score is `0.0`, the rescued niche contribution can never exceed `0.4`
+- log or persist when semantic rescue fires so we can audit why a creator survived exact-niche failure
+- semantic rescue may keep a creator in the lower candidate pool, but should not be able to push them into the top 5 by itself
+
+### Stage 4: Weighted score
+
+Current code weights in `backend/app/services/matching_config.py`:
+
+```text
+niche      0.35
+budget     0.30
+platform   0.15
+engagement 0.10
+language   0.08
+recency    0.02
+```
+
+Previous mismatch now fixed in the Navid task file:
+
+`docs/tasks/tasks-navid.md` used to say older weights:
+
+```text
+niche 0.30 / engagement 0.20 / budget 0.20 / platform 0.15 / language 0.10 / recency 0.05
+```
+
+The source of truth is now `SCORE_WEIGHTS` in `backend/app/services/matching_config.py`. The current weights emphasize commercial fit:
+
+- niche relevance
+- budget realism
+- platform availability
+
+This prevents a massive creator with good engagement from ranking above a correctly-priced niche creator.
+
+Current config:
+
+```python
+SCORE_WEIGHTS = {
+    "niche": 0.35,
+    "budget": 0.30,
+    "platform": 0.15,
+    "engagement": 0.10,
+    "language": 0.08,
+    "recency": 0.02,
+}
+```
+
+Both the service and scripts should import this constant. Docs should reference that file instead of repeating weights in multiple places.
+
+### Stage 5: Rationale
+
+Active today:
+
+- heuristic rationale generated in campaign service
+
+Planned N05:
+
+- bounded Gemini rationale for top-N only
+- 2-3 sentences
+- Bangla/English support
+- deterministic fallback when no API key exists
+
+Strategy:
+
+- never call LLM for every candidate
+- call only after hard filters and score sorting
+- for the hackathon demo, set `N = 5`
+- keep sub-scores as source of truth; rationale explains, not decides
+
+## Critical Engine Decisions Before N11
+
+These are the fixes that matter most before using the script as our matching validation harness.
+
+### 1. Budget: hard ceiling with soft penalty buffer
+
+A binary drop at exactly `budget_per_creator_max` is too brittle. A creator who is 10% above the brand's target can still be commercially plausible; a creator 2x above it is not.
+
+Use this rule:
+
+```text
+if rate <= campaign_max:
+    budget_score = 1.0
+elif rate <= campaign_max * 1.3:
+    budget_score = 1.0 - ((rate - campaign_max) / (campaign_max * 0.3))
+else:
+    hard_drop
+```
+
+Important distinction:
+
+- `campaign_max * 1.3` is the hard ceiling for explicit creator rates.
+- the soft penalty is only a score decay inside that ceiling.
+- the soft penalty must not rescue creators who fail required platform, availability, follower range, or direct-competitor gates.
+- missing creator rate can still use the tier midpoint estimate, but the estimate must go through the same ceiling logic.
+
+### 2. Normalize every sub-score to 0-1
+
+The weighted sum only means something if every component is already normalized to `[0.0, 1.0]`.
+
+Current state:
+
+- niche, platform, language, budget, engagement, and recency functions are intended to return 0-1 scores.
+- follower/subscriber count is used for tiering and tie-breaking, not directly as a weighted raw value.
+- engagement is tier-normalized today, but we should document the benchmark and clamp explicitly.
+
+Lock this invariant in tests:
+
+```text
+0.0 <= score_niche <= 1.0
+0.0 <= score_budget <= 1.0
+0.0 <= score_platform <= 1.0
+0.0 <= score_engagement <= 1.0
+0.0 <= score_language <= 1.0
+0.0 <= score_recency <= 1.0
+0.0 <= score_total <= 1.0
+```
+
+For YouTube engagement, use a clear demo benchmark. A simple Bangladesh-oriented starting rule:
+
+```text
+1% engagement -> 0.0
+7% engagement -> 1.0
+linear clamp between them
+```
+
+Or keep the current tier benchmark approach, but still clamp the result and explain it in the rationale/debug output. Do not mix raw subscriber counts into the weighted sum.
+
+### 3. Recency should penalize unknown activity slightly
+
+Previous code passed `creator_days_since_post=None`, so recency always used the unknown default. The live service now computes recency from portfolio items when available, and unknown activity scores `0.2`.
+
+Use portfolio items once available:
+
+```python
+def compute_recency_score(days_since_post: int | None) -> float:
+    if days_since_post is None:
+        return 0.2
+    if days_since_post <= 7:
+        return 1.0
+    if days_since_post <= 30:
+        return 0.8
+    if days_since_post <= 90:
+        return 0.5
+    return 0.1
+```
+
+Unknown activity should be slightly negative, not treated as average. For the real YouTube seeds, calculate this from `creator_portfolio_items.published_at`.
+
+### 4. Deterministic ranking
+
+Ranking must be stable across refreshes. After computing scores, sort with deterministic tie-breakers:
+
+```python
+matched_creators.sort(
+    key=lambda x: (
+        x.score_total,
+        x.primary_subscriber_count,
+        x.creator_id,
+    ),
+    reverse=True,
+)
+```
+
+If using ORM objects directly, use:
+
+```text
+score_total desc, selected social follower_count desc, creator_id desc
+```
+
+This avoids random-looking swaps when two creators have equal scores.
+
+### 5. Cross-platform deduplication
+
+Creators should appear once per campaign match, not once per social profile.
+
+For campaigns with `required_platforms = ["youtube"]`, match the creator using their verified YouTube profile. For campaigns with multiple or any platforms, choose a primary scoring profile with this order:
+
+1. required platform match
+2. `data_source = "verified"`
+3. `is_primary_platform = true`
+4. highest follower/subscriber count
+
+The displayed match remains the canonical `creator_profile`, with social profiles shown as supporting evidence.
+
+### 6. Language profile should become a distribution
+
+Today language detection stores language presence. For better matching, store or compute a distribution from recent content:
+
+```text
+Bangla 60%
+English 30%
+Banglish 10%
+```
+
+For N11, the script can still validate current language rows. Later, use title/description counts from recent portfolio items to build a weighted language profile.
+
+### 7. Feedback loop
+
+The matching engine needs audit signal, even without ML.
+
+Minimum future signal:
+
+```text
+brand accepted creator
+brand rejected creator
+brand ignored creator
+creator applied
+creator declined
+```
+
+This can live beside `ai_match_scores` or in application/collaboration events. The goal is not immediate machine learning; it is to check whether our scoring predicts real brand choices.
+
+## Recommended Scoring Strategy
+
+### 1. Keep the hard gates strict
+
+Hard gates should prevent obvious bad matches:
+
+- creator does not have required platform
+- follower count outside campaign bounds
+- budget wildly incompatible with creator tier
+- unavailable creator
+- future: conflict-of-interest violation
+
+Hard gates are better than soft penalties for demo trust. A brand should not see creators they obviously cannot use.
+
+### 2. Choose the best social profile carefully
+
+Current code picks:
+
+```text
+primary platform if marked, else highest follower count
+```
+
+With seeded data, this should be refined:
+
+1. Prefer a profile on one of the campaign required platforms.
+2. Prefer `data_source = "verified"`.
+3. If multiple remain, prefer `is_primary_platform`.
+4. Then highest follower count.
+
+This matters because every real creator has:
+
+- verified YouTube
+- estimated Instagram
+- estimated TikTok
+
+For YouTube campaigns, YouTube should clearly drive metrics. For TikTok/Instagram campaigns, estimated rows can participate but should be labelled and possibly scored with lower trust later.
+
+### 3. Treat estimated data as useful but lower confidence
+
+Estimated IG/TikTok rows are demo-enabling but not equivalent to verified YouTube rows.
+
+Current scoring can use them for platform coverage and broad sizing, but future N09/N06 should expose:
+
+```text
+verified > self_reported > estimated
+```
+
+Possible future penalty:
+
+```text
+estimated metric confidence multiplier = 0.85
+```
+
+Do not apply this yet unless the UI can explain it.
+
+### 4. Use portfolio freshness for recency
+
+The live service now computes this from `creator_portfolio_items.published_at` and falls back to the explicit 0.2 unknown-activity penalty above.
+
+Now that we have `creator_portfolio_items.published_at`, recency can be computed:
+
+```text
+days_since_latest_youtube_portfolio_item
+```
+
+This should be added carefully:
+
+- use platform-specific portfolio item when campaign requires one platform
+- fallback to latest portfolio item across platforms
+- if no portfolio item exists, use the low unknown-activity default, not a neutral score
+
+### 5. Do not overfit to city
+
+For real YouTube creators, `city` is intentionally unset. A creator abroad can still produce content for Bangladesh, and a creator in Dhaka can have a global audience.
+
+City should be:
+
+- a soft brand preference when reliable
+- not a hard gate for YouTube creator matching unless campaign explicitly requires local physical presence
+
+## N11 Script Alignment Plan
+
+Goal:
+
+Make `backend/scripts/test_matching.py` validate the same code path used by the app.
+
+### Script behavior
+
+The script should:
+
+1. Find or create a demo campaign with:
+   - active status
+   - public visibility
+   - primary niche present
+   - required platform `youtube`
+   - realistic BDT budget
+   - follower bounds compatible with seeded creators
+   - Bangla language target
+2. Call `run_campaign_matching(session, campaign_id)`.
+3. Print:
+   - campaign ID/title
+   - number of matches
+   - each matched creator
+   - total score
+   - sub-scores
+   - rationale
+4. Verify:
+   - at least one match exists
+   - scores are sorted descending
+   - each match has persisted platform, recency, semantic, and total scores
+5. Avoid calling `app.services.llm_matching.get_and_generate_matches`.
+
+### Why service-layer call over HTTP first
+
+For backend validation, calling `run_campaign_matching` directly is enough to exercise the same service path
+as the live endpoint, without needing auth headers.
+
+HTTP route smoke testing can be a second step if needed:
+
+```text
+POST /campaigns/{id}/run-matching
+```
+
+But the first correction is to stop using the dead experimental LLM script.
+
+## Immediate Risks To Check Before Editing Matching
+
+1. Docker verification is still needed for `scripts.test_matching` against seeded data.
+2. `N04` may be stale because score platform/recency/semantic already exist, but rank may not.
+3. `creator_social_profiles.data_source` influences primary profile selection, but estimated-data confidence penalties are still deferred until the UI can explain them.
+4. Conflict-of-interest is still planned but not active.
+5. Language profile is still binary presence, not a distribution.
+
+## Safe Implementation Order
+
+1. Run Docker tests and `scripts.test_matching` against seeded data.
+2. Inspect persisted scores and verify top results look commercially plausible.
+3. If no matches, inspect campaign seed setup before changing weights.
+4. Add stored rank only if the API/UI needs it.
+5. Add top-5 LLM rationale only after the deterministic engine output is stable.
+6. Implement direct-competitor conflict check.
+7. Upgrade language matching from binary presence to distribution.
+
+## Verification Commands
+
+Seed data first:
+
+```bash
+docker compose exec backend alembic upgrade head
+docker compose exec backend python -m scripts.seed_real_youtube_creators
+```
+
+Run matching script:
+
+```bash
+docker compose exec backend python -m scripts.test_matching
+```
+
+Inspect persisted scores:
+
+```bash
+docker compose exec postgres psql -U cohesiq -d cohesiq -c "
+SELECT score_total, score_niche, score_budget, score_platform, score_engagement, score_language, score_recency, score_semantic
+FROM ai_match_scores
+ORDER BY score_total DESC
+LIMIT 10;
+"
+```
+
+Health checks:
+
+```bash
+docker compose ps
+docker compose logs --tail 50 backend
+```

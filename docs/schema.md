@@ -27,9 +27,9 @@ and a new row.
 
 **4. All fields in `creator_social_profiles` are manually enterable.**
 No field in this table requires an API call. A creator fills in their own stats.
-Later, a sync layer can overwrite the same columns with API-verified values
-by adding `is_verified BOOLEAN` and `last_verified_at TIMESTAMPTZ` columns.
-The data model does not change.
+The YouTube enrichment sync can overwrite the same metric columns with API-verified values
+and marks those rows with `is_api_verified`, `api_verified_at`, `api_channel_id`, and
+`data_source = 'verified'`.
 
 **5. Soft deletes only where recovery matters.**
 `users`, `creator_profiles`, `brand_profiles` use `deleted_at` for soft delete.
@@ -291,9 +291,7 @@ CREATE INDEX idx_creator_profiles_country ON creator_profiles(country_code);
 
 ```sql
 -- One row per platform per creator.
--- All metric fields are SELF-REPORTED by the creator.
--- Later: add is_api_verified + last_verified_at columns to mark API-confirmed values.
--- The columns themselves do not change — only the verification flag gets added.
+-- Metric fields start as self-reported, then can be overwritten by API-verified enrichment.
 CREATE TABLE creator_social_profiles (
     id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     creator_id           UUID NOT NULL REFERENCES creator_profiles(id) ON DELETE CASCADE,
@@ -303,6 +301,7 @@ CREATE TABLE creator_social_profiles (
     handle               VARCHAR(255) NOT NULL,   -- @username or channel name
     profile_url          TEXT NOT NULL,            -- Full URL to their profile
     platform_user_id     VARCHAR(255),             -- Platform's internal ID (if known)
+    api_channel_id       VARCHAR(255),             -- API-confirmed channel/account ID
     display_name_on_platform VARCHAR(120),         -- Name as shown on the platform
 
     -- Audience size (self-reported, approximate)
@@ -327,6 +326,9 @@ CREATE TABLE creator_social_profiles (
     account_created_year SMALLINT,                 -- Year they joined the platform
     is_monetized         BOOLEAN DEFAULT FALSE,    -- YouTube Partner, Meta Stars, etc.
     has_verified_badge   BOOLEAN DEFAULT FALSE,    -- Blue tick / checkmark
+    is_api_verified      BOOLEAN DEFAULT FALSE,    -- Public API confirmed this row's stats
+    api_verified_at      TIMESTAMPTZ,              -- When the public API last confirmed stats
+    data_source          VARCHAR(30) DEFAULT 'self_reported', -- self_reported|verified|estimated
 
     -- Audience demographics (self-assessed by creator from their analytics)
     audience_country_primary   CHAR(2) DEFAULT 'BD',   -- ISO: primary audience country
@@ -786,24 +788,88 @@ languages (1) ── (many) campaign_language_targets
 
 ### `campaigns` — campaign type & KPI columns (migration `0013_add_campaign_type_and_kpis`)
 ```sql
--- The six collaboration models (brand demand side). Distinct from the creator-side
--- `collaboration_type` enum — see docs/plan.md §3.1. Do NOT merge the two.
+-- ⚠️  DEPRECATED: campaign_type is soft-deprecated as of migration 0015 (2026-06-06).
+-- Engagement type now lives on the Contract entity (contracts.contract_type).
+-- campaign_type is nullable with no default — do NOT write new values here.
+-- Safe to DROP once all remaining code references are removed.
+-- See docs/plan.md §3.1 and docs/revisions/srs-revisions-26-06-06.md §8 for the deprecation policy.
 CREATE TYPE campaign_type AS ENUM (
     'paid_content', 'product_gifting', 'affiliate',
     'brand_ambassador', 'talent_booking', 'ugc_only'
 );
 ALTER TABLE campaigns
-    ADD COLUMN campaign_type   campaign_type DEFAULT 'paid_content',
+    ADD COLUMN campaign_type   campaign_type,      -- nullable, no default (deprecated)
     ADD COLUMN kpi_targets     JSONB,              -- {reach, engagement_rate, conversions, roi_target}
     ADD COLUMN hashtags        TEXT[] DEFAULT '{}',
     ADD COLUMN tracking_notes  TEXT;
 ```
 
-### `ai_match_scores` — AI matching results (migration `53f8d9a8a155`)
+### `contracts` — engagement contracts (migration `0015_add_contract_model`)
+```sql
+-- First-class contract entity. One contract per accepted campaign application.
+-- Absorbs engagement type (formerly campaign_type) and owns the execution state machine.
+-- Navid-safe: Contract FKs to campaign_applications.id — no changes to matching fields.
+
+CREATE TYPE contract_type AS ENUM (
+    'content_collaboration',   -- creator publishes branded content on their channels
+    'product_seeding',         -- brand sends product; creator engages authentically
+    'talent_engagement'        -- creator appears at or hosts a live event/activation
+);
+CREATE TYPE contract_status AS ENUM (
+    'drafted', 'active', 'in_production', 'content_submitted',
+    'content_approved', 'published', 'closed', 'disputed'
+);
+CREATE TYPE payment_schedule_type AS ENUM ('upfront', 'on_delivery', 'milestone');
+CREATE TYPE product_disposition_type AS ENUM ('keep', 'return');
+
+CREATE TABLE contracts (
+    id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    application_id          UUID NOT NULL UNIQUE REFERENCES campaign_applications(id) ON DELETE CASCADE,
+    brand_id                UUID NOT NULL REFERENCES brand_profiles(id) ON DELETE CASCADE,
+    creator_id              UUID NOT NULL REFERENCES creator_profiles(id) ON DELETE CASCADE,
+    contract_type           contract_type NOT NULL,
+    status                  contract_status NOT NULL DEFAULT 'active',
+    -- Payment clause
+    payment_structure       VARCHAR(20) NOT NULL DEFAULT 'none',   -- 'flat_fee' | 'none'
+    payment_amount_bdt      INTEGER,
+    payment_schedule        payment_schedule_type,
+    -- Product transfer clause (product_seeding only)
+    has_product_transfer    BOOLEAN NOT NULL DEFAULT false,
+    product_disposition     product_disposition_type,
+    -- Deliverable clause
+    deliverable_notes       TEXT,
+    -- Exclusivity clause
+    exclusivity_days        SMALLINT,
+    usage_rights_days       SMALLINT,
+    -- Revision clause
+    max_revision_rounds     SMALLINT NOT NULL DEFAULT 2,
+    revisions_used          SMALLINT NOT NULL DEFAULT 0,
+    -- Kill fee clause
+    kill_fee_percentage     SMALLINT,
+    -- Content submission
+    draft_content_url       TEXT,
+    live_post_url           TEXT,
+    -- Platform fee locked at contract creation
+    platform_fee_percentage SMALLINT,  -- content_collaboration=15, product_seeding=10, talent_engagement=18
+    -- Audit trail timestamps
+    contracted_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
+    in_production_at        TIMESTAMPTZ,
+    submitted_at            TIMESTAMPTZ,
+    approved_at             TIMESTAMPTZ,
+    published_at            TIMESTAMPTZ,
+    closed_at               TIMESTAMPTZ,
+    updated_at              TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX ix_contracts_brand_id   ON contracts(brand_id);
+CREATE INDEX ix_contracts_creator_id ON contracts(creator_id);
+CREATE INDEX ix_contracts_status     ON contracts(status);
+```
+
+### `ai_match_scores` — AI matching results (migrations `53f8d9a8a155`, `0014_add_platform_recency_semantic_to_match_scores`)
 ```sql
 -- Live table. One row per (campaign, creator) ranked match.
--- NOTE: platform/recency/semantic_similarity/rank are planned but not yet persisted
--- here — see docs/plan.md Phase C. Current columns:
+-- All six sub-scores and semantic boost are now persisted (migration 0014).
 CREATE TABLE ai_match_scores (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     campaign_id       UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
@@ -812,6 +878,9 @@ CREATE TABLE ai_match_scores (
     score_engagement  FLOAT,
     score_budget      FLOAT,
     score_language    FLOAT,
+    score_platform    FLOAT,    -- added migration 0014: platform match sub-score (0–1)
+    score_recency     FLOAT,    -- added migration 0014: content recency sub-score (0–1)
+    score_semantic    FLOAT,    -- added migration 0014: Gemini semantic boost (0–1, nullable — only when semantic rescue fires)
     score_total       FLOAT,
     rationale         TEXT,
     generated_at      TIMESTAMPTZ DEFAULT NOW(),
@@ -823,28 +892,23 @@ CREATE TABLE ai_match_scores (
 `campaign_visibility` plus `archived` were added to the campaign lifecycle; `application_status`
 gained `invited` / `declined` for brand-initiated invitations.
 
-### YouTube ingestion (no schema yet — stateless wrapper)
-`app/youtube/` is a **read-only public-API client**; it does not persist. The next unit maps its
-`enrichment` output onto `creator_social_profiles` (overwriting the self-reported metric columns,
-plus the `is_api_verified` flag below). See `docs/tasks/tasks-navid.md`.
+### YouTube ingestion
+`app/youtube/` is a **read-only public-API client**; it does not persist. The creator domain exposes
+`POST /creators/{creator_id}/platforms/youtube/enrich`, which maps its `enrichment` output onto
+`creator_social_profiles` and sets `is_api_verified`, `api_verified_at`, `api_channel_id`, and
+`data_source = 'verified'`.
+
+### `creator_social_profiles` — unique platform row restored (migration `0017`)
+Migration `53f8d9a8a155` unintentionally dropped `uq_social_creator_platform`; migration `0017`
+restores `UNIQUE(creator_id, platform)` so enrichment and seed scripts can safely upsert one row
+per creator/platform.
 
 ---
 
 ## Extension Points (still future)
 
-These columns and tables are intentionally absent.
+These remaining columns and tables are intentionally absent.
 Add them without modifying existing tables.
-
-### Adding API-verified social stats (no schema change)
-```sql
--- Add to creator_social_profiles:
-ALTER TABLE creator_social_profiles
-    ADD COLUMN is_api_verified    BOOLEAN DEFAULT FALSE,
-    ADD COLUMN api_verified_at    TIMESTAMPTZ,
-    ADD COLUMN api_channel_id     VARCHAR(255);  -- Platform's internal channel ID
--- The existing metric columns (follower_count, avg_views, etc.) get overwritten
--- by the sync service. Same columns, now API-sourced instead of self-reported.
-```
 
 ### Adding content embeddings for semantic matching (pgvector)
 ```sql
@@ -860,9 +924,8 @@ Neo4j syncs from PostgreSQL. No schema change here.
 `campaign_applications` becomes the COLLABORATED_WITH edge.
 
 ### Adding AI match scores
-> ✅ **Implemented** — see "Implemented Since Phase 1" above (`ai_match_scores`, migration `53f8d9a8a155`).
-> Remaining work (persist `score_platform`, `score_recency`, `semantic_similarity`, `rank`) is
-> tracked in `docs/plan.md` Phase C.
+> ✅ **Fully implemented** — see "Implemented Since Phase 1" above (`ai_match_scores`, migrations `53f8d9a8a155` + `0014`).
+> All six sub-scores and `score_semantic` are now persisted. Stored `rank` column deferred (N04 — derivable from sorted response order).
 
 ### Adding payments and escrow
 ```sql

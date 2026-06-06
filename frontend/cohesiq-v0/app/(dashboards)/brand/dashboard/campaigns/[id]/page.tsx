@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { getCampaignById, getCampaignMatches } from "@/lib/api/campaigns";
 import { getApplicationsByCampaignId } from "@/lib/api/applications";
+import { listBrandContracts } from "@/lib/api/contracts";
 import { CampaignDetailClient } from "./_components/CampaignDetailClient";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -32,18 +33,20 @@ export default async function BrandCampaignDetailPage({ params }: PageProps) {
     );
   }
 
-  const [applications, matches] = await Promise.all([
+  const [applications, matches, contracts] = await Promise.all([
     getApplicationsByCampaignId(id, token),
     getCampaignMatches(id, token),
+    listBrandContracts(token, id),
   ]);
 
   return (
     <div className="flex flex-col min-h-full bg-background">
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <CampaignDetailClient 
-          campaign={campaign} 
-          applications={applications} 
-          initialMatches={matches || []} 
+        <CampaignDetailClient
+          campaign={campaign}
+          applications={applications}
+          initialMatches={matches || []}
+          initialContracts={contracts}
         />
       </main>
     </div>

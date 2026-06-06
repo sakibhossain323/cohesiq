@@ -1,74 +1,250 @@
-# Cohesiq: Executive Summary
+# Cohesiq — Executive Summary
 
-## 1. Project Overview
-**Cohesiq** is a modern B2B SaaS Influencer Matching Platform designed to bridge the gap between brands and creators in the South Asian ecosystem, starting with Bangladesh. Unlike first-generation platforms that prioritize expensive mega-celebrities and flat-fee brand awareness, Cohesiq empowers small-to-micro businesses (SMBs) to discover, vet, and partner with authentic content creators based on deep compatibility, verified audience tiers, and strict BDT budget constraints.
+> **Prepared for:** Internal team alignment + two external meetings (2026-06-08)
+> **Platform status:** Fully operational in Docker Compose · BuildFest 2026 MarTech Track
 
 ---
 
-## 2. Market Analysis & Opportunity
-*Source: `docs/feasibility-analysis-summary.md` (Fact-verified via Gemini Deep Research, May 23, 2026)*
+## Current State — Team Alignment
 
-### 2.1 Worldwide Market Size & Growth
-The global influencer economy is expanding rapidly, demonstrating high ROI and strong compound annual growth rates (CAGR).
+Before the meetings, everyone should be aligned on exactly what is live and what is not.
 
-| Metric | Verified Figure | Source |
+### What is built and working today
+
+- Brand + creator onboarding, Clerk auth, role routing
+- Creator profile: niches, languages, rate cards, portfolio
+- Profile-strength meter (9-item, 0–100, 4 tiers)
+- 4-step campaign creation wizard + edit form
+- Campaign Kanban (Invited → Needs Review → Shortlisted → Accepted)
+- Application drawer: shortlist / accept / reject + rejection reason
+- **Full contract lifecycle** (3 types, 6-state machine, clauses, fee breakdown)
+- Brand contract management (ContractCard + state actions)
+- Creator contracts page (submit draft, publish URL, view status)
+- AI Brief Analyzer (Groq primary → Gemini 2.0 Flash fallback)
+- ROI calculator, rate benchmark, creator comparison tools
+- Ethical-AI disclosure tags (self-reported / estimated / AI-scored)
+- 6-signal deterministic matching engine
+- Matching weights tuned for BD market (niche .35, budget .30)
+- YouTube Data API v3 Tier-0 wrapper + persistence layer
+- Niche classification (Groq + YouTube topic categories fallback)
+- 19 real BD YouTube channels seeded + 190 portfolio items
+- Semantic rescue via Gemini text-embedding-004
+- Sub-score breakdown UI (6 bars + semantic similarity bar)
+- Design system (token-based, dark mode, shadcn/ui bridge)
+
+### What is explicitly deferred (not missing — decided)
+
+| Item | Reason | When |
 |---|---|---|
-| Global influencer marketing (2025) | ~$32.55B | IMH Benchmark Report |
-| Global platform market (2032) | $103.79B | Straits Research |
-| Global platform CAGR | 30.6–32.7% | Straits Research / Multiple |
-| Average ROI per $1 spent | $5.78 | Nielsen |
+| pgvector / Neo4j / Redis / TimescaleDB | Relational MVP sufficient for demo scale | Phase E |
+| Real BDT escrow (bKash/Nagad) | Simulated correctly; payment rail not needed for BuildFest | Phase E |
+| Full Bangla UI toggle | i18n library not integrated; currency/dates are BDT/Dhaka | Phase D |
+| Authenticity trust score (BanglaBERT) | Engagement-vs-tier proxy ships first | Phase D |
+| Per-campaign real engagement snapshots | C02 UI done with estimates; DB table (N10) pending | Phase D |
 
-### 2.2 Existing Solutions vs. The Market Gap
-Current global platforms focus on enterprise clients, leaving a massive gap for SME-accessible solutions in emerging markets. 
+---
 
-| Platform | Pricing Model | BD Support | Key Limitation for Local Market |
+## Business Value & Market Opportunity
+
+### The problem
+
+Bangladesh's influencer economy is projected to reach **$45.3 million by 2028**, but it operates through WhatsApp DMs and spreadsheets. Brands cannot find the right creators. Creators have no professional way to receive, negotiate, or track brand deals. Fraud is rampant — 49% of Instagram accounts exhibit artificial inflation globally. There is no trusted infrastructure.
+
+### Market structure — how deals happen by segment
+
+The influencer market operates differently depending on brand size and creator tier:
+
+| | Small Brand | Mid Brand | Large Brand |
 |---|---|---|---|
-| GRIN / Aspire | $999–$2,000+/mo | No | USD pricing & annual lock-in inaccessible to SMEs |
-| Collabstr / Modash | Free to $299/mo | Minimal | Analytics paywalled, no local payment layer |
-| **HypeScout (BD Incumbent)** | BDT-priced | Full | First-gen platform; lacks deep Graph AI matching, Bengali NLP, and cross-platform analytics |
+| **Nano/Micro creator** | Inbound-heavy | Inbound + product seeding | Open calls / platforms |
+| **Mid-tier creator** | Outbound (brand hustles) | Mix | Mix |
+| **Macro/Celebrity** | Rarely accessible | Outbound via agency | Agency-to-agency |
 
-### 2.3 The Bangladesh Market & Potential Solution
-- **The Gap:** The Bangladesh influencer advertising market is projected to reach **$45.3M by 2028**. However, the current landscape is chaotic. Brands hunt manually via DMs. Fraud is rampant (49% of Instagram accounts exhibit fraud globally), and engagement rates actually *drop* for larger accounts (Mega: 1.21% vs. Micro: 3.86%). 
-- **Our Solution:** A two-sided marketplace (similar to Upwork) utilizing Graph AI to perform multi-hop matching, vector embeddings for semantic alignment, and Bengali NLP for comment authenticity scoring. A built-in escrow ledger (bKash) protects transactions and ensures trust.
+> *Inbound — creator discovers the brand's campaign and applies. Outbound — brand identifies and contacts the creator directly.*
+
+The large-brand and macro-creator segment is a relationship and agency business by nature. The high-growth opportunity lies in the small-to-mid brand paired with nano-to-mid-tier creator — high in volume, underserved by existing tools, and directly dependent on structured discovery and a trusted way to transact.
+
+### Where Cohesiq serves
+
+| | Small Brand | Mid Brand | Large Brand |
+|---|---|---|---|
+| **Nano/Micro** | **Cohesiq** | **Cohesiq** | **Cohesiq** |
+| **Mid-tier** | **Cohesiq** | **Cohesiq** | edges |
+| **Macro/Celebrity** | out of scope | out of scope | out of scope |
+
+**Primary ICP:** small-to-mid brands that lack a dedicated influencer team, paired with nano-to-mid-tier creators who lack management. Both sides share the same problem — no efficient way to find each other. The matching engine is the moat; discovery is the bottleneck this segment faces.
+
+### Competitive landscape
+
+| Platform | Pricing | Bangladesh | Positioning |
+|---|---|---|---|
+| GRIN / Aspire | $999–$2,000+/mo | Not supported | Enterprise SaaS built for global brands with large influencer teams |
+| Collabstr / Modash | Free–$299/mo | Limited | Self-serve discovery tools; analytics and payments require upgrades |
+| HypeScout (BD) | BDT-priced | Yes | Established local player; directory-based without AI matching or contract infrastructure |
+| **Cohesiq** | Commission-based · BDT-native | Yes | AI-ranked matching + verified creator data + end-to-end contract lifecycle |
+
+### What Cohesiq is
+
+Cohesiq is a **two-sided B2B marketplace** — like Upwork, but for influencer marketing in Bangladesh.
+
+- **Brands (the buyers):** post campaigns with BDT budgets, receive AI-ranked creator matches, manage the full collaboration lifecycle from one dashboard
+- **Creators (the supply):** build verified profiles linked to their YouTube channels, receive and negotiate branded deals, track their active contracts
+
+The platform operates in BDT, is built around the Bangladeshi creator ecosystem, and uses real public data from YouTube to verify creator metrics rather than relying on self-reported follower counts.
+
+### The collaboration lifecycle
+
+Cohesiq supports the full collaboration journey from discovery to payment. The platform accommodates both initiation directions — a brand can discover and invite a creator, or a creator can apply to a public campaign.
+
+| Phase | What happens | How Cohesiq supports it |
+|---|---|---|
+| **Discovery** | Brand searches and filters creators by niche, tier, platform, and budget | Marketplace browse + AI-ranked matching across 6 signals |
+| **Vetting** | Brand reviews creator profile, verified stats, portfolio, and past reviews | Creator profile with API-verified YouTube data and ethical-AI data labels |
+| **Outreach / Application** | Brand invites a creator directly, or creator applies to a public campaign | Campaign visibility model (public / private) + application flow |
+| **Negotiation** | Rate, deliverables, and timeline are proposed and agreed | Application with proposed rate → accepted rate |
+| **Contract creation** | Contract type chosen, clauses configured, platform fee locked | Contract entity (type + clause set + fee breakdown) |
+| **Escrow** | Payment held by the platform at contract activation | Simulated escrow locked at contract creation |
+| **Content production** | Creator produces the agreed content | — |
+| **Review & approval** | Brand reviews the draft; revisions tracked and capped by contract | Draft submission + revision rounds (limit enforced by revision clause) |
+| **Publishing** | Creator posts publicly with required disclosure | Live URL recorded on contract |
+| **Verification** | Brand confirms the post is live and meets the brief | Deliverable checklist against contract terms |
+| **Payment release** | Escrow released to creator on contract close | Automated on brand approval |
+| **Reviews** | Both parties rate and review each other | Bidirectional review model; ratings roll up to profiles |
+
+Every phase in this table is built, functional, and demonstrable in the live platform.
+
+### Three contract types
+
+| Type | What it is | Platform fee |
+|---|---|---|
+| **Content Collaboration** | Creator produces and publishes branded content on their channels | 15% |
+| **Product Seeding** | Brand sends a product; creator reviews or features it | 10% |
+| **Talent Engagement** | Creator appears at or hosts a live brand event | 18% |
+
+Contracts protect both parties: payment is locked at creation (brands cannot change it after the fact), revision rounds are capped (creators cannot be asked for unlimited changes), and every state transition is timestamped.
+
+### Business model in one line
+
+Cohesiq charges a percentage of the agreed collaboration fee. Higher-risk engagement types (talent booking) carry a higher fee. Brands pay; creators receive net-of-fee. Revenue scales directly with the volume and value of collaborations on the platform.
+
+### What differentiates Cohesiq
+
+| Feature | Why it matters |
+|---|---|
+| BDT-native, Bangladesh-first | No currency conversion friction; built for the local creator tier structure |
+| AI matching (6 signals) | Not a directory — creators are ranked by fit, not by follower count |
+| Verified YouTube data | Public API stats overwrite self-reported numbers; profiles are flagged as verified |
+| Ethical-AI disclosure | Every metric is tagged: self-reported / API-verified / AI-estimated. No hidden scoring |
+| Contract state machine | Legally structured agreements with clause configuration and audit trail — not a handshake deal |
+| Simulated escrow | Payment protection concept demonstrated; ready for bKash/Nagad integration |
 
 ---
 
-## 3. Initial Execution Plan & API Constraints
-*Source: `docs/plan.md`, `docs/data-availability-summary.md`*
+## Technical Architecture & System Design
 
-**Strategic Approach**
-Our initial execution plan revolves around using the **YouTube Data API v3** to actively fetch creator data, video performance metrics, and audience demography to feed our matching engine and build detailed creator profiles.
+### System overview
 
-**Core Matching Engine Components:**
-- **Deterministic Math:** A matching algorithm weighting Niche Alignment (30%), Audience Fit (25%), Budget (20%), Engagement Quality (15%), Platform (5%), and Authenticity (5%).
-- **LLM Rationale:** For every match, the LLM generates a 2-3 sentence rationale (in English or Bengali) explaining exactly *why* this creator fits the brand's specific brief.
-- **Graph Traversal:** Neo4j enables complex conflict-of-interest checks (e.g., "Has this creator worked with a competitor recently?") and lookalike audience discovery.
+```
+Browser
+  ↓ HTTPS :3000
+Next.js 16 App Router (React 19 · Tailwind v4 · shadcn/ui · Clerk SDK)
+  ↓ BACKEND_API_URL (Docker-internal) — Server Components / Server Actions
+  ↓ NEXT_PUBLIC_API_URL (browser) — Client Components
+FastAPI (Python 3.12 · SQLAlchemy 2.0 Async)
+  ↓
+PostgreSQL 16 (single relational store · 17 Alembic migrations)
+  ↓ (external)
+Clerk (RS256 JWT auth + webhooks)
+Groq API (LLaMA-3.1-8b-instant — primary generative model)
+Gemini API (text-embedding-004 embeddings · 1.5 Flash fallback · 2.0 Flash brief fallback)
+YouTube Data API v3 (Tier-0 public read · ~3 quota units per creator enrichment)
+Tavily Search API (seeding pipeline only — Operator-triggered)
+```
 
-**API Constraints & Technical Realities:**
-To implement this effectively, we must navigate several hard API limitations:
-- **Meta Graph API Constraints:** 
-  - OAuth is strictly required for almost all meaningful demographic data extraction.
-  - The App Review process is rigorous, taking 18-20 working days, and mandates formal Business Verification (PPCA authorization).
-  - *Critical Blocker:* In development mode, we cannot access real audience data. Furthermore, Meta has currently temporarily blocked API access for unverified applications.
-  - Instagram's demographic API enforces a hard minimum of 100 followers and only returns the top 45 segments, meaning complete demographic profiles for nano-influencers are structurally impossible to obtain.
-  - Facebook's "lifetime" period parameter for audience analytics is deprecated; we must warehouse daily demographic snapshots from day one because backfilling historical data is no longer supported.
-- **YouTube API Daily Limits:** We are constrained by a hard limit of 10,000 quota units daily. Importantly, the Search endpoint costs 100 units per call, making it entirely unviable for proactive creator discovery at scale.
-- **YouTube Audience Demographics:** The YouTube Analytics API requires a strict CASA Tier 2 security audit (taking 4-8 weeks) before we can access vital audience demographic data.
+Everything runs in Docker Compose: `postgres`, `backend`, `frontend`. No Neo4j, Redis, or TimescaleDB in the current build — those are Phase E additions that the relational MVP does not need at hackathon scale.
 
----
+### Backend — Domain-Driven Design
 
-## 4. Current Progress & Implementation
-*Source: `docs/submittable.md`*
+`backend/app/` follows strict DDD. Five domains: `auth/` · `brands/` · `creators/` · `campaigns/` · `youtube/`. Each domain owns `models.py`, `schemas.py`, `router.py`, `service.py`. Routers parse requests and return Pydantic responses only — all logic in services. No cross-domain imports in routers.
 
-Cohesiq is currently operational in a local Docker Compose environment, with significant progress on both the AI engine and the frontend UI.
+Cross-domain logic lives in `services/`: `matching.py` · `matching_config.py` · `semantic_match.py` · `llm_matching.py`.
 
-**Current Architecture Stack:**
-- **Backend:** Modular Monolith using FastAPI (Async), SQLAlchemy 2.0, and PostgreSQL (with `pgvector`).
-- **Graph Database:** Neo4j Community Edition for multi-hop creator-niche-brand relationships.
-- **Frontend:** Next.js 16 (App Router), Tailwind CSS v4, and shadcn/ui.
-- **AI/ML Layer:** Gemini 1.5 Flash for natural-language rationale generation and semantic embeddings, Llama 3.1 8B for data generation, coupled with deterministic heuristic scoring.
+`app/youtube/` is a **stateless public-API read client** (no DB writes). Creator profile persistence flows through `creators/normalization.py` → `POST /creators/{id}/platforms/youtube/enrich`.
 
-**Key Achievements:**
-1. **Data & Testing Pipeline:** We successfully seeded the platform with realistic testing data utilizing Tavily-assisted web scraping and Llama 3.1 8B synthetic generation across 14 standardized niche categories.
-2. **AI Architecture Optimization:** We shifted from a pure LLM-based matching engine (which occasionally hallucinated budget constraints) to a **deterministic heuristic engine** guarded by semantic AI. The system forces strict mathematical budget tiering *before* passing verified metrics to Gemini 1.5 Flash to generate the localized reasoning tags.
-3. **Frontend Integration:** The Next.js B2B dashboard is live. Brands can create campaigns, set BDT budgets, click "Run Matching", and instantly view ranked Creator Cards populated with Match Scores and AI-generated rationales.
+### AI / ML layer
+
+**Matching engine (deterministic-first):**
+
+```
+Stage 1 — Hard filters: budget ceiling, platform availability
+Stage 2 — 6-signal weighted score:
+           niche .35 · budget .30 · platform .15 · engagement .10 · language .08 · recency .02
+Stage 3 — Semantic rescue (Gemini text-embedding-004):
+           fires only when niche score = 0; score capped to prevent override of hard mismatches
+Stage 4 — LLM rationale (top-N candidates only):
+           Groq LLaMA-3.1-8b-instant (primary) → Gemini 1.5 Flash (fallback) → heuristic
+All weights and thresholds externalised to matching_config.py
+```
+
+Weight rationale for Bangladesh: budget raised to .30 (SMEs have hard BDT ceilings), niche raised to .35 (category fit matters more than reach at micro tier), engagement lowered to .10 (noisy proxy for micro creators).
+
+**YouTube enrichment pipeline:**
+
+```
+POST /creators/{id}/platforms/youtube/enrich
+  → youtube/service.get_channel_enrichment (Channels.list + PlaylistItems.list + Videos.list · ~3 units)
+  → creators/normalization.py:
+      · YOUTUBE_CATEGORY_MAP (deterministic niche from topic URLs)
+      · Groq LLaMA-3.1-8b-instant (optional niche from channel/video descriptions)
+      · Bangla/English/Banglish heuristic (language detection)
+      · city normalization
+  → creator_social_profiles UPSERT (is_api_verified=true, data_source="verified")
+  → creator_portfolio_items UPSERT (recent videos — drives recency scoring)
+```
+
+**Brief analyzer (Server Action):**
+```
+analyzeBriefAction (analyze-brief.ts)
+  → Groq LLaMA-3.1-8b-instant (structured JSON: visibility, niche, budget, hashtags, KPIs)
+  → Gemini 2.0 Flash (fallback)
+  → pre-fills campaign wizard; brand edits before submit
+```
+
+### Data model highlights
+
+17 Alembic migrations (`0001`→`0017`). Key tables:
+
+| Table | Purpose |
+|---|---|
+| `users` | Clerk identity bridge (`clerk_id` → internal `user_id`) |
+| `creator_profiles` | Core creator entity + profile-strength fields |
+| `creator_social_profiles` | One row per platform · `is_api_verified` / `api_channel_id` / `data_source` (self_reported / verified / estimated) |
+| `creator_portfolio_items` | Recent YouTube videos imported during enrichment · drives recency scoring |
+| `campaigns` | Brand demand: brief, budget, niche/platform/language targets, KPI targets, visibility |
+| `campaign_applications` | Creator proposals + brand invitations · status state machine |
+| `contracts` | **First-class entity** (migration 0015): type, clauses, 6-state machine, fee, audit timestamps |
+| `ai_match_scores` | 6 sub-scores + `score_semantic` persisted per campaign × creator pair (migration 0014) |
+| `reviews` | Post-contract star ratings; average rolled up to creator/brand profiles |
+
+### Build decisions worth noting
+
+| Decision | Rationale |
+|---|---|
+| Groq as primary LLM (not Gemini) | Lower latency, structured JSON output, more reliable for deterministic matching rationale at hackathon quotas |
+| Relational-only (no pgvector/Neo4j) | MVP scale doesn't need vector persistence or graph traversal; semantic matching works on-the-fly via Gemini embeddings |
+| Clerk for auth | RS256 JWT with JWKS validation, managed webhooks, role-based redirect — superior to rolling email/password for a 4-day build |
+| Contract as first-class entity | Original SRS had collaboration type on Campaign; extracted to Contract entity to support per-clause configuration, fee locking, and state machine audit trail — a correct architectural decision, documented in Divergence Ledger D12 |
+| Weights externalised to `matching_config.py` | Allows tuning without code changes; single source of truth for all scoring thresholds and caps |
+
+### Frontend architecture
+
+Next.js 16 App Router with strict **Server Component → Client Island** pattern:
+- `page.tsx` is always an async Server Component (data fetching, no hooks)
+- Interactive UI in `_components/PageClient.tsx` marked `"use client"`
+- URL-driven filtering: client islands push `?param=value` to URL; Server Component reads `searchParams`
+- Two-variable API URL contract: `BACKEND_API_URL` (Docker-internal, server only) / `NEXT_PUBLIC_API_URL` (browser only)
+- Design system: CSS custom property tokens (brand colors, neutral scale, typography, spacing, shadows) exposed as Tailwind v4 utilities via `@theme inline`; shadcn/ui components wired to the token bridge
+
+### What would be added in Phase E (post-hackathon)
+
+pgvector for persisted semantic search · Neo4j for multi-hop conflict-of-interest checks · Redis for score caching and quota management · TimescaleDB for follower growth Z-scores · bKash/Nagad real escrow integration · BanglaBERT comment authenticity scoring · full Bangla UI i18n

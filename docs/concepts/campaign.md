@@ -1,186 +1,129 @@
-```markdown
-# What is a Campaign in Branding & Marketing?
+# What is a Campaign?
 
-In the context of branding, marketing, and especially **influencer marketing platforms like Cohesiq**, a **campaign** is a structured, time-bound marketing initiative designed to achieve specific business goals through coordinated promotional activities.
+If you have no background in marketing, think of a campaign the way you would think of a **job posting**.
 
----
+A brand has a need — they want to reach an audience, launch a product, or build awareness. They don't know exactly which creator will do the work yet. So they write up what they need, how much they'll pay, and what kind of creator they're looking for. That job posting is a **campaign**.
 
-## 1. Core Definition
-
-A **marketing campaign** is a strategic series of actions, messages, and content pieces delivered through one or more channels (social media, email, ads, etc.) over a defined period to achieve a measurable business objective.
-
-Think of it as a **project** with:
-- **Goal** (what you want to achieve)
-- **Budget** (how much you'll spend)
-- **Timeline** (start and end dates)
-- **Target audience** (who you're trying to reach)
-- **Key performance indicators (KPIs)** (how you measure success)
+Once a creator is hired and the specific terms are agreed, a **Contract** takes over. The campaign's job is done at that point.
 
 ---
 
-## 2. Campaign Components (What Makes It a "Campaign")
+## 1. Public vs. Private Campaigns
 
-| Component | Description | Example |
-|-----------|-------------|---------|
-| **Objective** | The business goal | Brand awareness, product launch, sales boost |
-| **Target audience** | Who you're trying to reach | "Dhaka-based women aged 18-34 interested in fashion" |
-| **Budget** | Total spend | BDT 50,000 total campaign budget |
-| **Timeline** | Start and end dates | June 10 – June 30, 2026 |
-| **Creatives** | Assets to be used | Video, images, copy, hashtags |
-| **Channels/Platforms** | Where content will appear | Instagram, YouTube, TikTok |
-| **Influencers** | Who will create content | 5 micro-influencers in fashion niche |
-| **Deliverables** | What influencers must produce | 1 Instagram Reel + 2 Stories per influencer |
-| **KPIs** | Success metrics | Reach, engagement rate, conversions, ROI |
-| **Hashtags/URLs** | Tracking mechanisms | #CohesiqLaunch, custom affiliate links |
+A campaign has a **visibility** setting that determines how creators discover it.
+
+| Visibility | Who sees it | How creators engage | Real-world equivalent |
+|---|---|---|---|
+| **Public** | Any creator browsing the marketplace | Creator reads the brief and applies | Job board posting |
+| **Private** | Only creators the brand directly invites | Brand sends an invitation; creator accepts or declines | Executive headhunting |
+
+This is the most important setting on a campaign. It determines whether you're running an **open influencer program** (public) or a **curated outreach** (private).
 
 ---
 
-## 3. Types of Marketing Campaigns
+## 2. What a Campaign Contains
 
-| Campaign Type | Objective | Example for a Fashion Brand |
-|---------------|-----------|----------------------------|
-| **Brand Awareness** | Get your name out there | "New season collection launch" – influencers post lookbook videos |
-| **Product Launch** | Drive initial sales for a new product | "Limited edition drop" – countdown posts + exclusive discount codes |
-| **User-Generated Content (UGC)** | Collect authentic customer content | "Share your style with #MyBrandLook" – repost best entries |
-| **Seasonal/Holiday** | Capitalize on special occasions | "Eid collection" – gift guides, festive outfit ideas |
-| **Retention/Loyalty** | Keep existing customers engaged | "VIP members exclusive" – behind-the-scenes content |
-| **Sales/Conversion** | Drive immediate purchases | "24-hour flash sale" – urgency-driven posts with promo codes |
-| **Educational** | Teach audience about product benefits | "Skincare routine tutorial" – step-by-step guides |
-| **Community Building** | Foster brand community | "Live Q&A with founder" – interactive sessions |
+A campaign brief answers six questions:
+
+| Question | Campaign field |
+|---|---|
+| What are we trying to achieve? | `description`, `objectives`, `kpi_targets` |
+| What kind of creator do we need? | `primary_niche`, `required_platforms`, `creator_min_followers` |
+| How much will we pay? | `budget_per_creator_min`, `budget_per_creator_max` |
+| Who is our target audience? | `target_countries`, `target_cities`, `target_age_min/max`, `target_gender` |
+| What should they produce? | `deliverable_requirements` (platform + type + quantity) |
+| When does this happen? | `application_deadline`, `content_deadline` |
+
+Optional tracking fields: `hashtags`, `tracking_notes` (for discount codes, UTM links, etc.).
 
 ---
 
-## 4. A Campaign in Cohesiq's Context
+## 3. What a Campaign Does NOT Do
 
-For your influencer matching platform, a **campaign** represents a **brand's request to work with one or more influencers** under a unified budget and goal.
+A campaign does not govern the working relationship between brand and creator. It does not specify:
 
-### Campaign Lifecycle in Cohesiq
+- Whether money is exchanged (and how much)
+- Whether a product will be sent (and whether it should be returned)
+- How many revision rounds are allowed
+- What happens if either party doesn't deliver
+
+**All of that is the contract's job.**
+
+The campaign is the funnel. The contract is the transaction. They are deliberately separate — because the brand shouldn't need to specify payment terms before they even know which creator they'll work with.
+
+---
+
+## 4. Campaign Lifecycle
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    CAMPAIGN LIFECYCLE                            │
-│                                                                  │
-│  PHASE 1: BRAND CREATES CAMPAIGN                                 │
-│  ├── Brand specifies: budget, niche, platforms, timeline, KPIs  │
-│  ├── Cohesiq matches 5-10 recommended influencers               │
-│  └── Brand selects 3-5 influencers to invite                    │
-│                                                                  │
-│  PHASE 2: INFLUENCER RESPONSE                                    │
-│  ├── Influencers receive invitation with campaign brief         │
-│  ├── Each influencer counter-offers or accepts                  │
-│  └── Brand approves final lineup                                 │
-│                                                                  │
-│  PHASE 3: ESCROW & CONTENT CREATION                              │
-│  ├── Brand deposits total budget into Cohesiq escrow            │
-│  ├── Each influencer creates and submits content                │
-│  └── Platform verifies content meets brief requirements         │
-│                                                                  │
-│  PHASE 4: APPROVAL & PUBLICATION                                 │
-│  ├── Brand reviews and approves content                         │
-│  ├── Influencer posts to their channels                         │
-│  └── Platform verifies post is live with #ad disclosure         │
-│                                                                  │
-│  PHASE 5: PAYOUT & REPORTING                                     │
-│  ├── Platform releases payment to influencers                   │
-│  ├── Brand receives performance report (reach, engagement, ROI) │
-│  └── Campaign data feeds into matching algorithm for future     │
-└─────────────────────────────────────────────────────────────────┘
+DRAFT
+  Brand writes the brief but hasn't published yet.
+  Creators cannot see it.
+
+    ↓ Brand activates
+
+ACTIVE
+  Campaign is live. Creators can apply (if public) or receive invitations (if private).
+  Matching engine can be run to surface recommended creators.
+
+    ↓ First application is accepted + contract created
+
+IN PROGRESS
+  At least one contract is active. Work has begun.
+
+    ↓ All contracts closed
+
+COMPLETED
+  All engagements finished. ROI reporting available.
+
+  (CANCELLED or ARCHIVED are also possible exits at any stage)
 ```
 
 ---
 
-## 5. Campaign Data Structure (For Your Database)
+## 5. The Creator's View of a Campaign
 
-Here's how you might model a campaign in **Neo4j** (graph database):
+When a creator browses a public campaign, they see:
 
-```cypher
-CREATE (c:Campaign {
-  id: "camp_001",
-  name: "Eid Fashion Drop 2026",
-  objective: "Product Launch",
-  budget: 50000,
-  currency: "BDT",
-  start_date: "2026-06-10",
-  end_date: "2026-06-30",
-  status: "active",  // draft | active | completed | cancelled
-  created_at: "2026-06-01"
-})
+- The brand name and logo
+- Campaign title and brief description
+- Required platforms (Instagram, YouTube, TikTok, etc.)
+- Budget range per creator (BDT)
+- Minimum follower requirement
+- Content deadline
+- Niche tag
 
-// Link campaign to brand
-CREATE (b:Brand {id: "brand_fashionX"})-[:LAUNCHED]->(c)
+They do **not** see: how many creators have applied, what other creators were paid, or any private brand notes.
 
-// Link campaign to selected influencers
-CREATE (i1:Influencer {id: "inf_style_gal"})-[:PARTICIPATES_IN {rate: 8000, deliverable: "1 Reel + 2 Stories"}]->(c)
-
-// Link campaign to performance metrics
-CREATE (c)-[:ACHIEVED]->(perf:Performance {
-  total_reach: 250000,
-  total_engagement: 18500,
-  engagement_rate: 7.4,
-  conversions: 320,
-  roi: 4.2  // 4.2x return
-})
-```
+If a campaign is private, it doesn't appear in the marketplace at all — the creator only sees it if the brand sends them a direct invitation.
 
 ---
 
-## 6. Why Campaigns Matter for Cohesiq's Matching Engine
+## 6. Campaigns and the Matching Engine
 
-| Matching Factor | How Campaign Data Improves It |
-|----------------|-------------------------------|
-| **Audience fit** | Past campaigns show which influencer audiences actually converted, not just demographic match |
-| **Authenticity** | Real campaign ROI data is the ultimate trust signal (better than engagement rate proxies) |
-| **Pricing benchmarks** | Historical campaign rates help suggest fair prices to new brands and influencers |
-| **Lookalike discovery** | Find nano-influencers whose audience patterns match successful macro-influencer campaigns |
-| **Conflict detection** | Prevent brand-influencer mismatches by checking if influencer already worked with competitor |
+When a brand clicks "Run Matching," Cohesiq's matching engine reads the campaign brief and scores every creator in the database against it. The score has six components:
 
-**Progressive enhancement:** Even without historical data, your MVP can function. But over time, campaign data becomes your **most valuable proprietary asset** – competitors can't replicate your real transaction history.
+| Score component | What it measures |
+|---|---|
+| Niche match | Does the creator's content niche align with the campaign's target niche? |
+| Engagement | Is the creator's engagement rate healthy relative to their follower tier? |
+| Budget fit | Does the creator's rate card fall within the campaign's budget range? |
+| Platform | Does the creator post on the platforms the campaign requires? |
+| Language | Does the creator produce content in the campaign's target language? |
+| Recency | Has the creator been active recently? |
 
----
-
-## 7. Example Campaign Brief (For Your Demo)
-
-To make the concept concrete for judges, here's a sample campaign brief a brand would fill out in Cohesiq:
-
-**Campaign Name:** *Eid-ul-Adha Fashion Collection 2026*
-
-| Field | Value |
-|-------|-------|
-| **Brand** | FashionX (Dhaka-based clothing brand) |
-| **Objective** | Product launch & sales (30% awareness, 70% conversion) |
-| **Target audience** | Women 18-30 in Dhaka & Chittagong, interested in modest fashion |
-| **Product category** | Eid dresses, accessories |
-| **Budget per influencer** | BDT 5,000 – 15,000 |
-| **Total campaign budget** | BDT 60,000 (up to 8 influencers) |
-| **Platform** | Instagram primarily (YouTube secondary) |
-| **Timeline** | June 25 – July 5, 2026 (10 days before Eid) |
-| **Content deliverables** | 1 Reel (30-60 sec) + 2 Stories per influencer |
-| **Required hashtags** | #FashionXEid #EidCollection2026 |
-| **Affiliate tracking** | Unique discount code per influencer (e.g., FASHIONX_SARA) |
-| **Compliance** | Must include #ad or #sponsored |
-| **KPIs** | Reach 100K+, engagement rate >5%, minimum 50 conversions via codes |
-
-**Cohesiq's job:** Find 5-8 influencers whose audience demographics, engagement quality, and past campaign performance best match this brief.
+The engine returns a ranked list of creators (0–100 score). The brand can then invite the best matches directly from this list.
 
 ---
 
-## 8. Key Terms to Know
+## 7. Key Terms
 
-| Term | Definition |
-|------|------------|
-| **Impressions** | Number of times content was displayed |
-| **Reach** | Unique users who saw the content |
-| **Engagement** | Likes, comments, shares, saves |
-| **Engagement rate** | Engagement ÷ Reach (or Followers) × 100 |
-| **CTR** | Click-through rate (clicks ÷ impressions) |
-| **Conversion** | Desired action taken (purchase, signup, etc.) |
-| **ROI** | (Revenue from campaign – Cost) ÷ Cost |
-| **CPM** | Cost per thousand impressions |
-| **CPE** | Cost per engagement |
-| **UGC** | User-generated content |
-| **Brand lift** | Increase in brand perception metrics |
-
----
-
-**Bottom line for Cohesiq:** A campaign is the **core transaction unit** of your marketplace. Your matching engine's accuracy is ultimately judged by whether campaigns succeed (high ROI, brand repeats). Design your database schema, matching algorithm, and reporting dashboard around campaigns as first-class entities.
-```
+| Term | Plain-language meaning |
+|---|---|
+| **Brief** | The description of what the brand needs (like a job description) |
+| **Deliverable** | The specific content the creator must produce (e.g., "1 Instagram Reel + 2 Stories") |
+| **KPI** | Key Performance Indicator — a measurable goal (e.g., "reach 50,000 people") |
+| **Niche** | The content category a creator specialises in (fashion, food, tech, fitness, etc.) |
+| **Application** | A creator's expression of interest in a campaign (like a job application) |
+| **Contract** | The formal agreement created when a brand accepts a creator — governs payment, deliverables, and execution |
+| **Matching score** | A 0–100 number computed by the AI engine showing how well a creator fits a campaign |
