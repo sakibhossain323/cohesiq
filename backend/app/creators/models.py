@@ -13,6 +13,7 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
+    UniqueConstraint,
     func,
 )
 from sqlalchemy.dialects.postgresql import UUID, ENUM
@@ -128,6 +129,9 @@ class CreatorProfile(Base):
 
 class CreatorSocialProfile(Base):
     __tablename__ = "creator_social_profiles"
+    __table_args__ = (
+        UniqueConstraint("creator_id", "platform", name="uq_social_creator_platform"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
@@ -149,6 +153,7 @@ class CreatorSocialProfile(Base):
     handle: Mapped[str] = mapped_column(String(255), nullable=False)
     profile_url: Mapped[str] = mapped_column(Text, nullable=False)
     platform_user_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    api_channel_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     display_name_on_platform: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
 
     follower_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
@@ -164,6 +169,11 @@ class CreatorSocialProfile(Base):
     account_created_year: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
     is_monetized: Mapped[bool] = mapped_column(Boolean, server_default="false")
     has_verified_badge: Mapped[bool] = mapped_column(Boolean, server_default="false")
+    is_api_verified: Mapped[bool] = mapped_column(Boolean, server_default="false")
+    api_verified_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    data_source: Mapped[str] = mapped_column(String(30), server_default="self_reported")
 
     audience_country_primary: Mapped[Optional[str]] = mapped_column(String(2), server_default="BD")
     audience_city_primary: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)

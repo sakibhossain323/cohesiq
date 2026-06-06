@@ -1,6 +1,6 @@
 # Entity Relationship Diagram
 
-> **As-built** — reflects the live PostgreSQL schema (migration `0015_add_contract_model` at head).
+> **As-built** — reflects the live PostgreSQL schema (migration `0017_restore_social_creator_platform_unique` at head).
 > The SRS aspirational diagram (§9.2) has been superseded by this file.
 > See `docs/schema.md` for full DDL and `docs/srs-revisions.md` for the Contract change request.
 
