@@ -2,7 +2,7 @@
 
 > **As-built** — updated for the Contract entity change request (2026-06-06).
 > The original SRS §9.1 diagram placed "Choose Collaboration Type" on the Campaign actor path.
-> That use case has been moved to the Contract actor path (see §3 of `docs/srs-revisions.md`).
+> That use case has been moved to the Contract actor path (see §3 of `docs/revisions/srs-revisions-26-06-06.md`).
 >
 > Mermaid has no native UML use-case shape. Actors and use cases are modelled as a flowchart
 > with `subgraph` system boundaries — the conventional Mermaid convention for UML use cases.
