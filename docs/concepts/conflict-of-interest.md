@@ -179,6 +179,21 @@ Basic matching smoke test:
 docker compose exec backend python -m scripts.test_matching
 ```
 
+Automated conflict smoke test:
+
+```bash
+docker compose exec backend python -m scripts.test_conflict_matching
+```
+
+The automated script prints a lightweight audit line after the conflict run:
+
+```text
+Conflict audit: 1 baseline creators excluded by same-category recent history.
+  - Creator Name conflicted with Conflict Demo Competitor (edtech), collaborated 0 days ago.
+```
+
+This is script/debug visibility only. The API still returns only the final matched creators.
+
 Manual conflict test shape:
 
 1. Create Brand A with `brand_category = 'edtech'`.

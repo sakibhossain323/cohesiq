@@ -6,9 +6,9 @@ This document is the working plan for touching the matching engine. The matching
 brands will judge the product by whether recommended creators feel explainable, locally relevant, and
 commercially plausible. We should not change scoring casually.
 
-The immediate task is N11: align `backend/scripts/test_matching.py` with the live
-`POST /campaigns/{id}/run-matching` path. Before doing that, this plan records what data we have,
-how matching currently works, and what strategy we should use for safe iteration.
+N11 is now complete: `backend/scripts/test_matching.py` exercises the live service path used by
+`POST /campaigns/{id}/run-matching`. This plan records what data we have, how matching currently
+works, and what strategy we should use for safe iteration.
 
 ## Current Data Available
 
@@ -16,11 +16,13 @@ how matching currently works, and what strategy we should use for safe iteration
 
 The YouTube pipeline has now seeded:
 
-- 19 real Bangladesh-oriented YouTube channels
-- 19 verified YouTube social profiles
-- 19 estimated Instagram companion profiles
-- 19 estimated TikTok companion profiles
-- 190 YouTube portfolio items from recent uploads
+- 67 real Bangladesh-oriented YouTube channels from the 100-name inventory
+- 67 verified YouTube social profiles
+- 67 estimated Instagram companion profiles
+- 67 estimated TikTok companion profiles
+- YouTube portfolio items from recent uploads for resolved creators
+
+The unresolved handles from the 100-name inventory are not needed for the current demo supply pool.
 
 Important source labels:
 
@@ -160,7 +162,11 @@ Active first cut:
 Still planned:
 
 - support unregistered past brands by storing category directly on collaboration history if needed
-- expose conflict reason/audit metadata in match debug output
+- persist conflict reason/audit metadata for API/admin debug views
+
+Current debug visibility:
+
+- `scripts.test_conflict_matching` prints same-category recent collaboration rows that explain baseline creators excluded by the gate
 
 This should be relational first, not Neo4j.
 
@@ -241,12 +247,13 @@ Active today:
 - Groq-personalized rationale for the top 5 sorted matches when `GROQ_API_KEY` is configured
 - deterministic heuristic fallback when Groq is not configured or fails
 
-Planned N05:
+N05 current status:
 
 - bounded LLM rationale for top-N only
-- 2-3 sentences
-- Bangla/English support
+- 2 English sentences for the demo path
+- English-only evidence brief to avoid copying raw Bangla/non-ASCII titles into output
 - deterministic fallback when no API key exists
+- remaining cleanup: resolve or remove the old experimental `services/llm_matching.py` path
 
 Strategy:
 
@@ -256,9 +263,9 @@ Strategy:
 - use creator bio plus recent portfolio videos as grounding context
 - keep sub-scores as source of truth; rationale explains, not decides
 
-## Critical Engine Decisions Before N11
+## Critical Engine Decisions
 
-These are the fixes that matter most before using the script as our matching validation harness.
+These are the fixes that matter most for keeping the matching validation harness trustworthy.
 
 ### 1. Budget: hard ceiling with soft penalty buffer
 
@@ -381,7 +388,7 @@ English 30%
 Banglish 10%
 ```
 
-For N11, the script can still validate current language rows. Later, use title/description counts from recent portfolio items to build a weighted language profile.
+The script can still validate current language rows. Later, use title/description counts from recent portfolio items to build a weighted language profile.
 
 ### 7. Feedback loop
 
@@ -479,11 +486,11 @@ City should be:
 - a soft brand preference when reliable
 - not a hard gate for YouTube creator matching unless campaign explicitly requires local physical presence
 
-## N11 Script Alignment Plan
+## N11 Script Alignment
 
-Goal:
+Status:
 
-Make `backend/scripts/test_matching.py` validate the same code path used by the app.
+Complete and Docker-verified. `backend/scripts/test_matching.py` validates the same service path used by the app.
 
 ### Script behavior
 
@@ -522,25 +529,23 @@ HTTP route smoke testing can be a second step if needed:
 POST /campaigns/{id}/run-matching
 ```
 
-But the first correction is to stop using the dead experimental LLM script.
+The script no longer calls the dead experimental LLM matching branch.
 
-## Immediate Risks To Check Before Editing Matching
+## Remaining Risks
 
-1. Docker verification is still needed for `scripts.test_matching` against seeded data.
-2. `N04` may be stale because score platform/recency/semantic already exist, but rank may not.
-3. `creator_social_profiles.data_source` influences primary profile selection, but estimated-data confidence penalties are still deferred until the UI can explain them.
-4. Conflict-of-interest only works when both the current campaign and past registered brand have `brand_category`.
-5. Language profile is still binary presence, not a distribution.
+1. `N04` may be stale because score platform/recency/semantic already exist, but rank may not.
+2. `creator_social_profiles.data_source` influences primary profile selection, but estimated-data confidence penalties are still deferred until the UI can explain them.
+3. Conflict-of-interest only works when both the current campaign and past registered brand have `brand_category`.
+4. Language profile is still binary presence, not a distribution.
+5. The old experimental `services/llm_matching.py` path should be integrated or deleted to avoid future confusion.
 
 ## Safe Implementation Order
 
-1. Run Docker tests and `scripts.test_matching` against seeded data.
-2. Inspect persisted scores and verify top results look commercially plausible.
-3. If no matches, inspect campaign seed setup before changing weights.
-4. Add stored rank only if the API/UI needs it.
-5. Add top-5 LLM rationale only after the deterministic engine output is stable.
-6. Add conflict audit metadata to explain excluded creators in debug tooling.
-7. Upgrade language matching from binary presence to distribution.
+1. Resolve or delete the old experimental `services/llm_matching.py` path.
+2. Add stored rank only if the API/UI needs it.
+3. Persist conflict audit metadata only when the API/UI needs to show excluded creators.
+4. Upgrade language matching from binary presence to distribution when needed.
+5. Add estimated-data confidence penalties only when the UI can explain them.
 
 ## Verification Commands
 

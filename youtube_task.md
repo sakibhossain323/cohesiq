@@ -39,7 +39,7 @@ Status: Complete
 
 Unblocked by:
 - Unit 2 persistence verified.
-- N02 real-channel seeding verified: 19 YouTube `verified` rows plus 38 companion `estimated` rows.
+- N02 real-channel seeding verified: current demo DB has 67 YouTube `verified` rows plus 134 companion `estimated` rows.
 
 Scope:
 - Import `enrichment.recent_videos` into `creator_portfolio_items`.
@@ -49,7 +49,7 @@ Scope:
 
 Verification completed:
 - `docker compose exec backend python -m scripts.seed_real_youtube_creators`
-- Result: 19 creators succeeded, 0 failed, 190 YouTube portfolio rows imported.
+- Result: resolved creators import recent YouTube videos into `creator_portfolio_items`; unresolved handles from the 100-name inventory are not needed for the current demo.
 
 ## Unit 4: Matching Signal Integration
 Status: Pending

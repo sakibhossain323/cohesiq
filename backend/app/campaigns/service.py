@@ -698,6 +698,102 @@ def _english_only_text(text: str) -> str:
     return text.strip()
 
 
+def _safe_english_snippet(text: str | None, *, max_chars: int = 140) -> str | None:
+    if not text:
+        return None
+    cleaned = _english_only_text(text)
+    if not cleaned:
+        return None
+    alpha_count = sum(1 for char in cleaned if char.isalpha())
+    if alpha_count < 8:
+        return None
+    if len(cleaned) > max_chars:
+        cleaned = cleaned[:max_chars].rsplit(" ", 1)[0].strip()
+    return cleaned
+
+
+def _fit_label(score: float, *, strong: str, partial: str, weak: str) -> str:
+    if score >= 0.8:
+        return strong
+    if score >= 0.4:
+        return partial
+    return weak
+
+
+def _creator_evidence_brief(creator, scores, *, limit: int = 5) -> str:
+    profile_text = _safe_english_snippet(creator.bio or creator.tagline, max_chars=500)
+    items = sorted(
+        [item for item in creator.portfolio_items if item.title or item.content_url],
+        key=lambda item: item.published_at or date.min,
+        reverse=True,
+    )[:limit]
+
+    english_titles = []
+    non_english_count = 0
+    latest_date = None
+    top_view_count = None
+    for item in items:
+        if item.published_at and (latest_date is None or item.published_at > latest_date):
+            latest_date = item.published_at
+        if item.views is not None:
+            top_view_count = max(top_view_count or 0, item.views)
+        title = _safe_english_snippet(item.title, max_chars=90)
+        if title:
+            english_titles.append(title)
+        elif item.title:
+            non_english_count += 1
+
+    content_signal = "recent uploads are available"
+    if items and non_english_count == len(items):
+        content_signal = "recent uploads are mostly local-language or non-English, so describe their topic pattern without quoting titles"
+    elif english_titles:
+        content_signal = "sampled recent upload topics include " + "; ".join(english_titles[:3])
+
+    recency_signal = "latest upload date is unknown"
+    if latest_date:
+        days_since = max((date.today() - latest_date).days, 0)
+        recency_signal = f"latest sampled upload was {days_since} days ago"
+
+    performance_signal = "recent video performance is not available"
+    if top_view_count is not None:
+        performance_signal = f"top sampled recent video has about {top_view_count:,} views"
+
+    score_signals = [
+        _fit_label(scores.niche, strong="strong niche fit", partial="partial niche fit", weak="weak niche fit"),
+        _fit_label(scores.budget, strong="strong budget fit", partial="negotiable budget fit", weak="weak budget fit"),
+        _fit_label(scores.engagement, strong="strong engagement", partial="moderate engagement", weak="limited engagement"),
+        _fit_label(scores.language, strong="strong language fit", partial="partial language fit", weak="weak language fit"),
+        _fit_label(scores.recency, strong="fresh recent activity", partial="moderate recent activity", weak="older or unknown recent activity"),
+    ]
+
+    return "\n".join([
+        f"- Profile summary: {profile_text or 'No English profile summary available.'}",
+        f"- Recent content signal: {content_signal}.",
+        f"- Recency signal: {recency_signal}.",
+        f"- Performance signal: {performance_signal}.",
+        f"- Match signals: {', '.join(score_signals)}.",
+    ])
+
+
+def _first_sentences(text: str, *, limit: int = 2) -> str:
+    pieces = re.split(r"(?<=[.!?])\s+", text.strip())
+    selected = [piece.strip() for piece in pieces if piece.strip()][:limit]
+    return " ".join(selected).strip()
+
+
+def _polish_rationale_text(text: str) -> str:
+    replacements = {
+        "Based on the creator's profile and recent content pattern, ": "",
+        "Based on this creator's profile and recent content pattern, ": "",
+        "Based on their profile and recent content pattern, ": "",
+        "recent English-readable upload topics": "recent upload topics",
+        "English-readable upload topics": "recent upload topics",
+    }
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+    return text.strip()
+
+
 def _build_personalized_rationale_prompt(
     *,
     campaign: Campaign,
@@ -706,9 +802,7 @@ def _build_personalized_rationale_prompt(
     scores,
     creator_tier: str,
 ) -> str:
-    creator_bio = (creator.bio or creator.tagline or "").strip()
-    if len(creator_bio) > 700:
-        creator_bio = creator_bio[:700].rsplit(" ", 1)[0].strip() + "."
+    evidence_brief = _creator_evidence_brief(creator, scores)
 
     return f"""
 Write a personalized creator recommendation rationale for a brand marketer.
@@ -716,10 +810,13 @@ Write a personalized creator recommendation rationale for a brand marketer.
 Rules:
 - Use exactly 2 short sentences.
 - Write in English only.
-- Do not include Bengali/Bangla script or non-English words.
-- If a video title is not English, summarize its topic in English instead of quoting it.
-- Be specific to this creator's profile and recent videos.
+- Do not include non-ASCII script or non-English words.
+- Do not say "provided evidence brief" or mention that an evidence brief exists.
+- Do not start with "Based on"; start directly with the recommendation.
+- Use the evidence brief; do not quote raw video titles.
+- Be specific to this creator's profile, recent content pattern, and match signals.
 - Mention why they fit the campaign audience/content, not just that they have good scores.
+- If there is a clear weakness such as older activity, weak language fit, or limited engagement, mention it briefly as a consideration.
 - Do not invent facts beyond the context.
 - Do not mention raw internal score numbers.
 - Keep it professional and pitch-ready.
@@ -734,16 +831,8 @@ Required platforms: {", ".join(campaign.required_platforms or []) or "Any"}
 Creator:
 Name: {creator.display_name}
 Tier: {creator_tier}
-Bio/profile text: {creator_bio or "No profile bio available."}
-Recent videos:
-{_portfolio_context(creator.portfolio_items)}
-
-Scoring summary:
-Niche fit: {scores.niche}
-Budget fit: {scores.budget}
-Engagement fit: {scores.engagement}
-Language fit: {scores.language}
-Recency fit: {scores.recency}
+Evidence brief:
+{evidence_brief}
 """.strip()
 
 
@@ -785,6 +874,8 @@ async def _generate_personalized_rationale(
         if not content:
             return fallback
         cleaned = _english_only_text(" ".join(content.strip().split()))
+        cleaned = _polish_rationale_text(cleaned)
+        cleaned = _first_sentences(cleaned, limit=2)
         return cleaned or fallback
     except Exception as exc:
         logger.warning("Groq rationale generation failed: %s", exc)
