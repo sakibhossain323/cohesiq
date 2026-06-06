@@ -60,10 +60,16 @@ export function Navbar() {
             <line x1="24" y1="9" x2="22" y2="24" stroke="var(--brand-secondary)" strokeWidth="1.6" opacity="0.55" />
           </svg>
           Cohesiq
+          {pathname === "/design-system" && (
+            <span style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: "var(--color-text-muted)", fontSize: "var(--text-sm)" }}>
+              &nbsp;/ Design System
+            </span>
+          )}
         </Link>
 
         {/* Nav links */}
-        <nav
+        {pathname !== "/design-system" && (
+          <nav
           style={{ display: "flex", gap: "var(--space-8)" }}
           className="hidden md:flex"
           aria-label="Primary"
@@ -85,29 +91,39 @@ export function Navbar() {
             </Link>
           ))}
         </nav>
+        )}
 
         {/* Actions */}
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
-          <ThemeToggle />
-          {!isSignedIn && (
-            <>
-              <SignInButton mode="modal" forceRedirectUrl="/onboarding">
-                <button className="btn btn-ghost btn-sm">Sign In</button>
-              </SignInButton>
-              <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
-                <button className="btn btn-primary btn-sm">Get Started</button>
-              </SignUpButton>
-            </>
-          )}
-          {isSignedIn && (
-            <>
-              <Link href={dashboardHref} className="btn btn-ghost btn-sm">
-                Dashboard
-              </Link>
-              <UserButton />
-            </>
-          )}
-        </div>
+        {pathname === "/design-system" ? (
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
+            <Link href="/" className="btn btn-ghost btn-sm">
+              View landing &rarr;
+            </Link>
+            <ThemeToggle />
+          </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
+            <ThemeToggle />
+            {!isSignedIn && (
+              <>
+                <SignInButton mode="modal" forceRedirectUrl="/onboarding">
+                  <button className="btn btn-ghost btn-sm">Sign In</button>
+                </SignInButton>
+                <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+                  <button className="btn btn-primary btn-sm">Get Started</button>
+                </SignUpButton>
+              </>
+            )}
+            {isSignedIn && (
+              <>
+                <Link href={dashboardHref} className="btn btn-ghost btn-sm">
+                  Dashboard
+                </Link>
+                <UserButton />
+              </>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );
