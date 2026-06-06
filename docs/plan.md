@@ -110,7 +110,7 @@ SRS honest without rewriting it. Each entry is a *decision*, not an accident.
 | # | SRS expectation | As-built | Decision & rationale |
 |---|---|---|---|
 | D1 | pgvector for content embeddings | Gemini embeddings computed on the fly, token-similarity fallback; **not persisted** | **Keep relational for MVP.** pgvector is a Phase-E optimisation; semantic ranking already works without it. |
-| D2 | Neo4j multi-hop graph (Stage 2 + conflict-of-interest) | none; conflict data lives in `creator_collaboration_history` (relational) | **Defer Neo4j to Phase E.** Conflict-of-interest can be done relationally first (90-day brand-niche check) to satisfy FR-13 without a new datastore. |
+| D2 | Neo4j multi-hop graph (Stage 2 + conflict-of-interest) | none; conflict data lives in `creator_collaboration_history` (relational) | **Defer Neo4j to Phase E.** Conflict-of-interest can be done relationally first with a 90-day same-`brand_category` check to satisfy FR-13 without a new datastore. |
 | D3 | TimescaleDB follower time-series (authenticity Z-scores) | none | **Defer to Phase E.** Authenticity MVP uses the single-point engagement-vs-tier proxy; growth Z-score needs history we don't collect yet. |
 | D4 | Redis score cache + quota counter | none | **Defer.** Matching is fast enough on the seeded set (<5 s, NFR-1). Add Redis when quota or latency bites. |
 | D5 | Polymorphic talent (`social\|host\|ugc\|speaker\|ambassador` + extension tables) | social creators only | **Phase E.** Host vertical (US-15) is the first extension; base table is ready, extension tables are additive (NFR-4). |

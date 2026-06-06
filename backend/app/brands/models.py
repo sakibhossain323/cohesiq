@@ -42,6 +42,7 @@ class BrandProfile(Base):
     niche_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("niches.id", ondelete="SET NULL"), nullable=True
     )
+    brand_category: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     company_size: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     country_code: Mapped[str] = mapped_column(String(2), server_default="BD")
     city: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)

@@ -1,7 +1,7 @@
 import uuid
 import logging
 import re
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import List
 
 from fastapi import HTTPException, status
@@ -11,6 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.config import settings
+from app.brands.models import BrandProfile
+from app.brands.service import normalize_brand_category
 from app.campaigns.models import (
     Campaign,
     CampaignApplication,
@@ -38,6 +40,7 @@ from app.services.matching import (
     score_niche,
 )
 from app.services.matching_config import (
+    CONFLICT_LOOKBACK_DAYS,
     BUDGET_RATE_HARD_CAP,
     SEMANTIC_RESCUE_NICHE_CAP,
     SEMANTIC_SIMILARITY_THRESHOLD,
@@ -144,6 +147,34 @@ def _days_since_latest_portfolio_item(portfolio_items, required_platforms: list[
     return max((today - latest).days, 0)
 
 
+async def _has_recent_competitor_conflict(
+    db: AsyncSession,
+    *,
+    creator_id: uuid.UUID,
+    campaign_brand_id: uuid.UUID,
+    brand_category: str | None,
+) -> bool:
+    if not brand_category:
+        return False
+
+    from app.creators.models import CreatorCollaborationHistory  # noqa: PLC0415
+
+    cutoff = date.today() - timedelta(days=CONFLICT_LOOKBACK_DAYS)
+    result = await db.execute(
+        select(CreatorCollaborationHistory.id)
+        .join(BrandProfile, BrandProfile.id == CreatorCollaborationHistory.brand_id)
+        .where(
+            CreatorCollaborationHistory.creator_id == creator_id,
+            CreatorCollaborationHistory.brand_id != campaign_brand_id,
+            CreatorCollaborationHistory.collaborated_on.is_not(None),
+            CreatorCollaborationHistory.collaborated_on >= cutoff,
+            BrandProfile.brand_category == brand_category,
+        )
+        .limit(1)
+    )
+    return result.scalar_one_or_none() is not None
+
+
 # ------------------------------------------------------------------ #
 # Campaign CRUD                                                        #
 # ------------------------------------------------------------------ #
@@ -209,12 +240,19 @@ async def list_brand_campaigns(db: AsyncSession, brand_id: uuid.UUID) -> List[Ca
 async def create_campaign(
     db: AsyncSession, brand_id: uuid.UUID, data: CampaignCreate
 ) -> Campaign:
+    brand_category = normalize_brand_category(data.brand_category)
+    if brand_category is None:
+        brand_result = await db.execute(select(BrandProfile).where(BrandProfile.id == brand_id))
+        brand = brand_result.scalar_one_or_none()
+        brand_category = brand.brand_category if brand else None
+
     campaign = Campaign(
         brand_id=brand_id,
         title=data.title,
         description=data.description,
         objectives=data.objectives,
         primary_niche_id=data.primary_niche_id,
+        brand_category=brand_category,
         required_platforms=data.required_platforms,
         campaign_type=data.campaign_type,
         budget_per_creator_min=data.budget_per_creator_min,
@@ -267,6 +305,8 @@ async def update_campaign(
     db: AsyncSession, campaign: Campaign, data: CampaignUpdate
 ) -> Campaign:
     for field, value in data.model_dump(exclude_none=True).items():
+        if field == "brand_category":
+            value = normalize_brand_category(value)
         setattr(campaign, field, value)
     await db.commit()
     refreshed_campaign = await get_campaign(db, campaign.id)
@@ -801,6 +841,14 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             continue
 
         if not _passes_budget_gate(campaign.budget_per_creator_max, creator_rate, follower_count):
+            continue
+
+        if await _has_recent_competitor_conflict(
+            db,
+            creator_id=creator.id,
+            campaign_brand_id=campaign.brand_id,
+            brand_category=campaign.brand_category,
+        ):
             continue
 
         # Language profile mapping

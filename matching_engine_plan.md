@@ -132,10 +132,11 @@ Active today:
 - required platform filter
 - follower min/max filter
 - budget gate via `_passes_budget_gate`
+- unavailable/deleted creator gate
+- recent direct-competitor conflict gate when `campaign.brand_category` is present
 
 Needed improvements:
 
-- skip unavailable creators when `creator_profiles.is_available = false`
 - prefer verified profile data over estimated/self-reported data when choosing primary matching metrics
 - avoid using city as a hard gate for real YouTube seeds unless campaign explicitly asks for city and the creator has reliable city data
 - keep hard failures hard: missing required platform, unavailable creator, follower range failure, and future direct-competitor conflict should never be rescued by semantic scoring
@@ -143,22 +144,27 @@ Needed improvements:
 
 ### Stage 2: Conflict check
 
-Not active yet.
-
-Planned N08:
+Active first cut:
 
 - check `creator_collaboration_history`
-- detect direct competitor collaboration in the relevant category/window
-- hard-exclude direct competitor conflicts before scoring
+- join registered past brands through `brand_profiles`
+- compare `brand_profiles.brand_category` to `campaigns.brand_category`
+- if same creator + different brand + same brand category + collaboration within 90 days, hard-exclude before scoring
+
+Still planned:
+
+- support unregistered past brands by storing category directly on collaboration history if needed
+- expose conflict reason/audit metadata in match debug output
 
 This should be relational first, not Neo4j.
 
 Threat model:
 
 - `same niche` is not enough to define a competitor. A food creator who worked with Domino's is not automatically conflicted for every restaurant campaign.
-- competitor logic should compare explicit brand/category metadata, not only creator niche.
+- competitor logic compares product category (`brand_category`), not creator niche.
 - the 90-day window is a demo default, not a verified Bangladesh market standard. Keep it configurable and document it as a product assumption.
 - for demo trust, direct competitor conflict should be a hard exclude, not a penalty. A brand should not see a creator who is actively tied to a direct competitor.
+- examples: pen brand vs edtech platform is not a conflict; two pen brands are a conflict; two edtech platforms are a conflict.
 
 ### Stage 3: Niche and semantic relevance
 
@@ -517,7 +523,7 @@ But the first correction is to stop using the dead experimental LLM script.
 1. Docker verification is still needed for `scripts.test_matching` against seeded data.
 2. `N04` may be stale because score platform/recency/semantic already exist, but rank may not.
 3. `creator_social_profiles.data_source` influences primary profile selection, but estimated-data confidence penalties are still deferred until the UI can explain them.
-4. Conflict-of-interest is still planned but not active.
+4. Conflict-of-interest only works when both the current campaign and past registered brand have `brand_category`.
 5. Language profile is still binary presence, not a distribution.
 
 ## Safe Implementation Order
@@ -527,7 +533,7 @@ But the first correction is to stop using the dead experimental LLM script.
 3. If no matches, inspect campaign seed setup before changing weights.
 4. Add stored rank only if the API/UI needs it.
 5. Add top-5 LLM rationale only after the deterministic engine output is stable.
-6. Implement direct-competitor conflict check.
+6. Add conflict audit metadata to explain excluded creators in debug tooling.
 7. Upgrade language matching from binary presence to distribution.
 
 ## Verification Commands

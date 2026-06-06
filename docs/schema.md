@@ -503,6 +503,7 @@ CREATE TABLE brand_profiles (
 
     -- Business details
     niche_id         INTEGER REFERENCES niches(id) ON DELETE SET NULL,
+    brand_category   VARCHAR(50),             -- Product category for competitor checks, e.g. edtech/stationery
     company_size     VARCHAR(20) CHECK (company_size IN (
                          'individual',         -- Sole proprietor / freelancer
                          'small',              -- 2-20 employees
@@ -530,6 +531,7 @@ CREATE TABLE brand_profiles (
 
 CREATE INDEX idx_brand_profiles_user  ON brand_profiles(user_id);
 CREATE INDEX idx_brand_profiles_niche ON brand_profiles(niche_id);
+CREATE INDEX idx_brand_profiles_brand_category ON brand_profiles(brand_category);
 ```
 
 ---
@@ -551,6 +553,7 @@ CREATE TABLE campaigns (
     -- Targeting: niche
     -- Primary niche stored here. Additional niches in campaign_niche_targets table.
     primary_niche_id INTEGER REFERENCES niches(id) ON DELETE SET NULL,
+    brand_category   VARCHAR(50),            -- Product category; defaults from brand profile when omitted
 
     -- Targeting: platform
     -- Which platforms the brand wants content on
@@ -590,6 +593,7 @@ CREATE TABLE campaigns (
 CREATE INDEX idx_campaigns_brand       ON campaigns(brand_id);
 CREATE INDEX idx_campaigns_status      ON campaigns(status);
 CREATE INDEX idx_campaigns_primary_niche ON campaigns(primary_niche_id);
+CREATE INDEX idx_campaigns_brand_category ON campaigns(brand_category);
 CREATE INDEX idx_campaigns_budget      ON campaigns(budget_per_creator_max);
 ```
 

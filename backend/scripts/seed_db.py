@@ -7,6 +7,46 @@ from app.database import AsyncSessionLocal
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 
+BRAND_CATEGORY_BY_INDUSTRY = {
+    "technology": "electronics",
+    "food": "food_beverage",
+    "travel": "home_lifestyle",
+    "fashion": "fashion",
+    "beauty": "fashion",
+    "lifestyle": "home_lifestyle",
+    "gaming": "gaming",
+    "education": "edtech",
+    "fitness": "health_wellness",
+    "entertainment": "media_entertainment",
+    "news": "media_entertainment",
+    "finance": "finance",
+    "sports": "sports",
+}
+
+VALID_BRAND_CATEGORIES = {
+    "food_beverage",
+    "stationery",
+    "edtech",
+    "electronics",
+    "fashion",
+    "sports",
+    "gaming",
+    "health_wellness",
+    "finance",
+    "telecom",
+    "media_entertainment",
+    "home_lifestyle",
+}
+
+
+def normalize_brand_category(b_data: dict) -> str:
+    explicit = (b_data.get("brand_category") or "").strip().lower().replace("-", "_").replace(" ", "_")
+    if explicit in VALID_BRAND_CATEGORIES:
+        return explicit
+
+    industry = (b_data.get("industry") or "Lifestyle").strip().lower()
+    return BRAND_CATEGORY_BY_INDUSTRY.get(industry, "home_lifestyle")
+
 async def seed_db():
     print("Starting database seeding...")
     
@@ -110,13 +150,19 @@ async def seed_db():
 
 async def insert_brand(session, user_id, b_data, niche_map):
     # Insert brand profile
+    brand_category = normalize_brand_category(b_data)
     await session.execute(text("""
-        INSERT INTO brand_profiles (user_id, brand_name, logo_url, description)
-        VALUES (:user_id, :name, :logo, :desc)
-        ON CONFLICT (user_id) DO NOTHING
+        INSERT INTO brand_profiles (user_id, brand_name, logo_url, description, brand_category)
+        VALUES (:user_id, :name, :logo, :desc, :brand_category)
+        ON CONFLICT (user_id) DO UPDATE
+        SET brand_name = EXCLUDED.brand_name,
+            logo_url = EXCLUDED.logo_url,
+            description = EXCLUDED.description,
+            brand_category = EXCLUDED.brand_category
     """), {
         "user_id": user_id, "name": b_data.get("name", "Unknown"), 
-        "logo": b_data.get("logo_url", ""), "desc": b_data.get("description", "")
+        "logo": b_data.get("logo_url", ""), "desc": b_data.get("description", ""),
+        "brand_category": brand_category,
     })
     
     # Get brand id
@@ -132,35 +178,38 @@ async def insert_brand(session, user_id, b_data, niche_map):
     
     # Campaign 1: Active, high budget
     await session.execute(text("""
-        INSERT INTO campaigns (brand_id, title, description, primary_niche_id, budget_per_creator_max, status, visibility)
-        VALUES (:bid, :title, :desc, :nid, 100000, 'active', 'public')
+        INSERT INTO campaigns (brand_id, title, description, primary_niche_id, brand_category, budget_per_creator_max, status, visibility)
+        VALUES (:bid, :title, :desc, :nid, :brand_category, 100000, 'active', 'public')
     """), {
         "bid": brand_id,
         "title": f"Looking for {niche_name} influencers for {b_data.get('name', 'brand')}",
         "desc": f"We are launching a new flagship product and need top {niche_name} influencers to create high-quality videos.",
-        "nid": niche_id
+        "nid": niche_id,
+        "brand_category": brand_category,
     })
     
     # Campaign 2: Active, lower budget
     await session.execute(text("""
-        INSERT INTO campaigns (brand_id, title, description, primary_niche_id, budget_per_creator_max, status, visibility)
-        VALUES (:bid, :title, :desc, :nid, 15000, 'active', 'public')
+        INSERT INTO campaigns (brand_id, title, description, primary_niche_id, brand_category, budget_per_creator_max, status, visibility)
+        VALUES (:bid, :title, :desc, :nid, :brand_category, 15000, 'active', 'public')
     """), {
         "bid": brand_id,
         "title": f"Micro-influencers for {b_data.get('name', 'brand')} UGC",
         "desc": f"Seeking authentic user-generated content from smaller creators.",
-        "nid": niche_map.get("lifestyle", niche_id)
+        "nid": niche_map.get("lifestyle", niche_id),
+        "brand_category": brand_category,
     })
     
     # Campaign 3: Archived
     await session.execute(text("""
-        INSERT INTO campaigns (brand_id, title, description, primary_niche_id, budget_per_creator_max, status, visibility)
-        VALUES (:bid, :title, :desc, :nid, 30000, 'archived', 'private')
+        INSERT INTO campaigns (brand_id, title, description, primary_niche_id, brand_category, budget_per_creator_max, status, visibility)
+        VALUES (:bid, :title, :desc, :nid, :brand_category, 30000, 'archived', 'private')
     """), {
         "bid": brand_id,
         "title": f"Past campaign: {b_data.get('name', 'brand')} Summer Sale",
         "desc": f"This campaign is now closed.",
-        "nid": niche_id
+        "nid": niche_id,
+        "brand_category": brand_category,
     })
 
 async def insert_creator(session, user_id, c_data, niche_map):

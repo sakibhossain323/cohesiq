@@ -87,10 +87,11 @@ matching pipeline transparent end-to-end; ship authenticity scoring and ethical-
     5. LLM rationale on top-N only
   - Document which stages are active vs deferred in `plan.md` §4 Phase D after implementation
 
-[ ] N08 [P] Relational conflict-of-interest check (SRS FR-13, lighter-than-Neo4j first cut)
-  - 90-day brand-niche collision check via `creator_collaboration_history`
-  - Apply as Stage-2 gate: creators who collaborated with a same-niche competitor within 90 days are
-    excluded or penalised before the weighted score runs
+[~] N08 [P] Relational conflict-of-interest check (SRS FR-13, lighter-than-Neo4j first cut)
+  - Added `brand_category` to `brand_profiles` and `campaigns` via migration `0018`.
+  - Stage-2 gate now excludes creators who collaborated with a different registered brand in the same `brand_category` within 90 days.
+  - Uses product category, not creator niche: pen vs edtech is allowed; two pen brands conflict.
+  - Remaining: add conflict audit/debug output and category capture for unregistered historical brands if needed.
   - No Neo4j needed for this cut (D2); superseded by N16 if Neo4j is built later
 
 [ ] N09 [P] Ethical-AI data tags at ingestion (SRS US-19, NFR-14/15/16)
