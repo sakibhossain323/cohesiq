@@ -12,6 +12,33 @@ from app.database import AsyncSessionLocal
 DEMO_CAMPAIGN_TITLE = "YouTube creator launch demo"
 
 
+async def _ensure_schema_ready(session):
+    result = await session.execute(text("""
+        SELECT table_name
+        FROM (
+            VALUES
+                ('users'),
+                ('brand_profiles'),
+                ('campaigns'),
+                ('creator_profiles'),
+                ('creator_social_profiles'),
+                ('ai_match_scores'),
+                ('niches'),
+                ('languages')
+        ) AS required(table_name)
+        WHERE to_regclass('public.' || table_name) IS NULL
+    """))
+    missing_tables = [row[0] for row in result.all()]
+    if missing_tables:
+        raise SystemExit(
+            "Database schema is not migrated. Missing tables: "
+            f"{', '.join(missing_tables)}. Run "
+            "`docker compose exec backend alembic upgrade head`, then seed creators with "
+            "`docker compose exec backend python -m scripts.seed_real_youtube_creators`, "
+            "then retry `docker compose exec backend python -m scripts.test_matching`."
+        )
+
+
 async def _get_or_create_demo_brand_id(session):
     result = await session.execute(text("""
         SELECT bp.id
@@ -135,6 +162,7 @@ async def _get_or_create_demo_campaign_id(session):
 
 async def test():
     async with AsyncSessionLocal() as session:
+        await _ensure_schema_ready(session)
         campaign_id = await _get_or_create_demo_campaign_id(session)
 
         print(f"Running live matching service for campaign: {campaign_id}")
