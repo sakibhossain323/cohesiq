@@ -24,10 +24,22 @@ Verification completed:
 - Live route smoke test for `/youtube/channels/enrichment`
 
 ## Unit 2: Persist Enrichment To Creator Social Profile
-Status: Pending
+Status: Complete
+
+Scope:
+- Add `POST /creators/{creator_id}/platforms/youtube/enrich`.
+- Upsert the creator's YouTube `creator_social_profiles` row from public enrichment.
+- Store API verification metadata on the social profile row.
+
+Verification completed:
+- `docker compose exec backend python -m unittest tests.test_creator_youtube_enrichment tests.test_youtube_service -v`
 
 ## Unit 3: Portfolio Import From Recent Videos
 Status: Pending
+
+Unblocked by:
+- Unit 2 persistence verified.
+- N02 real-channel seeding verified: 19 YouTube `verified` rows plus 38 companion `estimated` rows.
 
 ## Unit 4: Matching Signal Integration
 Status: Pending

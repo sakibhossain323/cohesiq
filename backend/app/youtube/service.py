@@ -114,7 +114,7 @@ async def get_channel(
     handle: str | None = None,
     username: str | None = None,
 ) -> YouTubeChannel:
-    params: dict[str, Any] = {"part": "snippet,statistics,contentDetails"}
+    params: dict[str, Any] = {"part": "snippet,statistics,contentDetails,topicDetails"}
     if channel_id:
         params["id"] = channel_id
     elif handle:
@@ -250,6 +250,7 @@ def parse_channel_response(payload: dict[str, Any]) -> YouTubeChannel:
     item = items[0]
     snippet = item.get("snippet") or {}
     statistics = item.get("statistics") or {}
+    topic_details = item.get("topicDetails") or {}
     related_playlists = (
         (item.get("contentDetails") or {})
         .get("relatedPlaylists")
@@ -268,6 +269,7 @@ def parse_channel_response(payload: dict[str, Any]) -> YouTubeChannel:
         video_count=_to_int(statistics.get("videoCount")),
         view_count=_to_int(statistics.get("viewCount")),
         uploads_playlist_id=related_playlists.get("uploads"),
+        topic_categories=topic_details.get("topicCategories") or [],
         url=f"https://www.youtube.com/channel/{channel_id}",
     )
 
@@ -314,17 +316,40 @@ def build_channel_enrichment(
         handle=channel.custom_url,
         profile_url=channel.url,
         title=channel.title,
+        description=channel.description,
         thumbnail_url=_best_thumbnail_url(channel.thumbnails),
         subscriber_count=channel.subscriber_count,
         total_views=channel.view_count,
         video_count=channel.video_count,
         uploads_playlist_id=channel.uploads_playlist_id,
+        topic_categories=channel.topic_categories,
         recent_videos=recent_videos,
         avg_views_recent=_avg([video.view_count for video in recent_videos]),
         avg_likes_recent=_avg([video.like_count for video in recent_videos]),
         avg_comments_recent=_avg([video.comment_count for video in recent_videos]),
         estimated_engagement_rate=_estimate_engagement_rate(recent_videos),
         uploads_per_month=_estimate_uploads_per_month(recent_videos),
+        detected_content_languages=_detect_content_languages(
+            channel_title=channel.title,
+            recent_videos=recent_videos,
+        ),
+    )
+
+
+def _detect_content_languages(
+    *,
+    channel_title: str,
+    recent_videos: list[YouTubeRecentVideo],
+) -> list[str]:
+    from app.creators.normalization import detect_content_languages  # noqa: PLC0415
+
+    return detect_content_languages(
+        YouTubeChannelEnrichment(
+            platform_user_id="_",
+            profile_url="_",
+            title=channel_title,
+            recent_videos=recent_videos,
+        )
     )
 
 

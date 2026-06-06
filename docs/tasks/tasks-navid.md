@@ -22,7 +22,7 @@ graph/vector layers. Sakib owns the brand/creator marketplace UI & campaign work
 | Pure deterministic scorer | `[x]` | `services/matching.py` — 6 weights per SRS §5.2: niche .30 / engagement .20 / budget .20 / platform .15 / language .10 / recency .05 |
 | `run-matching` + `matches` endpoints | `[~]` | `app/campaigns/` — relational, heuristic rationale, partial score persistence (platform/recency/semantic/rank missing — N04) |
 | Semantic similarity (Gemini + token fallback) | `[~]` | `services/semantic_match.py` — computed on the fly, not persisted |
-| Seed pipeline (synthetic) | `[~]` | `scripts/generate_seed_data.py` (Tavily+Groq), `seed_db.py`, `reset_db.py`, `sync_clerk_users.py` — real BD channels not yet seeded (N02) |
+| Seed pipeline (synthetic + real YouTube script) | `[~]` | `scripts/generate_seed_data.py` (Tavily+Groq), `seed_db.py`, `reset_db.py`, `sync_clerk_users.py`, `seed_real_youtube_creators.py` — live API run pending |
 
 ---
 
@@ -31,25 +31,32 @@ graph/vector layers. Sakib owns the brand/creator marketplace UI & campaign work
 **Goal:** turn the stateless YouTube wrapper into persisted, matchable creator data; make the
 matching pipeline transparent end-to-end; ship authenticity scoring and ethical-AI data tags.
 
-[ ] N01 [P] Persist YouTube enrichment → `creator_social_profiles`
+[x] N01 [P] Persist YouTube enrichment → `creator_social_profiles`
   - Add `POST /creators/{creator_id}/platforms/youtube/enrich` (body: `channel_ref`, `recent_video_limit`)
   - Map enrichment output → social profile columns per `youtube_implementation.md` "Recommended mapping", plus two fields the recommended mapping omits:
     - `posts_per_month = enrichment.uploads_per_month` (schema column exists, mapping doc skips it)
     - `api_channel_id = enrichment.platform_user_id` (the YouTube channel ID)
-  - Add `is_api_verified`, `api_verified_at`, `api_channel_id` columns via migration `0014` (schema.md extension point)
+  - Add `is_api_verified`, `api_verified_at`, `api_channel_id` columns via migration `0016` (schema.md extension point)
   - Keep persistence in `app/creators/` — the YouTube wrapper stays stateless
-  - Unit-test mapping + update-vs-create before route test (Docker)
+  - Verified with `docker compose exec backend python -m unittest tests.test_creator_youtube_enrichment tests.test_youtube_service -v`
 
-[ ] N02 Seed 18–20 **real** BD YouTube channels (SRS US-3)
+[x] N02 Seed 18–20 **real** BD YouTube channels (SRS US-3)
   - Discover via `GET /youtube/channels?handle=` (1 unit each), **never** `Search.list` (D8 — 100 units)
   - Hardcode researched channel handles by niche; run enrichment → persist as API-verified creators
   - Add proportional synthetic IG/TikTok companion profiles labelled `"Estimated"` (N09, US-19)
+  - Verified with `docker compose exec backend python -m scripts.seed_real_youtube_creators`: 19 succeeded, 0 failed.
+  - Verified DB counts: 19 YouTube `verified`, 19 Instagram `estimated`, 19 TikTok `estimated`.
+  - Seed bios are generated from public channel descriptions plus the last five recent-video descriptions; city is left unset to avoid confusing creator location with audience/content location.
+  - Generated-bio behavior verified with `docker compose exec backend python -m unittest tests.test_creator_youtube_enrichment tests.test_youtube_service -v`.
 
-[ ] N03 Normalization at ingestion (SRS US-4, FR-26)
+[x] N03 Normalization at ingestion (SRS US-4, FR-26)
   - Niche: YouTube `topicCategories` Wikipedia URL → internal `niches` table via `YOUTUBE_CATEGORY_MAP` dict
-  - Language: detect Bangla/English/Banglish from video **titles+descriptions** using `langdetect`/`fasttext`; store on `creator_social_profiles.content_languages`. Note: full captions require a separate `captions.list` API call not in the Tier-0 enrichment endpoint — detection on titles+descriptions is the correct Tier-0 scope.
+  - Optional Groq classifier: when `GROQ_API_KEY` exists, classify niche from channel description plus last five video titles/descriptions; invalid/missing Groq output falls back to YouTube topic categories, then generic `Lifestyle`.
+  - Language: detect Bangla/English/Banglish from video **titles+descriptions**; current implementation uses deterministic script/keyword heuristics and stores on `creator_social_profiles.content_languages`. Note: full captions require a separate `captions.list` API call not in the Tier-0 enrichment endpoint — detection on titles+descriptions is the correct Tier-0 scope.
   - Tier: map follower count → nano/micro/macro/mega; compute engagement vs tier benchmark for N06
   - City: unrecognised city strings → `unknown_location` bucket, never silently dropped (SRS §4.4)
+  - Implemented as deterministic Tier-0 normalization in `app/creators/normalization.py`: topic-category niche map, Bangla/English/Banglish heuristic from titles/descriptions, city fallback, and engagement-vs-tier ratio helper.
+  - Verified with `docker compose exec backend python -m unittest tests.test_creator_youtube_enrichment tests.test_youtube_service -v`
 
 [ ] N04 Persist full score breakdown to `ai_match_scores` (SRS FR-10, plan Phase C)
   - Add `score_platform`, `score_recency`, `semantic_similarity`, `rank` columns via migration `0015`

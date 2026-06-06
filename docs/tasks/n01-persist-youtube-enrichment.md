@@ -37,10 +37,11 @@ Also persist:
 - `data_source = "verified"` when data comes from API
 
 ## Database changes
-- Add columns via migration (extension point is `0014`):
+- Add columns via migration `0016`:
   - `is_api_verified` (boolean)
   - `api_verified_at` (timestamp)
   - `api_channel_id` (string)
+  - `data_source` (string)
 - Update `docs/schema.md` after migration.
 
 ## Implementation details

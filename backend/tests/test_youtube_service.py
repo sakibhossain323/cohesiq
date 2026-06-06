@@ -42,6 +42,7 @@ class YouTubeServiceTests(unittest.TestCase):
                         "id": "UC_test",
                         "snippet": {
                             "title": "Test Channel",
+                            "description": "Channel description from YouTube.",
                             "customUrl": "@test",
                             "thumbnails": {
                                 "high": {"url": "https://example.com/high.jpg"}
@@ -54,6 +55,11 @@ class YouTubeServiceTests(unittest.TestCase):
                         },
                         "contentDetails": {
                             "relatedPlaylists": {"uploads": "UU_test"},
+                        },
+                        "topicDetails": {
+                            "topicCategories": [
+                                "https://en.wikipedia.org/wiki/Technology"
+                            ]
                         },
                     }
                 ]
@@ -101,7 +107,13 @@ class YouTubeServiceTests(unittest.TestCase):
 
         self.assertEqual(enrichment.platform_user_id, "UC_test")
         self.assertEqual(enrichment.handle, "@test")
+        self.assertEqual(enrichment.description, "Channel description from YouTube.")
         self.assertEqual(enrichment.thumbnail_url, "https://example.com/high.jpg")
+        self.assertEqual(
+            enrichment.topic_categories,
+            ["https://en.wikipedia.org/wiki/Technology"],
+        )
+        self.assertEqual(enrichment.detected_content_languages, ["en"])
         self.assertEqual(enrichment.avg_views_recent, 1500)
         self.assertEqual(enrichment.avg_likes_recent, 150)
         self.assertEqual(enrichment.avg_comments_recent, 15)

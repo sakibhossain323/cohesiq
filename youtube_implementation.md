@@ -42,8 +42,13 @@ YouTube integration lives in:
 - `backend/app/youtube/router.py`
 - `backend/app/youtube/service.py`
 - `backend/app/youtube/schemas.py`
+- `backend/app/creators/router.py` for the authenticated persistence endpoint
+- `backend/app/creators/service.py` for enrichment-to-social-profile persistence
+- `backend/alembic/versions/0016_add_api_verified_social_profile_fields.py`
 - `backend/tests/test_youtube_service.py`
+- `backend/tests/test_creator_youtube_enrichment.py`
 - `backend/scripts/test_youtube_api.py`
+- `backend/scripts/seed_real_youtube_creators.py`
 
 The router is included from `backend/app/main.py` with:
 
@@ -244,17 +249,17 @@ Search example:
 http://localhost:8000/youtube/search?q=python%20tutorial&max_results=5
 ```
 
-## Next Recommended Unit
+## Unit 2 Completed: Persist Enrichment To Creator Social Profile
 
-Unit 2 should persist enrichment into `creator_social_profiles`.
+The YouTube wrapper remains stateless. Persistence belongs to the creators domain.
 
-Recommended endpoint:
+Authenticated endpoint:
 
 ```text
 POST /creators/{creator_id}/platforms/youtube/enrich
 ```
 
-Recommended request body:
+Request body:
 
 ```json
 {
@@ -263,11 +268,12 @@ Recommended request body:
 }
 ```
 
-Recommended mapping:
+Implemented mapping:
 
 ```text
 platform = "youtube"
 platform_user_id = enrichment.platform_user_id
+api_channel_id = enrichment.platform_user_id
 handle = enrichment.handle or enrichment.title
 profile_url = enrichment.profile_url
 display_name_on_platform = enrichment.title
@@ -276,14 +282,202 @@ avg_views_per_post = enrichment.avg_views_recent
 avg_likes_per_post = enrichment.avg_likes_recent
 avg_comments_per_post = enrichment.avg_comments_recent
 engagement_rate = enrichment.estimated_engagement_rate
-stats_reported_for_period = "recent_uploads"
+posts_per_month = enrichment.uploads_per_month
+is_api_verified = true
+api_verified_at = now()
+data_source = "verified"
+stats_reported_at = now()
+stats_reported_for_period = "recent {n} uploads"
 ```
 
-Testing for Unit 2 should happen before route testing:
+Schema changes:
 
-1. Unit-test enrichment-to-social-profile mapping.
-2. Unit-test update-vs-create behavior.
-3. Then test the authenticated endpoint in Docker.
+```text
+creator_social_profiles.is_api_verified
+creator_social_profiles.api_verified_at
+creator_social_profiles.api_channel_id
+creator_social_profiles.data_source
+```
+
+These are added by migration `0016`.
+
+Migration `0017` restores `UNIQUE(creator_id, platform)` on `creator_social_profiles`, which is required by the enrichment and seeding upserts.
+
+Verification:
+
+```bash
+docker compose exec backend alembic upgrade head
+docker compose exec backend python -m unittest tests.test_creator_youtube_enrichment tests.test_youtube_service -v
+```
+
+Expected unit-test result:
+
+```text
+Ran 6 tests
+OK
+```
+
+Live authenticated route testing requires a valid Clerk-authenticated creator token. Use the frontend flow or an API client with an `Authorization: Bearer <token>` header.
+
+Example request shape:
+
+```bash
+curl -X POST "http://localhost:8000/creators/<creator_id>/platforms/youtube/enrich" \
+  -H "Authorization: Bearer <creator_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"channel_ref":"@programmingwithmosh","recent_video_limit":10}'
+```
+
+Successful response returns the persisted `SocialProfileOut` row, including:
+
+```text
+platform_user_id
+api_channel_id
+follower_count
+avg_views_per_post
+avg_likes_per_post
+avg_comments_per_post
+engagement_rate
+posts_per_month
+is_api_verified
+api_verified_at
+data_source
+stats_reported_at
+```
+
+## N02 Implemented: Real Bangladesh YouTube Creator Seeder
+
+The real-channel seeder is:
+
+```text
+backend/scripts/seed_real_youtube_creators.py
+```
+
+It hardcodes 19 Bangladesh YouTube creator handles across education, technology, food, travel, entertainment, comedy, and gaming. It calls `get_channel_enrichment()` for each handle and never calls `Search.list`.
+
+For each successful channel, it:
+
+- creates or updates a seed `users` row
+- creates or updates a `creator_profiles` row
+- generates `creator_profiles.bio` from the public channel description plus the last five recent-video descriptions
+- leaves `creator_profiles.city` unset, because creator location and target audience location should not be inferred from YouTube content
+- links the creator to a primary niche and Bangla language
+- persists the YouTube row as `data_source = "verified"`
+- adds estimated Instagram and TikTok companion rows as `data_source = "estimated"`
+
+Run after migrations through `0017`:
+
+```bash
+docker compose exec backend python -m scripts.seed_real_youtube_creators
+```
+
+The script prints one line per channel:
+
+```text
+Seeded <channel title> (@handle)
+Skipped @handle: <error>
+```
+
+It continues if one channel fails, rolls back only that channel, and prints a final success/failure count.
+
+Verified live result:
+
+```text
+Real YouTube creator seeding complete: 19 succeeded, 0 failed.
+```
+
+Verified DB counts:
+
+```text
+platform  | data_source | count
+----------+-------------+------
+youtube   | verified    | 19
+instagram | estimated   | 19
+tiktok    | estimated   | 19
+```
+
+Suggested database checks:
+
+```bash
+docker compose exec postgres psql -U cohesiq -d cohesiq -c "
+SELECT platform, data_source, count(*)
+FROM creator_social_profiles
+GROUP BY platform, data_source
+ORDER BY platform, data_source;
+"
+```
+
+```bash
+docker compose exec postgres psql -U cohesiq -d cohesiq -c "
+SELECT cp.display_name, sp.platform, sp.data_source, sp.follower_count, sp.is_api_verified
+FROM creator_profiles cp
+JOIN creator_social_profiles sp ON sp.creator_id = cp.id
+WHERE sp.platform = 'youtube'
+ORDER BY sp.follower_count DESC NULLS LAST
+LIMIT 20;
+"
+```
+
+Health checks after backend or migration changes:
+
+```bash
+docker compose ps
+docker compose logs --tail 50 backend
+```
+
+## N03 Implemented: Ingestion Normalization
+
+Normalization lives in:
+
+```text
+backend/app/creators/normalization.py
+```
+
+The current Tier-0 normalization is deterministic and uses only public channel/video payloads:
+
+- YouTube `topicCategories` Wikipedia URLs map to internal niche names through `YOUTUBE_CATEGORY_MAP`.
+- If `GROQ_API_KEY` is configured, the real-channel seeder asks Groq to classify the creator into exactly one allowed Cohesiq niche using channel description plus the last five video titles/descriptions.
+- If Groq is unavailable or returns an invalid niche, seeding falls back to YouTube topic categories, then a generic `Lifestyle` fallback.
+- Recent video titles and descriptions are scanned for Bangla, English, and Banglish signals.
+- Detected platform languages are stored on `creator_social_profiles.content_languages`.
+- The creator-level `creator_languages` table is synced from the detected languages.
+- Known Bangladesh city names are normalized; unknown or blank city strings become `unknown_location`.
+- `engagement_vs_tier_ratio()` compares engagement rate against the existing tier benchmark and is ready for N06 trust scoring.
+
+The YouTube wrapper now requests:
+
+```text
+part=snippet,statistics,contentDetails,topicDetails
+```
+
+New enrichment fields:
+
+```text
+topic_categories
+detected_content_languages
+```
+
+The persistence endpoint uses these fields to enrich the social profile row and creator language/niche junction rows.
+
+Focused test command:
+
+```bash
+docker compose exec backend python -m unittest tests.test_creator_youtube_enrichment tests.test_youtube_service -v
+```
+
+Expected after generated-bio seeding update:
+
+```text
+Ran 9 tests
+OK
+```
+
+Verified:
+
+```text
+Ran 9 tests
+OK
+```
 
 ## Later Units
 
