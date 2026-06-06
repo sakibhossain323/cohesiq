@@ -63,6 +63,21 @@ async def _ensure_schema_ready(session):
         )
 
 
+async def _ensure_seed_data_ready(session):
+    result = await session.execute(text("""
+        SELECT count(*)
+        FROM creator_social_profiles
+        WHERE platform = 'youtube'
+    """))
+    youtube_profile_count = result.scalar_one()
+    if youtube_profile_count <= 0:
+        raise SystemExit(
+            "No YouTube creator profiles found. Seed creator supply first with "
+            "`docker compose exec backend python -m scripts.seed_real_youtube_creators`, "
+            "then retry `docker compose exec backend python -m scripts.test_matching`."
+        )
+
+
 async def _get_or_create_demo_brand_id(session):
     result = await session.execute(text("""
         SELECT bp.id
@@ -192,6 +207,7 @@ async def _get_or_create_demo_campaign_id(session):
 async def test():
     async with AsyncSessionLocal() as session:
         await _ensure_schema_ready(session)
+        await _ensure_seed_data_ready(session)
         campaign_id = await _get_or_create_demo_campaign_id(session)
 
         print(f"Running live matching service for campaign: {campaign_id}")

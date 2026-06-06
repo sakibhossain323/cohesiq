@@ -144,6 +144,12 @@ Needed improvements:
 
 ### Stage 2: Conflict check
 
+Detailed concept doc:
+
+```text
+docs/concepts/conflict-of-interest.md
+```
+
 Active first cut:
 
 - check `creator_collaboration_history`

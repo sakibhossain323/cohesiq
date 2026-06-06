@@ -154,14 +154,43 @@ async def _has_recent_competitor_conflict(
     campaign_brand_id: uuid.UUID,
     brand_category: str | None,
 ) -> bool:
+    # Missing data is not a confirmed conflict. If the current campaign has no
+    # product category, skip the gate rather than excluding creators by guesswork.
     if not brand_category:
         return False
 
     from app.creators.models import CreatorCollaborationHistory  # noqa: PLC0415
 
     cutoff = date.today() - timedelta(days=CONFLICT_LOOKBACK_DAYS)
+
+    unregistered_result = await db.execute(
+        select(
+            CreatorCollaborationHistory.brand_name,
+            CreatorCollaborationHistory.collaborated_on,
+        )
+        .where(
+            CreatorCollaborationHistory.creator_id == creator_id,
+            CreatorCollaborationHistory.brand_id.is_(None),
+            CreatorCollaborationHistory.collaborated_on.is_not(None),
+            CreatorCollaborationHistory.collaborated_on >= cutoff,
+        )
+    )
+    for brand_name, collaborated_on in unregistered_result.all():
+        logger.warning(
+            "Skipping conflict check for creator %s with unregistered past brand %r from %s: no brand_category available",
+            creator_id,
+            brand_name,
+            collaborated_on,
+        )
+
+    # Only registered past brands with a matching brand_category can create a
+    # hard conflict. Unregistered/missing-category rows pass through.
     result = await db.execute(
-        select(CreatorCollaborationHistory.id)
+        select(
+            CreatorCollaborationHistory.brand_name,
+            CreatorCollaborationHistory.collaborated_on,
+            BrandProfile.brand_name,
+        )
         .join(BrandProfile, BrandProfile.id == CreatorCollaborationHistory.brand_id)
         .where(
             CreatorCollaborationHistory.creator_id == creator_id,
@@ -172,7 +201,19 @@ async def _has_recent_competitor_conflict(
         )
         .limit(1)
     )
-    return result.scalar_one_or_none() is not None
+    conflict = result.first()
+    if not conflict:
+        return False
+
+    history_brand_name, collaborated_on, registered_brand_name = conflict
+    logger.info(
+        "Excluded creator %s for competitor conflict: brand_category=%r, past_brand=%r, collaborated_on=%s",
+        creator_id,
+        brand_category,
+        registered_brand_name or history_brand_name,
+        collaborated_on,
+    )
+    return True
 
 
 # ------------------------------------------------------------------ #

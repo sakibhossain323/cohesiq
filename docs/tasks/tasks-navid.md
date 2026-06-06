@@ -88,6 +88,7 @@ matching pipeline transparent end-to-end; ship authenticity scoring and ethical-
   - Document which stages are active vs deferred in `plan.md` §4 Phase D after implementation
 
 [~] N08 [P] Relational conflict-of-interest check (SRS FR-13, lighter-than-Neo4j first cut)
+  - Concept doc: `docs/concepts/conflict-of-interest.md`
   - Added `brand_category` to `brand_profiles` and `campaigns` via migration `0018`.
   - Stage-2 gate now excludes creators who collaborated with a different registered brand in the same `brand_category` within 90 days.
   - Uses product category, not creator niche: pen vs edtech is allowed; two pen brands conflict.
