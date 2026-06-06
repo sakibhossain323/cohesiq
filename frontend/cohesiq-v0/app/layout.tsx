@@ -1,26 +1,24 @@
 import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
-import { Geist, Geist_Mono, Fraunces } from 'next/font/google'
+import { Plus_Jakarta_Sans, DM_Sans } from 'next/font/google'
 import { Toaster } from '@/components/ui/toaster'
 import { ClerkProvider } from '@clerk/nextjs'
+import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
-const geistSans = Geist({
+// Cohesiq design system: display / heading font
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  variable: '--font-geist-sans',
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-display',
   display: 'swap',
 })
 
-const geistMono = Geist_Mono({
+// Cohesiq design system: body / UI font
+const dmSans = DM_Sans({
   subsets: ['latin'],
-  variable: '--font-geist-mono',
-  display: 'swap',
-})
-
-// Editorial display serif — high-contrast, characterful headlines.
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  variable: '--font-fraunces',
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-body',
   display: 'swap',
 })
 
@@ -56,12 +54,15 @@ export default function RootLayout({
     <ClerkProvider>
       <html
         lang="en"
-        className={`bg-background ${geistSans.variable} ${geistMono.variable} ${fraunces.variable}`}
+        className={`bg-background ${plusJakartaSans.variable} ${dmSans.variable}`}
+        suppressHydrationWarning
       >
-        <body className="font-sans antialiased">
-          {children}
-          <Toaster />
-          {process.env.NODE_ENV === 'production' && <Analytics />}
+        <body className="antialiased" suppressHydrationWarning>
+          <ThemeProvider>
+            {children}
+            <Toaster />
+            {process.env.NODE_ENV === 'production' && <Analytics />}
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

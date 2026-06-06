@@ -165,3 +165,28 @@ graphify update .                                  # rebuild graph after code ch
 ### Skill
 
 `/graphify` — invokable from the Claude Code CLI. Trigger it for any complex codebase exploration that spans multiple files.
+
+---
+
+## Design System
+
+Cohesiq has a defined design system. **All frontend UI work must use design tokens — never hardcode colors, font sizes, spacing, or shadows.**
+
+### Files
+
+| File | Purpose |
+|---|---|
+| `frontend/cohesiq-v0/frontend/design/cohesiq.css` | Token source — all CSS custom properties |
+| `frontend/cohesiq-v0/app/globals.css` | Tailwind v4 `@theme inline` block — exposes every token as a utility class |
+| `frontend/cohesiq-v0/app/layout.tsx` | Font loading: `Plus Jakarta Sans` (`--font-display`) + `DM Sans` (`--font-body`) |
+| `frontend/cohesiq-v0/app/(public)/design-system/` | Live visual showcase at `/design-system` |
+| `docs/design-system.md` | Full token reference (colors, type scale, spacing, radius, shadows, shadcn bridge) |
+
+### Rules
+
+1. **Colors:** use `--brand-primary`, `--brand-secondary`, the `--n-*` warm neutral scale, or `--color-*` semantic tokens. No hex literals in new CSS or `style={}` props.
+2. **Typography:** use `font-display` (headings) or `font-body` (UI text) Tailwind utilities. Font sizes via the `--text-*` modular scale tokens — not Tailwind's default scale.
+3. **Spacing:** use `--space-*` 4px-grid tokens or their Tailwind equivalents. No arbitrary `px` values.
+4. **Dark mode:** all tokens automatically remap in dark mode — do not add `dark:` overrides unless handling a genuine one-off exception that cannot use a token.
+5. **shadcn/ui** components are already wired to the design system bridge tokens — do not override their CSS variables (`--background`, `--primary`, `--ring`, etc.).
+6. Before writing new UI styles, check `docs/design-system.md` for the correct token name.

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cohesiq — Design System</title>
+<link rel="stylesheet" href="cohesiq.css" />
+<style>
+body { background: var(--color-surface-subtle); }
+.ds-head { background: var(--color-surface); border-bottom: 1px solid var(--color-border); position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); }
+.ds-head .container { display: flex; align-items: center; justify-content: space-between; height: 72px; }
+.ds-actions { display: flex; align-items: center; gap: var(--space-3); }
+.theme-toggle { width: 40px; height: 40px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface-elevated); color: var(--color-text-primary); display: grid; place-items: center; transition: all .2s ease; }
+.theme-toggle:hover { color: var(--brand-primary); border-color: var(--brand-primary); }
+.theme-toggle .sun { display: none; } .dark .theme-toggle .sun { display: block; } .dark .theme-toggle .moon { display: none; }
+
+.hero-ds { padding-block: var(--space-20) var(--space-12); }
+.hero-ds h1 { font-size: clamp(2.4rem, 5vw, var(--text-6xl)); }
+.hero-ds .grad { background: linear-gradient(100deg, var(--brand-primary), var(--brand-secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero-ds p { color: var(--color-text-secondary); font-size: var(--text-xl); max-width: 56ch; margin-top: var(--space-4); }
+
+.block { padding-block: var(--space-12); border-top: 1px solid var(--color-border); }
+.block > .container > .blabel { display: flex; align-items: baseline; gap: var(--space-4); margin-bottom: var(--space-8); }
+.blabel h2 { font-size: var(--text-3xl); }
+.blabel span { font-family: ui-monospace, monospace; font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.panel { background: var(--color-surface-elevated); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--space-6); box-shadow: var(--shadow-sm); }
+
+/* swatches */
+.swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-4); }
+.swatch { border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--color-border); background: var(--color-surface-elevated); box-shadow: var(--shadow-sm); }
+.swatch .chip { height: 84px; }
+.swatch .meta { padding: var(--space-3); }
+.swatch .nm { font-family: var(--font-display); font-weight: 700; font-size: var(--text-sm); }
+.swatch .vr { font-family: ui-monospace, monospace; font-size: 11px; color: var(--color-text-muted); }
+.scale-row { display: grid; grid-template-columns: repeat(11, 1fr); gap: 8px; }
+.scale-row .s { border-radius: var(--radius-md); border: 1px solid var(--color-border); overflow: hidden; }
+.scale-row .s .c { height: 56px; }
+.scale-row .s .l { font-family: ui-monospace, monospace; font-size: 10px; text-align: center; padding: 4px 0; color: var(--color-text-muted); }
+
+.tokrow { display: grid; grid-template-columns: 28px 1fr auto; gap: var(--space-3); align-items: center; padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border-subtle); }
+.tokrow:last-child { border-bottom: none; }
+.tokrow .sw { width: 28px; height: 28px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); }
+.tokrow code { font-family: ui-monospace, monospace; font-size: var(--text-sm); }
+.tokrow .hex { font-family: ui-monospace, monospace; font-size: var(--text-xs); color: var(--color-text-muted); }
+.tok2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); }
+
+/* type specimens */
+.type-spec { display: flex; flex-direction: column; gap: var(--space-5); }
+.type-row { display: grid; grid-template-columns: 110px 1fr; gap: var(--space-5); align-items: baseline; border-bottom: 1px solid var(--color-border-subtle); padding-bottom: var(--space-4); }
+.type-row .tk { font-family: ui-monospace, monospace; font-size: var(--text-xs); color: var(--color-text-muted); }
+.type-row .smp { font-family: var(--font-display); font-weight: 800; line-height: 1.1; color: var(--color-text-primary); }
+
+/* spacing */
+.space-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.space-row { display: flex; align-items: center; gap: var(--space-4); }
+.space-row .bar { height: 16px; background: var(--brand-primary); border-radius: var(--radius-sm); }
+.space-row code { font-family: ui-monospace, monospace; font-size: var(--text-sm); width: 90px; }
+.space-row .px { font-family: ui-monospace, monospace; font-size: var(--text-xs); color: var(--color-text-muted); }
+
+/* radius + shadow */
+.demo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: var(--space-5); }
+.radius-demo { aspect-ratio: 1; background: var(--brand-primary-soft); border: 2px solid var(--brand-primary); display: grid; place-items: end center; padding-bottom: var(--space-2); }
+.radius-demo span, .shadow-demo span { font-family: ui-monospace, monospace; font-size: 11px; color: var(--color-text-secondary); }
+.shadow-demo { aspect-ratio: 1.4; background: var(--color-surface-elevated); border-radius: var(--radius-lg); display: grid; place-items: end center; padding-bottom: var(--space-2); }
+
+/* components showcase */
+.comp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: var(--space-6); }
+.comp { display: flex; flex-direction: column; gap: var(--space-4); }
+.comp .cl { font-family: ui-monospace, monospace; font-size: var(--text-xs); color: var(--color-text-muted); }
+.row { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
+.badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: var(--radius-full); }
+.badge.primary { background: var(--brand-primary-soft); color: var(--brand-primary); }
+.badge.warm { background: var(--brand-secondary-soft); color: var(--brand-secondary); }
+.badge.neutral { background: var(--color-surface-sunken); color: var(--color-text-secondary); }
+
+/* mini match card reuse */
+.av { width: 46px; height: 46px; border-radius: var(--radius-md); flex: none; background: repeating-linear-gradient(135deg, var(--brand-primary) 0 6px, var(--brand-primary-strong) 6px 12px); }
+.match-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); }
+.match-row .mn { font-family: var(--font-display); font-weight: 700; }
+.match-row .sub { font-size: var(--text-xs); color: var(--color-text-muted); }
+.scoreb { margin-left: auto; text-align: right; }
+.scoreb .pct { font-family: var(--font-display); font-weight: 800; color: var(--brand-primary); }
+.scoreb .bar { width: 64px; height: 6px; border-radius: 3px; background: var(--color-surface-sunken); overflow: hidden; margin-top: 4px; }
+.scoreb .bar i { display: block; height: 100%; width: 92%; background: linear-gradient(90deg, var(--brand-primary), var(--brand-secondary)); }
+
+@media (max-width: 720px){ .tok2 { grid-template-columns: 1fr; } .scale-row { grid-template-columns: repeat(6, 1fr); } .type-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="ds-head">
+  <div class="container">
+    <a class="logo" href="Cohesiq Landing.html">
+      <svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <circle cx="8" cy="8" r="4" fill="var(--brand-primary)"/><circle cx="24" cy="9" r="3" fill="var(--brand-secondary)"/><circle cx="22" cy="24" r="4.5" fill="var(--brand-primary)"/>
+        <line x1="8" y1="8" x2="24" y2="9" stroke="var(--brand-primary)" stroke-width="1.6" opacity="0.55"/><line x1="8" y1="8" x2="22" y2="24" stroke="var(--brand-primary)" stroke-width="1.6" opacity="0.55"/><line x1="24" y1="9" x2="22" y2="24" stroke="var(--brand-secondary)" stroke-width="1.6" opacity="0.55"/>
+      </svg>
+      Cohesiq <span style="font-family:var(--font-body);font-weight:500;color:var(--color-text-muted);font-size:var(--text-sm)">/ Design System</span>
+    </a>
+    <div class="ds-actions">
+      <a class="btn btn-ghost btn-sm" href="Cohesiq Landing.html">View landing →</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <svg class="moon ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg class="sun ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<section class="hero-ds">
+  <div class="container">
+    <span class="eyebrow">Foundations</span>
+    <h1 style="margin-top:var(--space-4)">The <span class="grad">Cohesiq</span> design system.</h1>
+    <p>Every token below maps 1:1 to a Tailwind v4 <code style="font-family:ui-monospace,monospace">@theme</code> custom property. Vibrant, energetic, professional — and first-class in both light and dark. Toggle the theme to inspect both.</p>
+  </div>
+</section>
+
+<!-- BRAND COLOR -->
+<section class="block">
+  <div class="container">
+    <div class="blabel"><h2>Brand</h2><span>--color-brand-*</span></div>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="chip" style="background:var(--brand-primary)"></div><div class="meta"><div class="nm">Primary</div><div class="vr">--brand-primary</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--brand-primary-strong)"></div><div class="meta"><div class="nm">Primary / strong</div><div class="vr">hover · pressed</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--brand-primary-soft)"></div><div class="meta"><div class="nm">Primary / soft</div><div class="vr">tint · badge bg</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--brand-secondary)"></div><div class="meta"><div class="nm">Secondary</div><div class="vr">--brand-secondary</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--brand-secondary-strong)"></div><div class="meta"><div class="nm">Secondary / strong</div><div class="vr">hover · pressed</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--brand-secondary-soft)"></div><div class="meta"><div class="nm">Secondary / soft</div><div class="vr">tint · chip bg</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- NEUTRALS -->
+<section class="block">
+  <div class="container">
+    <div class="blabel"><h2>Warm neutrals</h2><span>--n-50 → --n-950</span></div>
+    <div class="scale-row">
+      <div class="s"><div class="c" style="background:var(--n-50)"></div><div class="l">50</div></div>
+      <div class="s"><div class="c" style="background:var(--n-100)"></div><div class="l">100</div></div>
+      <div class="s"><div class="c" style="background:var(--n-200)"></div><div class="l">200</div></div>
+      <div class="s"><div class="c" style="background:var(--n-300)"></div><div class="l">300</div></div>
+      <div class="s"><div class="c" style="background:var(--n-400)"></div><div class="l">400</div></div>
+      <div class="s"><div class="c" style="background:var(--n-500)"></div><div class="l">500</div></div>
+      <div class="s"><div class="c" style="background:var(--n-600)"></div><div class="l">600</div></div>
+      <div class="s"><div class="c" style="background:var(--n-700)"></div><div class="l">700</div></div>
+      <div class="s"><div class="c" style="background:var(--n-800)"></div><div class="l">800</div></div>
+      <div class="s"><div class="c" style="background:var(--n-900)"></div><div class="l">900</div></div>
+      <div class="s"><div class="c" style="background:var(--n-950)"></div><div class="l">950</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- SEMANTIC TOKENS -->
+<section class="block">
+  <div class="container">
+    <div class="blabel"><h2>Semantic tokens</h2><span>resolve per theme</span></div>
+    <div class="tok2">
+      <div class="panel">
+        <div style="font-family:var(--font-display);font-weight:700;margin-bottom:var(--space-4)">Surfaces &amp; borders</div>
+        <div class="tokrow"><span class="sw" style="background:var(--color-surface)"></span><code>--color-surface</code><span class="hex">base</span></div>
+        <div class="tokrow"><span class="sw" style="background:var(--color-surface-elevated)"></span><code>--color-surface-elevated</code><span class="hex">cards</span></div>
+        <div class="tokrow"><span class="sw" style="background:var(--color-surface-subtle)"></span><code>--color-surface-subtle</code><span class="hex">sections</span></div>
+        <div class="tokrow"><span class="sw" style="background:var(--color-border)"></span><code>--color-border</code><span class="hex">dividers</span></div>
+        <div class="tokrow"><span class="sw" style="background:var(--color-border-subtle)"></span><code>--color-border-subtle</code><span class="hex">hairlines</span></div>
+      </div>
+      <div class="panel">
+        <div style="font-family:var(--font-display);font-weight:700;margin-bottom:var(--space-4)">Text</div>
+        <div class="tokrow"><span class="sw" style="background:var(--color-text-primary)"></span><code>--color-text-primary</code><span class="hex">headings · body</span></div>
+        <div class="tokrow"><span class="sw" style="background:var(--color-text-secondary)"></span><code>--color-text-secondary</code><span class="hex">supporting</span></div>
+        <div class="tokrow"><span class="sw" style="background:var(--color-text-muted)"></span><code>--color-text-muted</code><span class="hex">captions · meta</span></div>
+        <div style="margin-top:var(--space-5)">
+          <p style="color:var(--color-text-primary);font-weight:600">Primary — headings and body copy.</p>
+          <p style="color:var(--color-text-secondary);margin-top:6px">Secondary — supporting paragraphs.</p>
+          <p style="color:var(--color-text-muted);margin-top:6px;font-size:var(--text-sm)">Muted — captions and metadata. All ≥ 4.5:1.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TYPOGRAPHY -->
+<section class="block">
+  <div class="container">
+    <div class="blabel"><h2>Typography</h2><span>Plus Jakarta Sans · DM Sans</span></div>
+    <div class="panel">
+      <div class="type-spec">
+        <div class="type-row"><span class="tk">--text-7xl<br/>76px</span><div class="smp" style="font-size:var(--text-7xl)">Marketplace</div></div>
+        <div class="type-row"><span class="tk">--text-5xl<br/>49px</span><div class="smp" style="font-size:var(--text-5xl)">Stop guessing.</div></div>
+        <div class="type-row"><span class="tk">--text-3xl<br/>31px</span><div class="smp" style="font-size:var(--text-3xl)">AI matches creators</div></div>
+        <div class="type-row"><span class="tk">--text-xl<br/>20px</span><div class="smp" style="font-size:var(--text-xl);font-weight:600">Get discovered by the right brands</div></div>
+        <div class="type-row"><span class="tk">--text-base<br/>16px · body</span><div style="font-family:var(--font-body);font-size:var(--text-base);color:var(--color-text-secondary);max-width:60ch">Body copy is set in DM Sans at a 16px floor for comfortable reading across Latin and Bangla-Latin mixed content. Nothing on the platform drops below 12px.</div></div>
+        <div class="type-row"><span class="tk">--text-sm<br/>14.4px</span><div style="font-family:var(--font-body);font-size:var(--text-sm);color:var(--color-text-muted)">Supporting metadata, table cells, and helper text.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SPACING -->
+<section class="block">
+  <div class="container">
+    <div class="blabel"><h2>Spacing</h2><span>4px base grid · --space-1 → --space-32</span></div>
+    <div class="panel">
+      <div class="space-list">
+        <div class="space-row"><code>--space-1</code><div class="bar" style="width:4px"></div><span class="px">4px</span></div>
+        <div class="space-row"><code>--space-2</code><div class="bar" style="width:8px"></div><span class="px">8px</span></div>
+        <div class="space-row"><code>--space-3</code><div class="bar" style="width:12px"></div><span class="px">12px</span></div>
+        <div class="space-row"><code>--space-4</code><div class="bar" style="width:16px"></div><span class="px">16px</span></div>
+        <div class="space-row"><code>--space-6</code><div class="bar" style="width:24px"></div><span class="px">24px</span></div>
+        <div class="space-row"><code>--space-8</code><div class="bar" style="width:32px"></div><span class="px">32px</span></div>
+        <div class="space-row"><code>--space-12</code><div class="bar" style="width:48px"></div><span class="px">48px</span></div>
+        <div class="space-row"><code>--space-16</code><div class="bar" style="width:64px"></div><span class="px">64px</span></div>
+        <div class="space-row"><code>--space-24</code><div class="bar" style="width:96px"></div><span class="px">96px</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RADIUS + SHADOW -->
+<section class="block">
+  <div class="container">
+    <div class="tok2">
+      <div>
+        <div class="blabel"><h2>Radius</h2><span>--radius-*</span></div>
+        <div class="demo-grid">
+          <div class="radius-demo" style="border-radius:var(--radius-sm)"><span>sm · 4</span></div>
+          <div class="radius-demo" style="border-radius:var(--radius-md)"><span>md · 8</span></div>
+          <div class="radius-demo" style="border-radius:var(--radius-lg)"><span>lg · 12</span></div>
+          <div class="radius-demo" style="border-radius:var(--radius-xl)"><span>xl · 16</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="blabel"><h2>Elevation</h2><span>warm-tinted · glow in dark</span></div>
+        <div class="demo-grid">
+          <div class="shadow-demo" style="box-shadow:var(--shadow-sm)"><span>shadow-sm</span></div>
+          <div class="shadow-demo" style="box-shadow:var(--shadow-md)"><span>shadow-md</span></div>
+          <div class="shadow-demo" style="box-shadow:var(--shadow-lg)"><span>shadow-lg</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPONENTS -->
+<section class="block">
+  <div class="container">
+    <div class="blabel"><h2>Components</h2><span>buttons · badges · cards</span></div>
+    <div class="comp-grid">
+      <div class="panel comp">
+        <span class="cl">Buttons / primary &amp; warm</span>
+        <div class="row"><button class="btn btn-primary">Get Started</button><button class="btn btn-secondary">Join as Creator</button></div>
+        <div class="row"><button class="btn btn-ghost">Sign In</button><button class="btn btn-outline-warm">Join</button></div>
+        <div class="row"><button class="btn btn-primary btn-sm">Small</button><button class="btn btn-primary btn-lg">Large</button></div>
+      </div>
+      <div class="panel comp">
+        <span class="cl">Badges &amp; tags</span>
+        <div class="row"><span class="badge primary">AI matched</span><span class="badge warm">New</span><span class="badge neutral">Tech</span></div>
+        <div class="row"><span class="badge primary">✓ Verified</span><span class="badge warm">98% match</span></div>
+      </div>
+      <div class="panel comp">
+        <span class="cl">Match-score row</span>
+        <div class="match-row">
+          <div class="av"></div>
+          <div><div class="mn">Tasnia R.</div><div class="sub">248K · 6.4% eng.</div></div>
+          <div class="scoreb"><div class="pct">98%</div><div class="bar"><i></i></div></div>
+        </div>
+      </div>
+      <div class="panel comp">
+        <span class="cl">Eyebrow labels</span>
+        <div style="display:flex;flex-direction:column;gap:var(--space-4)"><span class="eyebrow">For brands</span><span class="eyebrow warm">For creators</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer style="background:#14110D;color:#8B8170;padding-block:var(--space-12)">
+  <div class="container" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-4)">
+    <span style="font-size:var(--text-sm)">© 2026 Cohesiq — Design System</span>
+    <a href="Cohesiq Landing.html" style="color:#fff;font-family:var(--font-display);font-weight:700;font-size:var(--text-sm)">See it in action →</a>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var root = document.documentElement;
+  if (localStorage.getItem('cohesiq-theme') === 'dark') root.classList.add('dark');
+  document.getElementById('themeToggle').addEventListener('click', function(){
+    root.classList.toggle('dark');
+    localStorage.setItem('cohesiq-theme', root.classList.contains('dark') ? 'dark' : 'light');
+  });
+})();
+</script>
+</body>
+</html>

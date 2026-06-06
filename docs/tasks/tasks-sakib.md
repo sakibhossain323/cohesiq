@@ -120,9 +120,9 @@ ingestion, the matching engine internals, semantic/LLM services, and seeding (`t
 
 | Sakib task | Needs from Navid | Why |
 |---|---|---|
-| Render six match-score bars (`MatchesClient.tsx`) | N04 (persist platform/recency/semantic/rank to `ai_match_scores`) | FR-10 needs all six sub-score dimensions; currently only niche/engagement/budget/language stored |
+| Render six match-score bars (`MatchesClient.tsx`) | ~~N04~~ **Done** — all six sub-scores + `score_semantic` now persisted (migration 0014) and rendered in `MatchesClient.tsx` (C04 complete) | FR-10 satisfied; Platform Fit / Recency / Semantic Similarity bars live |
 | D01 Authenticity Auditor (UI) | N06 (Trust Score backend) | UI renders the score Navid computes |
-| C02 per-campaign analytics | N01/N02 (real YouTube data) | real reach/engagement vs estimated |
+| C02 per-campaign analytics (real snapshot data) | N10 (per-campaign engagement snapshots table) | C02 UI done with estimate data; real Day-7/14/30 snapshots blocked on N10 — `campaign_engagement_snapshots` table not yet created |
 | B06 reviews wiring | backend `GET /creators/{id}/reviews` shape | confirm endpoint response shape before wiring |
 
 ---
@@ -149,9 +149,9 @@ ingestion, the matching engine internals, semantic/LLM services, and seeding (`t
 
 ## Phase E — Contract Entity (Change Request 2026-06-06)
 
-> Supersedes the old campaign_type-based collaboration model. See `docs/srs-revisions.md` for full user stories, personas, and FR mapping.
+> Supersedes the old campaign_type-based collaboration model. See `docs/revisions/srs-revisions-26-06-06.md` for full user stories, personas, and FR mapping.
 
-[x] E01 Documentation — `docs/srs-revisions.md` (INVEST user stories, personas, use cases, happy/sad paths, deprecation notice §8); `docs/srs.md` revision pointer; `docs/concepts/campaign.md` overhaul (plain language, 7 sections); `docs/concepts/contract.md` new file (3 engagement types, clause structure, state machine, fee table).
+[x] E01 Documentation — `docs/revisions/srs-revisions-26-06-06.md` (INVEST user stories, personas, use cases, happy/sad paths, deprecation notice §8); `docs/srs.md` revision pointer; `docs/concepts/campaign.md` overhaul (plain language, 7 sections); `docs/concepts/contract.md` new file (3 engagement types, clause structure, state machine, fee table).
 
 [x] E02 Backend migration — `0015_add_contract_model.py`: `contract_type`, `contract_status`, `payment_schedule_type`, `product_disposition_type` enums; `contracts` table with all clause fields + audit trail; `campaigns.campaign_type` made nullable (DEPRECATED).
 

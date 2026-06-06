@@ -1,0 +1,215 @@
+/* ============================================================
+   COHESIQ — Design System
+   Tokens mirror the intended Tailwind v4 @theme block.
+   ============================================================ */
+
+/* ---------- Fonts ---------- */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+
+/* ============================================================
+   TOKENS — LIGHT (default)
+   ============================================================ */
+:root {
+  /* Brand */
+  --brand-primary:        #5B2BD9;
+  --brand-primary-strong: #4A1FBF;
+  --brand-primary-soft:   #EDE6FB;
+  --brand-secondary:        #FF5C5C;
+  --brand-secondary-strong: #ED4444;
+  --brand-secondary-soft:   #FFE7E3;
+
+  /* Warm neutral scale (slightly warm grey) */
+  --n-50:  #FAF8F5;
+  --n-100: #F3EFE9;
+  --n-200: #E8E2D8;
+  --n-300: #D7CFC2;
+  --n-400: #B3A998;
+  --n-500: #8B8170;
+  --n-600: #6A6253;
+  --n-700: #4E483D;
+  --n-800: #36312A;
+  --n-900: #211D18;
+  --n-950: #14110D;
+
+  /* Semantic surfaces & text */
+  --color-surface:          #FFFFFF;
+  --color-surface-elevated:  #FFFFFF;
+  --color-surface-subtle:    var(--n-50);
+  --color-surface-sunken:    var(--n-100);
+  --color-text-primary:      var(--n-950);
+  --color-text-secondary:    var(--n-700);
+  --color-text-muted:        var(--n-500);
+  --color-border:            var(--n-200);
+  --color-border-subtle:     var(--n-100);
+  --color-on-brand:          #FFFFFF;
+
+  --color-brand-primary:   var(--brand-primary);
+  --color-brand-secondary: var(--brand-secondary);
+
+  /* Gradient washes */
+  --wash-primary:   color-mix(in oklab, var(--brand-primary) 12%, transparent);
+  --wash-secondary: color-mix(in oklab, var(--brand-secondary) 10%, transparent);
+
+  /* Typography */
+  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
+
+  --text-xs:   0.8rem;     /* 12.8 */
+  --text-sm:   0.9rem;     /* 14.4 */
+  --text-base: 1rem;       /* 16   */
+  --text-lg:   1.125rem;   /* 18   */
+  --text-xl:   1.25rem;    /* 20   */
+  --text-2xl:  1.563rem;   /* 25   */
+  --text-3xl:  1.953rem;   /* 31   */
+  --text-4xl:  2.441rem;   /* 39   */
+  --text-5xl:  3.052rem;   /* 49   */
+  --text-6xl:  3.815rem;   /* 61   */
+  --text-7xl:  4.768rem;   /* 76   */
+
+  --leading-tight:   1.05;
+  --leading-snug:    1.2;
+  --leading-normal:  1.55;
+  --tracking-tight:  -0.03em;
+  --tracking-snug:   -0.01em;
+  --tracking-wide:   0.08em;
+
+  /* Spacing (4px grid) */
+  --space-1: 0.25rem;  --space-2: 0.5rem;  --space-3: 0.75rem; --space-4: 1rem;
+  --space-5: 1.25rem;  --space-6: 1.5rem;  --space-8: 2rem;    --space-10: 2.5rem;
+  --space-12: 3rem;    --space-16: 4rem;   --space-20: 5rem;   --space-24: 6rem;
+  --space-32: 8rem;
+
+  /* Radius */
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px;
+  --radius-2xl: 24px; --radius-full: 9999px;
+
+  /* Elevation — warm-tinted in light */
+  --shadow-sm: 0 1px 2px rgba(33,29,24,0.06), 0 1px 3px rgba(91,43,217,0.05);
+  --shadow-md: 0 4px 12px rgba(33,29,24,0.07), 0 2px 6px rgba(91,43,217,0.06);
+  --shadow-lg: 0 18px 48px rgba(33,29,24,0.12), 0 8px 20px rgba(91,43,217,0.10);
+  --shadow-brand: 0 14px 36px rgba(91,43,217,0.30);
+  --shadow-warm:  0 14px 36px rgba(255,92,92,0.28);
+
+  --maxw: 1200px;
+}
+
+/* ============================================================
+   TOKENS — DARK
+   ============================================================ */
+.dark {
+  --brand-primary:        #8B5CFF;
+  --brand-primary-strong: #A07BFF;
+  --brand-primary-soft:   #241a3d;
+  --brand-secondary:        #FF7A6E;
+  --brand-secondary-strong: #FF9183;
+  --brand-secondary-soft:   #3a1f1c;
+
+  --color-surface:          #14110D;
+  --color-surface-elevated:  #1C1813;
+  --color-surface-subtle:    #1A1611;
+  --color-surface-sunken:    #100E0A;
+  --color-text-primary:      #F6F2EB;
+  --color-text-secondary:    #C9C1B3;
+  --color-text-muted:        #8B8170;
+  --color-border:            #2D281F;
+  --color-border-subtle:     #241F18;
+  --color-on-brand:          #FFFFFF;
+
+  --wash-primary:   color-mix(in oklab, var(--brand-primary) 18%, transparent);
+  --wash-secondary: color-mix(in oklab, var(--brand-secondary) 14%, transparent);
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md: 0 6px 20px rgba(0,0,0,0.45);
+  --shadow-lg: 0 24px 60px rgba(0,0,0,0.6);
+  --shadow-brand: 0 0 0 1px rgba(139,92,255,0.25), 0 18px 50px rgba(139,92,255,0.30);
+  --shadow-warm:  0 0 0 1px rgba(255,122,110,0.22), 0 18px 50px rgba(255,122,110,0.28);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background .4s ease, color .4s ease;
+}
+h1,h2,h3,h4 { font-family: var(--font-display); font-weight: 800; line-height: var(--leading-tight); letter-spacing: var(--tracking-tight); margin: 0; text-wrap: balance; }
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+button { font-family: inherit; cursor: pointer; }
+.container { max-width: var(--maxw); margin-inline: auto; padding-inline: var(--space-6); }
+
+/* Eyebrow label */
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: var(--text-sm); font-weight: 600;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--brand-primary);
+  display: inline-flex; align-items: center; gap: var(--space-2);
+}
+.eyebrow::before { content: ""; width: 22px; height: 2px; background: var(--brand-primary); border-radius: 2px; }
+.eyebrow.warm { color: var(--brand-secondary); }
+.eyebrow.warm::before { background: var(--brand-secondary); }
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  font-family: var(--font-display); font-weight: 700; font-size: var(--text-base);
+  padding: var(--space-3) var(--space-6); border-radius: var(--radius-full);
+  border: 1.5px solid transparent; white-space: nowrap;
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
+}
+.btn:active { transform: translateY(0) scale(.99); }
+.btn-primary { background: var(--brand-primary); color: var(--color-on-brand); box-shadow: var(--shadow-brand); }
+.btn-primary:hover { transform: translateY(-2px) scale(1.02); background: var(--brand-primary-strong); }
+.btn-secondary { background: var(--brand-secondary); color: #fff; box-shadow: var(--shadow-warm); }
+.btn-secondary:hover { transform: translateY(-2px) scale(1.02); background: var(--brand-secondary-strong); }
+.btn-ghost { background: transparent; color: var(--color-text-primary); border-color: var(--color-border); }
+.btn-ghost:hover { border-color: var(--brand-primary); color: var(--brand-primary); transform: translateY(-1px); }
+.btn-outline-warm { background: transparent; color: var(--brand-secondary); border-color: var(--brand-secondary); }
+.btn-outline-warm:hover { background: var(--brand-secondary); color: #fff; transform: translateY(-2px); }
+.btn-lg { font-size: var(--text-lg); padding: var(--space-4) var(--space-8); }
+.btn-sm { font-size: var(--text-sm); padding: var(--space-2) var(--space-4); }
+
+/* Icon glyphs (simple inline svg sizing) */
+.ico { width: 1.1em; height: 1.1em; flex: none; }
+
+/* ============================================================
+   MARK / LOGO
+   ============================================================ */
+.logo { display: inline-flex; align-items: center; gap: var(--space-2); font-family: var(--font-display); font-weight: 800; font-size: var(--text-xl); letter-spacing: -0.02em; color: var(--color-text-primary); }
+.logo-mark { width: 30px; height: 30px; flex: none; }
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card {
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ============================================================
+   REVEAL ANIMATIONS
+   ============================================================ */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); transition-delay: calc(var(--index, 0) * 80ms); will-change: transform, opacity; }
+  .reveal.is-visible { opacity: 1; transform: none; }
+}
+
+/* float keyframes for mosaic */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes floatY { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+}

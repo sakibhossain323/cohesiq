@@ -2,7 +2,7 @@
 
 > **As-built** — reflects the live PostgreSQL schema (migration `0017_restore_social_creator_platform_unique` at head).
 > The SRS aspirational diagram (§9.2) has been superseded by this file.
-> See `docs/schema.md` for full DDL and `docs/srs-revisions.md` for the Contract change request.
+> See `docs/schema.md` for full DDL and `docs/revisions/srs-revisions-26-06-06.md` for the Contract change request.
 
 ---
 
@@ -51,6 +51,10 @@ erDiagram
         decimal engagement_rate
         int     avg_views_per_post
         bool    is_primary_platform
+        bool    is_api_verified     "API-confirmed stats"
+        ts      api_verified_at     "when last API-verified"
+        string  api_channel_id      "YouTube channel ID from API"
+        string  data_source         "self_reported | verified | estimated"
         ts      stats_reported_at
     }
 
@@ -249,6 +253,9 @@ erDiagram
         float   score_engagement
         float   score_budget
         float   score_language
+        float   score_platform  "migration 0014"
+        float   score_recency   "migration 0014"
+        float   score_semantic  "migration 0014 — nullable, only when semantic rescue fires"
         float   score_total
         text    rationale
         ts      generated_at

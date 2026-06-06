@@ -796,7 +796,7 @@ languages (1) ── (many) campaign_language_targets
 -- Engagement type now lives on the Contract entity (contracts.contract_type).
 -- campaign_type is nullable with no default — do NOT write new values here.
 -- Safe to DROP once all remaining code references are removed.
--- See docs/plan.md §3.1 and docs/srs-revisions.md §8 for the deprecation policy.
+-- See docs/plan.md §3.1 and docs/revisions/srs-revisions-26-06-06.md §8 for the deprecation policy.
 CREATE TYPE campaign_type AS ENUM (
     'paid_content', 'product_gifting', 'affiliate',
     'brand_ambassador', 'talent_booking', 'ugc_only'
@@ -870,11 +870,10 @@ CREATE INDEX ix_contracts_creator_id ON contracts(creator_id);
 CREATE INDEX ix_contracts_status     ON contracts(status);
 ```
 
-### `ai_match_scores` — AI matching results (migration `53f8d9a8a155`)
+### `ai_match_scores` — AI matching results (migrations `53f8d9a8a155`, `0014_add_platform_recency_semantic_to_match_scores`)
 ```sql
 -- Live table. One row per (campaign, creator) ranked match.
--- NOTE: platform/recency/semantic_similarity/rank are planned but not yet persisted
--- here — see docs/plan.md Phase C. Current columns:
+-- All six sub-scores and semantic boost are now persisted (migration 0014).
 CREATE TABLE ai_match_scores (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     campaign_id       UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
@@ -883,6 +882,9 @@ CREATE TABLE ai_match_scores (
     score_engagement  FLOAT,
     score_budget      FLOAT,
     score_language    FLOAT,
+    score_platform    FLOAT,    -- added migration 0014: platform match sub-score (0–1)
+    score_recency     FLOAT,    -- added migration 0014: content recency sub-score (0–1)
+    score_semantic    FLOAT,    -- added migration 0014: Gemini semantic boost (0–1, nullable — only when semantic rescue fires)
     score_total       FLOAT,
     rationale         TEXT,
     generated_at      TIMESTAMPTZ DEFAULT NOW(),
@@ -926,9 +928,8 @@ Neo4j syncs from PostgreSQL. No schema change here.
 `campaign_applications` becomes the COLLABORATED_WITH edge.
 
 ### Adding AI match scores
-> ✅ **Implemented** — see "Implemented Since Phase 1" above (`ai_match_scores`, migration `53f8d9a8a155`).
-> Remaining work (persist `score_platform`, `score_recency`, `semantic_similarity`, `rank`) is
-> tracked in `docs/plan.md` Phase C.
+> ✅ **Fully implemented** — see "Implemented Since Phase 1" above (`ai_match_scores`, migrations `53f8d9a8a155` + `0014`).
+> All six sub-scores and `score_semantic` are now persisted. Stored `rank` column deferred (N04 — derivable from sorted response order).
 
 ### Adding payments and escrow
 ```sql
