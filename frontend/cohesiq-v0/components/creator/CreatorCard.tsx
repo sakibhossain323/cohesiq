@@ -16,7 +16,7 @@ interface CreatorCardProps {
   basePath?: string;
 }
 
-export function CreatorCard({ creator, basePath = "/creators" }: CreatorCardProps) {
+export function CreatorCard({ creator, basePath = "/brand/dashboard/creators" }: CreatorCardProps) {
   const primaryProfile = creator.social_profiles.find(sp => sp.is_primary_platform) ?? creator.social_profiles[0];
   const initials = creator.display_name
     .split(" ")

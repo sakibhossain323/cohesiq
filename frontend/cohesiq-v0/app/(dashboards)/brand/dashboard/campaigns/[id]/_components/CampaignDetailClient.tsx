@@ -24,6 +24,7 @@ import {
   AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatBDT, formatDate, cn } from "@/lib/utils";
+import { getBrandCategoryLabel } from "@/lib/brand-categories";
 import type { Campaign, Application, AIMatchScore, ApplicationStatus, Contract } from "@/lib/types";
 import { updateCampaignStatusAction, runMatchingAction } from "../_actions/campaign-actions";
 import { ApplicationDrawer } from "./ApplicationDrawer";
@@ -64,6 +65,8 @@ export function CampaignDetailClient({
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<"active" | "cancelled" | "completed" | "archived" | null>(null);
   const [statusDialogMessage, setStatusDialogMessage] = useState("");
+  const [matchingError, setMatchingError] = useState<string | null>(null);
+  const [matchingNotice, setMatchingNotice] = useState<string | null>(null);
 
   const handleAppStatusChange = (applicationId: string, newStatus: ApplicationStatus) => {
     setLocalApplications((prev) =>
@@ -112,10 +115,20 @@ export function CampaignDetailClient({
   };
 
   const handleRunMatching = () => {
+    setMatchingError(null);
+    setMatchingNotice(null);
     startTransition(async () => {
       const result = await runMatchingAction(campaign.id);
       if (result.success && result.matches) {
         setMatches(result.matches);
+        setMatchingNotice(
+          result.matches.length > 0
+            ? `Matching completed: ${result.matches.length} creators ranked.`
+            : "Matching completed, but no creators passed the campaign filters."
+        );
+        setActiveTab("matches");
+      } else {
+        setMatchingError(result.error || "Failed to run matching engine.");
         setActiveTab("matches");
       }
     });
@@ -148,6 +161,11 @@ export function CampaignDetailClient({
               </h1>
               <CampaignStatusBadge status={campaign.status} />
               {visibilityBadge}
+              {campaign.brand_category && (
+                <span className="inline-flex items-center gap-1 text-xs bg-muted text-muted-foreground rounded px-2 py-0.5">
+                  {getBrandCategoryLabel(campaign.brand_category)}
+                </span>
+              )}
             </div>
             {campaign.created_at && (
               <p className="text-sm text-muted-foreground">
@@ -344,6 +362,16 @@ export function CampaignDetailClient({
               <CardDescription>Your highest-scoring creators based on niche, budget, and platform fit</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
+              {matchingError && (
+                <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {matchingError}
+                </div>
+              )}
+              {matchingNotice && (
+                <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                  {matchingNotice}
+                </div>
+              )}
               {matches.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
                   <Sparkles className="mb-4 h-10 w-10 text-purple-400 opacity-50" />

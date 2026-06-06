@@ -89,7 +89,7 @@ export default async function CreatorDashboardPage() {
                       description="Browse campaigns and apply to get started"
                       action={
                         <Button asChild>
-                          <Link href="/campaigns">Browse Campaigns</Link>
+                          <Link href="/creator/dashboard/campaigns">Browse Campaigns</Link>
                         </Button>
                       }
                     />
@@ -205,9 +205,9 @@ export default async function CreatorDashboardPage() {
                     <ProfileStrengthMeter creator={creator} />
 
                     <Button variant="outline" className="mt-6 w-full" asChild>
-                      <Link href={`/creators/${creator.id}`}>
+                      <Link href="/creator/dashboard/profile">
                         <ExternalLink className="mr-2 h-4 w-4" />
-                        View Public Profile
+                        View Profile
                       </Link>
                     </Button>
                   </div>

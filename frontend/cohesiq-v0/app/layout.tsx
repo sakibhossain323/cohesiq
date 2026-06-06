@@ -51,20 +51,20 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <ClerkProvider>
-      <html
-        lang="en"
-        className={`bg-background ${plusJakartaSans.variable} ${dmSans.variable}`}
-        suppressHydrationWarning
-      >
-        <body className="antialiased" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`bg-background ${plusJakartaSans.variable} ${dmSans.variable}`}
+      suppressHydrationWarning
+    >
+      <body className="antialiased" suppressHydrationWarning>
+        <ClerkProvider>
           <ThemeProvider>
             {children}
             <Toaster />
             {process.env.NODE_ENV === 'production' && <Analytics />}
           </ThemeProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   )
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { createCampaign, NICHE_MAP } from "@/lib/api/campaigns";
+import { BRAND_CATEGORIES } from "@/lib/brand-categories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,6 +52,7 @@ export default function NewCampaignPage() {
     creator_min_followers: "1000",
     number_of_creators: "1",
     primary_niche_id: "",
+    brand_category: "",
     application_deadline: "",
     hashtags: "",
     tracking_notes: "",
@@ -143,6 +145,7 @@ export default function NewCampaignPage() {
         creator_min_followers: minFollowers,
         number_of_creators: numCreators,
         primary_niche_id: formData.primary_niche_id ? parseInt(formData.primary_niche_id, 10) : undefined,
+        brand_category: formData.brand_category || undefined,
         required_platforms: ["youtube"],
         application_deadline: formData.application_deadline || null,
         hashtags,
@@ -258,6 +261,28 @@ export default function NewCampaignPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="brand_category">Product Category</Label>
+              <Select
+                value={formData.brand_category}
+                onValueChange={(value) => setFormData({ ...formData, brand_category: value })}
+              >
+                <SelectTrigger id="brand_category">
+                  <SelectValue placeholder="Use brand default or select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BRAND_CATEGORIES.map((category) => (
+                    <SelectItem key={category.value} value={category.value}>
+                      {category.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Used for competitor conflict checks. Leave blank to use your brand profile category.
+              </p>
             </div>
           </CardContent>
         </Card>
