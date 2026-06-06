@@ -353,7 +353,15 @@ The real-channel seeder is:
 backend/scripts/seed_real_youtube_creators.py
 ```
 
-It hardcodes 19 Bangladesh YouTube creator handles across education, technology, food, travel, entertainment, comedy, and gaming. It calls `get_channel_enrichment()` for each handle and never calls `Search.list`.
+It carries a 100-name Bangladesh YouTube creator inventory across food, craft, tech, gaming, entertainment, education, sports, lifestyle, music, news, and kids content. Entries with known channel handles/IDs call `get_channel_enrichment()` directly. Display-name-only entries are skipped by default so the seeder does not burn YouTube `Search.list` quota.
+
+To resolve display-name-only entries in an explicit batch, set `YOUTUBE_SEED_SEARCH_RESOLVE_LIMIT`:
+
+```bash
+docker compose exec backend env YOUTUBE_SEED_SEARCH_RESOLVE_LIMIT=25 python -m scripts.seed_real_youtube_creators
+```
+
+Use batches because `Search.list` costs 100 quota units per name before the enrichment calls run.
 
 For each successful channel, it:
 

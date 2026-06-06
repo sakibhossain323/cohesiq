@@ -1,13 +1,16 @@
 import uuid
 import logging
+import re
 from datetime import date, datetime, timezone
 from typing import List
 
 from fastapi import HTTPException, status
+from groq import AsyncGroq
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.config import settings
 from app.campaigns.models import (
     Campaign,
     CampaignApplication,
@@ -39,11 +42,13 @@ from app.services.matching_config import (
     SEMANTIC_RESCUE_NICHE_CAP,
     SEMANTIC_SIMILARITY_THRESHOLD,
     TIER_MIN_FLOOR,
+    LLM_RATIONALE_TOP_N,
     TOP_MATCH_LIMIT,
 )
 from app.services.semantic_match import get_gemini_embedding, semantic_similarity
 
 logger = logging.getLogger(__name__)
+GROQ_RATIONALE_MODEL = "llama-3.1-8b-instant"
 
 
 def _campaign_options():
@@ -586,6 +591,125 @@ def generate_rationale(
     return " ".join(parts)
 
 
+def _portfolio_context(portfolio_items, *, limit: int = 5) -> str:
+    items = sorted(
+        [item for item in portfolio_items if item.title or item.content_url],
+        key=lambda item: item.published_at or date.min,
+        reverse=True,
+    )[:limit]
+    parts: list[str] = []
+    for item in items:
+        title = (item.title or "Untitled video").strip()
+        metrics = []
+        if item.views is not None:
+            metrics.append(f"{item.views} views")
+        if item.likes is not None:
+            metrics.append(f"{item.likes} likes")
+        metric_text = f" ({', '.join(metrics)})" if metrics else ""
+        parts.append(f"- {title}{metric_text}")
+    return "\n".join(parts) or "No recent portfolio videos available."
+
+
+def _english_only_text(text: str) -> str:
+    text = re.sub(r"[^\x00-\x7F]+", " ", text)
+    text = re.sub(r"\s+", " ", text)
+    text = re.sub(r"\s+([.,;:!?])", r"\1", text)
+    return text.strip()
+
+
+def _build_personalized_rationale_prompt(
+    *,
+    campaign: Campaign,
+    campaign_niche_name: str,
+    creator,
+    scores,
+    creator_tier: str,
+) -> str:
+    creator_bio = (creator.bio or creator.tagline or "").strip()
+    if len(creator_bio) > 700:
+        creator_bio = creator_bio[:700].rsplit(" ", 1)[0].strip() + "."
+
+    return f"""
+Write a personalized creator recommendation rationale for a brand marketer.
+
+Rules:
+- Use exactly 2 short sentences.
+- Write in English only.
+- Do not include Bengali/Bangla script or non-English words.
+- If a video title is not English, summarize its topic in English instead of quoting it.
+- Be specific to this creator's profile and recent videos.
+- Mention why they fit the campaign audience/content, not just that they have good scores.
+- Do not invent facts beyond the context.
+- Do not mention raw internal score numbers.
+- Keep it professional and pitch-ready.
+
+Campaign:
+Title: {campaign.title}
+Description: {campaign.description}
+Objectives: {campaign.objectives or "Not specified"}
+Niche: {campaign_niche_name}
+Required platforms: {", ".join(campaign.required_platforms or []) or "Any"}
+
+Creator:
+Name: {creator.display_name}
+Tier: {creator_tier}
+Bio/profile text: {creator_bio or "No profile bio available."}
+Recent videos:
+{_portfolio_context(creator.portfolio_items)}
+
+Scoring summary:
+Niche fit: {scores.niche}
+Budget fit: {scores.budget}
+Engagement fit: {scores.engagement}
+Language fit: {scores.language}
+Recency fit: {scores.recency}
+""".strip()
+
+
+async def _generate_personalized_rationale(
+    *,
+    campaign: Campaign,
+    campaign_niche_name: str,
+    creator,
+    scores,
+    creator_tier: str,
+    fallback: str,
+) -> str:
+    if not settings.groq_api_key:
+        return fallback
+
+    prompt = _build_personalized_rationale_prompt(
+        campaign=campaign,
+        campaign_niche_name=campaign_niche_name,
+        creator=creator,
+        scores=scores,
+        creator_tier=creator_tier,
+    )
+
+    try:
+        client = AsyncGroq(api_key=settings.groq_api_key)
+        completion = await client.chat.completions.create(
+            model=GROQ_RATIONALE_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You write concise, evidence-grounded influencer matching rationales.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.4,
+            max_tokens=130,
+        )
+        content = completion.choices[0].message.content if completion.choices else None
+        if not content:
+            return fallback
+        cleaned = _english_only_text(" ".join(content.strip().split()))
+        return cleaned or fallback
+    except Exception as exc:
+        logger.warning("Groq rationale generation failed: %s", exc)
+        return fallback
+
+
 async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> List[AIMatchScore]:
     from app.common.models import Niche, Language
     from app.creators.models import CreatorProfile
@@ -634,6 +758,7 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
     # Compute matches
     matches = []
     match_sort_followers = {}
+    match_contexts = {}
     for creator in creators:
         if not creator.is_available or creator.deleted_at is not None:
             continue
@@ -766,6 +891,12 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
         )
         matches.append(match_score_obj)
         match_sort_followers[creator.id] = follower_count
+        match_contexts[creator.id] = {
+            "creator": creator,
+            "scores": scores,
+            "creator_tier": creator_tier,
+            "fallback_rationale": rational_text,
+        }
 
     # Sort by score, then selected audience size, then creator id for stable rankings.
     matches.sort(
@@ -777,6 +908,20 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
         reverse=True,
     )
     top_matches = matches[:TOP_MATCH_LIMIT]
+
+    # Personalize only the top few rationales after deterministic ranking.
+    for match in top_matches[:LLM_RATIONALE_TOP_N]:
+        context = match_contexts.get(match.creator_id)
+        if not context:
+            continue
+        match.rationale = await _generate_personalized_rationale(
+            campaign=campaign,
+            campaign_niche_name=campaign_niche_name,
+            creator=context["creator"],
+            scores=context["scores"],
+            creator_tier=context["creator_tier"],
+            fallback=context["fallback_rationale"],
+        )
 
     # Save to db
     for match in top_matches:

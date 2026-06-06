@@ -226,10 +226,12 @@ Both the service and scripts should import this constant. Docs should reference 
 Active today:
 
 - heuristic rationale generated in campaign service
+- Groq-personalized rationale for the top 5 sorted matches when `GROQ_API_KEY` is configured
+- deterministic heuristic fallback when Groq is not configured or fails
 
 Planned N05:
 
-- bounded Gemini rationale for top-N only
+- bounded LLM rationale for top-N only
 - 2-3 sentences
 - Bangla/English support
 - deterministic fallback when no API key exists
@@ -239,6 +241,7 @@ Strategy:
 - never call LLM for every candidate
 - call only after hard filters and score sorting
 - for the hackathon demo, set `N = 5`
+- use creator bio plus recent portfolio videos as grounding context
 - keep sub-scores as source of truth; rationale explains, not decides
 
 ## Critical Engine Decisions Before N11

@@ -41,8 +41,8 @@ matching pipeline transparent end-to-end; ship authenticity scoring and ethical-
   - Verified with `docker compose exec backend python -m unittest tests.test_creator_youtube_enrichment tests.test_youtube_service -v`
 
 [x] N02 Seed 18–20 **real** BD YouTube channels (SRS US-3)
-  - Discover via `GET /youtube/channels?handle=` (1 unit each), **never** `Search.list` (D8 — 100 units)
-  - Hardcode researched channel handles by niche; run enrichment → persist as API-verified creators
+  - Discover known refs via `GET /youtube/channels?handle=` (1 unit each); use `Search.list` only when explicitly batch-enabled because it costs 100 units per name.
+  - Seeder now carries a 100-name BD YouTube creator inventory. Entries with known handles/channel IDs seed directly; unresolved display names are skipped unless `YOUTUBE_SEED_SEARCH_RESOLVE_LIMIT` is set for an explicit, quota-aware search-resolution batch.
   - Add proportional synthetic IG/TikTok companion profiles labelled `"Estimated"` (N09, US-19)
   - Verified with `docker compose exec backend python -m scripts.seed_real_youtube_creators`: 19 succeeded, 0 failed.
   - Verified DB counts: 19 YouTube `verified`, 19 Instagram `estimated`, 19 TikTok `estimated`.
@@ -64,9 +64,10 @@ matching pipeline transparent end-to-end; ship authenticity scoring and ethical-
   - Update `AIMatchScoreOut` Pydantic schema if any newly exposed score/rank field is missing from API responses
   - Coordinate with Sakib: these columns unlock the six-bar breakdown in `MatchesClient.tsx`
 
-[ ] N05 [P] Bounded LLM rationale service (SRS FR-9)
-  - Formalize Gemini rationale call: 2–3 sentences, Bangla/English, runs on top-N results only
-  - Heuristic fallback when `GEMINI_API_KEY` absent (keeps matching testable without a key)
+[~] N05 [P] Bounded LLM rationale service (SRS FR-9)
+  - Groq rationale call now runs only on the top 5 sorted matches when `GROQ_API_KEY` is configured
+  - Prompt is grounded in campaign text, creator bio, and recent portfolio videos; ranking still uses deterministic scores only
+  - Heuristic fallback when `GROQ_API_KEY` absent or generation fails (keeps matching testable without a key)
   - Resolve `services/llm_matching.py` — integrate into the pipeline or delete; no dead experimental paths
   - Coordinate with Sakib D02: the Gemini call structure here will be reused by the AI Brief Analyzer
 
