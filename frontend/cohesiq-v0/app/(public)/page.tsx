@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SignUpButton } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { LandingClient } from "./_components/LandingClient";
 import "./landing.css";
 
@@ -25,7 +26,9 @@ const IcoVerified = () => (
   </svg>
 );
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { userId } = await auth();
+
   return (
     <>
       <LandingClient />
@@ -50,28 +53,60 @@ export default function HomePage() {
 
               {/* dual CTA */}
               <div className="dual reveal" style={{ "--index": 3 } as React.CSSProperties}>
-                <Link className="dual-card brand" href="/sign-up">
-                  <span className="di">
-                    <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M3 11l18-5v12L3 14v-3z" strokeLinejoin="round" />
-                      <path d="M11.6 16.8a3 3 0 0 1-5.8-1.1V14" strokeLinecap="round" />
-                    </svg>
-                  </span>
-                  <span className="dt">I represent a Brand</span>
-                  <span className="dd">Post a campaign and get matched with verified creators.</span>
-                  <span className="dgo">Get started <ArrowRight /></span>
-                </Link>
-                <Link className="dual-card creator" href="/sign-up">
-                  <span className="di">
-                    <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="8" r="4" />
-                      <path d="M4 21a8 8 0 0 1 16 0" strokeLinecap="round" />
-                    </svg>
-                  </span>
-                  <span className="dt">I&apos;m a Creator</span>
-                  <span className="dd">Build a verified profile and let brands come to you.</span>
-                  <span className="dgo">Join free <ArrowRight /></span>
-                </Link>
+                {userId ? (
+                  <Link className="dual-card brand" href="/onboarding">
+                    <span className="di">
+                      <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 11l18-5v12L3 14v-3z" strokeLinejoin="round" />
+                        <path d="M11.6 16.8a3 3 0 0 1-5.8-1.1V14" strokeLinecap="round" />
+                      </svg>
+                    </span>
+                    <span className="dt">I represent a Brand</span>
+                    <span className="dd">Post a campaign and get matched with verified creators.</span>
+                    <span className="dgo">Get started <ArrowRight /></span>
+                  </Link>
+                ) : (
+                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+                    <button className="dual-card brand text-left w-full cursor-pointer">
+                      <span className="di">
+                        <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M3 11l18-5v12L3 14v-3z" strokeLinejoin="round" />
+                          <path d="M11.6 16.8a3 3 0 0 1-5.8-1.1V14" strokeLinecap="round" />
+                        </svg>
+                      </span>
+                      <span className="dt">I represent a Brand</span>
+                      <span className="dd">Post a campaign and get matched with verified creators.</span>
+                      <span className="dgo">Get started <ArrowRight /></span>
+                    </button>
+                  </SignUpButton>
+                )}
+                {userId ? (
+                  <Link className="dual-card creator" href="/onboarding">
+                    <span className="di">
+                      <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M4 21a8 8 0 0 1 16 0" strokeLinecap="round" />
+                      </svg>
+                    </span>
+                    <span className="dt">I&apos;m a Creator</span>
+                    <span className="dd">Build a verified profile and let brands come to you.</span>
+                    <span className="dgo">Join free <ArrowRight /></span>
+                  </Link>
+                ) : (
+                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+                    <button className="dual-card creator text-left w-full cursor-pointer">
+                      <span className="di">
+                        <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="8" r="4" />
+                          <path d="M4 21a8 8 0 0 1 16 0" strokeLinecap="round" />
+                        </svg>
+                      </span>
+                      <span className="dt">I&apos;m a Creator</span>
+                      <span className="dd">Build a verified profile and let brands come to you.</span>
+                      <span className="dgo">Join free <ArrowRight /></span>
+                    </button>
+                  </SignUpButton>
+                )}
               </div>
 
               <div className="proof reveal" style={{ "--index": 4 } as React.CSSProperties}>
@@ -232,9 +267,19 @@ export default function HomePage() {
                   </li>
                 ))}
               </ul>
-              <Link className="btn btn-primary" href="/sign-up" style={{ marginTop: "var(--space-8)" }}>
-                Post a campaign <ArrowRight />
-              </Link>
+              {userId ? (
+                <Link className="btn btn-primary" href="/onboarding" style={{ marginTop: "var(--space-8)" }}>
+                  Post a campaign <ArrowRight />
+                </Link>
+              ) : (
+                <div style={{ marginTop: "var(--space-8)" }}>
+                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+                    <button className="btn btn-primary">
+                      Post a campaign <ArrowRight />
+                    </button>
+                  </SignUpButton>
+                </div>
+              )}
             </div>
             <div className="feature-visual reveal" style={{ "--index": 1 } as React.CSSProperties}>
               <div className="mock">
@@ -283,9 +328,19 @@ export default function HomePage() {
                   <li key={title}><span className="fi">{icon}</span><span><span className="ft">{title}</span><br /><span className="fd">{desc}</span></span></li>
                 ))}
               </ul>
-              <Link className="btn btn-secondary" href="/sign-up" style={{ marginTop: "var(--space-8)" }}>
-                Create your profile <ArrowRight />
-              </Link>
+              {userId ? (
+                <Link className="btn btn-secondary" href="/onboarding" style={{ marginTop: "var(--space-8)" }}>
+                  Create your profile <ArrowRight />
+                </Link>
+              ) : (
+                <div style={{ marginTop: "var(--space-8)" }}>
+                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+                    <button className="btn btn-secondary">
+                      Create your profile <ArrowRight />
+                    </button>
+                  </SignUpButton>
+                </div>
+              )}
             </div>
             <div className="feature-visual reveal">
               <div className="mock profile">
@@ -361,12 +416,20 @@ export default function HomePage() {
             <h2 style={{ marginTop: "var(--space-4)" }}>Ready to connect?</h2>
             <p>Join Bangladesh&apos;s first structured creator marketplace.</p>
             <div className="cta-row">
-              <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
-                <button className="btn btn-primary btn-lg">Start as a Brand</button>
-              </SignUpButton>
-              <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
-                <button className="btn btn-outline-warm btn-lg">Join as a Creator</button>
-              </SignUpButton>
+              {userId ? (
+                <Link href="/onboarding" className="btn btn-primary btn-lg">
+                  Go to Dashboard
+                </Link>
+              ) : (
+                <>
+                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+                    <button className="btn btn-primary btn-lg">Start as a Brand</button>
+                  </SignUpButton>
+                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+                    <button className="btn btn-outline-warm btn-lg">Join as a Creator</button>
+                  </SignUpButton>
+                </>
+              )}
             </div>
           </div>
         </div>
