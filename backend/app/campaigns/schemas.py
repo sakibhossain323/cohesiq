@@ -53,6 +53,7 @@ class CampaignCreate(BaseModel):
     description: str
     objectives: Optional[str] = None
     primary_niche_id: Optional[int] = None
+    brand_category: Optional[str] = None
     required_platforms: List[str] = ["youtube"]
     visibility: str = "public"
     campaign_type: Optional[str] = None
@@ -83,6 +84,7 @@ class CampaignUpdate(BaseModel):
     description: Optional[str] = None
     objectives: Optional[str] = None
     primary_niche_id: Optional[int] = None
+    brand_category: Optional[str] = None
     required_platforms: Optional[List[str]] = None
     visibility: Optional[str] = None
     campaign_type: Optional[str] = None
@@ -116,6 +118,7 @@ class CampaignOut(BaseModel):
     visibility: str
     objectives: Optional[str] = None
     primary_niche_id: Optional[int] = None
+    brand_category: Optional[str] = None
     required_platforms: List[str]
     campaign_type: Optional[str] = None
     budget_per_creator_min: Optional[int] = None

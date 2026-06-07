@@ -63,6 +63,9 @@ export interface CreatorSocialProfile {
   is_primary_platform: boolean;
   is_monetized: boolean;
   has_verified_badge: boolean;
+  is_api_verified?: boolean;
+  api_verified_at?: string;
+  data_source?: string;
   audience_country_primary?: string;
   audience_city_primary?: string;
   audience_age_range_min?: number;
@@ -109,6 +112,7 @@ export interface Brand {
   website?: string;
   city?: string;
   niche: string;
+  brand_category?: string;
   is_verified: boolean;
   total_campaigns: number;
   average_rating?: number;
@@ -121,6 +125,7 @@ export interface Campaign {
   title: string;
   description: string;
   primary_niche_id?: number;
+  brand_category?: string;
   primary_niche: string;
   required_platforms?: PlatformType[];
   budget_per_creator_min?: number;
@@ -182,6 +187,8 @@ export interface CreatorFilters {
   language?: string;
   city?: string;
   is_available?: boolean;
+  page?: number;
+  page_size?: number;
 }
 
 export interface CampaignFilters {
@@ -212,4 +219,3 @@ export interface AIMatchScore {
   generated_at: string;
   creator?: Creator;
 }
-

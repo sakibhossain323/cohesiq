@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, Globe, Save } from "lucide-react";
+import { BRAND_CATEGORIES } from "@/lib/brand-categories";
 import type { Brand } from "@/lib/types";
 
 interface ProfileFormProps {
@@ -20,6 +22,7 @@ export function ProfileForm({ initialBrand }: ProfileFormProps) {
   const [formData, setFormData] = useState({
     brand_name: initialBrand.brand_name || "",
     niche: initialBrand.niche || "",
+    brand_category: initialBrand.brand_category || "",
     website: initialBrand.website || "",
     description: initialBrand.description || "",
     logo_url: initialBrand.logo_url || "",
@@ -72,6 +75,30 @@ export function ProfileForm({ initialBrand }: ProfileFormProps) {
                   placeholder="e.g. Consumer Electronics"
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="brand_category">Product Category</Label>
+                <Select
+                  value={formData.brand_category}
+                  onValueChange={(value) => setFormData({ ...formData, brand_category: value })}
+                >
+                  <SelectTrigger id="brand_category">
+                    <SelectValue placeholder="Select competitor category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BRAND_CATEGORIES.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Used to avoid recommending creators who recently worked with a direct competitor.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="website">Website URL</Label>
                 <div className="relative">

@@ -9,21 +9,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { NicheBadge } from "@/components/shared/NicheBadge";
-import { EstimatedTag } from "@/components/shared/EstimatedTag";
+import { getAvatarInitials } from "@/lib/avatar";
+import { getBrandCategoryLabel } from "@/lib/brand-categories";
 import {
   Sparkles,
   Brain,
   ChevronLeft,
-  TrendingUp,
-  Target,
-  DollarSign,
-  Globe2,
   Briefcase,
-  MonitorSmartphone,
-  Clock,
-  Cpu,
 } from "lucide-react";
 
 interface MatchesClientProps {
@@ -34,27 +27,50 @@ interface MatchesClientProps {
 export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) {
   const [matches, setMatches] = useState<AIMatchScore[]>(initialMatches);
   const [isPending, startTransition] = useTransition();
+  const [matchingError, setMatchingError] = useState<string | null>(null);
+  const [matchingNotice, setMatchingNotice] = useState<string | null>(null);
 
   const handleRunMatching = () => {
+    setMatchingError(null);
+    setMatchingNotice(null);
     startTransition(async () => {
       const result = await runMatchingAction(campaign.id);
       if (result.success && result.matches) {
         const sortedMatches = result.matches.sort((a: AIMatchScore, b: AIMatchScore) => (b.score_total || 0) - (a.score_total || 0));
         setMatches(sortedMatches);
+        setMatchingNotice(
+          sortedMatches.length > 0
+            ? `Matching completed: ${sortedMatches.length} creators ranked.`
+            : "Matching completed, but no creators passed the campaign filters."
+        );
+      } else {
+        setMatchingError(result.error || "Failed to run matching engine.");
       }
     });
-  };
-
-  const getScoreColorClass = (score: number) => {
-    if (score >= 0.8) return "bg-emerald-500";
-    if (score >= 0.6) return "bg-indigo-500";
-    return "bg-amber-500";
   };
 
   const getScoreBgClass = (score: number) => {
     if (score >= 0.8) return "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400";
     if (score >= 0.6) return "bg-indigo-500/10 border-indigo-500/20 text-indigo-700 dark:text-indigo-400";
     return "bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400";
+  };
+
+  const getScoreLabel = (score: number) => {
+    if (score >= 0.9) return "Excellent fit";
+    if (score >= 0.75) return "Strong fit";
+    if (score >= 0.6) return "Worth reviewing";
+    return "Needs review";
+  };
+
+  const getFitHighlights = (match: AIMatchScore) => {
+    const highlights: string[] = [];
+    if ((match.score_niche || 0) >= 0.8) highlights.push("Strong content fit");
+    if ((match.score_budget || 0) >= 0.8) highlights.push("Budget aligned");
+    if ((match.score_platform || 0) >= 0.8) highlights.push("Platform ready");
+    if ((match.score_language || 0) >= 0.8) highlights.push("Audience language fit");
+    if ((match.score_recency || 0) >= 0.8) highlights.push("Recently active");
+    if ((match.score_engagement || 0) >= 0.8) highlights.push("High engagement");
+    return highlights.slice(0, 4);
   };
 
   return (
@@ -100,11 +116,19 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
             {campaign.description}
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-2 border-t border-border/50">
+        <CardContent className="grid grid-cols-2 md:grid-cols-5 gap-6 pt-2 border-t border-border/50">
           <div>
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Primary Niche</span>
             <div className="mt-1">
               <NicheBadge niche={campaign.primary_niche} size="sm" />
+            </div>
+          </div>
+          <div>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Product Category</span>
+            <div className="mt-1">
+              <Badge variant="secondary" className="text-xs">
+                {getBrandCategoryLabel(campaign.brand_category)}
+              </Badge>
             </div>
           </div>
           <div>
@@ -143,6 +167,22 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
           </h2>
         </div>
 
+        {matchingError && (
+          <Card className="border-red-200 bg-red-50 dark:bg-red-950/20">
+            <CardContent className="py-3 text-sm text-red-700 dark:text-red-300">
+              {matchingError}
+            </CardContent>
+          </Card>
+        )}
+
+        {matchingNotice && (
+          <Card className="border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20">
+            <CardContent className="py-3 text-sm text-emerald-700 dark:text-emerald-300">
+              {matchingNotice}
+            </CardContent>
+          </Card>
+        )}
+
         {matches.length === 0 ? (
           <Card className="border-dashed border-2 py-12 flex flex-col items-center justify-center text-center">
             <Brain className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
@@ -162,6 +202,7 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
               if (!creator) return null;
               
               const pctScore = Math.round((match.score_total || 0) * 100);
+              const fitHighlights = getFitHighlights(match);
               
               return (
                 <Card 
@@ -176,7 +217,7 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
                           <Avatar className="h-14 w-14 rounded-lg border-2 border-border shadow-sm">
                             <AvatarImage src={creator.profile_photo_url} alt={creator.display_name} />
                             <AvatarFallback className="rounded-lg text-lg font-bold">
-                              {creator.display_name.slice(0, 2).toUpperCase()}
+                              {getAvatarInitials(creator.display_name)}
                             </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0">
@@ -213,121 +254,54 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
                       </div>
                     </div>
 
-                    {/* AI Scoring Details Column */}
-                    <div className="p-6 md:col-span-5 flex flex-col justify-between border-b md:border-b-0 md:border-r border-border/50 bg-muted/20">
-                      <div>
-                        <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                          <Brain className="h-4 w-4 text-primary" />
-                          Compatibility Breakdown
-                        </h4>
-                        
-                        <div className="space-y-3.5">
-                          {/* Niche Alignment */}
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-muted-foreground flex items-center gap-1">
-                                <Target className="h-3.5 w-3.5" /> Niche Alignment
-                              </span>
-                              <span className="font-semibold">{Math.round((match.score_niche || 0) * 100)}%</span>
-                            </div>
-                            <Progress value={(match.score_niche || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_niche || 0)} />
-                          </div>
-
-                          {/* Engagement Strength */}
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-muted-foreground flex items-center gap-1">
-                                <TrendingUp className="h-3.5 w-3.5" /> Engagement Strength
-                                <EstimatedTag variant="estimated" />
-                              </span>
-                              <span className="font-semibold">{Math.round((match.score_engagement || 0) * 100)}%</span>
-                            </div>
-                            <Progress value={(match.score_engagement || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_engagement || 0)} />
-                          </div>
-
-                          {/* Budget Fit */}
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-muted-foreground flex items-center gap-1">
-                                <DollarSign className="h-3.5 w-3.5" /> Budget Fit
-                              </span>
-                              <span className="font-semibold">{Math.round((match.score_budget || 0) * 100)}%</span>
-                            </div>
-                            <Progress value={(match.score_budget || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_budget || 0)} />
-                          </div>
-
-                          {/* Language Match */}
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-muted-foreground flex items-center gap-1">
-                                <Globe2 className="h-3.5 w-3.5" /> Language Match
-                              </span>
-                              <span className="font-semibold">{Math.round((match.score_language || 0) * 100)}%</span>
-                            </div>
-                            <Progress value={(match.score_language || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_language || 0)} />
-                          </div>
-
-                          {/* Platform Fit */}
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-muted-foreground flex items-center gap-1">
-                                <MonitorSmartphone className="h-3.5 w-3.5" /> Platform Fit
-                              </span>
-                              <span className="font-semibold">{Math.round((match.score_platform || 0) * 100)}%</span>
-                            </div>
-                            <Progress value={(match.score_platform || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_platform || 0)} />
-                          </div>
-
-                          {/* Recency */}
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-muted-foreground flex items-center gap-1">
-                                <Clock className="h-3.5 w-3.5" /> Recency
-                              </span>
-                              <span className="font-semibold">{Math.round((match.score_recency || 0) * 100)}%</span>
-                            </div>
-                            <Progress value={(match.score_recency || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_recency || 0)} />
-                          </div>
-
-                          {/* Semantic Similarity */}
-                          {(match.score_semantic ?? 0) > 0 && (
-                            <div className="space-y-1">
-                              <div className="flex justify-between text-xs">
-                                <span className="text-muted-foreground flex items-center gap-1">
-                                  <Cpu className="h-3.5 w-3.5" /> Semantic Similarity
-                                </span>
-                                <span className="font-semibold">{Math.round((match.score_semantic || 0) * 100)}%</span>
-                              </div>
-                              <Progress value={(match.score_semantic || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_semantic || 0)} />
-                            </div>
-                          )}
+                    {/* Recommendation Column */}
+                    <div className="p-6 md:col-span-5 border-b md:border-b-0 md:border-r border-border/50 bg-muted/20">
+                      <div className="flex h-full flex-col justify-between gap-5">
+                        <div className="space-y-3">
+                          <h4 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                            <Sparkles className="h-4 w-4 text-primary" />
+                            Why This Creator
+                          </h4>
+                          <p className="text-sm leading-6 text-foreground">
+                            {match.rationale || "No recommendation note generated yet."}
+                          </p>
                         </div>
+
+                        {fitHighlights.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {fitHighlights.map((highlight) => (
+                              <Badge key={highlight} variant="secondary" className="rounded-md text-xs">
+                                {highlight}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    {/* Overall Score & Rationale Column */}
-                    <div className="p-6 md:col-span-3 flex flex-col justify-between items-center text-center">
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center gap-1.5 mb-2">
-                          <span className="text-xxs uppercase tracking-wider font-semibold text-muted-foreground">Overall Match</span>
-                          <EstimatedTag variant="ai-scored" />
+                    {/* Score & Actions Column */}
+                    <div className="p-6 md:col-span-3 flex flex-col justify-between gap-5">
+                      <div className="space-y-4">
+                        <div className={`rounded-lg border p-4 text-left ${getScoreBgClass(match.score_total || 0)}`}>
+                          <p className="text-xs font-semibold uppercase tracking-wider">Recommendation</p>
+                          <div className="mt-2 flex items-end justify-between gap-3">
+                            <span className="text-lg font-bold">{getScoreLabel(match.score_total || 0)}</span>
+                            <span className="text-3xl font-extrabold leading-none">{pctScore}%</span>
+                          </div>
                         </div>
-                        <div className={`h-20 w-20 rounded-full border-4 flex flex-col items-center justify-center shadow-sm ${getScoreBgClass(match.score_total || 0)}`}>
-                          <span className="text-2xl font-extrabold">{pctScore}%</span>
+
+                        <div className="rounded-lg border border-border/50 bg-background/60 p-4">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Best Use
+                          </p>
+                          <p className="mt-2 text-sm leading-5 text-muted-foreground">
+                            Review their profile and recent content, then invite them if their tone fits your campaign creative.
+                          </p>
                         </div>
                       </div>
 
-                      <div className="w-full mt-4 bg-muted/40 rounded-lg p-3 text-left border border-border/30">
-                        <p className="text-xxs font-bold text-primary flex items-center gap-1 uppercase tracking-wider mb-1">
-                          <Sparkles className="h-3 w-3" /> AI Insight
-                        </p>
-                        <p className="text-[11px] text-muted-foreground italic leading-relaxed line-clamp-4">
-                          "{match.rationale || "No rationale generated."}"
-                        </p>
-                      </div>
-
-                      <div className="mt-4 w-full flex gap-2">
-                        <Link href={`/creators/${creator.id}`} className="flex-1">
+                      <div className="w-full flex gap-2">
+                        <Link href={`/brand/dashboard/creators/${creator.id}`} className="flex-1">
                           <Button variant="outline" size="sm" className="w-full text-xs">
                             View Profile
                           </Button>

@@ -7,6 +7,8 @@ const isProtectedRoute = createRouteMatcher([
 const isOnboardingRoute = createRouteMatcher([
   '/onboarding(.*)',
 ])
+const isBrandDashboardRoute = createRouteMatcher(['/brand/dashboard(.*)'])
+const isCreatorDashboardRoute = createRouteMatcher(['/creator/dashboard(.*)'])
 
 export default clerkMiddleware(async (auth, req) => {
   // Public routes: skip auth entirely — no Clerk API call, instant response
@@ -26,9 +28,19 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(new URL('/onboarding', req.url))
   }
 
+  if (isProtectedRoute(req) && sessionClaims?.metadata?.onboardingComplete) {
+    const role = sessionClaims?.metadata?.role
+    if (role === 'creator' && isBrandDashboardRoute(req)) {
+      return NextResponse.redirect(new URL('/creator/dashboard', req.url))
+    }
+    if (role === 'brand' && isCreatorDashboardRoute(req)) {
+      return NextResponse.redirect(new URL('/brand/dashboard', req.url))
+    }
+  }
+
   // Onboarding complete but trying to access /onboarding → send to dashboard
   if (isOnboardingRoute(req) && sessionClaims?.metadata?.onboardingComplete) {
-    const role = sessionClaims?.metadata?.role || 'creator'
+    const role = sessionClaims?.metadata?.role === 'brand' ? 'brand' : 'creator'
     return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url))
   }
 })

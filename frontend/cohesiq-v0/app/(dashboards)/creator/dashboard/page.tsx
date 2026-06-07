@@ -21,8 +21,9 @@ import { auth } from "@clerk/nextjs/server";
 import { getApplicationsByCreatorId } from "@/lib/api/applications";
 import { getSuggestedCampaigns } from "@/lib/api/campaigns";
 import { getCreatorById, getMyCreatorProfile } from "@/lib/api/creators";
+import { getAvatarInitials } from "@/lib/avatar";
 import { formatBDT, formatDate } from "@/lib/utils";
-import { ExternalLink, FileText, MapPin } from "lucide-react";
+import { ExternalLink, FileText, MapPin, RefreshCw } from "lucide-react";
 
 export default async function CreatorDashboardPage() {
   const { getToken } = await auth();
@@ -89,7 +90,7 @@ export default async function CreatorDashboardPage() {
                       description="Browse campaigns and apply to get started"
                       action={
                         <Button asChild>
-                          <Link href="/campaigns">Browse Campaigns</Link>
+                          <Link href="/creator/dashboard/campaigns">Browse Campaigns</Link>
                         </Button>
                       }
                     />
@@ -158,7 +159,7 @@ export default async function CreatorDashboardPage() {
                     <Avatar className="h-20 w-20 border-4 border-border">
                       <AvatarImage src={creator.profile_photo_url} alt={creator.display_name} />
                       <AvatarFallback className="text-xl font-bold">
-                        {creator.display_name.slice(0, 2).toUpperCase()}
+                        {getAvatarInitials(creator.display_name)}
                       </AvatarFallback>
                     </Avatar>
                     
@@ -205,9 +206,23 @@ export default async function CreatorDashboardPage() {
                     <ProfileStrengthMeter creator={creator} />
 
                     <Button variant="outline" className="mt-6 w-full" asChild>
-                      <Link href={`/creators/${creator.id}`}>
+                      <Link href="/creator/dashboard/profile">
                         <ExternalLink className="mr-2 h-4 w-4" />
-                        View Public Profile
+                        View Profile
+                      </Link>
+                    </Button>
+
+                    <Button className="mt-3 w-full" asChild>
+                      <Link href="/creator/dashboard/connect-youtube?autoStart=true">
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Sync YouTube
+                      </Link>
+                    </Button>
+
+                    <Button variant="secondary" className="mt-3 w-full" asChild>
+                      <Link href="/creator/dashboard/connect-tiktok?autoStart=true">
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Sync TikTok
                       </Link>
                     </Button>
                   </div>

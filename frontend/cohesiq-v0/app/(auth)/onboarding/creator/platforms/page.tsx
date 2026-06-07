@@ -19,6 +19,7 @@ import {
 import { useOnboarding } from '@/components/providers/OnboardingProvider';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RefreshCw } from 'lucide-react';
 import { completeOnboarding, submitCreatorOnboarding } from '../../_actions/onboarding';
 
 const PLATFORMS = [
@@ -122,6 +123,14 @@ export default function PlatformsStep() {
         await user.reload();
       }
 
+      if (syncPlatform === "youtube") {
+        window.location.href = '/creator/dashboard/connect-youtube?autoStart=true';
+        return;
+      }
+      if (syncPlatform === "tiktok") {
+        window.location.href = '/creator/dashboard/connect-tiktok?autoStart=true';
+        return;
+      }
       window.location.href = '/creator/dashboard';
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred');

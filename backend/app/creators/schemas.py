@@ -123,6 +123,11 @@ class YouTubeEnrichmentRequest(BaseModel):
     recent_video_limit: int = Field(10, ge=1, le=50)
 
 
+class PublicSocialEnrichmentRequest(BaseModel):
+    profile_ref: str = Field(..., min_length=1)
+    recent_post_limit: int = Field(12, ge=1, le=50)
+
+
 # ------------------------------------------------------------------ #
 # Rate Card schemas                                                    #
 # ------------------------------------------------------------------ #

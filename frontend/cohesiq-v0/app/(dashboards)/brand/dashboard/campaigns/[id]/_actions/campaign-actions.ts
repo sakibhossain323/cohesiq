@@ -9,7 +9,7 @@ export async function updateCampaignStatusAction(campaignId: string, status: str
   const token = await getToken();
   
   if (!token) {
-    throw new Error("Unauthorized");
+    return { success: false, error: "Unauthorized. Please sign in again." };
   }
 
   try {
@@ -50,7 +50,7 @@ export async function runMatchingAction(campaignId: string) {
   const token = await getToken();
   
   if (!token) {
-    throw new Error("Unauthorized");
+    return { success: false, error: "Unauthorized. Please sign in again." };
   }
 
   try {
@@ -60,6 +60,9 @@ export async function runMatchingAction(campaignId: string) {
     return { success: true, matches };
   } catch (error) {
     console.error("Failed to run matching:", error);
-    return { success: false, error: "Failed to run matching engine" };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to run matching engine",
+    };
   }
 }

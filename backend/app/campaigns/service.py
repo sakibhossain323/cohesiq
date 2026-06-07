@@ -1,13 +1,18 @@
 import uuid
 import logging
-from datetime import date, datetime, timezone
+import re
+from datetime import date, datetime, timedelta, timezone
 from typing import List
 
 from fastapi import HTTPException, status
+from groq import AsyncGroq
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.config import settings
+from app.brands.models import BrandProfile
+from app.brands.service import normalize_brand_category
 from app.campaigns.models import (
     Campaign,
     CampaignApplication,
@@ -35,15 +40,18 @@ from app.services.matching import (
     score_niche,
 )
 from app.services.matching_config import (
+    CONFLICT_LOOKBACK_DAYS,
     BUDGET_RATE_HARD_CAP,
     SEMANTIC_RESCUE_NICHE_CAP,
     SEMANTIC_SIMILARITY_THRESHOLD,
     TIER_MIN_FLOOR,
+    LLM_RATIONALE_TOP_N,
     TOP_MATCH_LIMIT,
 )
 from app.services.semantic_match import get_gemini_embedding, semantic_similarity
 
 logger = logging.getLogger(__name__)
+GROQ_RATIONALE_MODEL = "llama-3.1-8b-instant"
 
 
 def _campaign_options():
@@ -139,6 +147,75 @@ def _days_since_latest_portfolio_item(portfolio_items, required_platforms: list[
     return max((today - latest).days, 0)
 
 
+async def _has_recent_competitor_conflict(
+    db: AsyncSession,
+    *,
+    creator_id: uuid.UUID,
+    campaign_brand_id: uuid.UUID,
+    brand_category: str | None,
+) -> bool:
+    # Missing data is not a confirmed conflict. If the current campaign has no
+    # product category, skip the gate rather than excluding creators by guesswork.
+    if not brand_category:
+        return False
+
+    from app.creators.models import CreatorCollaborationHistory  # noqa: PLC0415
+
+    cutoff = date.today() - timedelta(days=CONFLICT_LOOKBACK_DAYS)
+
+    unregistered_result = await db.execute(
+        select(
+            CreatorCollaborationHistory.brand_name,
+            CreatorCollaborationHistory.collaborated_on,
+        )
+        .where(
+            CreatorCollaborationHistory.creator_id == creator_id,
+            CreatorCollaborationHistory.brand_id.is_(None),
+            CreatorCollaborationHistory.collaborated_on.is_not(None),
+            CreatorCollaborationHistory.collaborated_on >= cutoff,
+        )
+    )
+    for brand_name, collaborated_on in unregistered_result.all():
+        logger.warning(
+            "Skipping conflict check for creator %s with unregistered past brand %r from %s: no brand_category available",
+            creator_id,
+            brand_name,
+            collaborated_on,
+        )
+
+    # Only registered past brands with a matching brand_category can create a
+    # hard conflict. Unregistered/missing-category rows pass through.
+    result = await db.execute(
+        select(
+            CreatorCollaborationHistory.brand_name,
+            CreatorCollaborationHistory.collaborated_on,
+            BrandProfile.brand_name,
+        )
+        .join(BrandProfile, BrandProfile.id == CreatorCollaborationHistory.brand_id)
+        .where(
+            CreatorCollaborationHistory.creator_id == creator_id,
+            CreatorCollaborationHistory.brand_id != campaign_brand_id,
+            CreatorCollaborationHistory.collaborated_on.is_not(None),
+            CreatorCollaborationHistory.collaborated_on >= cutoff,
+            BrandProfile.brand_category == brand_category,
+        )
+        .limit(1)
+    )
+    conflict = result.first()
+    if not conflict:
+        return False
+
+    history_brand_name, collaborated_on, registered_brand_name = conflict
+    logger.info(
+        "Excluded creator %s for competitor conflict: brand_category=%r, past_brand=%r, collaborated_on=%s",
+        creator_id,
+        brand_category,
+        registered_brand_name or history_brand_name,
+        collaborated_on,
+    )
+    return True
+
+
 # ------------------------------------------------------------------ #
 # Campaign CRUD                                                        #
 # ------------------------------------------------------------------ #
@@ -204,12 +281,19 @@ async def list_brand_campaigns(db: AsyncSession, brand_id: uuid.UUID) -> List[Ca
 async def create_campaign(
     db: AsyncSession, brand_id: uuid.UUID, data: CampaignCreate
 ) -> Campaign:
+    brand_category = normalize_brand_category(data.brand_category)
+    if brand_category is None:
+        brand_result = await db.execute(select(BrandProfile).where(BrandProfile.id == brand_id))
+        brand = brand_result.scalar_one_or_none()
+        brand_category = brand.brand_category if brand else None
+
     campaign = Campaign(
         brand_id=brand_id,
         title=data.title,
         description=data.description,
         objectives=data.objectives,
         primary_niche_id=data.primary_niche_id,
+        brand_category=brand_category,
         required_platforms=data.required_platforms,
         campaign_type=data.campaign_type,
         budget_per_creator_min=data.budget_per_creator_min,
@@ -262,6 +346,8 @@ async def update_campaign(
     db: AsyncSession, campaign: Campaign, data: CampaignUpdate
 ) -> Campaign:
     for field, value in data.model_dump(exclude_none=True).items():
+        if field == "brand_category":
+            value = normalize_brand_category(value)
         setattr(campaign, field, value)
     await db.commit()
     refreshed_campaign = await get_campaign(db, campaign.id)
@@ -586,6 +672,216 @@ def generate_rationale(
     return " ".join(parts)
 
 
+def _portfolio_context(portfolio_items, *, limit: int = 5) -> str:
+    items = sorted(
+        [item for item in portfolio_items if item.title or item.content_url],
+        key=lambda item: item.published_at or date.min,
+        reverse=True,
+    )[:limit]
+    parts: list[str] = []
+    for item in items:
+        title = (item.title or "Untitled video").strip()
+        metrics = []
+        if item.views is not None:
+            metrics.append(f"{item.views} views")
+        if item.likes is not None:
+            metrics.append(f"{item.likes} likes")
+        metric_text = f" ({', '.join(metrics)})" if metrics else ""
+        parts.append(f"- {title}{metric_text}")
+    return "\n".join(parts) or "No recent portfolio videos available."
+
+
+def _english_only_text(text: str) -> str:
+    text = re.sub(r"[^\x00-\x7F]+", " ", text)
+    text = re.sub(r"\s+", " ", text)
+    text = re.sub(r"\s+([.,;:!?])", r"\1", text)
+    return text.strip()
+
+
+def _safe_english_snippet(text: str | None, *, max_chars: int = 140) -> str | None:
+    if not text:
+        return None
+    cleaned = _english_only_text(text)
+    if not cleaned:
+        return None
+    alpha_count = sum(1 for char in cleaned if char.isalpha())
+    if alpha_count < 8:
+        return None
+    if len(cleaned) > max_chars:
+        cleaned = cleaned[:max_chars].rsplit(" ", 1)[0].strip()
+    return cleaned
+
+
+def _fit_label(score: float, *, strong: str, partial: str, weak: str) -> str:
+    if score >= 0.8:
+        return strong
+    if score >= 0.4:
+        return partial
+    return weak
+
+
+def _creator_evidence_brief(creator, scores, *, limit: int = 5) -> str:
+    profile_text = _safe_english_snippet(creator.bio or creator.tagline, max_chars=500)
+    items = sorted(
+        [item for item in creator.portfolio_items if item.title or item.content_url],
+        key=lambda item: item.published_at or date.min,
+        reverse=True,
+    )[:limit]
+
+    english_titles = []
+    non_english_count = 0
+    latest_date = None
+    top_view_count = None
+    for item in items:
+        if item.published_at and (latest_date is None or item.published_at > latest_date):
+            latest_date = item.published_at
+        if item.views is not None:
+            top_view_count = max(top_view_count or 0, item.views)
+        title = _safe_english_snippet(item.title, max_chars=90)
+        if title:
+            english_titles.append(title)
+        elif item.title:
+            non_english_count += 1
+
+    content_signal = "recent uploads are available"
+    if items and non_english_count == len(items):
+        content_signal = "recent uploads are mostly local-language or non-English, so describe their topic pattern without quoting titles"
+    elif english_titles:
+        content_signal = "sampled recent upload topics include " + "; ".join(english_titles[:3])
+
+    recency_signal = "latest upload date is unknown"
+    if latest_date:
+        days_since = max((date.today() - latest_date).days, 0)
+        recency_signal = f"latest sampled upload was {days_since} days ago"
+
+    performance_signal = "recent video performance is not available"
+    if top_view_count is not None:
+        performance_signal = f"top sampled recent video has about {top_view_count:,} views"
+
+    score_signals = [
+        _fit_label(scores.niche, strong="strong niche fit", partial="partial niche fit", weak="weak niche fit"),
+        _fit_label(scores.budget, strong="strong budget fit", partial="negotiable budget fit", weak="weak budget fit"),
+        _fit_label(scores.engagement, strong="strong engagement", partial="moderate engagement", weak="limited engagement"),
+        _fit_label(scores.language, strong="strong language fit", partial="partial language fit", weak="weak language fit"),
+        _fit_label(scores.recency, strong="fresh recent activity", partial="moderate recent activity", weak="older or unknown recent activity"),
+    ]
+
+    return "\n".join([
+        f"- Profile summary: {profile_text or 'No English profile summary available.'}",
+        f"- Recent content signal: {content_signal}.",
+        f"- Recency signal: {recency_signal}.",
+        f"- Performance signal: {performance_signal}.",
+        f"- Match signals: {', '.join(score_signals)}.",
+    ])
+
+
+def _first_sentences(text: str, *, limit: int = 2) -> str:
+    pieces = re.split(r"(?<=[.!?])\s+", text.strip())
+    selected = [piece.strip() for piece in pieces if piece.strip()][:limit]
+    return " ".join(selected).strip()
+
+
+def _polish_rationale_text(text: str) -> str:
+    replacements = {
+        "Based on the creator's profile and recent content pattern, ": "",
+        "Based on this creator's profile and recent content pattern, ": "",
+        "Based on their profile and recent content pattern, ": "",
+        "recent English-readable upload topics": "recent upload topics",
+        "English-readable upload topics": "recent upload topics",
+    }
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+    return text.strip()
+
+
+def _build_personalized_rationale_prompt(
+    *,
+    campaign: Campaign,
+    campaign_niche_name: str,
+    creator,
+    scores,
+    creator_tier: str,
+) -> str:
+    evidence_brief = _creator_evidence_brief(creator, scores)
+
+    return f"""
+Write a personalized creator recommendation rationale for a brand marketer.
+
+Rules:
+- Use exactly 2 short sentences.
+- Write in English only.
+- Do not include non-ASCII script or non-English words.
+- Do not say "provided evidence brief" or mention that an evidence brief exists.
+- Do not start with "Based on"; start directly with the recommendation.
+- Use the evidence brief; do not quote raw video titles.
+- Be specific to this creator's profile, recent content pattern, and match signals.
+- Mention why they fit the campaign audience/content, not just that they have good scores.
+- If there is a clear weakness such as older activity, weak language fit, or limited engagement, mention it briefly as a consideration.
+- Do not invent facts beyond the context.
+- Do not mention raw internal score numbers.
+- Keep it professional and pitch-ready.
+
+Campaign:
+Title: {campaign.title}
+Description: {campaign.description}
+Objectives: {campaign.objectives or "Not specified"}
+Niche: {campaign_niche_name}
+Required platforms: {", ".join(campaign.required_platforms or []) or "Any"}
+
+Creator:
+Name: {creator.display_name}
+Tier: {creator_tier}
+Evidence brief:
+{evidence_brief}
+""".strip()
+
+
+async def _generate_personalized_rationale(
+    *,
+    campaign: Campaign,
+    campaign_niche_name: str,
+    creator,
+    scores,
+    creator_tier: str,
+    fallback: str,
+) -> str:
+    if not settings.groq_api_key:
+        return fallback
+
+    prompt = _build_personalized_rationale_prompt(
+        campaign=campaign,
+        campaign_niche_name=campaign_niche_name,
+        creator=creator,
+        scores=scores,
+        creator_tier=creator_tier,
+    )
+
+    try:
+        client = AsyncGroq(api_key=settings.groq_api_key)
+        completion = await client.chat.completions.create(
+            model=GROQ_RATIONALE_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You write concise, evidence-grounded influencer matching rationales.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.4,
+            max_tokens=130,
+        )
+        content = completion.choices[0].message.content if completion.choices else None
+        if not content:
+            return fallback
+        cleaned = _english_only_text(" ".join(content.strip().split()))
+        cleaned = _polish_rationale_text(cleaned)
+        cleaned = _first_sentences(cleaned, limit=2)
+        return cleaned or fallback
+    except Exception as exc:
+        logger.warning("Groq rationale generation failed: %s", exc)
+        return fallback
+
+
 async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> List[AIMatchScore]:
     from app.common.models import Niche, Language
     from app.creators.models import CreatorProfile
@@ -634,6 +930,7 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
     # Compute matches
     matches = []
     match_sort_followers = {}
+    match_contexts = {}
     for creator in creators:
         if not creator.is_available or creator.deleted_at is not None:
             continue
@@ -676,6 +973,14 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             continue
 
         if not _passes_budget_gate(campaign.budget_per_creator_max, creator_rate, follower_count):
+            continue
+
+        if await _has_recent_competitor_conflict(
+            db,
+            creator_id=creator.id,
+            campaign_brand_id=campaign.brand_id,
+            brand_category=campaign.brand_category,
+        ):
             continue
 
         # Language profile mapping
@@ -766,6 +1071,12 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
         )
         matches.append(match_score_obj)
         match_sort_followers[creator.id] = follower_count
+        match_contexts[creator.id] = {
+            "creator": creator,
+            "scores": scores,
+            "creator_tier": creator_tier,
+            "fallback_rationale": rational_text,
+        }
 
     # Sort by score, then selected audience size, then creator id for stable rankings.
     matches.sort(
@@ -777,6 +1088,20 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
         reverse=True,
     )
     top_matches = matches[:TOP_MATCH_LIMIT]
+
+    # Personalize only the top few rationales after deterministic ranking.
+    for match in top_matches[:LLM_RATIONALE_TOP_N]:
+        context = match_contexts.get(match.creator_id)
+        if not context:
+            continue
+        match.rationale = await _generate_personalized_rationale(
+            campaign=campaign,
+            campaign_niche_name=campaign_niche_name,
+            creator=context["creator"],
+            scores=context["scores"],
+            creator_tier=context["creator_tier"],
+            fallback=context["fallback_rationale"],
+        )
 
     # Save to db
     for match in top_matches:

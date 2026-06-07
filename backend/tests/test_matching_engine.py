@@ -1,10 +1,23 @@
 import unittest
+from datetime import date
+from types import SimpleNamespace
 
 from app.services.matching import (
     compute_match_score,
     score_budget_with_tier,
     score_recency,
 )
+
+try:
+    from app.campaigns.service import (
+        _creator_evidence_brief,
+        _first_sentences,
+        _polish_rationale_text,
+    )
+except ModuleNotFoundError:
+    _creator_evidence_brief = None
+    _first_sentences = None
+    _polish_rationale_text = None
 
 
 class MatchingEngineTests(unittest.TestCase):
@@ -71,7 +84,52 @@ class MatchingEngineTests(unittest.TestCase):
             self.assertGreaterEqual(value, 0.0)
             self.assertLessEqual(value, 1.0)
 
+    def test_rationale_evidence_brief_does_not_copy_bangla_titles(self):
+        if _creator_evidence_brief is None:
+            self.skipTest("campaign service dependencies are not installed in this local Python")
+
+        creator = SimpleNamespace(
+            bio="English learning and practical education creator.",
+            tagline=None,
+            portfolio_items=[
+                SimpleNamespace(
+                    title="টাকা আয় করো কিন্তু শেষে কিছুই থাকে না কেন?",
+                    content_url="https://youtube.com/watch?v=demo",
+                    published_at=date.today(),
+                    views=12000,
+                )
+            ],
+        )
+        scores = SimpleNamespace(
+            niche=1.0,
+            budget=1.0,
+            engagement=0.9,
+            language=1.0,
+            recency=1.0,
+        )
+
+        brief = _creator_evidence_brief(creator, scores)
+
+        self.assertIn("mostly local-language or non-English", brief)
+        self.assertNotIn("টাকা", brief)
+
+    def test_personalized_rationale_is_limited_to_two_sentences(self):
+        if _first_sentences is None:
+            self.skipTest("campaign service dependencies are not installed in this local Python")
+
+        text = _first_sentences("One. Two. Three.", limit=2)
+        self.assertEqual(text, "One. Two.")
+
+    def test_personalized_rationale_removes_canned_openers(self):
+        if _polish_rationale_text is None:
+            self.skipTest("campaign service dependencies are not installed in this local Python")
+
+        text = _polish_rationale_text(
+            "Based on the creator's profile and recent content pattern, "
+            "I recommend Example Creator for the campaign."
+        )
+        self.assertEqual(text, "I recommend Example Creator for the campaign.")
+
 
 if __name__ == "__main__":
     unittest.main()
-

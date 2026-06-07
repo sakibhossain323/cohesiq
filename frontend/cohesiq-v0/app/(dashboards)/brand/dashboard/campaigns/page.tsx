@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { CampaignStatusBadge } from "./_components/CampaignStatusBadge";
 import { formatBDT, formatDate, daysUntil } from "@/lib/utils";
+import { getBrandCategoryLabel } from "@/lib/brand-categories";
 import { Briefcase, Plus, Calculator, BarChart3 } from "lucide-react";
 
 export default async function BrandCampaignsPage() {
@@ -98,6 +99,11 @@ export default async function BrandCampaignsPage() {
                           {campaign.primary_niche && campaign.primary_niche !== "general" && (
                             <div className="text-xs text-muted-foreground mt-1 capitalize">
                               {campaign.primary_niche.replace('_', ' ')}
+                            </div>
+                          )}
+                          {campaign.brand_category && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Category: {getBrandCategoryLabel(campaign.brand_category)}
                             </div>
                           )}
                         </TableCell>
