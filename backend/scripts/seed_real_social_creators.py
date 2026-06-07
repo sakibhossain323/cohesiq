@@ -149,12 +149,27 @@ async def _fetch_enrichment(
 
 def _selected_seeds() -> list[RealSocialCreatorSeed]:
     platform = os.getenv("SOCIAL_SEED_PLATFORM", "").strip().lower()
+    topic = os.getenv("SOCIAL_SEED_TOPIC", "").strip().lower()
+    name_contains = os.getenv("SOCIAL_SEED_NAME_CONTAINS", "").strip().lower()
     limit = _int_env("SOCIAL_SEED_LIMIT", len(REAL_BD_SOCIAL_CREATORS))
     seeds = [
         seed
         for seed in REAL_BD_SOCIAL_CREATORS
         if not platform or seed.platform == platform
     ]
+    if topic:
+        seeds = [
+            seed
+            for seed in seeds
+            if (seed.expected_topic or "").lower() == topic
+        ]
+    if name_contains:
+        seeds = [
+            seed
+            for seed in seeds
+            if name_contains in seed.display_name.lower()
+            or name_contains in seed.profile_ref.lower()
+        ]
     return seeds[: max(limit, 0)]
 
 

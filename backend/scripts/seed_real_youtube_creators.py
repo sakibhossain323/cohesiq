@@ -256,8 +256,53 @@ def _search_resolution_limit() -> int:
 
 
 def _selected_youtube_seeds() -> list[RealYouTubeCreatorSeed]:
+    name_contains = os.getenv("YOUTUBE_SEED_NAME_CONTAINS", "").strip().lower()
     limit = _int_env("YOUTUBE_SEED_LIMIT", len(REAL_BD_YOUTUBE_CREATORS))
-    return REAL_BD_YOUTUBE_CREATORS[: max(limit, 0)]
+    seeds = REAL_BD_YOUTUBE_CREATORS
+    if name_contains:
+        seeds = [
+            seed
+            for seed in seeds
+            if name_contains in seed.display_name.lower()
+            or (seed.channel_ref and name_contains in seed.channel_ref.lower())
+        ]
+    selected = seeds[: max(limit, 0)]
+    extra_refs = _extra_youtube_seed_refs()
+    if extra_refs:
+        selected = [
+            *selected,
+            *[
+                RealYouTubeCreatorSeed(_display_name_from_ref(ref), ref)
+                for ref in extra_refs
+            ],
+        ]
+    return selected
+
+
+def _extra_youtube_seed_refs() -> list[str]:
+    raw = os.getenv("YOUTUBE_SEED_EXTRA_REFS", "").strip()
+    if not raw:
+        return []
+    refs: list[str] = []
+    seen: set[str] = set()
+    for item in raw.split(","):
+        ref = item.strip()
+        if not ref:
+            continue
+        key = ref.lower()
+        if key in seen:
+            continue
+        refs.append(ref)
+        seen.add(key)
+    return refs
+
+
+def _display_name_from_ref(ref: str) -> str:
+    cleaned = ref.strip().rstrip("/")
+    cleaned = cleaned.split("/")[-1] if "/" in cleaned else cleaned
+    cleaned = cleaned.lstrip("@")
+    cleaned = re.sub(r"[_-]+", " ", cleaned).strip()
+    return cleaned or ref
 
 
 def _int_env(name: str, default: int) -> int:
@@ -540,4 +585,8 @@ def _truncate_text(text: str, *, max_length: int) -> str:
 
 
 if __name__ == "__main__":
-    asyncio.run(seed_real_youtube_creators())
+    asyncio.run(
+        seed_real_youtube_creators(
+            _int_env("YOUTUBE_SEED_RECENT_VIDEO_LIMIT", 10)
+        )
+    )

@@ -15,6 +15,17 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { PlatformBadge } from "@/components/shared/PlatformBadge";
+import { cn } from "@/lib/utils";
+import type { PlatformType } from "@/lib/types";
+
+const CAMPAIGN_PLATFORMS: { value: PlatformType; label: string }[] = [
+  { value: "youtube", label: "YouTube" },
+  { value: "instagram", label: "Instagram" },
+  { value: "tiktok", label: "TikTok" },
+  { value: "facebook", label: "Facebook" },
+  { value: "linkedin", label: "LinkedIn" },
+];
 
 export default function EditCampaignPage() {
   const router = useRouter();
@@ -38,6 +49,7 @@ export default function EditCampaignPage() {
     application_deadline: "",
     hashtags: "",
     tracking_notes: "",
+    required_platforms: ["youtube"] as PlatformType[],
     kpi_reach: "",
     kpi_engagement_rate: "",
     kpi_conversions: "",
@@ -65,6 +77,7 @@ export default function EditCampaignPage() {
             application_deadline: campaignData.application_deadline ? campaignData.application_deadline.split('T')[0] : "",
             hashtags: ((campaignData as any).hashtags ?? []).join(", "),
             tracking_notes: (campaignData as any).tracking_notes || "",
+            required_platforms: ((campaignData.required_platforms?.length ? campaignData.required_platforms : ["youtube"]) as PlatformType[]),
             kpi_reach: kpi?.reach != null ? String(kpi.reach) : "",
             kpi_engagement_rate: kpi?.engagement_rate != null ? String(kpi.engagement_rate) : "",
             kpi_conversions: kpi?.conversions != null ? String(kpi.conversions) : "",
@@ -121,6 +134,10 @@ export default function EditCampaignPage() {
         return;
       }
     }
+    if (formData.required_platforms.length === 0) {
+      setError("Select at least one required platform.");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -144,6 +161,7 @@ export default function EditCampaignPage() {
         number_of_creators: numCreators,
         primary_niche_id: formData.primary_niche_id ? parseInt(formData.primary_niche_id, 10) : undefined,
         brand_category: formData.brand_category || null,
+        required_platforms: formData.required_platforms,
         application_deadline: formData.application_deadline || null,
         hashtags: formData.hashtags
           ? formData.hashtags.split(",").map(h => h.trim()).filter(Boolean)
@@ -186,6 +204,18 @@ export default function EditCampaignPage() {
       </div>
     );
   }
+
+  const togglePlatform = (platform: PlatformType) => {
+    setFormData(prev => {
+      const selected = prev.required_platforms.includes(platform);
+      return {
+        ...prev,
+        required_platforms: selected
+          ? prev.required_platforms.filter(item => item !== platform)
+          : [...prev.required_platforms, platform],
+      };
+    });
+  };
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
@@ -390,6 +420,35 @@ export default function EditCampaignPage() {
             <CardDescription>Set your expectations for creators.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Required Platforms</Label>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {CAMPAIGN_PLATFORMS.map(platform => {
+                  const isSelected = formData.required_platforms.includes(platform.value);
+                  return (
+                    <button
+                      key={platform.value}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => togglePlatform(platform.value)}
+                      className={cn(
+                        "flex items-center gap-2 rounded-lg border p-3 text-left transition-colors",
+                        isSelected
+                          ? "border-primary bg-primary/5 ring-1 ring-primary"
+                          : "border-border hover:border-muted-foreground/50 hover:bg-muted/30"
+                      )}
+                    >
+                      <PlatformBadge platform={platform.value} />
+                      <span className="text-sm font-medium">{platform.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Matching only considers creators with at least one selected platform.
+              </p>
+            </div>
+
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="budget">Max Budget per Creator (BDT)</Label>

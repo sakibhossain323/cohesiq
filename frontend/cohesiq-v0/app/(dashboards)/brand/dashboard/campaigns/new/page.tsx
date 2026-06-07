@@ -18,8 +18,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PlatformBadge } from "@/components/shared/PlatformBadge";
+import type { PlatformType } from "@/lib/types";
 
 type Visibility = "public" | "private";
+
+const CAMPAIGN_PLATFORMS: { value: PlatformType; label: string }[] = [
+  { value: "youtube", label: "YouTube" },
+  { value: "instagram", label: "Instagram" },
+  { value: "tiktok", label: "TikTok" },
+  { value: "facebook", label: "Facebook" },
+  { value: "linkedin", label: "LinkedIn" },
+];
 
 const VISIBILITY_OPTIONS: { value: Visibility; icon: React.ReactNode; title: string; description: string; hint: string }[] = [
   {
@@ -56,6 +66,7 @@ export default function NewCampaignPage() {
     application_deadline: "",
     hashtags: "",
     tracking_notes: "",
+    required_platforms: ["youtube"] as PlatformType[],
     kpi_reach: "",
     kpi_engagement_rate: "",
     kpi_conversions: "",
@@ -117,6 +128,10 @@ export default function NewCampaignPage() {
         return;
       }
     }
+    if (formData.required_platforms.length === 0) {
+      setError("Select at least one required platform.");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -146,7 +161,7 @@ export default function NewCampaignPage() {
         number_of_creators: numCreators,
         primary_niche_id: formData.primary_niche_id ? parseInt(formData.primary_niche_id, 10) : undefined,
         brand_category: formData.brand_category || undefined,
-        required_platforms: ["youtube"],
+        required_platforms: formData.required_platforms,
         application_deadline: formData.application_deadline || null,
         hashtags,
         tracking_notes: formData.tracking_notes || undefined,
@@ -179,6 +194,18 @@ export default function NewCampaignPage() {
   };
 
   const selectedVisibility = VISIBILITY_OPTIONS.find((o) => o.value === formData.visibility);
+
+  const togglePlatform = (platform: PlatformType) => {
+    setFormData(prev => {
+      const selected = prev.required_platforms.includes(platform);
+      return {
+        ...prev,
+        required_platforms: selected
+          ? prev.required_platforms.filter(item => item !== platform)
+          : [...prev.required_platforms, platform],
+      };
+    });
+  };
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
@@ -346,6 +373,35 @@ export default function NewCampaignPage() {
             <CardDescription>Set the bar for who qualifies and what you&apos;re willing to pay.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Required Platforms</Label>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {CAMPAIGN_PLATFORMS.map(platform => {
+                  const isSelected = formData.required_platforms.includes(platform.value);
+                  return (
+                    <button
+                      key={platform.value}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => togglePlatform(platform.value)}
+                      className={cn(
+                        "flex items-center gap-2 rounded-lg border p-3 text-left transition-colors",
+                        isSelected
+                          ? "border-primary bg-primary/5 ring-1 ring-primary"
+                          : "border-border hover:border-muted-foreground/50 hover:bg-muted/30"
+                      )}
+                    >
+                      <PlatformBadge platform={platform.value} />
+                      <span className="text-sm font-medium">{platform.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Matching only considers creators with at least one selected platform.
+              </p>
+            </div>
+
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="budget">Max Budget per Creator (BDT)</Label>
