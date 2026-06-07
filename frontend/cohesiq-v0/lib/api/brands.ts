@@ -16,6 +16,7 @@ function mapBrandResponse(b: any): Brand {
     website: b.website,
     city: b.city,
     niche: b.niche_id ? NICHE_MAP[b.niche_id] || `Niche ${b.niche_id}` : "general",
+    brand_category: b.brand_category || undefined,
     is_verified: b.is_verified,
     total_campaigns: b.total_campaigns,
     average_rating: b.average_rating ? Number(b.average_rating) : undefined,

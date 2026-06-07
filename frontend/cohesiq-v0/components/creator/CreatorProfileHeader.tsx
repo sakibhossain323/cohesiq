@@ -7,6 +7,7 @@ import { StarRating } from "@/components/shared/StarRating";
 import { NicheBadge } from "@/components/shared/NicheBadge";
 import { MapPin, MessageCircle } from "lucide-react";
 import { AuthenticityBadge } from "@/components/creator/AuthenticityBadge";
+import { getAvatarInitials } from "@/lib/avatar";
 import type { Creator } from "@/lib/types";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -20,12 +21,7 @@ export function CreatorProfileHeader({ creator, actionSlot }: CreatorProfileHead
   const { isSignedIn } = useAuth();
   const router = useRouter();
 
-  const initials = creator.display_name
-    .split(" ")
-    .map(n => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  const initials = getAvatarInitials(creator.display_name);
 
   const handleContact = () => {
     if (!isSignedIn) {

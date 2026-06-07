@@ -1,4 +1,5 @@
 import asyncio
+import os
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -23,46 +24,158 @@ from app.youtube import service as youtube_service
 
 @dataclass(frozen=True)
 class RealYouTubeCreatorSeed:
-    handle: str
+    display_name: str
+    channel_ref: str | None = None
+
+    @property
+    def stable_key(self) -> str:
+        return _slugify(self.channel_ref or self.display_name)
 
 
 REAL_BD_YOUTUBE_CREATORS: list[RealYouTubeCreatorSeed] = [
-    RealYouTubeCreatorSeed("@AymanSadiq"),
-    RealYouTubeCreatorSeed("@munzereenshahid"),
-    RealYouTubeCreatorSeed("@10msmain"),
-    RealYouTubeCreatorSeed("@jhankarmahbub"),
-    RealYouTubeCreatorSeed("@enayetchowdhuryofficial"),
-    RealYouTubeCreatorSeed("@iamkhalidfarhan"),
-    RealYouTubeCreatorSeed("@sohag360"),
-    RealYouTubeCreatorSeed("@ATCAndroidToToCompany"),
-    RealYouTubeCreatorSeed("@samzonebd"),
-    RealYouTubeCreatorSeed("@petukcouple"),
-    RealYouTubeCreatorSeed("@khudalagse"),
-    RealYouTubeCreatorSeed("@nadironthegobangla"),
-    RealYouTubeCreatorSeed("@RafsanTheChotobhai"),
-    RealYouTubeCreatorSeed("@tawhidafridimytv"),
-    RealYouTubeCreatorSeed("@salmanmuqtadir"),
-    RealYouTubeCreatorSeed("@JhakanakaProject"),
-    RealYouTubeCreatorSeed("@antikmahmud"),
-    RealYouTubeCreatorSeed("@RnaRTuminoL"),
-    RealYouTubeCreatorSeed("@jahidhasanjoyofficial"),
+    RealYouTubeCreatorSeed("SS Food Challenge", "@ssfoodchallenge"),
+    RealYouTubeCreatorSeed("SS Food Challenge Junior", "@ssfoodchallengejunior"),
+    RealYouTubeCreatorSeed("Nobabi Couple", "@NobabiCouple"),
+    RealYouTubeCreatorSeed("Waziha's vlog", "@wazihasvlog"),
+    RealYouTubeCreatorSeed("Doyel Agro", "@DoyelAgro"),
+    RealYouTubeCreatorSeed("Village Life Fishing", "@VillageLifeFishing"),
+    RealYouTubeCreatorSeed("Food Stops Here", "@FoodStopsHere"),
+    RealYouTubeCreatorSeed("Humanitarian Kitchen", "@HumanitarianKitchen"),
+    RealYouTubeCreatorSeed("AroundMeBD", "@AroundMeBD"),
+    RealYouTubeCreatorSeed("Health Care Bangla", "@HealthcareBangla"),
+    RealYouTubeCreatorSeed("দিল Deel", "@DeelBangla"),
+    RealYouTubeCreatorSeed("Extreme Launch Lover", "@ExtremeLaunchLover"),
+    RealYouTubeCreatorSeed("Tonni Art and Craft", "@TonniArtCraft"),
+    RealYouTubeCreatorSeed("Farjana Drawing Academy", "@FarjanaDrawingAcademy"),
+    RealYouTubeCreatorSeed("Mukta Art & Craft", "@MuktaArtCraft"),
+    RealYouTubeCreatorSeed("Ara's Easy Art", "@ArasEasyArt"),
+    RealYouTubeCreatorSeed("Selai Tutorial", "@selaitutorial"),
+    RealYouTubeCreatorSeed("Bamboo / Shorts", "@craftbamboo"),
+    RealYouTubeCreatorSeed("Wood Carving Art", "@WoodCarvingArt"),
+    RealYouTubeCreatorSeed("Crazy Bangla Tips", "@CrazyBanglaTips"),
+    RealYouTubeCreatorSeed("FRIEND DIY GIFT", "@FRIENDDIYGIFT"),
+    RealYouTubeCreatorSeed("Shorts Drawing", "@ShortsDrawing"),
+    RealYouTubeCreatorSeed("PC Builder Bangladesh", "@PCBuilderBangladesh"),
+    RealYouTubeCreatorSeed("ATC Android Toto Company", "@ATCAndroidToToCompany"),
+    RealYouTubeCreatorSeed("Toxic Bamboo", "@ToxicBamboo"),
+    RealYouTubeCreatorSeed("Tanvir Anik", "@TanvirAnik"),
+    RealYouTubeCreatorSeed("Hemel 360°", "@Hemel360"),
+    RealYouTubeCreatorSeed("iTechFamily", "@itechfamily"),
+    RealYouTubeCreatorSeed("Timeline World Bangla", "@TimelineWorldBangla"),
+    RealYouTubeCreatorSeed("Ai with Rana Imam", "@AiwithRanaImam"),
+    RealYouTubeCreatorSeed("Potato Pseudo Gamer", "@PotatoPseudoGamer"),
+    RealYouTubeCreatorSeed("All Gaming", "@AllGaming"),
+    RealYouTubeCreatorSeed("NqisiK", "@NqisiK"),
+    RealYouTubeCreatorSeed("Garena Free Fire Bangladesh", "@GarenaFreeFireBangladesh"),
+    RealYouTubeCreatorSeed("Gaming With Talha Is Back", "@GamingWithTalhaIsBack"),
+    RealYouTubeCreatorSeed("SkySay Gaming Pro", "@SkySayGamingPro"),
+    RealYouTubeCreatorSeed("REVENGE 9T4", "@REVENGE9T4"),
+    RealYouTubeCreatorSeed("games hole", "@gameshole"),
+    RealYouTubeCreatorSeed("Prank King Entertainment", "@PrankKingEntertainment"),
+    RealYouTubeCreatorSeed("Tarikul Islam Mondal", "@TarikulIslamMondal"),
+    RealYouTubeCreatorSeed("Md Junaed", "@MdJunaed"),
+    RealYouTubeCreatorSeed("The Ajaira LTD", "@AjairaLtdOriginals"),
+    RealYouTubeCreatorSeed("Dhruba TV", "@DhrubaTV"),
+    RealYouTubeCreatorSeed("AGAIN FOYSAl", "@AGAINFOYSAl"),
+    RealYouTubeCreatorSeed("TAWHID AFRIDI", "@tawhidafridimytv"),
+    RealYouTubeCreatorSeed("Brain Fix", "@BrainFix"),
+    RealYouTubeCreatorSeed("Funny Day", "@FunnyDay"),
+    RealYouTubeCreatorSeed("Advance Search is Back", "@AdvanceSearchisBack"),
+    RealYouTubeCreatorSeed("Matha Nosto", "@MathaNosto"),
+    RealYouTubeCreatorSeed("Zan Zamin", "@ZanZamin"),
+    RealYouTubeCreatorSeed("Mr. Triple R", "@MrTripleR"),
+    RealYouTubeCreatorSeed("Sagor Bhuyan", "@SagorBhuyan"),
+    RealYouTubeCreatorSeed("10 Minute School", "@10msmain"),
+    RealYouTubeCreatorSeed("Shykh Seraj", "@ShykhSeraj"),
+    RealYouTubeCreatorSeed("মায়াজাল", "@mayajaalbangla"),
+    RealYouTubeCreatorSeed("Kuti Bari", "@KutiBari"),
+    RealYouTubeCreatorSeed("Bangla Lecture", "@BanglaLecture"),
+    RealYouTubeCreatorSeed("Drawing Fantasy", "@DrawingFantasy"),
+    RealYouTubeCreatorSeed("AL HERA ISLAMIC CENTER", "@ALHERAISLAMICCENTER"),
+    RealYouTubeCreatorSeed("R I Media", "@RIMedia"),
+    RealYouTubeCreatorSeed("Rabbitholebd Sports", "@RabbitholebdSports"),
+    RealYouTubeCreatorSeed("Bangladesh Cricket: The Tigers", "@bcbtigercricket"),
+    RealYouTubeCreatorSeed("Jamuna Sports", "@JamunaSports"),
+    RealYouTubeCreatorSeed("SOMOY SPORTS", "@somoysports"),
+    RealYouTubeCreatorSeed("ON FIELD", "@ONFIELD"),
+    RealYouTubeCreatorSeed("FutbalGamerz", "@FutbalGamerz"),
+    RealYouTubeCreatorSeed("BD Sports Network", "@BDSportsNetwork"),
+    RealYouTubeCreatorSeed("AllRounder", "@AllRounderBD"),
+    RealYouTubeCreatorSeed("Rs Yasin Raj", "@RsYasinRaj"),
+    RealYouTubeCreatorSeed("Manik Miah Official", "@ManikMiahOfficial"),
+    RealYouTubeCreatorSeed("Ritu Hossain", "@RituHossain"),
+    RealYouTubeCreatorSeed("Soniya Akter Rima", "@SoniyaAkterRima"),
+    RealYouTubeCreatorSeed("Oishrat Jahan Eity", "@OishratJahanEity"),
+    RealYouTubeCreatorSeed("Sayan Official", "@SayanOfficial"),
+    RealYouTubeCreatorSeed("Riasad Azim", "@RiasadAzim"),
+    RealYouTubeCreatorSeed("Modern YouTube Family", "@ModernYouTubeFamily"),
+    RealYouTubeCreatorSeed("Apu Biswas", "@ApuBiswasOfficial"),
+    RealYouTubeCreatorSeed("Zohra's Flicks", "@ZohrasFlicks"),
+    RealYouTubeCreatorSeed("Disha Moni", "@DishaMoni"),
+    RealYouTubeCreatorSeed("FF EDITZ 100K", "@FFEDITZ100K"),
+    RealYouTubeCreatorSeed("SAIFUDDIN BD", "@SAIFUDDINBD"),
+    RealYouTubeCreatorSeed("Meowphorius", "@Meowphorius"),
+    RealYouTubeCreatorSeed("Hasan Pigeon Gopalganj", "@HasanPigeonGopalganj"),
+    RealYouTubeCreatorSeed("Comedy Animals BD", "@ComedyAnimalsBD"),
+    RealYouTubeCreatorSeed("Wildlife Cuties", "@WildlifeCuties"),
+    RealYouTubeCreatorSeed("Coke Studio Bangla", "@CokeStudioBangla"),
+    RealYouTubeCreatorSeed("Pritom Hasan", "@PritomHasan"),
+    RealYouTubeCreatorSeed("Sathi Khan", "@SathiKhan"),
+    RealYouTubeCreatorSeed("Mon Baul", "@MonBaul"),
+    RealYouTubeCreatorSeed("Habib Wahid", "@habibwahid"),
+    RealYouTubeCreatorSeed("Prothom Alo", "@ProthomAlo"),
+    RealYouTubeCreatorSeed("The Daily Star", "@TheDailyStar"),
+    RealYouTubeCreatorSeed("The Business Standard", "@TheBusinessStandard"),
+    RealYouTubeCreatorSeed("Ki Keno Kivabe", "@KiKenoKivabe"),
+    RealYouTubeCreatorSeed("Expert Talk", "@ExpertTalk"),
+    RealYouTubeCreatorSeed("Tritiyo Matra", "@TritiyoMatra"),
+    RealYouTubeCreatorSeed("The Press", "@ThePress"),
+    RealYouTubeCreatorSeed("Chorki", "@ChorkiOfficial"),
+    RealYouTubeCreatorSeed("Mas Media Info", "@MasMediaInfo"),
+    RealYouTubeCreatorSeed("Maasranga Kids", "@MaasrangaKids"),
 ]
 
 
 async def seed_real_youtube_creators(recent_video_limit: int = 10) -> None:
     print("Seeding real Bangladesh YouTube creators...")
-    print("Discovery mode: handles only. Search.list is not used.")
+    search_limit = _search_resolution_limit()
+    if search_limit:
+        print(
+            "Discovery mode: guarded Search.list resolution enabled for "
+            f"up to {search_limit} unresolved names."
+        )
+    else:
+        print(
+            "Discovery mode: handles/channel IDs only. Search.list is not used. "
+            "Set YOUTUBE_SEED_SEARCH_RESOLVE_LIMIT to resolve display names in batches."
+        )
 
     async with AsyncSessionLocal() as session:
         await _ensure_lookups(session)
         niche_map = await _niche_map(session)
 
         successes = 0
+        skipped_unresolved: list[str] = []
         failures: list[tuple[str, str]] = []
-        for seed in REAL_BD_YOUTUBE_CREATORS:
+        seeds = _selected_youtube_seeds()
+        print(f"Selected {len(seeds)} YouTube creators; recent_video_limit={recent_video_limit}")
+        for seed in seeds:
+            channel_ref = seed.channel_ref
+            if not channel_ref:
+                channel_ref = await _existing_seed_channel_ref(session, seed)
+            if not channel_ref:
+                if search_limit <= 0:
+                    skipped_unresolved.append(seed.display_name)
+                    continue
+                search_limit -= 1
+                channel_ref = await _resolve_channel_ref_from_search(seed.display_name)
+                if not channel_ref:
+                    skipped_unresolved.append(seed.display_name)
+                    continue
+
             try:
                 enrichment = await youtube_service.get_channel_enrichment(
-                    channel_ref=seed.handle,
+                    channel_ref=channel_ref,
                     recent_video_limit=recent_video_limit,
                 )
                 creator_id = await _upsert_creator_profile(
@@ -79,14 +192,14 @@ async def seed_real_youtube_creators(recent_video_limit: int = 10) -> None:
                 selected_niche = (
                     groq_niche
                     or (normalized_niches[0] if normalized_niches else None)
-                    or "Lifestyle"
                 )
-                await _upsert_creator_niche(
-                    session,
-                    creator_id,
-                    selected_niche,
-                    niche_map,
-                )
+                if selected_niche:
+                    await _upsert_creator_niche(
+                        session,
+                        creator_id,
+                        selected_niche,
+                        niche_map,
+                    )
                 normalized_languages = enrichment.detected_content_languages or detect_content_languages(enrichment)
                 for index, language_code in enumerate(normalized_languages):
                     await _upsert_creator_language(
@@ -106,30 +219,137 @@ async def seed_real_youtube_creators(recent_video_limit: int = 10) -> None:
                     enrichment=enrichment,
                     niche_name=selected_niche,
                 )
-                await _upsert_estimated_companion_profiles(
-                    session,
-                    creator_id=creator_id,
-                    handle=seed.handle,
-                    youtube_subscribers=enrichment.subscriber_count,
-                    youtube_avg_views=enrichment.avg_views_recent,
-                    youtube_engagement_rate=enrichment.estimated_engagement_rate,
-                )
                 await session.commit()
                 successes += 1
                 print(
-                    f"Seeded {enrichment.title} ({seed.handle}); "
+                    f"Seeded {enrichment.title} ({channel_ref}); "
                     f"imported {imported_videos} portfolio videos"
                 )
             except Exception as exc:
                 await session.rollback()
-                failures.append((seed.handle, str(exc)))
-                print(f"Skipped {seed.handle}: {exc}")
+                failures.append((seed.display_name, str(exc)))
+                print(f"Skipped {seed.display_name}: {exc}")
 
-    print(f"Real YouTube creator seeding complete: {successes} succeeded, {len(failures)} failed.")
+    print(
+        "Real YouTube creator seeding complete: "
+        f"{successes} succeeded, {len(skipped_unresolved)} unresolved, {len(failures)} failed."
+    )
+    if skipped_unresolved:
+        print("Unresolved display names need channel handles/IDs, or run a guarded search batch:")
+        print("  docker compose exec backend env YOUTUBE_SEED_SEARCH_RESOLVE_LIMIT=25 python -m scripts.seed_real_youtube_creators")
+        for name in skipped_unresolved:
+            print(f"- {name}")
     if failures:
         print("Failures:")
-        for handle, detail in failures:
-            print(f"- {handle}: {detail}")
+        for name, detail in failures:
+            print(f"- {name}: {detail}")
+
+
+def _search_resolution_limit() -> int:
+    raw = os.getenv("YOUTUBE_SEED_SEARCH_RESOLVE_LIMIT", "0").strip()
+    if not raw:
+        return 0
+    try:
+        return max(0, int(raw))
+    except ValueError:
+        return 0
+
+
+def _selected_youtube_seeds() -> list[RealYouTubeCreatorSeed]:
+    name_contains = os.getenv("YOUTUBE_SEED_NAME_CONTAINS", "").strip().lower()
+    limit = _int_env("YOUTUBE_SEED_LIMIT", len(REAL_BD_YOUTUBE_CREATORS))
+    seeds = REAL_BD_YOUTUBE_CREATORS
+    if name_contains:
+        seeds = [
+            seed
+            for seed in seeds
+            if name_contains in seed.display_name.lower()
+            or (seed.channel_ref and name_contains in seed.channel_ref.lower())
+        ]
+    selected = seeds[: max(limit, 0)]
+    extra_refs = _extra_youtube_seed_refs()
+    if extra_refs:
+        selected = [
+            *selected,
+            *[
+                RealYouTubeCreatorSeed(_display_name_from_ref(ref), ref)
+                for ref in extra_refs
+            ],
+        ]
+    return selected
+
+
+def _extra_youtube_seed_refs() -> list[str]:
+    raw = os.getenv("YOUTUBE_SEED_EXTRA_REFS", "").strip()
+    if not raw:
+        return []
+    refs: list[str] = []
+    seen: set[str] = set()
+    for item in raw.split(","):
+        ref = item.strip()
+        if not ref:
+            continue
+        key = ref.lower()
+        if key in seen:
+            continue
+        refs.append(ref)
+        seen.add(key)
+    return refs
+
+
+def _display_name_from_ref(ref: str) -> str:
+    cleaned = ref.strip().rstrip("/")
+    cleaned = cleaned.split("/")[-1] if "/" in cleaned else cleaned
+    cleaned = cleaned.lstrip("@")
+    cleaned = re.sub(r"[_-]+", " ", cleaned).strip()
+    return cleaned or ref
+
+
+def _int_env(name: str, default: int) -> int:
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
+
+
+async def _resolve_channel_ref_from_search(display_name: str) -> str | None:
+    search = await youtube_service.search_public(
+        q=display_name,
+        max_results=1,
+        resource_type="channel",
+        region_code="BD",
+        relevance_language="bn",
+    )
+    if not search.results:
+        print(f"Could not resolve {display_name}: no channel search result")
+        return None
+    channel_id = search.results[0].channel_id
+    if not channel_id:
+        print(f"Could not resolve {display_name}: search result had no channel ID")
+        return None
+    print(f"Resolved {display_name} -> {channel_id} ({search.results[0].title})")
+    return channel_id
+
+
+async def _existing_seed_channel_ref(session, seed: RealYouTubeCreatorSeed) -> str | None:
+    email = f"real_youtube_{seed.stable_key}@test.com"
+    result = await session.execute(
+        text("""
+            SELECT csp.api_channel_id
+            FROM users u
+            JOIN creator_profiles cp ON cp.user_id = u.id
+            JOIN creator_social_profiles csp ON csp.creator_id = cp.id
+            WHERE u.email = :email
+              AND csp.platform = 'youtube'
+              AND csp.api_channel_id IS NOT NULL
+            LIMIT 1
+        """),
+        {"email": email},
+    )
+    return result.scalar_one_or_none()
 
 
 async def _ensure_lookups(session) -> None:
@@ -185,9 +405,9 @@ async def _upsert_creator_profile(
     profile_photo_url: str | None,
     bio: str,
 ):
-    safe_handle = seed.handle.lstrip("@").lower()
-    email = f"real_youtube_{safe_handle}@test.com"
-    clerk_id = f"seed_real_youtube_{safe_handle}"
+    safe_key = seed.stable_key
+    email = f"real_youtube_{safe_key}@test.com"
+    clerk_id = f"seed_real_youtube_{safe_key}"
 
     await session.execute(
         text("""
@@ -233,7 +453,7 @@ async def _upsert_creator_profile(
 
 
 async def _upsert_creator_niche(session, creator_id, niche: str, niche_map: dict[str, int]) -> None:
-    niche_id = niche_map.get(niche.lower()) or niche_map.get("lifestyle")
+    niche_id = niche_map.get(niche.lower())
     if not niche_id:
         return
     await session.execute(
@@ -315,80 +535,10 @@ async def _upsert_verified_youtube_profile(session, *, creator_id, enrichment) -
     )
 
 
-async def _upsert_estimated_companion_profiles(
-    session,
-    *,
-    creator_id,
-    handle: str,
-    youtube_subscribers: int | None,
-    youtube_avg_views: int | None,
-    youtube_engagement_rate: float | None,
-) -> None:
-    handle_slug = handle.lstrip("@").lower()
-    estimates = [
-        {
-            "platform": "instagram",
-            "handle": handle_slug,
-            "profile_url": f"https://www.instagram.com/{handle_slug}",
-            "follower_count": _scaled_int(youtube_subscribers, 0.55),
-            "avg_views_per_post": _scaled_int(youtube_avg_views, 0.35),
-            "engagement_rate": _scaled_rate(youtube_engagement_rate, 1.1),
-        },
-        {
-            "platform": "tiktok",
-            "handle": handle_slug,
-            "profile_url": f"https://www.tiktok.com/@{handle_slug}",
-            "follower_count": _scaled_int(youtube_subscribers, 0.45),
-            "avg_views_per_post": _scaled_int(youtube_avg_views, 0.5),
-            "engagement_rate": _scaled_rate(youtube_engagement_rate, 1.25),
-        },
-    ]
-    reported_at = datetime.now(timezone.utc)
-    for estimate in estimates:
-        await session.execute(
-            text("""
-                INSERT INTO creator_social_profiles (
-                    creator_id, platform, handle, profile_url, follower_count,
-                    avg_views_per_post, engagement_rate, posts_per_month,
-                    is_primary_platform, is_api_verified, data_source,
-                    stats_reported_at, stats_reported_for_period
-                )
-                VALUES (
-                    :creator_id, :platform, :handle, :profile_url, :follower_count,
-                    :avg_views_per_post, :engagement_rate, 12.0,
-                    false, false, 'estimated', :stats_reported_at, 'youtube_estimate'
-                )
-                ON CONFLICT (creator_id, platform) DO UPDATE
-                SET handle = EXCLUDED.handle,
-                    profile_url = EXCLUDED.profile_url,
-                    follower_count = EXCLUDED.follower_count,
-                    avg_views_per_post = EXCLUDED.avg_views_per_post,
-                    engagement_rate = EXCLUDED.engagement_rate,
-                    posts_per_month = EXCLUDED.posts_per_month,
-                    is_primary_platform = false,
-                    is_api_verified = false,
-                    data_source = 'estimated',
-                    stats_reported_at = EXCLUDED.stats_reported_at,
-                    stats_reported_for_period = EXCLUDED.stats_reported_for_period;
-            """),
-            {
-                "creator_id": creator_id,
-                "stats_reported_at": reported_at,
-                **estimate,
-            },
-        )
-
-
-def _scaled_int(value: int | None, multiplier: float) -> int | None:
-    if value is None:
-        return None
-    return max(1, round(value * multiplier))
-
-
-def _scaled_rate(value: float | None, multiplier: float) -> float | None:
-    if value is None:
-        return None
-    return round(min(value * multiplier, 0.9999), 4)
+def _slugify(value: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "_", value.lower())
+    slug = slug.strip("_")
+    return slug or "unknown"
 
 
 def _build_creator_bio(enrichment) -> str:
@@ -435,4 +585,8 @@ def _truncate_text(text: str, *, max_length: int) -> str:
 
 
 if __name__ == "__main__":
-    asyncio.run(seed_real_youtube_creators())
+    asyncio.run(
+        seed_real_youtube_creators(
+            _int_env("YOUTUBE_SEED_RECENT_VIDEO_LIMIT", 10)
+        )
+    )

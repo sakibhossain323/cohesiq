@@ -17,6 +17,7 @@ class BrandProfileOut(BaseModel):
     facebook_page_url: Optional[str] = None
     instagram_url: Optional[str] = None
     niche_id: Optional[int] = None
+    brand_category: Optional[str] = None
     company_size: Optional[str] = None
     country_code: Optional[str] = None
     city: Optional[str] = None
@@ -41,6 +42,7 @@ class BrandProfileUpdate(BaseModel):
     facebook_page_url: Optional[str] = None
     instagram_url: Optional[str] = None
     niche_id: Optional[int] = None
+    brand_category: Optional[str] = None
     company_size: Optional[str] = None
     country_code: Optional[str] = None
     city: Optional[str] = None

@@ -162,6 +162,7 @@ def generate_synthetic_brands():
     Each object must have exactly these keys:
     - "name": string (e.g. Pathao, Chaldal, local fashion brands, tech startups)
     - "industry": string (one of Technology, Food, Travel, Fashion, Beauty, Lifestyle, Gaming, Education, Fitness, Entertainment)
+    - "brand_category": string (one of food_beverage, stationery, edtech, electronics, fashion, sports, gaming, health_wellness, finance, telecom, media_entertainment, home_lifestyle). This is what the brand sells, not the creator content niche.
     - "description": string (short realistic company description)
     - "logo_url": string (use https://ui-avatars.com/api/?name=BRANDNAME)
     - "website": string (fake or real URL)

@@ -1,4 +1,4 @@
-import { getCreators } from "@/lib/api/creators";
+import { getCreatorSearchPage } from "@/lib/api/creators";
 import { BrandCreatorsClient } from "./_components/BrandCreatorsClient";
 import { parseCreatorFilters } from "@/lib/parsers";
 import type { SearchParams } from "@/lib/parsers";
@@ -14,7 +14,12 @@ export default async function BrandFindCreatorsPage({ searchParams }: BrandFindC
   
   // Note: we don't strictly need auth token here since getCreators is public
   // but if it ever becomes private we'd await auth().getToken() and pass it.
-  const creators = await getCreators(filters).catch(() => []);
+  const creatorPage = await getCreatorSearchPage(filters).catch(() => ({
+    creators: [],
+    page: filters.page ?? 1,
+    pageSize: filters.page_size ?? 12,
+    hasNextPage: false,
+  }));
 
   return (
     <div className="flex flex-col bg-background min-h-full">
@@ -30,7 +35,15 @@ export default async function BrandFindCreatorsPage({ searchParams }: BrandFindC
           </p>
         </div>
 
-        <BrandCreatorsClient creators={creators} activeFilters={filters} />
+        <BrandCreatorsClient
+          creators={creatorPage.creators}
+          activeFilters={filters}
+          pagination={{
+            page: creatorPage.page,
+            pageSize: creatorPage.pageSize,
+            hasNextPage: creatorPage.hasNextPage,
+          }}
+        />
       </main>
     </div>
   );

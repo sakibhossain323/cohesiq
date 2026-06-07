@@ -13,7 +13,7 @@ interface CampaignCardProps {
   basePath?: string;
 }
 
-export function CampaignCard({ campaign, basePath = "/campaigns" }: CampaignCardProps) {
+export function CampaignCard({ campaign, basePath = "/creator/dashboard/campaigns" }: CampaignCardProps) {
   const daysLeft = campaign.application_deadline 
     ? daysUntil(campaign.application_deadline)
     : null;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -139,6 +140,7 @@ interface CreatorProfileClientProps {
 
 export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProfileClientProps) {
   const { toast } = useToast();
+  const router = useRouter();
   const [profiles, setProfiles] = useState<CreatorSocialProfile[]>(initialProfiles);
   
   const [showDialog, setShowDialog] = useState(false);
@@ -159,6 +161,11 @@ export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProf
     setDialogMode("edit");
     setForm(toFormState(profile));
     setShowDialog(true);
+  };
+
+  const handleConnectTikTok = () => {
+    setShowDialog(false);
+    router.push("/creator/dashboard/connect-tiktok?autoStart=true");
   };
 
   const handleSave = () => {
@@ -205,6 +212,15 @@ export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProf
   };
 
   const handleSync = async (platformId: string, platformName: PlatformType) => {
+    if (platformName === "youtube") {
+      router.push("/creator/dashboard/connect-youtube?autoStart=true");
+      return;
+    }
+    if (platformName === "tiktok") {
+      router.push("/creator/dashboard/connect-tiktok?autoStart=true");
+      return;
+    }
+
     setSyncingId(platformId);
     try {
       await new Promise(res => setTimeout(res, 1000));
@@ -276,8 +292,15 @@ export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProf
                       <p className="text-sm text-muted-foreground mb-1">Handle</p>
                       <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
                         @{profile.handle}
-                        {profile.has_verified_badge && <BadgeCheck className="h-5 w-5 text-blue-500" />}
+                        {(profile.has_verified_badge || profile.is_api_verified) && (
+                          <BadgeCheck className="h-5 w-5 text-primary" />
+                        )}
                       </h3>
+                      {profile.is_api_verified && (
+                        <Badge variant="outline" className="mt-2 text-xs">
+                          API verified
+                        </Badge>
+                      )}
                       {profile.profile_url && (
                         <a href={profile.profile_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline mt-1 inline-block truncate max-w-[250px]">
                           {profile.profile_url}
@@ -408,6 +431,26 @@ export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProf
 
             <div className="flex-1 overflow-y-auto px-1 py-4">
               <TabsContent value="basic" className="space-y-4 m-0">
+                {dialogMode === "add" && (
+                  <div className="rounded-lg border bg-muted/20 p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-start gap-3">
+                        <PlatformBadge platform="tiktok" />
+                        <div>
+                          <p className="font-medium text-foreground">Sync with TikTok</p>
+                          <p className="text-sm text-muted-foreground">
+                            Verify your TikTok account and import profile metrics automatically.
+                          </p>
+                        </div>
+                      </div>
+                      <Button type="button" variant="secondary" onClick={handleConnectTikTok} className="shrink-0">
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Sync TikTok
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label>Platform *</Label>
                   <Select

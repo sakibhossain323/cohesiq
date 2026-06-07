@@ -20,7 +20,7 @@ graph/vector layers. Sakib owns the brand/creator marketplace UI & campaign work
 | Channel enrichment (creator-ready metrics) | `[x]` | `GET /youtube/channels/enrichment` → subs, avg views/likes/comments, est. engagement, uploads/month |
 | YouTube unit + smoke tests | `[x]` | `tests/test_youtube_service.py`, `scripts/test_youtube_api.py` |
 | Pure deterministic scorer | `[x]` | `services/matching.py` + `services/matching_config.py` — current weights: niche .35 / budget .30 / platform .15 / engagement .10 / language .08 / recency .02 |
-| `run-matching` + `matches` endpoints | `[~]` | `app/campaigns/` — relational, heuristic rationale, persisted score breakdown; rank column still pending if UI needs stored rank |
+| `run-matching` + `matches` endpoints | `[~]` | `app/campaigns/` — relational, top-5 Groq rationale when configured, persisted score breakdown; rank column still pending only if UI needs stored rank |
 | Semantic similarity (Gemini + token fallback) | `[~]` | `services/semantic_match.py` — computed on the fly, persisted as `score_semantic`; wrong-niche rescue is capped in `score_niche` |
 | Seed pipeline (synthetic + real YouTube script) | `[x]` | `scripts/generate_seed_data.py` (Tavily+Groq), `seed_db.py`, `reset_db.py`, `sync_clerk_users.py`, `seed_real_youtube_creators.py` — live run verified: 19 channels succeeded, 0 failed |
 | YouTube enrichment persistence + normalization | `[x]` | N01/N02/N03/N12 all verified. `POST /creators/{id}/platforms/youtube/enrich` persists to `creator_social_profiles`; `normalization.py` handles niche/language/city/tier; 19 YouTube `verified` + 38 estimated profiles + 190 portfolio items seeded. See `docs/revisions/srs-revisions-26-06-07.md` §3. |
@@ -41,12 +41,13 @@ matching pipeline transparent end-to-end; ship authenticity scoring and ethical-
   - Keep persistence in `app/creators/` — the YouTube wrapper stays stateless
   - Verified with `docker compose exec backend python -m unittest tests.test_creator_youtube_enrichment tests.test_youtube_service -v`
 
-[x] N02 Seed 18–20 **real** BD YouTube channels (SRS US-3)
-  - Discover via `GET /youtube/channels?handle=` (1 unit each), **never** `Search.list` (D8 — 100 units)
-  - Hardcode researched channel handles by niche; run enrichment → persist as API-verified creators
+[x] N02 Seed real BD YouTube channels (SRS US-3)
+  - Discover known refs via `GET /youtube/channels?handle=` (1 unit each); use `Search.list` only when explicitly batch-enabled because it costs 100 units per name.
+  - Seeder now carries a 100-name BD YouTube creator inventory. Entries with known handles/channel IDs seed directly; unresolved display names are skipped unless `YOUTUBE_SEED_SEARCH_RESOLVE_LIMIT` is set for an explicit, quota-aware search-resolution batch.
   - Add proportional synthetic IG/TikTok companion profiles labelled `"Estimated"` (N09, US-19)
-  - Verified with `docker compose exec backend python -m scripts.seed_real_youtube_creators`: 19 succeeded, 0 failed.
-  - Verified DB counts: 19 YouTube `verified`, 19 Instagram `estimated`, 19 TikTok `estimated`.
+  - Verified with `docker compose exec backend python -m scripts.seed_real_youtube_creators`; latest demo DB has 67 resolved creators from the 100-name inventory.
+  - Verified DB counts: 67 YouTube `verified`, 67 Instagram `estimated`, 67 TikTok `estimated`.
+  - Remaining unresolved YouTube handles are not needed for the current demo supply pool.
   - Seed bios are generated from public channel descriptions plus the last five recent-video descriptions; city is left unset to avoid confusing creator location with audience/content location.
   - Generated-bio behavior verified with `docker compose exec backend python -m unittest tests.test_creator_youtube_enrichment tests.test_youtube_service -v`.
 
@@ -65,9 +66,12 @@ matching pipeline transparent end-to-end; ship authenticity scoring and ethical-
   - Update `AIMatchScoreOut` Pydantic schema if any newly exposed score/rank field is missing from API responses
   - Coordinate with Sakib: these columns unlock the six-bar breakdown in `MatchesClient.tsx`
 
-[ ] N05 [P] Bounded LLM rationale service (SRS FR-9)
-  - Formalize Gemini rationale call: 2–3 sentences, Bangla/English, runs on top-N results only
-  - Heuristic fallback when `GEMINI_API_KEY` absent (keeps matching testable without a key)
+[~] N05 [P] Bounded LLM rationale service (SRS FR-9)
+  - Groq rationale call now runs only on the top 5 sorted matches when `GROQ_API_KEY` is configured
+  - Prompt is grounded in campaign text, creator bio, and an English-only recent-content evidence brief; ranking still uses deterministic scores only
+  - Output is capped to two sentences and post-processed to avoid copied Bangla/non-ASCII text and canned "Based on..." openers
+  - Verified with `docker compose exec backend python -m unittest tests.test_matching_engine -v` and `docker compose exec backend python -m scripts.test_matching`
+  - Heuristic fallback when `GROQ_API_KEY` absent or generation fails (keeps matching testable without a key)
   - Resolve `services/llm_matching.py` — integrate into the pipeline or delete; no dead experimental paths
   - Coordinate with Sakib D02: the Gemini call structure here will be reused by the AI Brief Analyzer
 
@@ -87,10 +91,14 @@ matching pipeline transparent end-to-end; ship authenticity scoring and ethical-
     5. LLM rationale on top-N only
   - Document which stages are active vs deferred in `plan.md` §4 Phase D after implementation
 
-[ ] N08 [P] Relational conflict-of-interest check (SRS FR-13, lighter-than-Neo4j first cut)
-  - 90-day brand-niche collision check via `creator_collaboration_history`
-  - Apply as Stage-2 gate: creators who collaborated with a same-niche competitor within 90 days are
-    excluded or penalised before the weighted score runs
+[x] N08 [P] Relational conflict-of-interest check (SRS FR-13, lighter-than-Neo4j first cut)
+  - Concept doc: `docs/concepts/conflict-of-interest.md`
+  - Added `brand_category` to `brand_profiles` and `campaigns` via migration `0018`.
+  - Stage-2 gate now excludes creators who collaborated with a different registered brand in the same `brand_category` within 90 days.
+  - Uses product category, not creator niche: pen vs edtech is allowed; two pen brands conflict.
+  - Debug visibility: `scripts.test_conflict_matching` prints same-category conflict audit rows for baseline creators excluded by the gate.
+  - Verified with `docker compose exec backend python -m scripts.test_conflict_matching`.
+  - Future extension: persist conflict audit metadata and add category capture for unregistered historical brands if needed.
   - No Neo4j needed for this cut (D2); superseded by N16 if Neo4j is built later
 
 [ ] N09 [P] Ethical-AI data tags at ingestion (SRS US-19, NFR-14/15/16)
@@ -106,11 +114,12 @@ matching pipeline transparent end-to-end; ship authenticity scoring and ethical-
   - Expose via a new endpoint (shape to confirm with Sakib for C02 analytics panel)
   - Use cached enrichment data (N01) — no extra API calls if stats were recently fetched
 
-[~] N11 Align `scripts/test_matching.py` to call `POST /campaigns/{id}/run-matching` correctly
+[x] N11 Align `scripts/test_matching.py` to call the live run-matching path correctly
   - Strategy document: `matching_engine_plan.md`
   - Script now exercises the same live service layer via `run_campaign_matching`
   - Added matching-engine unit coverage for budget buffer, recency buckets, semantic rescue cap, and 0–1 score normalization
-  - Pending Docker verification against seeded data: `docker compose exec backend python -m scripts.test_matching`
+  - Verified with `docker compose exec backend python -m unittest tests.test_matching_engine -v`
+  - Verified against seeded data with `docker compose exec backend python -m scripts.test_matching`
 
 [x] N12 [P] Portfolio import from recent YouTube videos (youtube_task.md Unit 3)
   - After N01 persists the social profile, import `enrichment.recent_videos` → `creator_portfolio_items`
@@ -118,7 +127,7 @@ matching pipeline transparent end-to-end; ship authenticity scoring and ethical-
   - Upsert by `content_url` so re-running enrichment doesn't duplicate rows
   - Only import videos missing from the portfolio (compare against existing `creator_portfolio_items`)
   - Implemented in `app/creators/service.py` and wired into `POST /creators/{creator_id}/platforms/youtube/enrich` plus `scripts/seed_real_youtube_creators.py`.
-  - Verified with live seeder: 19 creators succeeded, 0 failed, 190 YouTube portfolio rows imported.
+  - Verified with live seeder and `scripts.test_matching`; current demo DB uses the 67 resolved YouTube creators from the 100-name inventory.
 
 ---
 

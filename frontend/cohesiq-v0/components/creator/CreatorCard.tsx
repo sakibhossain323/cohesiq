@@ -9,6 +9,7 @@ import { FollowerCount } from "@/components/shared/FollowerCount";
 import { MapPin } from "lucide-react";
 import { EstimatedTag } from "@/components/shared/EstimatedTag";
 import { AuthenticityBadge } from "@/components/creator/AuthenticityBadge";
+import { getAvatarInitials } from "@/lib/avatar";
 import type { Creator } from "@/lib/types";
 
 interface CreatorCardProps {
@@ -16,14 +17,9 @@ interface CreatorCardProps {
   basePath?: string;
 }
 
-export function CreatorCard({ creator, basePath = "/creators" }: CreatorCardProps) {
+export function CreatorCard({ creator, basePath = "/brand/dashboard/creators" }: CreatorCardProps) {
   const primaryProfile = creator.social_profiles.find(sp => sp.is_primary_platform) ?? creator.social_profiles[0];
-  const initials = creator.display_name
-    .split(" ")
-    .map(n => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  const initials = getAvatarInitials(creator.display_name);
 
   return (
     <Link href={`${basePath}/${creator.id}`}>

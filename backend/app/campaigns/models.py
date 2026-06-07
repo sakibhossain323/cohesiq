@@ -43,6 +43,7 @@ class Campaign(Base):
     primary_niche_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("niches.id", ondelete="SET NULL"), nullable=True
     )
+    brand_category: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     required_platforms: Mapped[List[str]] = mapped_column(
         ARRAY(
             ENUM(

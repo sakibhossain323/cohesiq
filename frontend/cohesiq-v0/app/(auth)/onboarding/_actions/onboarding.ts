@@ -49,6 +49,7 @@ export async function resetOnboarding() {
   try {
     await client.users.updateUser(userId, {
       publicMetadata: {
+        role: null,
         onboardingComplete: false,
       },
     })

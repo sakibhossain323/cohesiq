@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ApplicationStatusBadge } from "@/components/application/ApplicationStatusBadge";
+import { getAvatarInitials } from "@/lib/avatar";
 import { formatBDT, formatDate } from "@/lib/utils";
 import { CheckCircle2, XCircle, Star, Users, ExternalLink, Loader2, ChevronRight } from "lucide-react";
 import type { Application, ApplicationStatus } from "@/lib/types";
@@ -53,7 +54,7 @@ export function ApplicationDrawer({
 
   const creator = application.creator;
   const creatorName = creator?.display_name || "Unknown Creator";
-  const initials = creatorName.slice(0, 2).toUpperCase();
+  const initials = getAvatarInitials(creatorName);
   const status = application.status;
 
   const canShortlist = status === "pending" || status === "invited";

@@ -15,6 +15,7 @@ from app.creators.schemas import (
     CreatorProfileUpdate,
     PortfolioItemCreate,
     PortfolioItemOut,
+    PublicSocialEnrichmentRequest,
     RateCardCreate,
     RateCardOut,
     RateCardUpdate,
@@ -143,6 +144,44 @@ async def enrich_youtube_platform(
         creator_id,
         channel_ref=data.channel_ref,
         recent_video_limit=data.recent_video_limit,
+    )
+
+
+@router.post("/{creator_id}/platforms/instagram/enrich", response_model=SocialProfileOut)
+async def enrich_instagram_platform(
+    creator_id: uuid.UUID,
+    data: PublicSocialEnrichmentRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    creator = await service.get_creator(db, creator_id)
+    if not creator or creator.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not your profile")
+    return await service.enrich_public_social_profile(
+        db,
+        creator_id,
+        platform="instagram",
+        profile_ref=data.profile_ref,
+        recent_post_limit=data.recent_post_limit,
+    )
+
+
+@router.post("/{creator_id}/platforms/tiktok/enrich", response_model=SocialProfileOut)
+async def enrich_tiktok_platform(
+    creator_id: uuid.UUID,
+    data: PublicSocialEnrichmentRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    creator = await service.get_creator(db, creator_id)
+    if not creator or creator.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not your profile")
+    return await service.enrich_public_social_profile(
+        db,
+        creator_id,
+        platform="tiktok",
+        profile_ref=data.profile_ref,
+        recent_post_limit=data.recent_post_limit,
     )
 
 

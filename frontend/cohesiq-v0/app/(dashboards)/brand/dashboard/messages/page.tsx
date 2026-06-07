@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { getAvatarInitials } from "@/lib/avatar";
 import { Search, Send, Info, FileText, MessageSquare } from "lucide-react";
 
 // Mock data for the UI
@@ -92,7 +93,7 @@ export default function BrandMessagesPage() {
               >
                 <Avatar className="h-10 w-10 border border-border mt-0.5">
                   <AvatarImage src={chat.logo_url} />
-                  <AvatarFallback>{chat.creator_name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback>{getAvatarInitials(chat.creator_name)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-baseline mb-0.5">
@@ -124,7 +125,7 @@ export default function BrandMessagesPage() {
               <div className="flex items-center gap-3">
                 <Avatar className="h-9 w-9 border border-border">
                   <AvatarImage src={activeChat.logo_url} />
-                  <AvatarFallback>{activeChat.creator_name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback>{getAvatarInitials(activeChat.creator_name)}</AvatarFallback>
                 </Avatar>
                 <div>
                   <h3 className="font-semibold text-sm">{activeChat.creator_name}</h3>
