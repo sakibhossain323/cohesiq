@@ -163,6 +163,11 @@ export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProf
     setShowDialog(true);
   };
 
+  const handleConnectTikTok = () => {
+    setShowDialog(false);
+    router.push("/creator/dashboard/connect-tiktok?autoStart=true");
+  };
+
   const handleSave = () => {
     if (!form.platform || !form.handle) return;
     
@@ -209,6 +214,10 @@ export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProf
   const handleSync = async (platformId: string, platformName: PlatformType) => {
     if (platformName === "youtube") {
       router.push("/creator/dashboard/connect-youtube?autoStart=true");
+      return;
+    }
+    if (platformName === "tiktok") {
+      router.push("/creator/dashboard/connect-tiktok?autoStart=true");
       return;
     }
 
@@ -422,6 +431,26 @@ export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProf
 
             <div className="flex-1 overflow-y-auto px-1 py-4">
               <TabsContent value="basic" className="space-y-4 m-0">
+                {dialogMode === "add" && (
+                  <div className="rounded-lg border bg-muted/20 p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-start gap-3">
+                        <PlatformBadge platform="tiktok" />
+                        <div>
+                          <p className="font-medium text-foreground">Sync with TikTok</p>
+                          <p className="text-sm text-muted-foreground">
+                            Verify your TikTok account and import profile metrics automatically.
+                          </p>
+                        </div>
+                      </div>
+                      <Button type="button" variant="secondary" onClick={handleConnectTikTok} className="shrink-0">
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Sync TikTok
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label>Platform *</Label>
                   <Select

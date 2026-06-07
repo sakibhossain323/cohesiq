@@ -218,6 +218,13 @@ export default async function CreatorDashboardPage() {
                         Sync YouTube
                       </Link>
                     </Button>
+
+                    <Button variant="secondary" className="mt-3 w-full" asChild>
+                      <Link href="/creator/dashboard/connect-tiktok?autoStart=true">
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Sync TikTok
+                      </Link>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

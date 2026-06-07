@@ -35,8 +35,8 @@ export default function PlatformsStep() {
     setProfileUrl('');
   };
 
-  const handleComplete = async (syncYouTube = false) => {
-    if (!syncYouTube && data.creatorPlatforms.length === 0 && (!handle || !profileUrl)) {
+  const handleComplete = async (syncPlatform: "youtube" | "tiktok" | null = null) => {
+    if (!syncPlatform && data.creatorPlatforms.length === 0 && (!handle || !profileUrl)) {
       setError('Please add at least one platform');
       return;
     }
@@ -82,9 +82,15 @@ export default function PlatformsStep() {
         await user.reload();
       }
 
-      window.location.href = syncYouTube
-        ? '/creator/dashboard/connect-youtube?autoStart=true'
-        : '/creator/dashboard';
+      if (syncPlatform === "youtube") {
+        window.location.href = '/creator/dashboard/connect-youtube?autoStart=true';
+        return;
+      }
+      if (syncPlatform === "tiktok") {
+        window.location.href = '/creator/dashboard/connect-tiktok?autoStart=true';
+        return;
+      }
+      window.location.href = '/creator/dashboard';
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred');
       setIsSubmitting(false);
@@ -116,11 +122,31 @@ export default function PlatformsStep() {
           </div>
           <Button
             type="button"
-            onClick={() => handleComplete(true)}
+            onClick={() => handleComplete("youtube")}
             disabled={isSubmitting}
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             {isSubmitting ? 'Saving...' : 'Sync YouTube'}
+          </Button>
+        </div>
+      </div>
+
+      <div className="rounded-md border border-border bg-muted/40 p-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-sm font-medium text-foreground">Verify with TikTok OAuth</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Finish onboarding and sync your TikTok profile directly from your authorized account.
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => handleComplete("tiktok")}
+            disabled={isSubmitting}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            {isSubmitting ? 'Saving...' : 'Sync TikTok'}
           </Button>
         </div>
       </div>
@@ -185,15 +211,8 @@ export default function PlatformsStep() {
           Back
         </Button>
         <div className="flex gap-3">
-          <Button onClick={() => handleComplete(false)} disabled={isSubmitting}>
+          <Button onClick={() => handleComplete()} disabled={isSubmitting}>
             {isSubmitting ? 'Saving...' : 'Complete Onboarding'}
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => handleComplete(true)}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Saving...' : 'Complete & Sync YouTube'}
           </Button>
         </div>
       </div>
