@@ -18,6 +18,7 @@ from app.creators.models import (
 )
 from app.common.models import Niche
 from app.creators.normalization import (
+    classify_public_social_niche_with_groq,
     detect_content_languages,
     map_youtube_topic_categories,
 )
@@ -33,6 +34,8 @@ from app.creators.schemas import (
     SocialProfileCreate,
     SocialProfileUpdate,
 )
+from app.social_ingestion import service as social_ingestion_service
+from app.social_ingestion.schemas import PublicSocialProfileEnrichment
 from app.youtube import service as youtube_service
 from app.youtube.schemas import YouTubeChannelEnrichment, YouTubeRecentVideo
 
@@ -302,6 +305,171 @@ async def enrich_youtube_social_profile(
     await db.commit()
     await db.refresh(social_profile)
     return social_profile
+
+
+def build_public_social_profile_values(
+    enrichment: PublicSocialProfileEnrichment,
+    *,
+    reported_at: datetime,
+) -> dict:
+    return {
+        "platform": enrichment.platform,
+        "handle": enrichment.handle,
+        "profile_url": enrichment.profile_url,
+        "platform_user_id": enrichment.platform_user_id,
+        "api_channel_id": enrichment.platform_user_id or enrichment.handle,
+        "display_name_on_platform": enrichment.display_name,
+        "follower_count": enrichment.follower_count,
+        "following_count": enrichment.following_count,
+        "avg_views_per_post": enrichment.avg_views_recent,
+        "avg_likes_per_post": enrichment.avg_likes_recent,
+        "avg_comments_per_post": enrichment.avg_comments_recent,
+        "avg_shares_per_post": enrichment.avg_shares_recent,
+        "engagement_rate": enrichment.estimated_engagement_rate,
+        "posts_per_month": enrichment.posts_per_month,
+        "has_verified_badge": enrichment.is_verified,
+        "is_api_verified": True,
+        "api_verified_at": reported_at,
+        "data_source": "verified",
+        "content_languages": enrichment.detected_content_languages or ["en"],
+        "stats_reported_at": reported_at,
+        "stats_reported_for_period": f"recent {len(enrichment.recent_posts)} posts",
+    }
+
+
+def apply_public_social_enrichment_to_social_profile(
+    social_profile: CreatorSocialProfile,
+    enrichment: PublicSocialProfileEnrichment,
+    *,
+    reported_at: datetime,
+) -> CreatorSocialProfile:
+    for field, value in build_public_social_profile_values(
+        enrichment,
+        reported_at=reported_at,
+    ).items():
+        setattr(social_profile, field, value)
+    return social_profile
+
+
+async def enrich_public_social_profile(
+    db: AsyncSession,
+    creator_id: uuid.UUID,
+    *,
+    platform: str,
+    profile_ref: str,
+    recent_post_limit: int,
+) -> CreatorSocialProfile:
+    try:
+        if platform == "instagram":
+            enrichment = await social_ingestion_service.get_instagram_enrichment(
+                profile_ref=profile_ref,
+                recent_post_limit=recent_post_limit,
+            )
+        elif platform == "tiktok":
+            enrichment = await social_ingestion_service.get_tiktok_enrichment(
+                profile_ref=profile_ref,
+                recent_post_limit=recent_post_limit,
+            )
+        else:
+            raise ValueError("platform must be instagram or tiktok")
+    except social_ingestion_service.SocialIngestionConfigError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except social_ingestion_service.SocialIngestionAPIError as exc:
+        status_code = exc.status_code if exc.status_code < 500 else 502
+        raise HTTPException(status_code=status_code, detail=exc.detail) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    result = await db.execute(
+        select(CreatorSocialProfile).where(
+            CreatorSocialProfile.creator_id == creator_id,
+            CreatorSocialProfile.platform == platform,
+        )
+    )
+    social_profile = result.scalar_one_or_none()
+    if not social_profile:
+        social_profile = CreatorSocialProfile(creator_id=creator_id, platform=platform)
+        db.add(social_profile)
+
+    apply_public_social_enrichment_to_social_profile(
+        social_profile,
+        enrichment,
+        reported_at=datetime.now(timezone.utc),
+    )
+    await sync_public_social_ingestion_languages(
+        db,
+        creator_id=creator_id,
+        enrichment=enrichment,
+    )
+    await sync_public_social_ingestion_niche(
+        db,
+        creator_id=creator_id,
+        enrichment=enrichment,
+    )
+    await db.commit()
+    await db.refresh(social_profile)
+    return social_profile
+
+
+async def sync_public_social_ingestion_languages(
+    db: AsyncSession,
+    *,
+    creator_id: uuid.UUID,
+    enrichment: PublicSocialProfileEnrichment,
+) -> None:
+    languages = enrichment.detected_content_languages or ["en"]
+    for language_code in languages:
+        result = await db.execute(
+            select(CreatorLanguage).where(
+                CreatorLanguage.creator_id == creator_id,
+                CreatorLanguage.language_code == language_code,
+            )
+        )
+        creator_language = result.scalar_one_or_none()
+        if creator_language:
+            creator_language.is_primary = language_code == languages[0]
+        else:
+            db.add(
+                CreatorLanguage(
+                    creator_id=creator_id,
+                    language_code=language_code,
+                    is_primary=language_code == languages[0],
+                )
+            )
+
+
+async def sync_public_social_ingestion_niche(
+    db: AsyncSession,
+    *,
+    creator_id: uuid.UUID,
+    enrichment: PublicSocialProfileEnrichment,
+) -> None:
+    niche_name = classify_public_social_niche_with_groq(enrichment)
+    if not niche_name:
+        return
+
+    result = await db.execute(select(Niche).where(Niche.name == niche_name))
+    niche = result.scalar_one_or_none()
+    if not niche:
+        return
+
+    existing_result = await db.execute(
+        select(CreatorNiche).where(
+            CreatorNiche.creator_id == creator_id,
+            CreatorNiche.niche_id == niche.id,
+        )
+    )
+    creator_niche = existing_result.scalar_one_or_none()
+    if creator_niche:
+        creator_niche.is_primary = True
+    else:
+        db.add(
+            CreatorNiche(
+                creator_id=creator_id,
+                niche_id=niche.id,
+                is_primary=True,
+            )
+        )
 
 
 async def sync_youtube_ingestion_normalization(

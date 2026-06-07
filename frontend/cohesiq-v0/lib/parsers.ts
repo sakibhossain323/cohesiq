@@ -14,6 +14,17 @@ function getNumber(value: string | string[] | undefined): number | undefined {
   return isNaN(num) ? undefined : num;
 }
 
+function getBoundedNumber(
+  value: string | string[] | undefined,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  const num = getNumber(value);
+  if (num === undefined) return fallback;
+  return Math.min(Math.max(num, min), max);
+}
+
 function getBoolean(value: string | string[] | undefined): boolean | undefined {
   const str = getString(value);
   if (str === "true") return true;
@@ -53,5 +64,7 @@ export function parseCreatorFilters(searchParams: SearchParams): CreatorFilters 
     language: getString(searchParams.language),
     city: getString(searchParams.city),
     is_available: getBoolean(searchParams.is_available),
+    page: getBoundedNumber(searchParams.page, 1, 1, 10_000),
+    page_size: getBoundedNumber(searchParams.page_size, 12, 1, 60),
   };
 }

@@ -157,7 +157,9 @@ async def seed_real_youtube_creators(recent_video_limit: int = 10) -> None:
         successes = 0
         skipped_unresolved: list[str] = []
         failures: list[tuple[str, str]] = []
-        for seed in REAL_BD_YOUTUBE_CREATORS:
+        seeds = _selected_youtube_seeds()
+        print(f"Selected {len(seeds)} YouTube creators; recent_video_limit={recent_video_limit}")
+        for seed in seeds:
             channel_ref = seed.channel_ref
             if not channel_ref:
                 channel_ref = await _existing_seed_channel_ref(session, seed)
@@ -190,14 +192,14 @@ async def seed_real_youtube_creators(recent_video_limit: int = 10) -> None:
                 selected_niche = (
                     groq_niche
                     or (normalized_niches[0] if normalized_niches else None)
-                    or "Lifestyle"
                 )
-                await _upsert_creator_niche(
-                    session,
-                    creator_id,
-                    selected_niche,
-                    niche_map,
-                )
+                if selected_niche:
+                    await _upsert_creator_niche(
+                        session,
+                        creator_id,
+                        selected_niche,
+                        niche_map,
+                    )
                 normalized_languages = enrichment.detected_content_languages or detect_content_languages(enrichment)
                 for index, language_code in enumerate(normalized_languages):
                     await _upsert_creator_language(
@@ -216,14 +218,6 @@ async def seed_real_youtube_creators(recent_video_limit: int = 10) -> None:
                     creator_id=creator_id,
                     enrichment=enrichment,
                     niche_name=selected_niche,
-                )
-                await _upsert_estimated_companion_profiles(
-                    session,
-                    creator_id=creator_id,
-                    handle=enrichment.handle or seed.stable_key,
-                    youtube_subscribers=enrichment.subscriber_count,
-                    youtube_avg_views=enrichment.avg_views_recent,
-                    youtube_engagement_rate=enrichment.estimated_engagement_rate,
                 )
                 await session.commit()
                 successes += 1
@@ -259,6 +253,21 @@ def _search_resolution_limit() -> int:
         return max(0, int(raw))
     except ValueError:
         return 0
+
+
+def _selected_youtube_seeds() -> list[RealYouTubeCreatorSeed]:
+    limit = _int_env("YOUTUBE_SEED_LIMIT", len(REAL_BD_YOUTUBE_CREATORS))
+    return REAL_BD_YOUTUBE_CREATORS[: max(limit, 0)]
+
+
+def _int_env(name: str, default: int) -> int:
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
 
 
 async def _resolve_channel_ref_from_search(display_name: str) -> str | None:
@@ -399,7 +408,7 @@ async def _upsert_creator_profile(
 
 
 async def _upsert_creator_niche(session, creator_id, niche: str, niche_map: dict[str, int]) -> None:
-    niche_id = niche_map.get(niche.lower()) or niche_map.get("lifestyle")
+    niche_id = niche_map.get(niche.lower())
     if not niche_id:
         return
     await session.execute(
@@ -479,82 +488,6 @@ async def _upsert_verified_youtube_profile(session, *, creator_id, enrichment) -
         """),
         {"creator_id": creator_id, **values},
     )
-
-
-async def _upsert_estimated_companion_profiles(
-    session,
-    *,
-    creator_id,
-    handle: str,
-    youtube_subscribers: int | None,
-    youtube_avg_views: int | None,
-    youtube_engagement_rate: float | None,
-) -> None:
-    handle_slug = handle.lstrip("@").lower()
-    estimates = [
-        {
-            "platform": "instagram",
-            "handle": handle_slug,
-            "profile_url": f"https://www.instagram.com/{handle_slug}",
-            "follower_count": _scaled_int(youtube_subscribers, 0.55),
-            "avg_views_per_post": _scaled_int(youtube_avg_views, 0.35),
-            "engagement_rate": _scaled_rate(youtube_engagement_rate, 1.1),
-        },
-        {
-            "platform": "tiktok",
-            "handle": handle_slug,
-            "profile_url": f"https://www.tiktok.com/@{handle_slug}",
-            "follower_count": _scaled_int(youtube_subscribers, 0.45),
-            "avg_views_per_post": _scaled_int(youtube_avg_views, 0.5),
-            "engagement_rate": _scaled_rate(youtube_engagement_rate, 1.25),
-        },
-    ]
-    reported_at = datetime.now(timezone.utc)
-    for estimate in estimates:
-        await session.execute(
-            text("""
-                INSERT INTO creator_social_profiles (
-                    creator_id, platform, handle, profile_url, follower_count,
-                    avg_views_per_post, engagement_rate, posts_per_month,
-                    is_primary_platform, is_api_verified, data_source,
-                    stats_reported_at, stats_reported_for_period
-                )
-                VALUES (
-                    :creator_id, :platform, :handle, :profile_url, :follower_count,
-                    :avg_views_per_post, :engagement_rate, 12.0,
-                    false, false, 'estimated', :stats_reported_at, 'youtube_estimate'
-                )
-                ON CONFLICT (creator_id, platform) DO UPDATE
-                SET handle = EXCLUDED.handle,
-                    profile_url = EXCLUDED.profile_url,
-                    follower_count = EXCLUDED.follower_count,
-                    avg_views_per_post = EXCLUDED.avg_views_per_post,
-                    engagement_rate = EXCLUDED.engagement_rate,
-                    posts_per_month = EXCLUDED.posts_per_month,
-                    is_primary_platform = false,
-                    is_api_verified = false,
-                    data_source = 'estimated',
-                    stats_reported_at = EXCLUDED.stats_reported_at,
-                    stats_reported_for_period = EXCLUDED.stats_reported_for_period;
-            """),
-            {
-                "creator_id": creator_id,
-                "stats_reported_at": reported_at,
-                **estimate,
-            },
-        )
-
-
-def _scaled_int(value: int | None, multiplier: float) -> int | None:
-    if value is None:
-        return None
-    return max(1, round(value * multiplier))
-
-
-def _scaled_rate(value: float | None, multiplier: float) -> float | None:
-    if value is None:
-        return None
-    return round(min(value * multiplier, 0.9999), 4)
 
 
 def _slugify(value: str) -> str:

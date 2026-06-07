@@ -49,20 +49,30 @@ def normalize_brand_category(b_data: dict) -> str:
 
 async def seed_db():
     print("Starting database seeding...")
+    include_static_creators = os.getenv("SEED_INCLUDE_STATIC_CREATORS", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+    }
     
     # Try to load real creators
-    try:
-        with open(os.path.join(DATA_DIR, "real_creators.json"), "r", encoding="utf-8") as f:
-            real_creators = json.load(f)
-    except FileNotFoundError:
-        real_creators = []
+    real_creators = []
+    synth_creators = []
+    if include_static_creators:
+        try:
+            with open(os.path.join(DATA_DIR, "real_creators.json"), "r", encoding="utf-8") as f:
+                real_creators = json.load(f)
+        except FileNotFoundError:
+            real_creators = []
         
-    # Try to load synthetic creators
-    try:
-        with open(os.path.join(DATA_DIR, "synthetic_creators.json"), "r", encoding="utf-8") as f:
-            synth_creators = json.load(f)
-    except FileNotFoundError:
-        synth_creators = []
+        # Try to load synthetic creators
+        try:
+            with open(os.path.join(DATA_DIR, "synthetic_creators.json"), "r", encoding="utf-8") as f:
+                synth_creators = json.load(f)
+        except FileNotFoundError:
+            synth_creators = []
+    else:
+        print("Skipping static creator JSON; run real YouTube/Instagram/TikTok seeders for API-sourced creators.")
         
     creators_data = real_creators + synth_creators
     
@@ -122,7 +132,7 @@ async def seed_db():
                 await insert_creator(session, u["id"], c, niche_map)
                 
         # Insert remaining as dummy users
-        print("Inserting remaining synthetic data as dummy users...")
+        print("Inserting remaining brand data as dummy users...")
         for i, b in enumerate(available_brands):
             dummy_email = f"dummy_brand_{i}@test.com"
             dummy_clerk_id = f"dummy_clerk_b_{uuid.uuid4().hex[:8]}"
@@ -134,16 +144,18 @@ async def seed_db():
             u_id = u_res.scalar()
             await insert_brand(session, u_id, b, niche_map)
             
-        for i, c in enumerate(available_creators):
-            dummy_email = f"dummy_creator_{i}@test.com"
-            dummy_clerk_id = f"dummy_clerk_c_{uuid.uuid4().hex[:8]}"
-            await session.execute(
-                text("INSERT INTO users (clerk_id, email, role) VALUES (:cid, :email, 'creator') ON CONFLICT DO NOTHING"),
-                {"cid": dummy_clerk_id, "email": dummy_email}
-            )
-            u_res = await session.execute(text("SELECT id FROM users WHERE email = :e"), {"e": dummy_email})
-            u_id = u_res.scalar()
-            await insert_creator(session, u_id, c, niche_map)
+        if include_static_creators:
+            print("Inserting remaining static creator data as dummy users...")
+            for i, c in enumerate(available_creators):
+                dummy_email = f"dummy_creator_{i}@test.com"
+                dummy_clerk_id = f"dummy_clerk_c_{uuid.uuid4().hex[:8]}"
+                await session.execute(
+                    text("INSERT INTO users (clerk_id, email, role) VALUES (:cid, :email, 'creator') ON CONFLICT DO NOTHING"),
+                    {"cid": dummy_clerk_id, "email": dummy_email}
+                )
+                u_res = await session.execute(text("SELECT id FROM users WHERE email = :e"), {"e": dummy_email})
+                u_id = u_res.scalar()
+                await insert_creator(session, u_id, c, niche_map)
             
         await session.commit()
         print("Database seeded successfully!")

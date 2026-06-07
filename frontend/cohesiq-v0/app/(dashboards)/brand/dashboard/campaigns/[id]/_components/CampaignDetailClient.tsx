@@ -24,6 +24,7 @@ import {
   AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatBDT, formatDate, cn } from "@/lib/utils";
+import { getAvatarInitials } from "@/lib/avatar";
 import { getBrandCategoryLabel } from "@/lib/brand-categories";
 import type { Campaign, Application, AIMatchScore, ApplicationStatus, Contract } from "@/lib/types";
 import { updateCampaignStatusAction, runMatchingAction } from "../_actions/campaign-actions";
@@ -404,7 +405,7 @@ export function CampaignDetailClient({
                           <Avatar className="h-8 w-8">
                             <AvatarImage src={creator?.profile_photo_url || ""} />
                             <AvatarFallback className="text-xs">
-                              {name.slice(0, 2).toUpperCase()}
+                              {getAvatarInitials(name)}
                             </AvatarFallback>
                           </Avatar>
                           <div>
@@ -591,7 +592,7 @@ export function CampaignDetailClient({
 
 function ApplicationCard({ app, onClick }: { app: Application; onClick: () => void }) {
   const creatorName = app.creator?.display_name || "Unknown Creator";
-  const initials = creatorName.slice(0, 2).toUpperCase();
+  const initials = getAvatarInitials(creatorName);
 
   return (
     <Card

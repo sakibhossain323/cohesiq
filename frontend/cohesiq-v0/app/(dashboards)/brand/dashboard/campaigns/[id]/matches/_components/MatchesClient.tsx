@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NicheBadge } from "@/components/shared/NicheBadge";
+import { getAvatarInitials } from "@/lib/avatar";
 import { getBrandCategoryLabel } from "@/lib/brand-categories";
 import {
   Sparkles,
@@ -216,7 +217,7 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
                           <Avatar className="h-14 w-14 rounded-lg border-2 border-border shadow-sm">
                             <AvatarImage src={creator.profile_photo_url} alt={creator.display_name} />
                             <AvatarFallback className="rounded-lg text-lg font-bold">
-                              {creator.display_name.slice(0, 2).toUpperCase()}
+                              {getAvatarInitials(creator.display_name)}
                             </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0">

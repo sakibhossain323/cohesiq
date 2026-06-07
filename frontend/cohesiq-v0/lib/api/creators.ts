@@ -1,6 +1,13 @@
 import type { Creator, CreatorFilters } from "@/lib/types";
 import { fetchApi } from "./client";
 
+export interface CreatorSearchPage {
+  creators: Creator[];
+  page: number;
+  pageSize: number;
+  hasNextPage: boolean;
+}
+
 const NICHE_MAP: Record<number, string> = {
   1: "technology",
   2: "gaming",
@@ -40,8 +47,10 @@ function mapCreatorResponse(c: any): Creator {
   };
 }
 
-export async function getCreators(filters?: CreatorFilters): Promise<Creator[]> {
+export async function getCreatorSearchPage(filters?: CreatorFilters): Promise<CreatorSearchPage> {
   const query = new URLSearchParams();
+  const page = Math.max(1, filters?.page ?? 1);
+  const pageSize = Math.min(Math.max(1, filters?.page_size ?? 12), 60);
   
   if (filters?.niche) {
     // Reverse map niche name to ID
@@ -55,12 +64,24 @@ export async function getCreators(filters?: CreatorFilters): Promise<Creator[]> 
   if (filters?.language) query.append("language", filters.language);
   if (filters?.city) query.append("city", filters.city);
   if (filters?.is_available !== undefined) query.append("is_available", filters.is_available.toString());
+  query.append("limit", (pageSize + 1).toString());
+  query.append("offset", ((page - 1) * pageSize).toString());
   
   const queryString = query.toString();
   const endpoint = queryString ? `/creators/?${queryString}` : '/creators/';
   
   const data = await fetchApi<any[]>(endpoint);
-  return data.map(mapCreatorResponse);
+  return {
+    creators: data.slice(0, pageSize).map(mapCreatorResponse),
+    page,
+    pageSize,
+    hasNextPage: data.length > pageSize,
+  };
+}
+
+export async function getCreators(filters?: CreatorFilters): Promise<Creator[]> {
+  const page = await getCreatorSearchPage(filters);
+  return page.creators;
 }
 
 export async function getCreatorById(id: string): Promise<Creator | null> {
@@ -98,4 +119,3 @@ export async function updateSocialProfile(
     body: payload,
   });
 }
-

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { StarRating } from "@/components/shared/StarRating";
+import { getAvatarInitials } from "@/lib/avatar";
 import type { Creator } from "@/lib/types";
 
 const PLATFORM_LABELS: Record<string, string> = {
@@ -95,7 +96,7 @@ export function CompareClient({ creators }: CompareClientProps) {
       <div className={`grid gap-4 mb-6`} style={{ gridTemplateColumns: `200px repeat(${creators.length}, 1fr)` }}>
         <div />
         {creators.map(creator => {
-          const initials = creator.display_name.slice(0, 2).toUpperCase();
+          const initials = getAvatarInitials(creator.display_name);
           return (
             <Card key={creator.id} className="text-center">
               <CardContent className="pt-6 pb-4 flex flex-col items-center gap-2">

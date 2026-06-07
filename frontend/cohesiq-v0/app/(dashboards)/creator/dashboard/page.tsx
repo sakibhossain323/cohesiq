@@ -21,6 +21,7 @@ import { auth } from "@clerk/nextjs/server";
 import { getApplicationsByCreatorId } from "@/lib/api/applications";
 import { getSuggestedCampaigns } from "@/lib/api/campaigns";
 import { getCreatorById, getMyCreatorProfile } from "@/lib/api/creators";
+import { getAvatarInitials } from "@/lib/avatar";
 import { formatBDT, formatDate } from "@/lib/utils";
 import { ExternalLink, FileText, MapPin, RefreshCw } from "lucide-react";
 
@@ -158,7 +159,7 @@ export default async function CreatorDashboardPage() {
                     <Avatar className="h-20 w-20 border-4 border-border">
                       <AvatarImage src={creator.profile_photo_url} alt={creator.display_name} />
                       <AvatarFallback className="text-xl font-bold">
-                        {creator.display_name.slice(0, 2).toUpperCase()}
+                        {getAvatarInitials(creator.display_name)}
                       </AvatarFallback>
                     </Avatar>
                     
