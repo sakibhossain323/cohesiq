@@ -27,6 +27,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     return (
       <button
         className={className}
+        suppressHydrationWarning
         style={{
           width: 38, height: 38, borderRadius: 'var(--radius-full)',
           border: '1px solid var(--color-border)',
@@ -35,7 +36,6 @@ export function ThemeToggle({ className }: { className?: string }) {
           transition: 'all .2s ease',
         }}
         aria-label="Toggle theme"
-        disabled
       />
     )
   }
@@ -46,6 +46,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     <button
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       className={className}
+      suppressHydrationWarning
       style={{
         width: 38, height: 38, borderRadius: 'var(--radius-full)',
         border: '1px solid var(--color-border)',

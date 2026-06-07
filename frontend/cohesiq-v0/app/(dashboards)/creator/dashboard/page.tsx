@@ -22,7 +22,7 @@ import { getApplicationsByCreatorId } from "@/lib/api/applications";
 import { getSuggestedCampaigns } from "@/lib/api/campaigns";
 import { getCreatorById, getMyCreatorProfile } from "@/lib/api/creators";
 import { formatBDT, formatDate } from "@/lib/utils";
-import { ExternalLink, FileText, MapPin } from "lucide-react";
+import { ExternalLink, FileText, MapPin, RefreshCw } from "lucide-react";
 
 export default async function CreatorDashboardPage() {
   const { getToken } = await auth();
@@ -208,6 +208,13 @@ export default async function CreatorDashboardPage() {
                       <Link href="/creator/dashboard/profile">
                         <ExternalLink className="mr-2 h-4 w-4" />
                         View Profile
+                      </Link>
+                    </Button>
+
+                    <Button className="mt-3 w-full" asChild>
+                      <Link href="/creator/dashboard/connect-youtube?autoStart=true">
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Sync YouTube
                       </Link>
                     </Button>
                   </div>

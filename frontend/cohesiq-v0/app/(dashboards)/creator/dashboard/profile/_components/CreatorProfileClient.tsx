@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -139,6 +140,7 @@ interface CreatorProfileClientProps {
 
 export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProfileClientProps) {
   const { toast } = useToast();
+  const router = useRouter();
   const [profiles, setProfiles] = useState<CreatorSocialProfile[]>(initialProfiles);
   
   const [showDialog, setShowDialog] = useState(false);
@@ -205,6 +207,11 @@ export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProf
   };
 
   const handleSync = async (platformId: string, platformName: PlatformType) => {
+    if (platformName === "youtube") {
+      router.push("/creator/dashboard/connect-youtube?autoStart=true");
+      return;
+    }
+
     setSyncingId(platformId);
     try {
       await new Promise(res => setTimeout(res, 1000));
@@ -276,8 +283,15 @@ export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProf
                       <p className="text-sm text-muted-foreground mb-1">Handle</p>
                       <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
                         @{profile.handle}
-                        {profile.has_verified_badge && <BadgeCheck className="h-5 w-5 text-blue-500" />}
+                        {(profile.has_verified_badge || profile.is_api_verified) && (
+                          <BadgeCheck className="h-5 w-5 text-primary" />
+                        )}
                       </h3>
+                      {profile.is_api_verified && (
+                        <Badge variant="outline" className="mt-2 text-xs">
+                          API verified
+                        </Badge>
+                      )}
                       {profile.profile_url && (
                         <a href={profile.profile_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline mt-1 inline-block truncate max-w-[250px]">
                           {profile.profile_url}

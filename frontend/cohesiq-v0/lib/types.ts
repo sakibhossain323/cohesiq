@@ -63,6 +63,9 @@ export interface CreatorSocialProfile {
   is_primary_platform: boolean;
   is_monetized: boolean;
   has_verified_badge: boolean;
+  is_api_verified?: boolean;
+  api_verified_at?: string;
+  data_source?: string;
   audience_country_primary?: string;
   audience_city_primary?: string;
   audience_age_range_min?: number;

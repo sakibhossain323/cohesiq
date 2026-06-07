@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RefreshCw } from 'lucide-react';
 import { completeOnboarding, submitCreatorOnboarding } from '../../_actions/onboarding';
 
 export default function PlatformsStep() {
@@ -34,8 +35,8 @@ export default function PlatformsStep() {
     setProfileUrl('');
   };
 
-  const handleComplete = async () => {
-    if (data.creatorPlatforms.length === 0 && (!handle || !profileUrl)) {
+  const handleComplete = async (syncYouTube = false) => {
+    if (!syncYouTube && data.creatorPlatforms.length === 0 && (!handle || !profileUrl)) {
       setError('Please add at least one platform');
       return;
     }
@@ -81,7 +82,9 @@ export default function PlatformsStep() {
         await user.reload();
       }
 
-      window.location.href = '/creator/dashboard';
+      window.location.href = syncYouTube
+        ? '/creator/dashboard/connect-youtube?autoStart=true'
+        : '/creator/dashboard';
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred');
       setIsSubmitting(false);
@@ -102,6 +105,25 @@ export default function PlatformsStep() {
           {error}
         </div>
       )}
+
+      <div className="rounded-md border border-border bg-muted/40 p-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-sm font-medium text-foreground">Verify with YouTube OAuth</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Finish onboarding and sync your channel directly from Google.
+            </p>
+          </div>
+          <Button
+            type="button"
+            onClick={() => handleComplete(true)}
+            disabled={isSubmitting}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            {isSubmitting ? 'Saving...' : 'Sync YouTube'}
+          </Button>
+        </div>
+      </div>
 
       {/* Added Platforms List */}
       {data.creatorPlatforms.length > 0 && (
@@ -162,9 +184,18 @@ export default function PlatformsStep() {
         <Button variant="outline" onClick={() => router.push('/onboarding/creator/niches')} disabled={isSubmitting}>
           Back
         </Button>
-        <Button onClick={handleComplete} disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : 'Complete Onboarding'}
-        </Button>
+        <div className="flex gap-3">
+          <Button onClick={() => handleComplete(false)} disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : 'Complete Onboarding'}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => handleComplete(true)}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Saving...' : 'Complete & Sync YouTube'}
+          </Button>
+        </div>
       </div>
     </div>
   );
