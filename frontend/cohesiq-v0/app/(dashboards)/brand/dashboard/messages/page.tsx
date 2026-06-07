@@ -60,9 +60,9 @@ export default function BrandMessagesPage() {
   return (
     <div className="flex h-[calc(100vh-theme(spacing.16))] w-full flex-col p-4 sm:p-6 lg:p-8">
       {/* Demo Banner */}
-      <div className="mb-4 rounded-md bg-blue-50 p-3 border border-blue-200 flex items-center justify-center gap-2 text-blue-800 text-sm">
-        <Info className="h-4 w-4" />
-        <span className="font-medium">Demo Mode:</span> Direct Messaging is currently in development. This is a preview of the upcoming chat interface.
+      <div className="mb-4 rounded-xl bg-brand-soft border border-brand/20 px-4 py-3 flex items-center justify-center gap-2 text-brand text-sm">
+        <Info className="h-4 w-4 shrink-0" />
+        <span><span className="font-semibold">Demo Mode:</span> Direct Messaging is in development. This is a preview of the upcoming chat interface.</span>
       </div>
 
       <div className="flex flex-1 overflow-hidden rounded-xl border border-border bg-card shadow-sm">

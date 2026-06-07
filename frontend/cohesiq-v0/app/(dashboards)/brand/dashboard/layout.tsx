@@ -1,5 +1,6 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { Megaphone, Search, MessageSquare, Building2, BarChart3 } from 'lucide-react'
+import './brand.css'
 
 const brandNavItems = [
   { href: '/brand/dashboard', label: 'Home', icon: <BarChart3 className="h-4 w-4" /> },

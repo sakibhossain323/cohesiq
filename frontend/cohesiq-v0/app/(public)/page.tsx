@@ -54,7 +54,7 @@ export default async function HomePage() {
               {/* dual CTA */}
               <div className="dual reveal" style={{ "--index": 3 } as React.CSSProperties}>
                 {userId ? (
-                  <Link className="dual-card brand" href="/onboarding">
+                  <Link className="dual-card brand" href="/onboarding/brand/profile">
                     <span className="di">
                       <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M3 11l18-5v12L3 14v-3z" strokeLinejoin="round" />
@@ -66,7 +66,7 @@ export default async function HomePage() {
                     <span className="dgo">Get started <ArrowRight /></span>
                   </Link>
                 ) : (
-                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding/brand/profile" signInForceRedirectUrl="/onboarding/brand/profile">
                     <button className="dual-card brand text-left w-full cursor-pointer">
                       <span className="di">
                         <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -81,7 +81,7 @@ export default async function HomePage() {
                   </SignUpButton>
                 )}
                 {userId ? (
-                  <Link className="dual-card creator" href="/onboarding">
+                  <Link className="dual-card creator" href="/onboarding/creator/personal-info">
                     <span className="di">
                       <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <circle cx="12" cy="8" r="4" />
@@ -93,7 +93,7 @@ export default async function HomePage() {
                     <span className="dgo">Join free <ArrowRight /></span>
                   </Link>
                 ) : (
-                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding/creator/personal-info" signInForceRedirectUrl="/onboarding/creator/personal-info">
                     <button className="dual-card creator text-left w-full cursor-pointer">
                       <span className="di">
                         <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -268,12 +268,12 @@ export default async function HomePage() {
                 ))}
               </ul>
               {userId ? (
-                <Link className="btn btn-primary" href="/onboarding" style={{ marginTop: "var(--space-8)" }}>
+                <Link className="btn btn-primary" href="/onboarding/brand/profile" style={{ marginTop: "var(--space-8)" }}>
                   Post a campaign <ArrowRight />
                 </Link>
               ) : (
                 <div style={{ marginTop: "var(--space-8)" }}>
-                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding/brand/profile" signInForceRedirectUrl="/onboarding/brand/profile">
                     <button className="btn btn-primary">
                       Post a campaign <ArrowRight />
                     </button>
@@ -329,12 +329,12 @@ export default async function HomePage() {
                 ))}
               </ul>
               {userId ? (
-                <Link className="btn btn-secondary" href="/onboarding" style={{ marginTop: "var(--space-8)" }}>
+                <Link className="btn btn-secondary" href="/onboarding/creator/personal-info" style={{ marginTop: "var(--space-8)" }}>
                   Create your profile <ArrowRight />
                 </Link>
               ) : (
                 <div style={{ marginTop: "var(--space-8)" }}>
-                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding/creator/personal-info" signInForceRedirectUrl="/onboarding/creator/personal-info">
                     <button className="btn btn-secondary">
                       Create your profile <ArrowRight />
                     </button>
@@ -422,10 +422,10 @@ export default async function HomePage() {
                 </Link>
               ) : (
                 <>
-                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding/brand/profile" signInForceRedirectUrl="/onboarding/brand/profile">
                     <button className="btn btn-primary btn-lg">Start as a Brand</button>
                   </SignUpButton>
-                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding">
+                  <SignUpButton mode="modal" forceRedirectUrl="/onboarding/creator/personal-info" signInForceRedirectUrl="/onboarding/creator/personal-info">
                     <button className="btn btn-outline-warm btn-lg">Join as a Creator</button>
                   </SignUpButton>
                 </>

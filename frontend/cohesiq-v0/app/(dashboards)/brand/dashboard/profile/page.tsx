@@ -7,36 +7,42 @@ import { ResetOnboardingButton } from "@/components/onboarding/ResetOnboardingBu
 export default async function BrandProfilePage() {
   const { getToken } = await auth();
   const token = await getToken();
-  
+
   if (!token) {
-    return null; // Layout should handle redirect
+    return null;
   }
 
   const brand = await getMyBrandProfile(token);
 
   if (!brand) {
     return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center p-8 text-center bg-background">
-        <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Profile not found</h2>
-        <p className="text-muted-foreground mb-6">We couldn't find a brand profile for your account. Please complete onboarding.</p>
+      <div className="bd-empty" style={{ minHeight: "50vh" }}>
+        <div className="bd-empty-icon"><Building2 className="h-6 w-6" /></div>
+        <p className="bd-empty-title">Profile not found</p>
+        <p className="bd-empty-desc">
+          We couldn&apos;t find a brand profile. Please complete onboarding.
+        </p>
         <ResetOnboardingButton />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          <Building2 className="h-8 w-8 text-primary" />
-          Brand Profile
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Manage your company details and public presence on Cohesiq.
-        </p>
-      </div>
+    <div className="bd-page">
+      {/* ── Editorial header ───────────────────────────────── */}
+      <header className="bd-header">
+        <div className="bd-header-inner">
+          <div>
+            <span className="eyebrow mb-3 block">Settings</span>
+            <h1 className="bd-header-title">Brand Profile</h1>
+            <p className="bd-header-sub">
+              Manage your company details and public presence on Cohesiq.
+            </p>
+          </div>
+        </div>
+      </header>
 
-      <div className="grid gap-8">
+      <div className="bd-body" style={{ maxWidth: "760px" }}>
         <ProfileForm initialBrand={brand} />
       </div>
     </div>

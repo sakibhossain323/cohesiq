@@ -12,7 +12,7 @@ import { CampaignStatusBadge } from "../../_components/CampaignStatusBadge";
 import {
   ArrowLeft, Users, Sparkles, Settings, Loader2, CheckCircle2, XCircle,
   Edit, Archive, PlayCircle, FileSignature, BarChart2, Globe, Lock,
-  Send, ChevronRight,
+  ChevronRight,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -40,15 +40,12 @@ interface CampaignDetailClientProps {
   initialContracts: Contract[];
 }
 
-// ── Kanban column config ────────────────────────────────────────────────────
 const PIPELINE_COLUMNS = [
-  { key: "invited",     label: "Invited",      dot: "bg-purple-400",  statuses: ["invited"] as ApplicationStatus[] },
-  { key: "pending",     label: "Needs Review",  dot: "bg-yellow-400",  statuses: ["pending"] as ApplicationStatus[] },
-  { key: "shortlisted", label: "Shortlisted",   dot: "bg-blue-400",    statuses: ["shortlisted"] as ApplicationStatus[] },
-  { key: "accepted",    label: "Accepted",      dot: "bg-green-400",   statuses: ["accepted", "completed"] as ApplicationStatus[] },
+  { key: "invited",     label: "Invited",       dot: "bd-kanban-dot-invited",     statuses: ["invited"] as ApplicationStatus[] },
+  { key: "pending",     label: "Needs Review",  dot: "bd-kanban-dot-pending",     statuses: ["pending"] as ApplicationStatus[] },
+  { key: "shortlisted", label: "Shortlisted",   dot: "bd-kanban-dot-shortlisted", statuses: ["shortlisted"] as ApplicationStatus[] },
+  { key: "accepted",    label: "Accepted",      dot: "bd-kanban-dot-accepted",    statuses: ["accepted", "completed"] as ApplicationStatus[] },
 ] as const;
-
-// ── Main component ──────────────────────────────────────────────────────────
 
 export function CampaignDetailClient({
   campaign,
@@ -139,179 +136,162 @@ export function CampaignDetailClient({
     (a) => !["rejected", "withdrawn", "declined"].includes(a.status)
   );
 
-  const visibilityBadge = campaign.visibility === "private"
-    ? <span className="inline-flex items-center gap-1 text-xs bg-muted text-muted-foreground rounded px-2 py-0.5"><Lock className="h-3 w-3" /> Private</span>
-    : <span className="inline-flex items-center gap-1 text-xs bg-muted text-muted-foreground rounded px-2 py-0.5"><Globe className="h-3 w-3" /> Public</span>;
-
   return (
     <>
-      {/* ── Page header ──────────────────────────────────────────── */}
-      <div className="mb-8">
-        <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2 text-muted-foreground">
-          <Link href="/brand/dashboard/campaigns">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Campaigns
-          </Link>
-        </Button>
-
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3 flex-wrap mb-2">
-              <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                {campaign.title}
-              </h1>
+      {/* ── Page header ──────────────────────────────────────── */}
+      <header className="bd-header" style={{ marginBottom: "var(--space-8)" }}>
+        <div className="bd-header-inner">
+          <div style={{ flex: 1 }}>
+            <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2 text-muted-foreground hover:text-foreground">
+              <Link href="/brand/dashboard/campaigns">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Campaigns
+              </Link>
+            </Button>
+            <div className="flex items-center gap-3 flex-wrap mb-1">
               <CampaignStatusBadge status={campaign.status} />
-              {visibilityBadge}
+              <span className="inline-flex items-center gap-1 text-xs bg-muted text-muted-foreground rounded-full px-3 py-1">
+                {campaign.visibility === "private"
+                  ? <><Lock className="h-3 w-3" /> Private</>
+                  : <><Globe className="h-3 w-3" /> Public</>}
+              </span>
               {campaign.brand_category && (
-                <span className="inline-flex items-center gap-1 text-xs bg-muted text-muted-foreground rounded px-2 py-0.5">
+                <span className="inline-flex items-center gap-1 text-xs bg-muted text-muted-foreground rounded-full px-3 py-1">
                   {getBrandCategoryLabel(campaign.brand_category)}
                 </span>
               )}
             </div>
+            <h1 className="bd-header-title">{campaign.title}</h1>
             {campaign.created_at && (
-              <p className="text-sm text-muted-foreground">
-                Created {formatDate(campaign.created_at)}
-              </p>
+              <p className="bd-header-sub">Created {formatDate(campaign.created_at)}</p>
             )}
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" disabled={isPending}>
-                {isPending
-                  ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  : <Settings className="mr-2 h-4 w-4" />}
-                Manage
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem asChild>
-                <Link href={`/brand/dashboard/campaigns/${campaign.id}/edit`} className="cursor-pointer flex items-center">
-                  <Edit className="mr-2 h-4 w-4" /> Edit Campaign
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {campaign.status !== "active" ? (
-                <DropdownMenuItem onClick={() => confirmStatusChange("active")} className="cursor-pointer">
-                  <PlayCircle className="mr-2 h-4 w-4" /> Reactivate
+          <div className="bd-header-actions">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" disabled={isPending}>
+                  {isPending
+                    ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    : <Settings className="mr-2 h-4 w-4" />}
+                  Manage
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuItem asChild>
+                  <Link href={`/brand/dashboard/campaigns/${campaign.id}/edit`} className="cursor-pointer flex items-center">
+                    <Edit className="mr-2 h-4 w-4" /> Edit Campaign
+                  </Link>
                 </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={() => confirmStatusChange("completed")} className="cursor-pointer">
-                  <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Completed
-                </DropdownMenuItem>
-              )}
-              {!["cancelled", "archived"].includes(campaign.status) && (
+                <DropdownMenuSeparator />
+                {campaign.status !== "active" ? (
+                  <DropdownMenuItem onClick={() => confirmStatusChange("active")} className="cursor-pointer">
+                    <PlayCircle className="mr-2 h-4 w-4" /> Reactivate
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={() => confirmStatusChange("completed")} className="cursor-pointer">
+                    <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Completed
+                  </DropdownMenuItem>
+                )}
+                {!["cancelled", "archived"].includes(campaign.status) && (
+                  <DropdownMenuItem
+                    onClick={() => confirmStatusChange("cancelled")}
+                    className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
+                  >
+                    <XCircle className="mr-2 h-4 w-4" /> Cancel Campaign
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => confirmStatusChange("cancelled")}
-                  className="cursor-pointer text-yellow-600 focus:bg-yellow-50 focus:text-yellow-700"
+                  onClick={() => confirmStatusChange("archived")}
+                  className="cursor-pointer text-muted-foreground"
                 >
-                  <XCircle className="mr-2 h-4 w-4" /> Cancel Campaign
+                  <Archive className="mr-2 h-4 w-4" /> Archive
                 </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => confirmStatusChange("archived")}
-                className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-700"
-              >
-                <Archive className="mr-2 h-4 w-4" /> Archive
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* ── Tabs ─────────────────────────────────────────────────── */}
+      {/* ── Tabs ─────────────────────────────────────────────── */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-8 bg-muted/50 w-full sm:w-auto p-1 h-auto grid grid-cols-4 sm:flex">
-          <TabsTrigger value="pipeline" className="py-2 px-5 flex items-center gap-2">
+        <TabsList className="mb-8 bg-surface-subtle border border-border w-full sm:w-auto p-1 h-auto grid grid-cols-4 sm:flex rounded-xl">
+          <TabsTrigger value="pipeline" className="py-2 px-4 flex items-center gap-2 rounded-lg">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Pipeline</span>
-            <Badge variant="secondary" className="bg-primary/10 text-primary px-1.5 py-0 h-5">
+            <Badge variant="secondary" className="bg-brand-soft text-brand px-1.5 py-0 h-5">
               {activeApps.length}
             </Badge>
           </TabsTrigger>
 
-          <TabsTrigger value="contracts" className="py-2 px-5 flex items-center gap-2">
+          <TabsTrigger value="contracts" className="py-2 px-4 flex items-center gap-2 rounded-lg">
             <FileSignature className="h-4 w-4" />
             <span className="hidden sm:inline">Contracts</span>
             {localContracts.length > 0 && (
-              <Badge variant="secondary" className="bg-primary/10 text-primary px-1.5 py-0 h-5">
+              <Badge variant="secondary" className="bg-brand-soft text-brand px-1.5 py-0 h-5">
                 {localContracts.length}
               </Badge>
             )}
           </TabsTrigger>
 
-          <TabsTrigger value="matches" className="py-2 px-5 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-purple-500" />
+          <TabsTrigger value="matches" className="py-2 px-4 flex items-center gap-2 rounded-lg">
+            <Sparkles className="h-4 w-4" />
             <span className="hidden sm:inline">Matches</span>
             {matches.length > 0 && (
-              <Badge variant="secondary" className="bg-primary/10 text-primary px-1.5 py-0 h-5">
+              <Badge variant="secondary" className="bg-brand-soft text-brand px-1.5 py-0 h-5">
                 {matches.length}
               </Badge>
             )}
           </TabsTrigger>
 
-          <TabsTrigger value="details" className="py-2 px-5 flex items-center gap-2">
-            <BarChart2 className="h-4 w-4 text-green-500" />
+          <TabsTrigger value="details" className="py-2 px-4 flex items-center gap-2 rounded-lg">
+            <BarChart2 className="h-4 w-4" />
             <span className="hidden sm:inline">Details</span>
           </TabsTrigger>
         </TabsList>
 
-        {/* ──────────── Tab: Pipeline ──────────────────────────────── */}
+        {/* ──────────── Tab: Pipeline ──────────────────────────── */}
         <TabsContent value="pipeline" className="m-0">
           {activeApps.length === 0 ? (
-            <Card className="min-h-[40vh] flex items-center justify-center border-dashed">
-              <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-                <Users className="mb-4 h-12 w-12 text-muted-foreground/30" />
-                <p className="font-medium text-foreground text-lg">No activity yet</p>
-                <p className="mt-2 text-sm text-muted-foreground max-w-xs text-balance">
+            <div className="bd-section">
+              <div className="bd-empty">
+                <div className="bd-empty-icon"><Users className="h-6 w-6" /></div>
+                <p className="bd-empty-title">No activity yet</p>
+                <p className="bd-empty-desc">
                   {campaign.visibility === "public"
                     ? "Creators will appear here once they apply to your campaign."
                     : "Go to Matches to find and invite specific creators."}
                 </p>
-                <Button
-                  variant="outline"
-                  className="mt-6"
-                  onClick={() => setActiveTab("matches")}
-                >
-                  <Sparkles className="mr-2 h-4 w-4 text-purple-500" />
+                <Button variant="outline" onClick={() => setActiveTab("matches")}>
+                  <Sparkles className="mr-2 h-4 w-4" />
                   Find Creators
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 items-start">
+            <div className="bd-kanban">
               {PIPELINE_COLUMNS.map((col) => {
                 const colApps = activeApps.filter((a) =>
                   (col.statuses as readonly string[]).includes(a.status)
                 );
                 return (
-                  <div
-                    key={col.key}
-                    className="bg-muted/30 rounded-xl p-4 border border-border min-h-[200px]"
-                  >
-                    <div className="flex items-center justify-between mb-4 px-1">
-                      <h3 className="font-semibold text-sm flex items-center gap-2">
-                        <span className={cn("w-2 h-2 rounded-full", col.dot)} />
+                  <div key={col.key} className="bd-kanban-col">
+                    <div className="bd-kanban-head">
+                      <span className="bd-kanban-label">
+                        <span className={cn("bd-kanban-dot", col.dot)} />
                         {col.label}
-                      </h3>
-                      <Badge variant="secondary" className="h-5 px-1.5 py-0 text-xs">
+                      </span>
+                      <Badge variant="secondary" className="h-5 px-1.5 py-0 text-xs bg-background">
                         {colApps.length}
                       </Badge>
                     </div>
-
                     <div className="space-y-2">
                       {colApps.map((app) => (
-                        <ApplicationCard
-                          key={app.id}
-                          app={app}
-                          onClick={() => setSelectedApp(app)}
-                        />
+                        <ApplicationCard key={app.id} app={app} onClick={() => setSelectedApp(app)} />
                       ))}
                       {colApps.length === 0 && (
-                        <p className="text-xs text-muted-foreground/50 text-center py-6">
-                          Empty
-                        </p>
+                        <p className="text-xs text-muted-foreground/50 text-center py-6">Empty</p>
                       )}
                     </div>
                   </div>
@@ -321,70 +301,67 @@ export function CampaignDetailClient({
           )}
         </TabsContent>
 
-        {/* ──────────── Tab: Contracts ─────────────────────────────── */}
+        {/* ──────────── Tab: Contracts ─────────────────────────── */}
         <TabsContent value="contracts" className="m-0">
           {localContracts.length === 0 ? (
-            <Card className="min-h-[40vh] flex items-center justify-center border-dashed">
-              <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-                <FileSignature className="mb-4 h-12 w-12 text-muted-foreground/30" />
-                <p className="font-medium text-foreground text-lg">No contracts yet</p>
-                <p className="mt-2 text-sm text-muted-foreground max-w-xs text-balance">
-                  Contracts appear here after you accept a creator and define the engagement terms.
-                  Go to the Pipeline tab to review applications.
+            <div className="bd-section">
+              <div className="bd-empty">
+                <div className="bd-empty-icon"><FileSignature className="h-6 w-6" /></div>
+                <p className="bd-empty-title">No contracts yet</p>
+                <p className="bd-empty-desc">
+                  Contracts appear after you accept a creator and define engagement terms.
                 </p>
-                <Button
-                  variant="outline"
-                  className="mt-6"
-                  onClick={() => setActiveTab("pipeline")}
-                >
+                <Button variant="outline" onClick={() => setActiveTab("pipeline")}>
                   <Users className="mr-2 h-4 w-4" />
                   View Pipeline
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ) : (
             <div className="space-y-3">
               {localContracts.map((c) => (
-                <ContractCard
-                  key={c.id}
-                  contract={c}
-                  onContractUpdate={handleContractUpdate}
-                />
+                <ContractCard key={c.id} contract={c} onContractUpdate={handleContractUpdate} />
               ))}
             </div>
           )}
         </TabsContent>
 
-        {/* ──────────── Tab: Matches ───────────────────────────────── */}
+        {/* ──────────── Tab: Matches ───────────────────────────── */}
         <TabsContent value="matches" className="m-0">
-          <Card>
-            <CardHeader>
-              <CardTitle>Best Matches For This Campaign</CardTitle>
-              <CardDescription>Your highest-scoring creators based on niche, budget, and platform fit</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          <div className="bd-section">
+            <div className="bd-section-head">
+              <div>
+                <span className="bd-section-title">Best Matches</span>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Highest-scoring creators based on niche, budget, and platform fit.
+                </p>
+              </div>
+              {matches.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={handleRunMatching} disabled={isPending}>
+                  {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                  Re-run
+                </Button>
+              )}
+            </div>
+            <div className="bd-section-body space-y-3">
               {matchingError && (
-                <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
                   {matchingError}
                 </div>
               )}
               {matchingNotice && (
-                <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                <div className="rounded-xl border border-brand/20 bg-brand-soft/40 px-4 py-3 text-sm text-brand">
                   {matchingNotice}
                 </div>
               )}
               {matches.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
-                  <Sparkles className="mb-4 h-10 w-10 text-purple-400 opacity-50" />
-                  <p className="font-medium text-foreground text-lg mb-1">No recommendations yet</p>
-                  <p className="text-sm max-w-sm mb-6">
+                <div className="bd-empty" style={{ paddingBlock: "var(--space-10)" }}>
+                  <div className="bd-empty-icon"><Sparkles className="h-6 w-6" /></div>
+                  <p className="bd-empty-title">No recommendations yet</p>
+                  <p className="bd-empty-desc">
                     Run AI matching to rank and discover the best creators for this campaign.
                   </p>
-                  <Button
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
-                    onClick={handleRunMatching}
-                    disabled={isPending}
-                  >
+                  <Button onClick={handleRunMatching} disabled={isPending}>
                     {isPending
                       ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Running…</>
                       : <><Sparkles className="mr-2 h-4 w-4" /> Run AI Matching</>}
@@ -399,17 +376,17 @@ export function CampaignDetailClient({
                     return (
                       <div
                         key={match.id}
-                        className="flex items-center justify-between gap-4 rounded-lg border border-border p-3"
+                        className="flex items-center justify-between gap-4 rounded-xl border border-border p-3 hover:border-brand/30 hover:bg-surface-subtle transition-all"
                       >
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
+                          <Avatar className="h-9 w-9">
                             <AvatarImage src={creator?.profile_photo_url || ""} />
-                            <AvatarFallback className="text-xs">
+                            <AvatarFallback className="text-xs bg-brand-soft text-brand font-semibold">
                               {getAvatarInitials(name)}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="text-sm font-semibold">{name}</p>
+                            <p className="text-sm font-semibold font-display">{name}</p>
                             {creator?.primary_niche && (
                               <p className="text-xs text-muted-foreground capitalize">
                                 {creator.primary_niche.replace(/_/g, " ")}
@@ -418,7 +395,7 @@ export function CampaignDetailClient({
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant="secondary">Score {score}%</Badge>
+                          <span className="bd-status bd-status-active">Score {score}%</span>
                           <Button size="sm" variant="ghost" asChild>
                             <Link href={`/brand/dashboard/creators/${creator?.id}`}>
                               <ChevronRight className="h-4 w-4" />
@@ -428,11 +405,7 @@ export function CampaignDetailClient({
                       </div>
                     );
                   })}
-                  <div className="flex justify-between items-center pt-2">
-                    <Button variant="ghost" size="sm" onClick={handleRunMatching} disabled={isPending}>
-                      {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      Re-run matching
-                    </Button>
+                  <div className="flex justify-end items-center pt-2">
                     <Button variant="outline" size="sm" asChild>
                       <Link href={`/brand/dashboard/campaigns/${campaign.id}/matches`}>
                         View all {matches.length} matches
@@ -441,21 +414,19 @@ export function CampaignDetailClient({
                   </div>
                 </>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
 
-        {/* ──────────── Tab: Details ───────────────────────────────── */}
+        {/* ──────────── Tab: Details ───────────────────────────── */}
         <TabsContent value="details" className="m-0 space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Campaign Brief</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
+          <div className="bd-section">
+            <div className="bd-section-head">
+              <span className="bd-section-title">Campaign Brief</span>
+            </div>
+            <div className="bd-section-body space-y-6">
               <div>
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                  Description
-                </h4>
+                <h4 className="eyebrow mb-3">Description</h4>
                 <p className="text-foreground whitespace-pre-wrap leading-relaxed">
                   {campaign.description}
                 </p>
@@ -463,49 +434,32 @@ export function CampaignDetailClient({
 
               <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6 pt-4 border-t border-border">
                 <div>
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                    Reach strategy
-                  </h4>
-                  <div className="flex items-center gap-1.5 text-sm font-medium">
+                  <h4 className="eyebrow mb-2" style={{ fontSize: "var(--text-xs)" }}>Reach Strategy</h4>
+                  <div className="flex items-center gap-1.5 text-sm font-semibold">
                     {campaign.visibility === "private"
-                      ? <><Lock className="h-3.5 w-3.5" /> Private outreach</>
-                      : <><Globe className="h-3.5 w-3.5" /> Public campaign</>}
+                      ? <><Lock className="h-3.5 w-3.5" /> Private</>
+                      : <><Globe className="h-3.5 w-3.5" /> Public</>}
                   </div>
                 </div>
-
                 <div>
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                    Target Niche
-                  </h4>
-                  <Badge variant="secondary" className="capitalize">
+                  <h4 className="eyebrow mb-2" style={{ fontSize: "var(--text-xs)" }}>Target Niche</h4>
+                  <span className="bd-status bd-status-active capitalize">
                     {campaign.primary_niche && campaign.primary_niche !== "general"
                       ? campaign.primary_niche.replace("_", " ")
                       : "Any"}
-                  </Badge>
+                  </span>
                 </div>
-
                 <div>
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                    Budget (max / creator)
-                  </h4>
-                  <p className="text-sm font-medium">
-                    {campaign.budget_per_creator_max
-                      ? formatBDT(campaign.budget_per_creator_max)
-                      : "Open"}
+                  <h4 className="eyebrow mb-2" style={{ fontSize: "var(--text-xs)" }}>Budget / Creator</h4>
+                  <p className="text-sm font-semibold">
+                    {campaign.budget_per_creator_max ? formatBDT(campaign.budget_per_creator_max) : "Open"}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Exact payment set on contract
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Exact payment set on contract</p>
                 </div>
-
                 <div>
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                    Min Followers
-                  </h4>
-                  <p className="text-sm font-medium">
-                    {campaign.creator_min_followers
-                      ? campaign.creator_min_followers.toLocaleString()
-                      : "Any"}
+                  <h4 className="eyebrow mb-2" style={{ fontSize: "var(--text-xs)" }}>Min Followers</h4>
+                  <p className="text-sm font-semibold">
+                    {campaign.creator_min_followers ? campaign.creator_min_followers.toLocaleString() : "Any"}
                   </p>
                 </div>
               </div>
@@ -514,24 +468,22 @@ export function CampaignDetailClient({
                 <div className="grid sm:grid-cols-2 gap-6 pt-4 border-t border-border">
                   {campaign.application_deadline && (
                     <div>
-                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                        Application Deadline
-                      </h4>
-                      <p className="text-sm font-medium">{formatDate(campaign.application_deadline)}</p>
+                      <h4 className="eyebrow mb-2" style={{ fontSize: "var(--text-xs)" }}>Application Deadline</h4>
+                      <p className="text-sm font-semibold">{formatDate(campaign.application_deadline)}</p>
                     </div>
                   )}
                   {campaign.content_deadline && (
                     <div>
-                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                        Content Deadline
-                      </h4>
-                      <p className="text-sm font-medium">{formatDate(campaign.content_deadline)}</p>
+                      <h4 className="eyebrow mb-2" style={{ fontSize: "var(--text-xs)" }}>Content Deadline</h4>
+                      <p className="text-sm font-semibold">{formatDate(campaign.content_deadline)}</p>
                     </div>
                   )}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+
+          <CampaignAnalyticsTab campaign={campaign} />
 
           <p className="text-xs text-muted-foreground px-1">
             Payment terms, engagement type, and clauses are defined per creator on each{" "}
@@ -546,7 +498,7 @@ export function CampaignDetailClient({
         </TabsContent>
       </Tabs>
 
-      {/* ── Status change confirmation ───────────────────────────── */}
+      {/* ── Status change confirmation ───────────────────────── */}
       <AlertDialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -565,7 +517,7 @@ export function CampaignDetailClient({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* ── Application drawer ────────────────────────────────────── */}
+      {/* ── Application drawer ────────────────────────────────── */}
       <ApplicationDrawer
         application={selectedApp}
         campaignId={campaign.id}
@@ -574,7 +526,7 @@ export function CampaignDetailClient({
         onAcceptAndContract={handleAcceptAndContract}
       />
 
-      {/* ── Contract creation modal ───────────────────────────────── */}
+      {/* ── Contract creation modal ───────────────────────────── */}
       {contractModalApp && (
         <ContractCreateModal
           open={!!contractModalApp}
@@ -589,41 +541,35 @@ export function CampaignDetailClient({
 }
 
 // ── Application card (kanban cell) ──────────────────────────────────────────
-
 function ApplicationCard({ app, onClick }: { app: Application; onClick: () => void }) {
   const creatorName = app.creator?.display_name || "Unknown Creator";
   const initials = getAvatarInitials(creatorName);
 
   return (
-    <Card
-      className="shadow-none hover:border-primary/50 transition-colors cursor-pointer"
+    <div
+      className="bg-surface-elevated rounded-xl border border-border p-3 cursor-pointer hover:border-brand/40 hover:shadow-sm transition-all"
       onClick={onClick}
     >
-      <div className="p-3">
-        <div className="flex items-center gap-2.5 mb-2">
-          <Avatar className="h-8 w-8 border border-border shrink-0">
-            <AvatarImage
-              src={`https://api.dicebear.com/9.x/initials/svg?seed=${creatorName}`}
-            />
-            <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <p className="font-semibold text-sm truncate leading-tight">{creatorName}</p>
-            <p className="text-xs text-muted-foreground">
-              {app.creator?.primary_niche?.replace(/_/g, " ") || "Creator"}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <ApplicationStatusBadge status={app.status as ApplicationStatus} />
-          {app.proposed_rate && (
-            <span className="text-xs font-semibold text-muted-foreground">
-              {formatBDT(app.proposed_rate)}
-            </span>
-          )}
+      <div className="flex items-center gap-2.5 mb-2.5">
+        <Avatar className="h-8 w-8 border border-border shrink-0">
+          <AvatarImage src={`https://api.dicebear.com/9.x/initials/svg?seed=${creatorName}`} />
+          <AvatarFallback className="text-xs bg-brand-soft text-brand">{initials}</AvatarFallback>
+        </Avatar>
+        <div className="min-w-0">
+          <p className="font-semibold text-sm truncate leading-tight font-display">{creatorName}</p>
+          <p className="text-xs text-muted-foreground capitalize">
+            {app.creator?.primary_niche?.replace(/_/g, " ") || "Creator"}
+          </p>
         </div>
       </div>
-    </Card>
+      <div className="flex items-center justify-between">
+        <ApplicationStatusBadge status={app.status as ApplicationStatus} />
+        {app.proposed_rate && (
+          <span className="text-xs font-semibold text-muted-foreground">
+            {formatBDT(app.proposed_rate)}
+          </span>
+        )}
+      </div>
+    </div>
   );
 }

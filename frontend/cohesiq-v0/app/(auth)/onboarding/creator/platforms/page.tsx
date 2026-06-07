@@ -11,6 +11,7 @@ import {
   Linkedin,
   Music2,
   Plus,
+  RefreshCw,
   TriangleAlert,
   Twitter,
   X,
@@ -19,7 +20,6 @@ import {
 import { useOnboarding } from '@/components/providers/OnboardingProvider';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RefreshCw } from 'lucide-react';
 import { completeOnboarding, submitCreatorOnboarding } from '../../_actions/onboarding';
 
 const PLATFORMS = [
@@ -45,12 +45,15 @@ function PlatformGlyph({ platform }: { platform: string }) {
   return <>{map[platform] ?? <Globe />}</>;
 }
 
+type SyncPlatform = 'youtube' | 'tiktok' | null;
+
 export default function PlatformsStep() {
   const router = useRouter();
   const { getToken } = useAuth();
   const { user } = useUser();
   const { data, updateData } = useOnboarding();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [syncing, setSyncing] = useState<SyncPlatform>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [platform, setPlatform] = useState('youtube');
@@ -76,9 +79,10 @@ export default function PlatformsStep() {
     );
   };
 
-  const handleComplete = async () => {
-    if (data.creatorPlatforms.length === 0 && (!handle || !profileUrl)) {
-      setError('Please add at least one platform');
+  const handleComplete = async (syncPlatform: SyncPlatform = null) => {
+    // OAuth sync provides the platform, so a manual entry isn't required then.
+    if (!syncPlatform && data.creatorPlatforms.length === 0 && (!handle || !profileUrl)) {
+      setError('Please add at least one platform or verify with YouTube / TikTok');
       return;
     }
 
@@ -90,6 +94,7 @@ export default function PlatformsStep() {
     }
 
     setIsSubmitting(true);
+    setSyncing(syncPlatform);
     setError(null);
 
     try {
@@ -97,6 +102,7 @@ export default function PlatformsStep() {
       if (!token) {
         setError('Authentication token unavailable. Please try again.');
         setIsSubmitting(false);
+        setSyncing(null);
         return;
       }
 
@@ -123,11 +129,12 @@ export default function PlatformsStep() {
         await user.reload();
       }
 
-      if (syncPlatform === "youtube") {
+      // 4. Route to the OAuth connect flow when syncing, otherwise the dashboard.
+      if (syncPlatform === 'youtube') {
         window.location.href = '/creator/dashboard/connect-youtube?autoStart=true';
         return;
       }
-      if (syncPlatform === "tiktok") {
+      if (syncPlatform === 'tiktok') {
         window.location.href = '/creator/dashboard/connect-tiktok?autoStart=true';
         return;
       }
@@ -135,6 +142,7 @@ export default function PlatformsStep() {
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred');
       setIsSubmitting(false);
+      setSyncing(null);
     }
   };
 
@@ -146,7 +154,8 @@ export default function PlatformsStep() {
         <span className="ob-stage-step">Step 03 · Platforms</span>
         <h2 className="ob-stage-title">Where do you post?</h2>
         <p className="ob-stage-sub">
-          Add at least one platform. Verified handles boost your authenticity score and match rank.
+          Verify with OAuth for an instant, trusted sync — or add a platform manually. Verified
+          handles boost your authenticity score and match rank.
         </p>
       </div>
 
@@ -158,6 +167,50 @@ export default function PlatformsStep() {
       )}
 
       <div className="ob-form">
+        {/* ── OAuth sync ─────────────────────────────────────── */}
+        <div className="ob-sync">
+          <div className="ob-sync-row">
+            <span className="ob-sync-glyph yt">
+              <Youtube />
+            </span>
+            <div className="ob-sync-meta">
+              <div className="t">Verify with YouTube</div>
+              <div className="d">Sync your channel &amp; subscriber count directly from Google.</div>
+            </div>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => handleComplete('youtube')}
+              disabled={isSubmitting}
+            >
+              <RefreshCw className={`ico${syncing === 'youtube' ? ' spin' : ''}`} />
+              {syncing === 'youtube' ? 'Syncing…' : 'Sync YouTube'}
+            </button>
+          </div>
+
+          <div className="ob-sync-row">
+            <span className="ob-sync-glyph tt">
+              <Music2 />
+            </span>
+            <div className="ob-sync-meta">
+              <div className="t">Verify with TikTok</div>
+              <div className="d">Sync your TikTok profile from your authorized account.</div>
+            </div>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => handleComplete('tiktok')}
+              disabled={isSubmitting}
+            >
+              <RefreshCw className={`ico${syncing === 'tiktok' ? ' spin' : ''}`} />
+              {syncing === 'tiktok' ? 'Syncing…' : 'Sync TikTok'}
+            </button>
+          </div>
+        </div>
+
+        <div className="ob-divider">or add manually</div>
+
+        {/* ── Added platforms ────────────────────────────────── */}
         {data.creatorPlatforms.length > 0 && (
           <div className="ob-field">
             <span className="ob-label">Added platforms</span>
@@ -185,6 +238,7 @@ export default function PlatformsStep() {
           </div>
         )}
 
+        {/* ── Manual add panel ───────────────────────────────── */}
         <div className="ob-panel">
           <span className="ob-panel-title">Add a platform</span>
 
@@ -240,8 +294,13 @@ export default function PlatformsStep() {
         >
           <ArrowLeft className="ico" /> Back
         </button>
-        <button type="button" className="btn btn-secondary" onClick={handleComplete} disabled={isSubmitting}>
-          {isSubmitting ? 'Saving…' : 'Complete onboarding'}
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => handleComplete()}
+          disabled={isSubmitting}
+        >
+          {isSubmitting && !syncing ? 'Saving…' : 'Complete onboarding'}
         </button>
       </div>
     </>

@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/sidebar'
 import { LogIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import './sidebar.css'
 
 export interface NavItem {
   href: string
@@ -29,12 +30,23 @@ interface DashboardLayoutProps {
   navItems: NavItem[]
 }
 
+/* ── Cohesiq node-graph mark (matches Navbar SVG exactly) ── */
+function CohesiqMark() {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" aria-hidden style={{ width: 22, height: 22 }}>
+      <circle cx="8"  cy="8"  r="4"   fill="white" />
+      <circle cx="24" cy="9"  r="3"   fill="white" opacity="0.75" />
+      <circle cx="22" cy="24" r="4.5" fill="white" opacity="0.88" />
+      <line x1="8"  y1="8"  x2="24" y2="9"  stroke="white" strokeWidth="1.6" opacity="0.5" />
+      <line x1="8"  y1="8"  x2="22" y2="24" stroke="white" strokeWidth="1.6" opacity="0.5" />
+      <line x1="24" y1="9"  x2="22" y2="24" stroke="white" strokeWidth="1.6" opacity="0.5" />
+    </svg>
+  )
+}
+
 export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
   const pathname = usePathname()
 
-  // A nav item is active if the path exactly matches OR the path starts with the href
-  // (for section roots), but the Dashboard root must be an exact match to avoid
-  // always being active when inside /campaigns, /messages, etc.
   function isActive(href: string): boolean {
     if (href === '/creator/dashboard' || href === '/brand/dashboard') {
       return pathname === href
@@ -45,16 +57,20 @@ export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader className="border-b">
-          <Link href="/" className="flex items-center gap-2 px-2 py-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <span className="text-sm font-bold text-primary-foreground">C</span>
+
+        {/* ── Logo ───────────────────────────────────────── */}
+        <SidebarHeader className="border-b border-sidebar-border p-0">
+          <Link href="/" className="sb-logo-link">
+            <div className="sb-mark">
+              <CohesiqMark />
             </div>
-            <span className="text-lg font-bold text-foreground">Cohesiq</span>
+            <span className="sb-wordmark">Cohesiq</span>
           </Link>
         </SidebarHeader>
 
+        {/* ── Nav ────────────────────────────────────────── */}
         <SidebarContent>
+          <span className="sb-section-label">Navigation</span>
           <SidebarMenu>
             {navItems.map((item) => (
               <SidebarMenuItem key={item.href}>
@@ -73,20 +89,16 @@ export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
           </SidebarMenu>
         </SidebarContent>
 
-        {/* ── User section at the very bottom of the sidebar ── */}
-        <SidebarFooter className="border-t p-3">
+        {/* ── User footer ────────────────────────────────── */}
+        <SidebarFooter className="border-t border-sidebar-border p-3">
           <Show when="signed-in">
-            <div className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-sidebar-accent transition-colors">
+            <div className="sb-user">
               <UserButton
-                appearance={{
-                  elements: {
-                    avatarBox: 'h-8 w-8',
-                  },
-                }}
+                appearance={{ elements: { avatarBox: 'h-8 w-8' } }}
               />
-              <div className="flex flex-col min-w-0">
-                <span className="text-sm font-medium text-sidebar-foreground truncate">My Account</span>
-                <span className="text-xs text-muted-foreground truncate">Manage profile</span>
+              <div className="sb-user-info">
+                <span className="sb-user-name">My Account</span>
+                <span className="sb-user-sub">Manage profile</span>
               </div>
             </div>
           </Show>
@@ -100,6 +112,7 @@ export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
             </SignInButton>
           </Show>
         </SidebarFooter>
+
       </Sidebar>
 
       <SidebarInset>

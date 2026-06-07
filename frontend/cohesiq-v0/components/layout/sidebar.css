@@ -1,0 +1,131 @@
+/* ============================================================
+   SIDEBAR — editorial design layer
+   Uses --sidebar-* tokens from globals.css; no hex literals.
+   ============================================================ */
+
+/* ── Logo header area ────────────────────────────────────── */
+.sb-logo-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-4);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+.sb-logo-link:hover { opacity: 0.85; }
+
+/* Gradient tile that holds the node-graph SVG mark */
+.sb-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    135deg,
+    var(--brand-primary) 0%,
+    color-mix(in oklab, var(--brand-primary) 55%, var(--brand-secondary)) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px color-mix(in oklab, var(--brand-primary) 35%, transparent);
+}
+
+.sb-wordmark {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-xl);
+  letter-spacing: -0.025em;
+  color: var(--sidebar-foreground);
+  line-height: 1;
+}
+
+/* ── Section eyebrow ─────────────────────────────────────── */
+.sb-section-label {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sidebar-foreground);
+  opacity: 0.35;
+  padding: var(--space-4) var(--space-3) var(--space-1);
+}
+
+/* ── Active nav item — left accent bar ───────────────────── */
+[data-sidebar="menu-button"][data-active="true"] {
+  position: relative;
+  font-weight: 600 !important;
+  font-family: var(--font-display);
+}
+[data-sidebar="menu-button"][data-active="true"]::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 18%;
+  height: 64%;
+  width: 3px;
+  background: var(--sidebar-primary);
+  border-radius: 0 3px 3px 0;
+}
+
+/* Inactive nav items use display font too */
+[data-sidebar="menu-button"] {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+/* ── Footer user row ─────────────────────────────────────── */
+.sb-user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2) var(--space-2);
+  width: 100%;
+  transition: background 0.15s ease;
+  cursor: default;
+}
+.sb-user:hover { background: var(--sidebar-accent); }
+
+.sb-user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.sb-user-name {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--sidebar-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+.sb-user-sub {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--sidebar-foreground);
+  opacity: 0.45;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Subtle top gradient on the sidebar surface ──────────── */
+[data-sidebar="sidebar"] > [data-sidebar="content"]:first-child {
+  position: relative;
+}
+[data-sidebar="sidebar"] > [data-sidebar="content"]:first-child::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 80px;
+  background: linear-gradient(180deg, var(--wash-primary) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
