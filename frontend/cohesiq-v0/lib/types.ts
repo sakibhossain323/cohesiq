@@ -197,6 +197,7 @@ export interface Review {
 }
 
 export interface CreatorFilters {
+  search?: string;
   niche?: string;
   platform?: PlatformType;
   min_followers?: number;
@@ -204,9 +205,20 @@ export interface CreatorFilters {
   language?: string;
   city?: string;
   is_available?: boolean;
+  max_rate?: number;
+  sort_by?: CreatorSortBy;
   page?: number;
   page_size?: number;
 }
+
+export type CreatorSortBy =
+  | "followers_desc"
+  | "engagement_desc"
+  | "avg_views_desc"
+  | "rating_desc"
+  | "collaborations_desc"
+  | "newest"
+  | "name_asc";
 
 export interface CampaignFilters {
   search?: string;

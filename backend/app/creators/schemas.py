@@ -300,6 +300,7 @@ class CreatorProfileOut(BaseModel):
 # ------------------------------------------------------------------ #
 
 class CreatorFilters(BaseModel):
+    search: Optional[str] = None
     niche: Optional[int] = None          # niche_id
     platform: Optional[str] = None
     min_followers: Optional[int] = None
@@ -308,5 +309,6 @@ class CreatorFilters(BaseModel):
     city: Optional[str] = None
     is_available: Optional[bool] = None
     max_rate: Optional[int] = None       # max price_bdt in rate cards
+    sort_by: str = "followers_desc"
     limit: int = 20
     offset: int = 0

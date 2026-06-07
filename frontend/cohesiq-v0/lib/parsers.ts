@@ -1,4 +1,4 @@
-import type { CampaignFilters, CreatorFilters, PlatformType, CampaignStatus } from "./types";
+import type { CampaignFilters, CreatorFilters, CreatorSortBy, PlatformType, CampaignStatus } from "./types";
 
 export type SearchParams = { [key: string]: string | string[] | undefined };
 
@@ -55,8 +55,12 @@ export function parseCreatorFilters(searchParams: SearchParams): CreatorFilters 
   const platformStr = getString(searchParams.platform);
   const validPlatforms: PlatformType[] = ["youtube", "instagram", "facebook", "tiktok", "twitter_x", "linkedin", "snapchat", "other"];
   const platform = validPlatforms.includes(platformStr as PlatformType) ? (platformStr as PlatformType) : undefined;
+  const sortStr = getString(searchParams.sort_by);
+  const validSorts: CreatorSortBy[] = ["followers_desc", "engagement_desc", "avg_views_desc", "rating_desc", "collaborations_desc", "newest", "name_asc"];
+  const sort_by = validSorts.includes(sortStr as CreatorSortBy) ? (sortStr as CreatorSortBy) : "followers_desc";
 
   return {
+    search: getString(searchParams.search),
     niche: getString(searchParams.niche),
     platform,
     min_followers: getNumber(searchParams.min_followers),
@@ -64,6 +68,8 @@ export function parseCreatorFilters(searchParams: SearchParams): CreatorFilters 
     language: getString(searchParams.language),
     city: getString(searchParams.city),
     is_available: getBoolean(searchParams.is_available),
+    max_rate: getNumber(searchParams.max_rate),
+    sort_by,
     page: getBoundedNumber(searchParams.page, 1, 1, 10_000),
     page_size: getBoundedNumber(searchParams.page_size, 12, 1, 60),
   };

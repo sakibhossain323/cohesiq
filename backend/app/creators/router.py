@@ -42,6 +42,7 @@ def _require_own_profile(creator_id: uuid.UUID, current_user: User) -> None:
 @router.get("/", response_model=List[CreatorProfileOut])
 async def list_creators(
     db: Annotated[AsyncSession, Depends(get_db)],
+    search: Optional[str] = Query(None),
     niche: Optional[int] = Query(None),
     platform: Optional[str] = Query(None),
     min_followers: Optional[int] = Query(None),
@@ -50,11 +51,13 @@ async def list_creators(
     city: Optional[str] = Query(None),
     is_available: Optional[bool] = Query(None),
     max_rate: Optional[int] = Query(None),
+    sort_by: str = Query("followers_desc"),
     limit: int = Query(20, le=100),
     offset: int = Query(0),
 ):
     """Browse creators with optional filters."""
     filters = CreatorFilters(
+        search=search,
         niche=niche,
         platform=platform,
         min_followers=min_followers,
@@ -63,6 +66,7 @@ async def list_creators(
         city=city,
         is_available=is_available,
         max_rate=max_rate,
+        sort_by=sort_by,
         limit=limit,
         offset=offset,
     )

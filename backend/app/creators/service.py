@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import List
 
 from fastapi import HTTPException, status
-from sqlalchemy import and_, select
+from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -122,6 +122,27 @@ async def list_creators(db: AsyncSession, filters: CreatorFilters) -> List[Creat
         .options(*_with_all_relations())
     )
 
+    search = filters.search.strip() if filters.search else ""
+    if search:
+        search_term = f"%{search}%"
+        query = query.where(
+            or_(
+                CreatorProfile.display_name.ilike(search_term),
+                CreatorProfile.full_name.ilike(search_term),
+                CreatorProfile.tagline.ilike(search_term),
+                CreatorProfile.bio.ilike(search_term),
+                CreatorProfile.city.ilike(search_term),
+                CreatorProfile.id.in_(
+                    select(CreatorSocialProfile.creator_id).where(
+                        or_(
+                            CreatorSocialProfile.handle.ilike(search_term),
+                            CreatorSocialProfile.display_name_on_platform.ilike(search_term),
+                        )
+                    )
+                ),
+            )
+        )
+
     if filters.is_available is not None:
         query = query.where(CreatorProfile.is_available == filters.is_available)
 
@@ -159,6 +180,37 @@ async def list_creators(db: AsyncSession, filters: CreatorFilters) -> List[Creat
                 CreatorSocialProfile.follower_count <= filters.max_followers
             )
         query = query.where(CreatorProfile.id.in_(social_subq))
+
+    sort_by = filters.sort_by or "followers_desc"
+    if sort_by in {"followers_desc", "engagement_desc", "avg_views_desc"}:
+        metric_column = {
+            "followers_desc": CreatorSocialProfile.follower_count,
+            "engagement_desc": CreatorSocialProfile.engagement_rate,
+            "avg_views_desc": CreatorSocialProfile.avg_views_per_post,
+        }[sort_by]
+        metric_subq = (
+            select(
+                CreatorSocialProfile.creator_id.label("creator_id"),
+                func.max(metric_column).label("sort_metric"),
+            )
+            .group_by(CreatorSocialProfile.creator_id)
+            .subquery()
+        )
+        query = (
+            query
+            .outerjoin(metric_subq, CreatorProfile.id == metric_subq.c.creator_id)
+            .order_by(desc(metric_subq.c.sort_metric).nullslast(), CreatorProfile.display_name.asc())
+        )
+    elif sort_by == "rating_desc":
+        query = query.order_by(desc(CreatorProfile.average_rating).nullslast(), CreatorProfile.display_name.asc())
+    elif sort_by == "collaborations_desc":
+        query = query.order_by(desc(CreatorProfile.total_collaborations), CreatorProfile.display_name.asc())
+    elif sort_by == "newest":
+        query = query.order_by(desc(CreatorProfile.created_at), CreatorProfile.display_name.asc())
+    elif sort_by == "name_asc":
+        query = query.order_by(CreatorProfile.display_name.asc())
+    else:
+        query = query.order_by(CreatorProfile.display_name.asc())
 
     query = query.offset(filters.offset).limit(filters.limit)
     result = await db.execute(query)

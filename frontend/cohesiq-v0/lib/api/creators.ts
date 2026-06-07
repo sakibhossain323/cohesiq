@@ -52,6 +52,8 @@ export async function getCreatorSearchPage(filters?: CreatorFilters): Promise<Cr
   const query = new URLSearchParams();
   const page = Math.max(1, filters?.page ?? 1);
   const pageSize = Math.min(Math.max(1, filters?.page_size ?? 12), 60);
+
+  if (filters?.search) query.append("search", filters.search);
   
   if (filters?.niche) {
     // Reverse map niche name to ID
@@ -65,6 +67,8 @@ export async function getCreatorSearchPage(filters?: CreatorFilters): Promise<Cr
   if (filters?.language) query.append("language", filters.language);
   if (filters?.city) query.append("city", filters.city);
   if (filters?.is_available !== undefined) query.append("is_available", filters.is_available.toString());
+  if (filters?.max_rate) query.append("max_rate", filters.max_rate.toString());
+  if (filters?.sort_by) query.append("sort_by", filters.sort_by);
   query.append("limit", (pageSize + 1).toString());
   query.append("offset", ((page - 1) * pageSize).toString());
   

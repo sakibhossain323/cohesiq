@@ -25,14 +25,18 @@ interface CreatorFiltersProps {
 
 const niches = [
   "Technology",
+  "Gaming",
   "Fashion",
+  "Beauty",
   "Food",
   "Travel",
-  "Gaming",
-  "Fitness",
-  "Beauty",
-  "Finance",
   "Lifestyle",
+  "Education",
+  "Finance",
+  "Fitness",
+  "Parenting",
+  "Entertainment",
+  "News",
   "Other",
 ];
 
@@ -43,13 +47,16 @@ const platforms: { value: PlatformType; label: string }[] = [
   { value: "facebook", label: "Facebook" },
 ];
 
-const languages = ["Bangla", "English"];
+const languages = [
+  { value: "bn", label: "Bangla" },
+  { value: "en", label: "English" },
+];
 
 export function CreatorFilters({ filters, onFiltersChange }: CreatorFiltersProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [followerRange, setFollowerRange] = useState<[number, number]>([
     filters.min_followers ?? 1000,
-    filters.max_followers ?? 1000000,
+    filters.max_followers ?? 20000000,
   ]);
 
   const handleNicheChange = (value: string) => {
@@ -99,12 +106,29 @@ export function CreatorFilters({ filters, onFiltersChange }: CreatorFiltersProps
     });
   };
 
+  const handleMaxRateChange = (value: string) => {
+    const maxRate = Number.parseInt(value, 10);
+    onFiltersChange({
+      ...filters,
+      max_rate: Number.isFinite(maxRate) && maxRate > 0 ? maxRate : undefined,
+    });
+  };
+
   const clearFilters = () => {
-    setFollowerRange([1000, 1000000]);
+    setFollowerRange([1000, 20000000]);
     onFiltersChange({});
   };
 
-  const hasActiveFilters = Object.values(filters).some(v => v !== undefined);
+  const hasActiveFilters = [
+    filters.niche,
+    filters.platform,
+    filters.min_followers,
+    filters.max_followers,
+    filters.language,
+    filters.city,
+    filters.is_available,
+    filters.max_rate,
+  ].some(v => v !== undefined);
 
   return (
     <div className="rounded-lg border border-border bg-card">
@@ -124,7 +148,7 @@ export function CreatorFilters({ filters, onFiltersChange }: CreatorFiltersProps
             variant="ghost"
             size="sm"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="h-8 w-8 p-0 lg:hidden"
+            className="h-8 w-8 p-0 md:hidden"
           >
             {isExpanded ? (
               <ChevronUp className="h-4 w-4" />
@@ -135,7 +159,7 @@ export function CreatorFilters({ filters, onFiltersChange }: CreatorFiltersProps
         </div>
       </div>
 
-      <div className={cn("space-y-6 p-4", !isExpanded && "hidden lg:block")}>
+      <div className={cn("grid gap-5 p-4 md:grid-cols-2 xl:grid-cols-4", !isExpanded && "hidden md:grid")}>
         {/* Niche Filter */}
         <div className="space-y-2">
           <Label htmlFor="niche" className="text-sm font-medium">
@@ -186,7 +210,7 @@ export function CreatorFilters({ filters, onFiltersChange }: CreatorFiltersProps
             onValueChange={handleFollowerRangeChange}
             onValueCommit={handleFollowerRangeCommit}
             min={1000}
-            max={1000000}
+            max={20000000}
             step={1000}
             className="py-2"
           />
@@ -208,8 +232,8 @@ export function CreatorFilters({ filters, onFiltersChange }: CreatorFiltersProps
             <SelectContent>
               <SelectItem value="all">All Languages</SelectItem>
               {languages.map(lang => (
-                <SelectItem key={lang} value={lang}>
-                  {lang}
+                <SelectItem key={lang.value} value={lang.value}>
+                  {lang.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -229,8 +253,21 @@ export function CreatorFilters({ filters, onFiltersChange }: CreatorFiltersProps
           />
         </div>
 
+        <div className="space-y-2">
+          <Label htmlFor="max-rate" className="text-sm font-medium">
+            Max Rate
+          </Label>
+          <Input
+            id="max-rate"
+            inputMode="numeric"
+            placeholder="৳250000"
+            value={filters.max_rate ?? ""}
+            onChange={e => handleMaxRateChange(e.target.value)}
+          />
+        </div>
+
         {/* Available Toggle */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between rounded-lg border border-border bg-muted/20 p-3">
           <Label htmlFor="available" className="text-sm font-medium">
             Available Only
           </Label>
