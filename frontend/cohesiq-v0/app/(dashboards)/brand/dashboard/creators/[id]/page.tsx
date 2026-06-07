@@ -1,7 +1,8 @@
-import { CreatorDetailView } from "@/components/creator/CreatorDetailView";
+import { notFound } from "next/navigation";
+import { getCreatorById } from "@/lib/api/creators";
+import { getCreatorReviews } from "@/lib/api/reviews";
+import { BrandCreatorMediaKit } from "./_components/BrandCreatorMediaKit";
 import { InviteModal } from "./_components/InviteModal";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 
 interface PrivateCreatorDetailPageProps {
   params: Promise<{ id: string }>;
@@ -9,19 +10,22 @@ interface PrivateCreatorDetailPageProps {
 
 export default async function PrivateCreatorDetailPage({ params }: PrivateCreatorDetailPageProps) {
   const { id } = await params;
-  
+
+  const creator = await getCreatorById(id);
+
+  if (!creator) {
+    notFound();
+  }
+
+  const creatorReviews = (await getCreatorReviews(id))
+    .filter(review => review.is_public)
+    .slice(0, 4);
+
   return (
-    <div className="flex flex-col bg-background w-full">
-      <div className="mx-auto max-w-5xl px-4 pt-6 sm:px-6 lg:px-8 w-full">
-        <Link 
-          href="/brand/dashboard/creators" 
-          className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mb-2"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Find Creators
-        </Link>
-      </div>
-      <CreatorDetailView creatorId={id} actionSlot={<InviteModal creatorId={id} />} />
-    </div>
+    <BrandCreatorMediaKit
+      creator={creator}
+      reviews={creatorReviews}
+      actionSlot={<InviteModal creatorId={id} />}
+    />
   );
 }

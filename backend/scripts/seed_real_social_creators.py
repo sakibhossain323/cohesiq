@@ -10,7 +10,10 @@ from app.auth import models as auth_models  # noqa: F401
 from app.brands import models as brand_models  # noqa: F401
 from app.campaigns import models as campaign_models  # noqa: F401
 from app.creators.normalization import classify_public_social_niche_with_groq
-from app.creators.service import build_public_social_profile_values
+from app.creators.service import (
+    build_public_social_profile_values,
+    import_public_social_recent_posts_to_portfolio,
+)
 from app.database import AsyncSessionLocal
 from app.social_ingestion import service as social_service
 from app.social_ingestion.schemas import PublicSocialProfileEnrichment
@@ -107,6 +110,12 @@ async def seed_real_social_creators(recent_post_limit: int = 12) -> None:
                     session,
                     creator_id=creator_id,
                     enrichment=enrichment,
+                )
+                await import_public_social_recent_posts_to_portfolio(
+                    session,
+                    creator_id=creator_id,
+                    enrichment=enrichment,
+                    niche_name=selected_niche,
                 )
                 await session.commit()
                 successes += 1
@@ -332,7 +341,7 @@ async def _upsert_verified_social_profile(
                 avg_comments_per_post, avg_shares_per_post, engagement_rate,
                 posts_per_month, has_verified_badge, is_api_verified,
                 api_verified_at, data_source, content_languages,
-                stats_reported_at, stats_reported_for_period, is_primary_platform
+                notes, stats_reported_at, stats_reported_for_period, is_primary_platform
             )
             VALUES (
                 :creator_id, :platform, :handle, :profile_url, :platform_user_id,
@@ -341,7 +350,7 @@ async def _upsert_verified_social_profile(
                 :avg_comments_per_post, :avg_shares_per_post, :engagement_rate,
                 :posts_per_month, :has_verified_badge, :is_api_verified,
                 :api_verified_at, :data_source, :content_languages,
-                :stats_reported_at, :stats_reported_for_period, true
+                :notes, :stats_reported_at, :stats_reported_for_period, true
             )
             ON CONFLICT (creator_id, platform) DO UPDATE
             SET handle = EXCLUDED.handle,
@@ -362,6 +371,7 @@ async def _upsert_verified_social_profile(
                 api_verified_at = EXCLUDED.api_verified_at,
                 data_source = 'verified',
                 content_languages = EXCLUDED.content_languages,
+                notes = EXCLUDED.notes,
                 stats_reported_at = EXCLUDED.stats_reported_at,
                 stats_reported_for_period = EXCLUDED.stats_reported_for_period,
                 is_primary_platform = true;

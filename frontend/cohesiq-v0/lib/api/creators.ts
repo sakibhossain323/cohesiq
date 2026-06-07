@@ -41,6 +41,7 @@ function mapCreatorResponse(c: any): Creator {
     languages: c.languages ? c.languages.map((l: any) => l.language_code) : [],
     social_profiles: c.social_profiles || [],
     rate_cards: c.rate_cards || [],
+    portfolio_items: c.portfolio_items || [],
     is_available: c.is_available,
     total_collaborations: c.total_collaborations,
     average_rating: c.average_rating ? Number(c.average_rating) : undefined,

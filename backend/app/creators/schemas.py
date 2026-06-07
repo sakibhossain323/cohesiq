@@ -110,6 +110,7 @@ class SocialProfileOut(BaseModel):
     audience_gender_majority: Optional[str] = None
     audience_gender_pct: Optional[int] = None
     content_languages: List[str]
+    notes: Optional[str] = None
     stats_reported_at: Optional[datetime] = None
     stats_reported_for_period: Optional[str] = None
     created_at: datetime

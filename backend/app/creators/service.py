@@ -35,7 +35,7 @@ from app.creators.schemas import (
     SocialProfileUpdate,
 )
 from app.social_ingestion import service as social_ingestion_service
-from app.social_ingestion.schemas import PublicSocialProfileEnrichment
+from app.social_ingestion.schemas import PublicSocialProfileEnrichment, SocialRecentPost
 from app.youtube import service as youtube_service
 from app.youtube.schemas import YouTubeChannelEnrichment, YouTubeRecentVideo
 
@@ -237,6 +237,7 @@ def build_youtube_social_profile_values(
         "data_source": "verified",
         "content_languages": enrichment.detected_content_languages
         or detect_content_languages(enrichment),
+        "notes": enrichment.description,
         "stats_reported_at": reported_at,
         "stats_reported_for_period": f"recent {len(enrichment.recent_videos)} uploads",
     }
@@ -332,6 +333,7 @@ def build_public_social_profile_values(
         "api_verified_at": reported_at,
         "data_source": "verified",
         "content_languages": enrichment.detected_content_languages or ["en"],
+        "notes": enrichment.bio,
         "stats_reported_at": reported_at,
         "stats_reported_for_period": f"recent {len(enrichment.recent_posts)} posts",
     }
@@ -402,6 +404,11 @@ async def enrich_public_social_profile(
         enrichment=enrichment,
     )
     await sync_public_social_ingestion_niche(
+        db,
+        creator_id=creator_id,
+        enrichment=enrichment,
+    )
+    await import_public_social_recent_posts_to_portfolio(
         db,
         creator_id=creator_id,
         enrichment=enrichment,
@@ -580,6 +587,78 @@ def build_youtube_portfolio_item_values(
         "is_featured": sort_order == 0,
         "sort_order": sort_order,
     }
+
+
+async def import_public_social_recent_posts_to_portfolio(
+    db: AsyncSession,
+    *,
+    creator_id: uuid.UUID,
+    enrichment: PublicSocialProfileEnrichment,
+    niche_name: str | None = None,
+) -> int:
+    existing_result = await db.execute(
+        select(CreatorPortfolioItem.content_url).where(
+            CreatorPortfolioItem.creator_id == creator_id,
+            CreatorPortfolioItem.platform == enrichment.platform,
+        )
+    )
+    existing_urls = set(existing_result.scalars().all())
+    niche_id = await _resolve_public_social_portfolio_niche_id(
+        db,
+        enrichment,
+        niche_name=niche_name,
+    )
+
+    imported_count = 0
+    for index, post in enumerate(enrichment.recent_posts):
+        values = build_public_social_portfolio_item_values(
+            post,
+            platform=enrichment.platform,
+            niche_id=niche_id,
+            sort_order=index,
+        )
+        if not values["content_url"] or values["content_url"] in existing_urls:
+            continue
+        db.add(CreatorPortfolioItem(creator_id=creator_id, **values))
+        existing_urls.add(values["content_url"])
+        imported_count += 1
+    return imported_count
+
+
+def build_public_social_portfolio_item_values(
+    post: SocialRecentPost,
+    *,
+    platform: str,
+    niche_id: int | None,
+    sort_order: int = 0,
+) -> dict:
+    return {
+        "platform": platform,
+        "content_url": post.url or "",
+        "title": _truncate(post.title, 255),
+        "thumbnail_url": post.thumbnail_url,
+        "niche_id": niche_id,
+        "views": post.view_count,
+        "likes": post.like_count,
+        "comments": post.comment_count,
+        "published_at": post.published_at.date() if post.published_at else None,
+        "is_featured": sort_order == 0,
+        "sort_order": sort_order,
+    }
+
+
+async def _resolve_public_social_portfolio_niche_id(
+    db: AsyncSession,
+    enrichment: PublicSocialProfileEnrichment,
+    *,
+    niche_name: str | None = None,
+) -> int | None:
+    selected_niche = niche_name or classify_public_social_niche_with_groq(enrichment)
+    if not selected_niche:
+        return None
+    result = await db.execute(select(Niche).where(Niche.name == selected_niche))
+    niche = result.scalar_one_or_none()
+    return niche.id if niche else None
 
 
 async def _resolve_youtube_portfolio_niche_id(

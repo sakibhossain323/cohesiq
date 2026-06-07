@@ -52,6 +52,7 @@ export interface CreatorSocialProfile {
   platform: PlatformType;
   handle: string;
   profile_url: string;
+  display_name_on_platform?: string;
   follower_count?: number;
   following_count?: number;
   avg_views_per_post?: number;
@@ -73,6 +74,7 @@ export interface CreatorSocialProfile {
   audience_gender_majority?: string;
   audience_gender_pct?: number;
   content_languages: string[];
+  notes?: string;
   stats_reported_at?: string;
   stats_reported_for_period?: string;
 }
@@ -83,6 +85,20 @@ export interface CreatorRateCard {
   deliverable_type: DeliverableType;
   price_bdt: number;
   is_negotiable: boolean;
+}
+
+export interface CreatorPortfolioItem {
+  id: string;
+  platform: PlatformType;
+  content_url: string;
+  title?: string;
+  thumbnail_url?: string;
+  views?: number;
+  likes?: number;
+  comments?: number;
+  published_at?: string;
+  is_featured: boolean;
+  sort_order: number;
 }
 
 export interface Creator {
@@ -97,6 +113,7 @@ export interface Creator {
   languages: string[];
   social_profiles: CreatorSocialProfile[];
   rate_cards: CreatorRateCard[];
+  portfolio_items: CreatorPortfolioItem[];
   is_available: boolean;
   total_collaborations: number;
   average_rating?: number;

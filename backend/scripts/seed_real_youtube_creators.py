@@ -501,7 +501,7 @@ async def _upsert_verified_youtube_profile(session, *, creator_id, enrichment) -
                 api_channel_id, display_name_on_platform, follower_count,
                 avg_views_per_post, avg_likes_per_post, avg_comments_per_post,
                 engagement_rate, posts_per_month, is_api_verified, api_verified_at,
-                data_source, stats_reported_at, stats_reported_for_period,
+                data_source, notes, stats_reported_at, stats_reported_for_period,
                 is_primary_platform
             )
             VALUES (
@@ -509,7 +509,7 @@ async def _upsert_verified_youtube_profile(session, *, creator_id, enrichment) -
                 :api_channel_id, :display_name_on_platform, :follower_count,
                 :avg_views_per_post, :avg_likes_per_post, :avg_comments_per_post,
                 :engagement_rate, :posts_per_month, :is_api_verified, :api_verified_at,
-                :data_source, :stats_reported_at, :stats_reported_for_period,
+                :data_source, :notes, :stats_reported_at, :stats_reported_for_period,
                 true
             )
             ON CONFLICT (creator_id, platform) DO UPDATE
@@ -527,6 +527,7 @@ async def _upsert_verified_youtube_profile(session, *, creator_id, enrichment) -
                 is_api_verified = true,
                 api_verified_at = EXCLUDED.api_verified_at,
                 data_source = 'verified',
+                notes = EXCLUDED.notes,
                 stats_reported_at = EXCLUDED.stats_reported_at,
                 stats_reported_for_period = EXCLUDED.stats_reported_for_period,
                 is_primary_platform = true;
