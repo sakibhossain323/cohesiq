@@ -1,10 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Building2, User } from "lucide-react";
+import { ArrowRight, Check, Megaphone, User } from "lucide-react";
 import { useOnboarding } from "@/components/providers/OnboardingProvider";
+import { OnboardingLogo } from "./OnboardingShell";
 
 export function OnboardingRoleSelect() {
   const router = useRouter();
@@ -20,49 +20,92 @@ export function OnboardingRoleSelect() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <div className="mx-auto max-w-2xl w-full text-center">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Welcome to Cohesiq</h1>
-        <p className="text-muted-foreground mb-8">
-          To get started, tell us how you want to use the platform.
-        </p>
+    <div className="ob-root">
+      <div className="ob-shell">
+        <header className="ob-topbar">
+          <OnboardingLogo />
+          <div className="ob-topbar-note">
+            <strong>Bangladesh&apos;s</strong> creator marketplace
+          </div>
+        </header>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <Card
-            className="cursor-pointer transition-all hover:border-primary hover:shadow-md"
-            onClick={() => handleSelectRole("creator")}
-          >
-            <CardHeader>
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4">
-                <User className="h-6 w-6 text-primary" />
-              </div>
-              <CardTitle>I am a Creator</CardTitle>
-              <CardDescription>
-                I want to showcase my portfolio and apply to brand campaigns.
-              </CardDescription>
-            </CardHeader>
-            <CardFooter>
-              <Button className="w-full" variant="outline">Select Creator</Button>
-            </CardFooter>
-          </Card>
+        <div className="ob-fork">
+          <span className="eyebrow ob-rise">Welcome to Cohesiq</span>
+          <h1 className="ob-title ob-rise" style={{ "--i": 1 } as React.CSSProperties}>
+            How will you use <span className="ob-grad">Cohesiq</span>?
+          </h1>
+          <p className="ob-lead ob-rise" style={{ "--i": 2 } as React.CSSProperties}>
+            One platform, two doors. Choose the path that fits — it shapes your profile and the
+            tools you&apos;ll see next.
+          </p>
 
-          <Card
-            className="cursor-pointer transition-all hover:border-primary hover:shadow-md"
-            onClick={() => handleSelectRole("brand")}
-          >
-            <CardHeader>
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4">
-                <Building2 className="h-6 w-6 text-primary" />
-              </div>
-              <CardTitle>I represent a Brand</CardTitle>
-              <CardDescription>
-                I want to discover creators and post campaigns.
-              </CardDescription>
-            </CardHeader>
-            <CardFooter>
-              <Button className="w-full" variant="outline">Select Brand</Button>
-            </CardFooter>
-          </Card>
+          <div className="ob-pick">
+            <button
+              type="button"
+              className="ob-pick-card brand ob-rise"
+              style={{ "--i": 3 } as React.CSSProperties}
+              onClick={() => handleSelectRole("brand")}
+            >
+              <span className="ob-pick-ico">
+                <Megaphone />
+              </span>
+              <span className="ob-pick-kicker">For brands</span>
+              <span className="ob-pick-title">I represent a brand</span>
+              <span className="ob-pick-desc">
+                Post a campaign and get matched with verified creators — ranked by niche, audience,
+                and real engagement.
+              </span>
+              <ul className="ob-pick-list">
+                <li>
+                  <span className="ck"><Check /></span> AI-ranked creator matches
+                </li>
+                <li>
+                  <span className="ck"><Check /></span> Brief-to-payment workspace
+                </li>
+                <li>
+                  <span className="ck"><Check /></span> ROI tracking per collaboration
+                </li>
+              </ul>
+              <span className="ob-pick-go">
+                Continue as a brand <ArrowRight className="ico" />
+              </span>
+            </button>
+
+            <button
+              type="button"
+              className="ob-pick-card creator ob-rise"
+              style={{ "--i": 4 } as React.CSSProperties}
+              onClick={() => handleSelectRole("creator")}
+            >
+              <span className="ob-pick-ico">
+                <User />
+              </span>
+              <span className="ob-pick-kicker">For creators</span>
+              <span className="ob-pick-title">I&apos;m a creator</span>
+              <span className="ob-pick-desc">
+                Build a verified profile and let brands come to you — no cold DMs, just offers with
+                budgets attached.
+              </span>
+              <ul className="ob-pick-list">
+                <li>
+                  <span className="ck"><Check /></span> Verified, discoverable profile
+                </li>
+                <li>
+                  <span className="ck"><Check /></span> Inbound brand offers
+                </li>
+                <li>
+                  <span className="ck"><Check /></span> Transparent rate cards
+                </li>
+              </ul>
+              <span className="ob-pick-go">
+                Continue as a creator <ArrowRight className="ico" />
+              </span>
+            </button>
+          </div>
+
+          <p className="ob-fork-foot ob-rise" style={{ "--i": 5 } as React.CSSProperties}>
+            Not ready yet? <Link href="/">Back to home</Link>
+          </p>
         </div>
       </div>
     </div>

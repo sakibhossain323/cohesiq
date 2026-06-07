@@ -3,12 +3,19 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
+import { BarChart3, LayoutPanelLeft, ShieldCheck, Sparkles, TriangleAlert } from 'lucide-react';
 import { useOnboarding } from '@/components/providers/OnboardingProvider';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { completeOnboarding, submitBrandOnboarding } from '../../_actions/onboarding';
+import { OnboardingShell } from '../../_components/OnboardingShell';
+
+const BRAND_POINTS = [
+  { icon: <Sparkles />, label: 'AI-ranked creator matches by niche & engagement' },
+  { icon: <ShieldCheck />, label: 'Authenticity scoring — fake-follower detection built in' },
+  { icon: <LayoutPanelLeft />, label: 'Brief-to-payment campaign workspace' },
+  { icon: <BarChart3 />, label: 'ROI tracking on every collaboration' },
+];
 
 export default function BrandProfileStep() {
   const router = useRouter();
@@ -35,7 +42,7 @@ export default function BrandProfileStep() {
         setIsSubmitting(false);
         return;
       }
-      
+
       // 1. Save data to backend via Server Action (runs on Next.js server using Docker-internal URL)
       const backendRes = await submitBrandOnboarding(token, {
         role: data.role || 'brand',
@@ -65,77 +72,112 @@ export default function BrandProfileStep() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-muted/30 p-4">
-      <div className="mx-auto w-full max-w-2xl flex-1 mt-10">
-        <h1 className="text-2xl font-bold tracking-tight mb-2">Brand Setup</h1>
-        <p className="text-sm text-muted-foreground mb-8">
-          Tell us about your brand to start posting campaigns.
-        </p>
+    <OnboardingShell
+      accent="brand"
+      eyebrow="Brand onboarding"
+      title={
+        <>
+          Find creators who actually <span className="ob-grad">fit your brand.</span>
+        </>
+      }
+      lead="Set up your brand once. Then post a brief and let the matching engine surface the right creators — no DMs, no guesswork."
+      note={<strong>Final step</strong>}
+      rail={
+        <ul className="ob-points">
+          {BRAND_POINTS.map((point) => (
+            <li key={point.label}>
+              <span className="pi">{point.icon}</span>
+              <span>{point.label}</span>
+            </li>
+          ))}
+        </ul>
+      }
+    >
+      <div className="ob-stage-head">
+        <span className="ob-stage-step">Brand profile</span>
+        <h2 className="ob-stage-title">Set up your brand</h2>
+        <p className="ob-stage-sub">Tell us who you are so creators know exactly who they&apos;re working with.</p>
+      </div>
 
-        <div className="bg-background rounded-lg border shadow-sm p-6 space-y-6">
-          {error && (
-            <div className="bg-destructive/15 text-destructive p-3 rounded-md text-sm">
-              {error}
-            </div>
-          )}
+      {error && (
+        <div className="ob-alert" role="alert" style={{ marginBottom: 'var(--space-6)' }}>
+          <TriangleAlert />
+          <span>{error}</span>
+        </div>
+      )}
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="brandName">Brand Name *</Label>
-              <Input 
-                id="brandName" 
-                name="brandName" 
-                value={formData.brandName} 
-                onChange={handleChange} 
-                placeholder="Acme Corp" 
-                required 
-              />
-            </div>
+      <div className="ob-form">
+        <div className="ob-field">
+          <label htmlFor="brandName" className="ob-label">
+            Brand name <span className="req">*</span>
+          </label>
+          <Input
+            id="brandName"
+            name="brandName"
+            className="ob-control"
+            value={formData.brandName}
+            onChange={handleChange}
+            placeholder="e.g. Aarong"
+            required
+          />
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Brand Description</Label>
-              <Textarea 
-                id="description" 
-                name="description" 
-                value={formData.description} 
-                onChange={handleChange} 
-                placeholder="What does your brand do?" 
-                rows={4}
-              />
-            </div>
+        <div className="ob-field">
+          <label htmlFor="description" className="ob-label">
+            Brand description <span className="opt">Optional</span>
+          </label>
+          <Textarea
+            id="description"
+            name="description"
+            className="ob-control"
+            value={formData.description}
+            onChange={handleChange}
+            placeholder="What does your brand do, and what kind of creators are you looking for?"
+            rows={4}
+          />
+        </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="website">Website</Label>
-                <Input 
-                  id="website" 
-                  name="website" 
-                  value={formData.website} 
-                  onChange={handleChange} 
-                  placeholder="https://..." 
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
-                <Input 
-                  id="city" 
-                  name="city" 
-                  value={formData.city} 
-                  onChange={handleChange} 
-                  placeholder="Dhaka" 
-                />
-              </div>
-            </div>
+        <div className="ob-grid-2">
+          <div className="ob-field">
+            <label htmlFor="website" className="ob-label">
+              Website <span className="opt">Optional</span>
+            </label>
+            <Input
+              id="website"
+              name="website"
+              className="ob-control"
+              value={formData.website}
+              onChange={handleChange}
+              placeholder="https://…"
+            />
           </div>
 
-          <div className="flex justify-end pt-4">
-            <Button onClick={handleComplete} disabled={isSubmitting || !formData.brandName}>
-              {isSubmitting ? 'Saving...' : 'Complete Onboarding'}
-            </Button>
+          <div className="ob-field">
+            <label htmlFor="city" className="ob-label">
+              City <span className="opt">Optional</span>
+            </label>
+            <Input
+              id="city"
+              name="city"
+              className="ob-control"
+              value={formData.city}
+              onChange={handleChange}
+              placeholder="Dhaka"
+            />
           </div>
         </div>
       </div>
-    </div>
+
+      <div className="ob-actions end">
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={handleComplete}
+          disabled={isSubmitting || !formData.brandName}
+        >
+          {isSubmitting ? 'Saving…' : 'Complete onboarding'}
+        </button>
+      </div>
+    </OnboardingShell>
   );
 }

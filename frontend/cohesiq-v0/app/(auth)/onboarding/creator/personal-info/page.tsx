@@ -2,10 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ArrowRight } from 'lucide-react';
 import { useOnboarding } from '@/components/providers/OnboardingProvider';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -28,66 +27,82 @@ export default function PersonalInfoStep() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold">Tell us about yourself</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          This information will be displayed on your public creator profile.
+    <>
+      <div className="ob-stage-head">
+        <span className="ob-stage-step">Step 01 · Personal info</span>
+        <h2 className="ob-stage-title">Tell us about yourself</h2>
+        <p className="ob-stage-sub">
+          This is the first thing brands see on your public profile. Make it count.
         </p>
       </div>
 
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="displayName">Display Name *</Label>
-          <Input 
-            id="displayName" 
-            name="displayName" 
-            value={formData.displayName} 
-            onChange={handleChange} 
-            placeholder="John Doe" 
-            required 
+      <div className="ob-form">
+        <div className="ob-field">
+          <label htmlFor="displayName" className="ob-label">
+            Display name <span className="req">*</span>
+          </label>
+          <Input
+            id="displayName"
+            name="displayName"
+            className="ob-control"
+            value={formData.displayName}
+            onChange={handleChange}
+            placeholder="e.g. Maisha Ahmed"
+            required
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="tagline">Tagline</Label>
-          <Input 
-            id="tagline" 
-            name="tagline" 
-            value={formData.tagline} 
-            onChange={handleChange} 
-            placeholder="Tech reviewer & lifestyle vlogger" 
+        <div className="ob-field">
+          <label htmlFor="tagline" className="ob-label">
+            Tagline <span className="opt">Optional</span>
+          </label>
+          <Input
+            id="tagline"
+            name="tagline"
+            className="ob-control"
+            value={formData.tagline}
+            onChange={handleChange}
+            placeholder="Tech reviewer & lifestyle vlogger"
           />
+          <span className="ob-hint">One line that captures what you make.</span>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="bio">Bio</Label>
-          <Textarea 
-            id="bio" 
-            name="bio" 
-            value={formData.bio} 
-            onChange={handleChange} 
-            placeholder="Write a short bio about your content..." 
+        <div className="ob-field">
+          <label htmlFor="bio" className="ob-label">
+            Bio <span className="opt">Optional</span>
+          </label>
+          <Textarea
+            id="bio"
+            name="bio"
+            className="ob-control"
+            value={formData.bio}
+            onChange={handleChange}
+            placeholder="Write a short bio about your content, your audience, and the brands you love working with…"
             rows={4}
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="city">City</Label>
-            <Input 
-              id="city" 
-              name="city" 
-              value={formData.city} 
-              onChange={handleChange} 
-              placeholder="Dhaka" 
+        <div className="ob-grid-2">
+          <div className="ob-field">
+            <label htmlFor="city" className="ob-label">
+              City <span className="opt">Optional</span>
+            </label>
+            <Input
+              id="city"
+              name="city"
+              className="ob-control"
+              value={formData.city}
+              onChange={handleChange}
+              placeholder="Dhaka"
             />
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="gender">Gender (Optional)</Label>
+
+          <div className="ob-field">
+            <label htmlFor="gender" className="ob-label">
+              Gender <span className="opt">Optional</span>
+            </label>
             <Select value={formData.gender} onValueChange={handleSelectChange}>
-              <SelectTrigger id="gender">
+              <SelectTrigger id="gender" className="ob-control w-full">
                 <SelectValue placeholder="Select gender" />
               </SelectTrigger>
               <SelectContent>
@@ -101,11 +116,16 @@ export default function PersonalInfoStep() {
         </div>
       </div>
 
-      <div className="flex justify-end pt-4">
-        <Button onClick={handleNext} disabled={!formData.displayName}>
-          Next Step
-        </Button>
+      <div className="ob-actions end">
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={handleNext}
+          disabled={!formData.displayName}
+        >
+          Next step <ArrowRight className="ico arrow" />
+        </button>
       </div>
-    </div>
+    </>
   );
 }
