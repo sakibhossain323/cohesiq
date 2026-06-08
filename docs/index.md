@@ -35,6 +35,7 @@ Never silently edit `srs.md` to match a shortcut. Record divergences in `plan.md
 |---|---|---|
 | [`tasks/tasks-sakib.md`](tasks/tasks-sakib.md) | Sakib | Campaign UI, marketplace, contract entity, analytics, AI features |
 | [`tasks/tasks-navid.md`](tasks/tasks-navid.md) | Navid | YouTube enrichment, matching engine, seeding pipeline, semantic/LLM services |
+| [`tasks/tasks-labib.md`](tasks/tasks-labib.md) | Labib | Campaign creation UX (modal popup, 3-step wizard), invitation lifecycle (Invited→Negotiation→Accepted Kanban, shortlist-as-bookmark) |
 | [`tasks/n01-persist-youtube-enrichment.md`](tasks/n01-persist-youtube-enrichment.md) | Navid | Detailed spec for N01 — persisting YouTube API data to creator profiles |
 
 ---
