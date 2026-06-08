@@ -10,6 +10,7 @@ const statusConfig: Record<ApplicationStatus, { label: string; className: string
   declined: { label: "Declined", className: "border-gray-200 bg-gray-50 text-gray-700" },
   pending: { label: "Pending", className: "border-amber-200 bg-amber-50 text-amber-700" },
   shortlisted: { label: "Shortlisted", className: "border-blue-200 bg-blue-50 text-blue-700" },
+  pending_agreement: { label: "Pending Agreement", className: "border-indigo-200 bg-indigo-50 text-indigo-700" },
   accepted: { label: "Accepted", className: "border-green-200 bg-green-50 text-green-700" },
   rejected: { label: "Rejected", className: "border-red-200 bg-red-50 text-red-700" },
   withdrawn: { label: "Withdrawn", className: "border-gray-200 bg-gray-50 text-gray-700" },

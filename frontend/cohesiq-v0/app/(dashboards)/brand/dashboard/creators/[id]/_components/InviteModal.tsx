@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { getCampaigns, inviteCreatorToCampaign } from "@/lib/api/campaigns";
+import { getCampaignsByBrandId, inviteCreatorToCampaign } from "@/lib/api/campaigns";
+import { getMyBrandProfile } from "@/lib/api/brands";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Mail } from "lucide-react";
 import type { Campaign } from "@/lib/types";
 
@@ -22,9 +24,15 @@ export function InviteModal({ creatorId }: InviteModalProps) {
   const [brandNotes, setBrandNotes] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (open && isLoaded && isSignedIn) {
+      setSelectedCampaign("");
+      setBrandNotes("");
+      setError(null);
+      setNotice(null);
       loadCampaigns();
     }
   }, [open, isLoaded, isSignedIn]);
@@ -32,13 +40,15 @@ export function InviteModal({ creatorId }: InviteModalProps) {
   const loadCampaigns = async () => {
     setIsLoading(true);
     try {
-      // In a real app, you might want to filter to only active campaigns created by the current brand.
-      // Assuming getCampaigns returns the current user's campaigns if they are a brand, or we might need a specific endpoint.
-      // For now we'll fetch all and assume the backend handles brand scoping or we filter here.
-      const allCampaigns = await getCampaigns({});
-      setCampaigns(allCampaigns);
+      const token = await getToken();
+      if (!token) throw new Error("Not authenticated");
+      const brand = await getMyBrandProfile(token);
+      if (!brand) throw new Error("Brand profile not found");
+      const brandCampaigns = await getCampaignsByBrandId(brand.id);
+      setCampaigns(brandCampaigns);
     } catch (err) {
       console.error("Failed to load campaigns", err);
+      setError(err instanceof Error ? err.message : "Failed to load campaigns");
     } finally {
       setIsLoading(false);
     }
@@ -47,15 +57,22 @@ export function InviteModal({ creatorId }: InviteModalProps) {
   const handleInvite = async () => {
     if (!selectedCampaign) return;
     setIsSubmitting(true);
+    setError(null);
+    setNotice(null);
     try {
       const token = await getToken();
       if (!token) return;
 
       await inviteCreatorToCampaign(selectedCampaign, creatorId, brandNotes, token);
-      setOpen(false);
-      // Optional: Add toast success message
+      setNotice("Invitation sent.");
     } catch (err) {
       console.error("Failed to invite creator", err);
+      const message = err instanceof Error ? err.message : "Failed to invite creator";
+      setError(
+        message.includes("409")
+          ? "This creator already has an application or invitation for the selected campaign. Choose a different campaign."
+          : message
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -94,6 +111,11 @@ export function InviteModal({ creatorId }: InviteModalProps) {
               </SelectContent>
             </Select>
           </div>
+          {(error || notice) && (
+            <Alert variant={error ? "destructive" : "default"}>
+              <AlertDescription>{error || notice}</AlertDescription>
+            </Alert>
+          )}
           <div className="space-y-2">
             <label className="text-sm font-medium">Message (Optional)</label>
             <Textarea 

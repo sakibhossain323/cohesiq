@@ -174,6 +174,7 @@ FRs it satisfies and its current status.
 - `[x]` `ApplicationDrawer` imported and wired in `CampaignDetailClient.tsx`; opens on card click; Shortlist/Accept/Reject controls + rejection reason textarea fully reachable; status changes update Kanban optimistically via `localApplications` state
 - `[x]` Active Contracts tab wired to `localApplications.filter(a => a.status === 'accepted' || a.status === 'completed')`; Sent Invitations tab wired to `initiated_by === 'brand'`
 - `[x]` Edit form parity with the wizard (`campaigns/[id]/edit`) — "Campaign Type & Goals" card with campaign_type, hashtags, tracking_notes, KPI grid added (A11)
+- `[x]` Campaign application gatekeeper backend slice — migration `0020` adds application questions, acknowledgments, submitted answers, accepted acknowledgment rows, and `pending_agreement`; service validates required answers/acks on apply and invite acceptance, with capacity guard for `pending_agreement`/`accepted`
 - `[ ]` FR-15 explicit state machine with timestamped audit-trail transitions (currently status-field only)
 
 ### Phase C — Matching transparency + localization *(SRS US-6, US-7, US-8, US-9; FR-9…FR-11, FR-24)* — **[~] partial**

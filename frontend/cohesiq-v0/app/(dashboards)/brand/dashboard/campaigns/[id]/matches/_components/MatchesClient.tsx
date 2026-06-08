@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { runMatchingAction } from "../../_actions/campaign-actions";
+import { inviteCreatorAction, runMatchingAction } from "../../_actions/campaign-actions";
 import type { Campaign, AIMatchScore } from "@/lib/types";
 import { formatBDT, formatFollowerCount } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +33,8 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
   const [matchingError, setMatchingError] = useState<string | null>(null);
   const [matchingNotice, setMatchingNotice] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [invitingId, setInvitingId] = useState<string | null>(null);
+  const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
 
   const returnTo = `/brand/dashboard/campaigns/${campaign.id}/matches`;
   const compareHref = `/brand/dashboard/creators/compare?ids=${Array.from(selectedIds).join(",")}&returnTo=${encodeURIComponent(returnTo)}`;
@@ -66,6 +68,26 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
         );
       } else {
         setMatchingError(result.error || "Failed to run matching engine.");
+      }
+    });
+  };
+
+  const handleInvite = (creatorId: string, creatorName: string) => {
+    setMatchingError(null);
+    setMatchingNotice(null);
+    setInvitingId(creatorId);
+    startTransition(async () => {
+      const result = await inviteCreatorAction(
+        campaign.id,
+        creatorId,
+        `Invited from AI matches for ${campaign.title}`,
+      );
+      setInvitingId(null);
+      if (result.success) {
+        setInvitedIds(prev => new Set(prev).add(creatorId));
+        setMatchingNotice(`${creatorName} has been invited to this campaign.`);
+      } else {
+        setMatchingError(result.error || "Failed to invite creator.");
       }
     });
   };
@@ -251,6 +273,7 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
               const pctScore = Math.round((match.score_total || 0) * 100);
               const fitHighlights = getFitHighlights(match);
               const isSelected = selectedIds.has(creator.id);
+              const isInvited = invitedIds.has(creator.id);
               
               return (
                 <Card 
@@ -367,8 +390,13 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
                             View Profile
                           </Button>
                         </Link>
-                        <Button size="sm" className="flex-1 text-xs">
-                          Invite
+                        <Button
+                          size="sm"
+                          className="flex-1 text-xs"
+                          disabled={invitingId === creator.id || isInvited}
+                          onClick={() => handleInvite(creator.id, creator.display_name)}
+                        >
+                          {invitingId === creator.id ? "Inviting..." : isInvited ? "Invited" : "Invite"}
                         </Button>
                       </div>
                     </div>

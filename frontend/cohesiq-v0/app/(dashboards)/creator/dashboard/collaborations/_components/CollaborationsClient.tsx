@@ -17,6 +17,7 @@ const STATUS_CONFIG: Record<ApplicationStatus, { label: string; className: strin
   declined: { label: "Declined", className: "border-gray-200 bg-gray-50 text-gray-700", icon: XCircle },
   pending: { label: "Pending Review", className: "border-yellow-200 bg-yellow-50 text-yellow-700", icon: Clock },
   shortlisted: { label: "Shortlisted", className: "border-blue-200 bg-blue-50 text-blue-700", icon: Clock },
+  pending_agreement: { label: "Pending Agreement", className: "border-indigo-200 bg-indigo-50 text-indigo-700", icon: FileSignature },
   accepted: { label: "Accepted", className: "border-green-200 bg-green-50 text-green-700", icon: CheckCircle2 },
   rejected: { label: "Rejected", className: "border-red-200 bg-red-50 text-red-700", icon: XCircle },
   withdrawn: { label: "Withdrawn", className: "border-gray-200 bg-gray-50 text-gray-700", icon: Clock },

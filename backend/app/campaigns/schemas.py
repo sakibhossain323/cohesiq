@@ -46,6 +46,38 @@ class DeliverableRequirementOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class ApplicationQuestionCreate(BaseModel):
+    question_text: str
+    question_type: str = "text"
+    options_json: Optional[List[str]] = None
+    is_required: bool = True
+    sort_order: int = 0
+
+
+class ApplicationQuestionOut(BaseModel):
+    id: uuid.UUID
+    question_text: str
+    question_type: str
+    options_json: Optional[List[str]] = None
+    is_required: bool
+    sort_order: int
+    model_config = {"from_attributes": True}
+
+
+class CampaignAcknowledgmentCreate(BaseModel):
+    statement_text: str
+    is_required: bool = True
+    sort_order: int = 0
+
+
+class CampaignAcknowledgmentOut(BaseModel):
+    id: uuid.UUID
+    statement_text: str
+    is_required: bool
+    sort_order: int
+    model_config = {"from_attributes": True}
+
+
 # ------------------------------------------------------------------ #
 # Campaign schemas                                                     #
 # ------------------------------------------------------------------ #
@@ -79,6 +111,8 @@ class CampaignCreate(BaseModel):
     niche_targets: List[int] = []              # additional niche_ids
     language_targets: List[LanguageTargetRef] = []
     deliverable_requirements: List[DeliverableRequirementCreate] = []
+    application_questions: List[ApplicationQuestionCreate] = []
+    acknowledgments: List[CampaignAcknowledgmentCreate] = []
 
 
 class CampaignUpdate(BaseModel):
@@ -107,6 +141,8 @@ class CampaignUpdate(BaseModel):
     hashtags: Optional[List[str]] = None
     tracking_notes: Optional[str] = None
     deliverable_requirements: Optional[List[DeliverableRequirementCreate]] = None
+    application_questions: Optional[List[ApplicationQuestionCreate]] = None
+    acknowledgments: Optional[List[CampaignAcknowledgmentCreate]] = None
 
 
 class CampaignStatusUpdate(BaseModel):
@@ -144,6 +180,8 @@ class CampaignOut(BaseModel):
     niche_targets: List[NicheTargetRef] = []
     language_targets: List[LanguageTargetRef] = []
     deliverable_requirements: List[DeliverableRequirementOut] = []
+    application_questions: List[ApplicationQuestionOut] = []
+    acknowledgments: List[CampaignAcknowledgmentOut] = []
     created_at: datetime
     updated_at: datetime
 
@@ -165,9 +203,17 @@ class CampaignFilters(BaseModel):
 # Application schemas                                                  #
 # ------------------------------------------------------------------ #
 
+class ApplicationAnswerCreate(BaseModel):
+    question_id: uuid.UUID
+    answer_text: Optional[str] = None
+    answer_options: Optional[List[str]] = None
+
+
 class ApplicationCreate(BaseModel):
     proposal_text: Optional[str] = None
     proposed_rate: Optional[int] = None
+    answers: List[ApplicationAnswerCreate] = []
+    accepted_acknowledgment_ids: List[uuid.UUID] = []
 
 
 class ApplicationInviteCreate(BaseModel):
@@ -179,10 +225,12 @@ class ApplicationRespondInvite(BaseModel):
     action: str  # accept | decline
     proposal_text: Optional[str] = None
     proposed_rate: Optional[int] = None
+    answers: List[ApplicationAnswerCreate] = []
+    accepted_acknowledgment_ids: List[uuid.UUID] = []
 
 
 class ApplicationStatusUpdate(BaseModel):
-    status: str  # shortlisted | accepted | rejected | withdrawn | completed
+    status: str  # shortlisted | pending_agreement | accepted | rejected | withdrawn | completed
     brand_notes: Optional[str] = None
     rejection_reason: Optional[str] = None
     agreed_rate: Optional[int] = None
@@ -300,6 +348,57 @@ class ContractOut(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class LiveMetricSnapshotCreate(BaseModel):
+    captured_at: Optional[datetime] = None
+    platform: Optional[str] = None
+    views: int = 0
+    impressions: int = 0
+    likes: int = 0
+    comments: int = 0
+    shares: int = 0
+    saves: int = 0
+    source: str = "manual"
+
+
+class LiveMetricSnapshotOut(BaseModel):
+    id: uuid.UUID
+    contract_id: uuid.UUID
+    platform: Optional[str] = None
+    captured_at: datetime
+    views: int
+    impressions: int
+    likes: int
+    comments: int
+    shares: int
+    saves: int
+    engagement_rate: float
+    estimated_revenue_bdt: int
+    revenue_basis: Optional[str] = None
+    source: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class LiveContractAnalyticsOut(BaseModel):
+    contract_id: uuid.UUID
+    creator_id: uuid.UUID
+    live_post_url: Optional[str] = None
+    status: str
+    latest: Optional[LiveMetricSnapshotOut] = None
+    snapshots: List[LiveMetricSnapshotOut] = []
+    total_views_delta: int = 0
+    total_engagement_delta: int = 0
+    revenue_delta_bdt: int = 0
+
+
+class CampaignLiveAnalyticsOut(BaseModel):
+    campaign_id: uuid.UUID
+    totals: dict
+    contracts: List[LiveContractAnalyticsOut] = []
+    timeline: List[dict] = []
 
 
 class AIMatchScoreOut(BaseModel):

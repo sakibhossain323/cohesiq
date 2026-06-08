@@ -3,6 +3,7 @@ import logging
 import re
 from datetime import date, datetime, timedelta, timezone
 from typing import List
+from urllib.parse import urlparse
 
 from fastapi import HTTPException, status
 from groq import AsyncGroq
@@ -13,6 +14,7 @@ from sqlalchemy.orm import selectinload
 from app.config import settings
 from app.brands.models import BrandProfile
 from app.brands.service import normalize_brand_category
+from app.creators.models import CreatorPortfolioItem, CreatorSocialProfile
 from app.common.deliverables import (
     canonical_deliverable_code,
     deliverable_platform,
@@ -20,15 +22,22 @@ from app.common.deliverables import (
 )
 from app.campaigns.models import (
     Campaign,
+    CampaignAcknowledgment,
     CampaignApplication,
+    CampaignApplicationAcknowledgment,
+    CampaignApplicationAnswer,
+    CampaignApplicationQuestion,
     CampaignDeliverableRequirement,
     CampaignLanguageTarget,
     CampaignNicheTarget,
+    Contract,
     Review,
     AIMatchScore,
+    LiveContentMetricSnapshot,
 )
 from app.campaigns.schemas import (
     ApplicationCreate,
+    ApplicationAnswerCreate,
     ApplicationStatusUpdate,
     CampaignCreate,
     CampaignFilters,
@@ -37,6 +46,7 @@ from app.campaigns.schemas import (
     ReviewCreate,
     ApplicationInviteCreate,
     ApplicationRespondInvite,
+    LiveMetricSnapshotCreate,
 )
 from app.services.matching import (
     TIER_BUDGET_RANGES,
@@ -64,6 +74,8 @@ def _campaign_options():
         selectinload(Campaign.niche_targets),
         selectinload(Campaign.language_targets),
         selectinload(Campaign.deliverable_requirements),
+        selectinload(Campaign.application_questions),
+        selectinload(Campaign.acknowledgments),
     ]
 
 
@@ -335,9 +347,131 @@ async def list_brand_campaigns(db: AsyncSession, brand_id: uuid.UUID) -> List[Ca
     return list(result.scalars().all())
 
 
+def _validate_campaign_screening_payload(data: CampaignCreate | CampaignUpdate) -> None:
+    questions = getattr(data, "application_questions", None)
+    if questions is not None and len(questions) > 5:
+        raise HTTPException(status_code=400, detail="Campaigns can have at most 5 application questions")
+
+    for question in questions or []:
+        if question.question_type not in {"text", "single_choice", "multi_choice"}:
+            raise HTTPException(status_code=400, detail="Unsupported application question type")
+        if question.question_type in {"single_choice", "multi_choice"} and not question.options_json:
+            raise HTTPException(status_code=400, detail="Choice questions require options")
+
+
+def _has_answer(answer: ApplicationAnswerCreate) -> bool:
+    return bool((answer.answer_text or "").strip() or answer.answer_options)
+
+
+def _validate_application_requirement_payload(
+    campaign: Campaign,
+    answers: list[ApplicationAnswerCreate],
+    accepted_acknowledgment_ids: list[uuid.UUID],
+) -> None:
+    answer_map = {answer.question_id: answer for answer in answers}
+    known_question_ids = {question.id for question in campaign.application_questions}
+    unknown_question_ids = set(answer_map) - known_question_ids
+    if unknown_question_ids:
+        raise HTTPException(status_code=400, detail="Application includes answers for unknown questions")
+
+    for question in campaign.application_questions:
+        if question.is_required and (question.id not in answer_map or not _has_answer(answer_map[question.id])):
+            raise HTTPException(status_code=400, detail="Required application questions must be answered")
+
+    ack_ids = set(accepted_acknowledgment_ids)
+    known_ack_ids = {ack.id for ack in campaign.acknowledgments}
+    unknown_ack_ids = ack_ids - known_ack_ids
+    if unknown_ack_ids:
+        raise HTTPException(status_code=400, detail="Application includes unknown acknowledgments")
+
+    missing_required_acks = [
+        ack.id for ack in campaign.acknowledgments
+        if ack.is_required and ack.id not in ack_ids
+    ]
+    if missing_required_acks:
+        raise HTTPException(status_code=400, detail="Required acknowledgments must be accepted")
+
+
+async def _persist_application_requirements(
+    db: AsyncSession,
+    application_id: uuid.UUID,
+    answers: list[ApplicationAnswerCreate],
+    accepted_acknowledgment_ids: list[uuid.UUID],
+) -> None:
+    for answer in answers:
+        db.add(CampaignApplicationAnswer(
+            application_id=application_id,
+            question_id=answer.question_id,
+            answer_text=answer.answer_text,
+            answer_options_json=answer.answer_options,
+        ))
+
+    for acknowledgment_id in accepted_acknowledgment_ids:
+        db.add(CampaignApplicationAcknowledgment(
+            application_id=application_id,
+            acknowledgment_id=acknowledgment_id,
+        ))
+
+
+async def _selected_application_count(
+    db: AsyncSession,
+    campaign_id: uuid.UUID,
+    *,
+    exclude_application_id: uuid.UUID | None = None,
+) -> int:
+    query = select(CampaignApplication).where(
+        CampaignApplication.campaign_id == campaign_id,
+        CampaignApplication.status.in_(("pending_agreement", "accepted")),
+    )
+    if exclude_application_id is not None:
+        query = query.where(CampaignApplication.id != exclude_application_id)
+    result = await db.execute(query)
+    return len(result.scalars().all())
+
+
+async def _release_extra_shortlisted_if_capacity_filled(
+    db: AsyncSession,
+    campaign: Campaign,
+) -> None:
+    accepted_result = await db.execute(
+        select(CampaignApplication).where(
+            CampaignApplication.campaign_id == campaign.id,
+            CampaignApplication.status == "accepted",
+        )
+    )
+    accepted_count = len(accepted_result.scalars().all())
+    if accepted_count < campaign.number_of_creators:
+        return
+
+    shortlisted_result = await db.execute(
+        select(CampaignApplication).where(
+            CampaignApplication.campaign_id == campaign.id,
+            CampaignApplication.status == "shortlisted",
+        )
+    )
+    now = datetime.now(timezone.utc)
+    for application in shortlisted_result.scalars().all():
+        application.status = "rejected"
+        application.rejection_reason = "Campaign capacity has been filled"
+        application.responded_at = now
+
+
+def _validate_application_status_transition(current_status: str, next_status: str) -> None:
+    if current_status == "invited" and next_status in {"shortlisted", "pending_agreement", "accepted"}:
+        raise HTTPException(
+            status_code=400,
+            detail="Creator must accept the invitation before they can be shortlisted or selected",
+        )
+    if next_status == "pending_agreement" and current_status not in {"pending", "shortlisted"}:
+        raise HTTPException(status_code=400, detail="Only pending or shortlisted applications can receive final agreement terms")
+    if next_status == "accepted" and current_status not in {"pending", "shortlisted", "pending_agreement"}:
+        raise HTTPException(status_code=400, detail="Only engaged applications can be accepted")
+
+
 async def create_campaign(
     db: AsyncSession, brand_id: uuid.UUID, data: CampaignCreate
 ) -> Campaign:
+    _validate_campaign_screening_payload(data)
     brand_category = normalize_brand_category(data.brand_category)
     if brand_category is None:
         brand_result = await db.execute(select(BrandProfile).where(BrandProfile.id == brand_id))
@@ -409,6 +543,24 @@ async def create_campaign(
             notes=req.notes,
         ))
 
+    for index, question in enumerate(data.application_questions):
+        db.add(CampaignApplicationQuestion(
+            campaign_id=campaign.id,
+            question_text=question.question_text,
+            question_type=question.question_type,
+            options_json=question.options_json,
+            is_required=question.is_required,
+            sort_order=question.sort_order if question.sort_order is not None else index,
+        ))
+
+    for index, acknowledgment in enumerate(data.acknowledgments):
+        db.add(CampaignAcknowledgment(
+            campaign_id=campaign.id,
+            statement_text=acknowledgment.statement_text,
+            is_required=acknowledgment.is_required,
+            sort_order=acknowledgment.sort_order if acknowledgment.sort_order is not None else index,
+        ))
+
     await db.commit()
     refreshed_campaign = await get_campaign(db, campaign.id)
     if not refreshed_campaign:
@@ -419,8 +571,11 @@ async def create_campaign(
 async def update_campaign(
     db: AsyncSession, campaign: Campaign, data: CampaignUpdate
 ) -> Campaign:
+    _validate_campaign_screening_payload(data)
     update_data = data.model_dump(exclude_none=True)
     deliverable_requirements = update_data.pop("deliverable_requirements", None)
+    application_questions = update_data.pop("application_questions", None)
+    acknowledgments = update_data.pop("acknowledgments", None)
 
     for field, value in update_data.items():
         if field == "brand_category":
@@ -462,6 +617,34 @@ async def update_campaign(
                     notes=req.get("notes"),
                 )
             )
+
+    if application_questions is not None:
+        campaign.application_questions.clear()
+        await db.flush()
+        for index, question in enumerate(application_questions):
+            campaign.application_questions.append(
+                CampaignApplicationQuestion(
+                    campaign_id=campaign.id,
+                    question_text=question.get("question_text"),
+                    question_type=question.get("question_type", "text"),
+                    options_json=question.get("options_json"),
+                    is_required=question.get("is_required", True),
+                    sort_order=question.get("sort_order", index),
+                )
+            )
+
+    if acknowledgments is not None:
+        campaign.acknowledgments.clear()
+        await db.flush()
+        for index, acknowledgment in enumerate(acknowledgments):
+            campaign.acknowledgments.append(
+                CampaignAcknowledgment(
+                    campaign_id=campaign.id,
+                    statement_text=acknowledgment.get("statement_text"),
+                    is_required=acknowledgment.get("is_required", True),
+                    sort_order=acknowledgment.get("sort_order", index),
+                )
+            )
     await db.commit()
     refreshed_campaign = await get_campaign(db, campaign.id)
     if not refreshed_campaign:
@@ -499,6 +682,11 @@ async def apply_to_campaign(
         raise HTTPException(status_code=404, detail="Campaign not found")
     if campaign.status != "active":
         raise HTTPException(status_code=400, detail="Campaign is not accepting applications")
+    _validate_application_requirement_payload(
+        campaign,
+        data.answers,
+        data.accepted_acknowledgment_ids,
+    )
 
     # Check for duplicate
     existing = await db.execute(
@@ -518,6 +706,13 @@ async def apply_to_campaign(
         proposed_rate=data.proposed_rate,
     )
     db.add(app)
+    await db.flush()
+    await _persist_application_requirements(
+        db,
+        app.id,
+        data.answers,
+        data.accepted_acknowledgment_ids,
+    )
     await db.commit()
     await db.refresh(app)
     return app
@@ -576,7 +771,21 @@ async def update_application_status(
     if not campaign or campaign.brand_id != brand_id:
         raise HTTPException(status_code=403, detail="Not your campaign")
 
+    allowed = {"shortlisted", "pending_agreement", "accepted", "rejected", "withdrawn", "completed"}
+    if data.status not in allowed:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {allowed}")
+    _validate_application_status_transition(app.status, data.status)
+
     now = datetime.now(timezone.utc)
+    if data.status in {"pending_agreement", "accepted"}:
+        selected_count = await _selected_application_count(
+            db,
+            campaign_id,
+            exclude_application_id=application_id,
+        )
+        if selected_count >= campaign.number_of_creators:
+            raise HTTPException(status_code=409, detail="Campaign creator capacity is already filled")
+
     app.status = data.status
     if data.brand_notes is not None:
         app.brand_notes = data.brand_notes
@@ -593,6 +802,8 @@ async def update_application_status(
         app.responded_at = now
     if data.status == "completed":
         app.completed_at = now
+    if data.status == "accepted":
+        await _release_extra_shortlisted_if_capacity_filled(db, campaign)
 
     await db.commit()
     await db.refresh(app)
@@ -654,9 +865,24 @@ async def respond_invite(
     if data.action == "decline":
         app.status = "declined"
     elif data.action == "accept":
+        campaign = await get_campaign(db, campaign_id)
+        if not campaign:
+            raise HTTPException(status_code=404, detail="Campaign not found")
+        _validate_application_requirement_payload(
+            campaign,
+            data.answers,
+            data.accepted_acknowledgment_ids,
+        )
         app.status = "pending"
         app.proposal_text = data.proposal_text
         app.proposed_rate = data.proposed_rate
+        await db.flush()
+        await _persist_application_requirements(
+            db,
+            app.id,
+            data.answers,
+            data.accepted_acknowledgment_ids,
+        )
     else:
         raise HTTPException(status_code=400, detail="Invalid action")
 
@@ -1339,6 +1565,262 @@ async def list_contracts_for_creator(db: AsyncSession, creator_id: uuid.UUID) ->
     return list(result.scalars().all())
 
 
+REVENUE_PER_VIEW_BDT = 0.25
+REVENUE_PER_LIKE_BDT = 1.0
+REVENUE_PER_COMMENT_BDT = 3.0
+REVENUE_PER_SHARE_BDT = 4.0
+REVENUE_PER_SAVE_BDT = 2.0
+
+
+def calculate_engagement_rate(
+    views: int,
+    impressions: int,
+    likes: int,
+    comments: int,
+    shares: int,
+    saves: int,
+) -> float:
+    denominator = impressions or views
+    if denominator <= 0:
+        return 0.0
+    engagements = likes + comments + shares + saves
+    return round((engagements / denominator) * 100, 2)
+
+
+def estimate_live_content_revenue_bdt(
+    views: int,
+    likes: int,
+    comments: int,
+    shares: int,
+    saves: int,
+) -> int:
+    return round(
+        (views * REVENUE_PER_VIEW_BDT)
+        + (likes * REVENUE_PER_LIKE_BDT)
+        + (comments * REVENUE_PER_COMMENT_BDT)
+        + (shares * REVENUE_PER_SHARE_BDT)
+        + (saves * REVENUE_PER_SAVE_BDT)
+    )
+
+
+def infer_platform_from_url(url: str | None) -> str | None:
+    if not url:
+        return None
+    host = urlparse(url).netloc.lower()
+    if "youtube.com" in host or "youtu.be" in host:
+        return "youtube"
+    if "instagram.com" in host:
+        return "instagram"
+    if "tiktok.com" in host:
+        return "tiktok"
+    if "facebook.com" in host:
+        return "facebook"
+    return None
+
+
+def _snapshot_totals(snapshot: LiveContentMetricSnapshot | None) -> dict:
+    if not snapshot:
+        return {
+            "views": 0,
+            "impressions": 0,
+            "likes": 0,
+            "comments": 0,
+            "shares": 0,
+            "saves": 0,
+            "engagements": 0,
+            "estimated_revenue_bdt": 0,
+        }
+    engagements = snapshot.likes + snapshot.comments + snapshot.shares + snapshot.saves
+    return {
+        "views": snapshot.views,
+        "impressions": snapshot.impressions,
+        "likes": snapshot.likes,
+        "comments": snapshot.comments,
+        "shares": snapshot.shares,
+        "saves": snapshot.saves,
+        "engagements": engagements,
+        "estimated_revenue_bdt": snapshot.estimated_revenue_bdt,
+    }
+
+
+async def create_live_metric_snapshot(
+    db: AsyncSession,
+    contract_id: uuid.UUID,
+    brand_id: uuid.UUID,
+    data: LiveMetricSnapshotCreate,
+) -> LiveContentMetricSnapshot:
+    contract = await get_contract(db, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if contract.brand_id != brand_id:
+        raise HTTPException(status_code=403, detail="Not your contract")
+    if contract.status not in ("published", "closed"):
+        raise HTTPException(status_code=400, detail="Metrics can only be tracked after content is published")
+
+    metrics = {
+        "views": data.views,
+        "impressions": data.impressions,
+        "likes": data.likes,
+        "comments": data.comments,
+        "shares": data.shares,
+        "saves": data.saves,
+    }
+    if any(value < 0 for value in metrics.values()):
+        raise HTTPException(status_code=400, detail="Metric values cannot be negative")
+
+    engagement_rate = calculate_engagement_rate(**metrics)
+    revenue = estimate_live_content_revenue_bdt(
+        data.views,
+        data.likes,
+        data.comments,
+        data.shares,
+        data.saves,
+    )
+    snapshot = LiveContentMetricSnapshot(
+        contract_id=contract.id,
+        platform=data.platform or infer_platform_from_url(contract.live_post_url),
+        captured_at=data.captured_at or datetime.now(timezone.utc),
+        engagement_rate=engagement_rate,
+        estimated_revenue_bdt=revenue,
+        revenue_basis="0.25/view + 1/like + 3/comment + 4/share + 2/save BDT",
+        source=data.source,
+        **metrics,
+    )
+    db.add(snapshot)
+    await db.commit()
+    await db.refresh(snapshot)
+    return snapshot
+
+
+async def get_contract_live_analytics(
+    db: AsyncSession,
+    contract_id: uuid.UUID,
+    brand_id: uuid.UUID,
+) -> dict:
+    contract = await get_contract(db, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if contract.brand_id != brand_id:
+        raise HTTPException(status_code=403, detail="Not your contract")
+
+    result = await db.execute(
+        select(LiveContentMetricSnapshot)
+        .where(LiveContentMetricSnapshot.contract_id == contract_id)
+        .order_by(LiveContentMetricSnapshot.captured_at.asc())
+    )
+    snapshots = list(result.scalars().all())
+    first = snapshots[0] if snapshots else None
+    latest = snapshots[-1] if snapshots else None
+    first_totals = _snapshot_totals(first)
+    latest_totals = _snapshot_totals(latest)
+
+    return {
+        "contract_id": contract.id,
+        "creator_id": contract.creator_id,
+        "live_post_url": contract.live_post_url,
+        "status": contract.status,
+        "latest": latest,
+        "snapshots": snapshots,
+        "total_views_delta": max(0, latest_totals["views"] - first_totals["views"]),
+        "total_engagement_delta": max(0, latest_totals["engagements"] - first_totals["engagements"]),
+        "revenue_delta_bdt": max(0, latest_totals["estimated_revenue_bdt"] - first_totals["estimated_revenue_bdt"]),
+    }
+
+
+async def get_campaign_live_analytics(
+    db: AsyncSession,
+    campaign_id: uuid.UUID,
+    brand_id: uuid.UUID,
+) -> dict:
+    campaign = await get_campaign(db, campaign_id)
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    if campaign.brand_id != brand_id:
+        raise HTTPException(status_code=403, detail="Not your campaign")
+
+    contract_result = await db.execute(
+        select(Contract)
+        .join(CampaignApplication, CampaignApplication.id == Contract.application_id)
+        .where(
+            CampaignApplication.campaign_id == campaign_id,
+            Contract.brand_id == brand_id,
+        )
+        .options(selectinload(Contract.metric_snapshots))
+        .order_by(Contract.contracted_at.desc())
+    )
+    contracts = list(contract_result.scalars().all())
+    contract_payloads = []
+    timeline_by_time: dict[datetime, dict] = {}
+    totals = {
+        "published_contracts": 0,
+        "views": 0,
+        "impressions": 0,
+        "likes": 0,
+        "comments": 0,
+        "shares": 0,
+        "saves": 0,
+        "engagements": 0,
+        "estimated_revenue_bdt": 0,
+        "engagement_rate": 0.0,
+    }
+
+    for contract in contracts:
+        snapshots = sorted(contract.metric_snapshots, key=lambda snap: snap.captured_at)
+        first = snapshots[0] if snapshots else None
+        latest = snapshots[-1] if snapshots else None
+        latest_totals = _snapshot_totals(latest)
+        first_totals = _snapshot_totals(first)
+
+        if contract.status in ("published", "closed"):
+            totals["published_contracts"] += 1
+        for key in ("views", "impressions", "likes", "comments", "shares", "saves", "engagements", "estimated_revenue_bdt"):
+            totals[key] += latest_totals[key]
+
+        for snapshot in snapshots:
+            bucket = timeline_by_time.setdefault(
+                snapshot.captured_at,
+                {
+                    "captured_at": snapshot.captured_at,
+                    "views": 0,
+                    "likes": 0,
+                    "comments": 0,
+                    "shares": 0,
+                    "saves": 0,
+                    "engagements": 0,
+                    "estimated_revenue_bdt": 0,
+                },
+            )
+            bucket["views"] += snapshot.views
+            bucket["likes"] += snapshot.likes
+            bucket["comments"] += snapshot.comments
+            bucket["shares"] += snapshot.shares
+            bucket["saves"] += snapshot.saves
+            bucket["engagements"] += snapshot.likes + snapshot.comments + snapshot.shares + snapshot.saves
+            bucket["estimated_revenue_bdt"] += snapshot.estimated_revenue_bdt
+
+        contract_payloads.append({
+            "contract_id": contract.id,
+            "creator_id": contract.creator_id,
+            "live_post_url": contract.live_post_url,
+            "status": contract.status,
+            "latest": latest,
+            "snapshots": snapshots,
+            "total_views_delta": max(0, latest_totals["views"] - first_totals["views"]),
+            "total_engagement_delta": max(0, latest_totals["engagements"] - first_totals["engagements"]),
+            "revenue_delta_bdt": max(0, latest_totals["estimated_revenue_bdt"] - first_totals["estimated_revenue_bdt"]),
+        })
+
+    denominator = totals["impressions"] or totals["views"]
+    totals["engagement_rate"] = round((totals["engagements"] / denominator) * 100, 2) if denominator else 0.0
+
+    return {
+        "campaign_id": campaign_id,
+        "totals": totals,
+        "contracts": contract_payloads,
+        "timeline": sorted(timeline_by_time.values(), key=lambda item: item["captured_at"]),
+    }
+
+
 async def submit_content_draft(
     db: AsyncSession, contract_id: uuid.UUID, draft_url: str, creator_id: uuid.UUID
 ) -> "Contract":
@@ -1405,6 +1887,104 @@ async def request_revision(
     return contract
 
 
+def _normalize_url_for_compare(url: str) -> str | None:
+    parsed = urlparse(url.strip())
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return None
+    path = parsed.path.rstrip("/")
+    return f"{parsed.netloc.lower()}{path}".rstrip("/")
+
+
+def _clean_handle(handle: str | None) -> str:
+    return (handle or "").strip().lstrip("@").strip("/").lower()
+
+
+def _url_path_parts(url: str) -> list[str]:
+    parsed = urlparse(url.strip())
+    return [part for part in parsed.path.strip("/").split("/") if part]
+
+
+def _profile_path_prefix(profile_url: str | None) -> str | None:
+    if not profile_url:
+        return None
+    normalized = _normalize_url_for_compare(profile_url)
+    if not normalized:
+        return None
+    return normalized
+
+
+def _matches_creator_platform_url(live_url: str, profile: CreatorSocialProfile) -> bool:
+    parsed = urlparse(live_url.strip())
+    host = parsed.netloc.lower().removeprefix("www.")
+    parts = _url_path_parts(live_url)
+    handle = _clean_handle(profile.handle)
+    profile_prefix = _profile_path_prefix(profile.profile_url)
+    normalized_live = _normalize_url_for_compare(live_url)
+
+    if profile_prefix and normalized_live and normalized_live.startswith(f"{profile_prefix}/"):
+        return True
+
+    if profile.platform == "youtube":
+        if "youtu.be" in host:
+            return False
+        if "youtube.com" not in host:
+            return False
+        if len(parts) >= 2 and parts[0] in {"@", "c", "channel", "user"}:
+            return _clean_handle(parts[1]) == handle or parts[1].lower() == (profile.api_channel_id or "").lower()
+        if parts and parts[0].startswith("@"):
+            return _clean_handle(parts[0]) == handle
+        return bool(profile.api_channel_id and profile.api_channel_id in live_url)
+
+    if profile.platform == "instagram":
+        if "instagram.com" not in host:
+            return False
+        if parts and _clean_handle(parts[0]) == handle:
+            return True
+        return bool(profile_prefix and normalized_live and normalized_live.startswith(f"{profile_prefix}/"))
+
+    if profile.platform == "tiktok":
+        if "tiktok.com" not in host:
+            return False
+        if parts and _clean_handle(parts[0]) == handle:
+            return True
+        return bool(profile_prefix and normalized_live and normalized_live.startswith(f"{profile_prefix}/"))
+
+    return bool(profile_prefix and normalized_live and normalized_live.startswith(f"{profile_prefix}/"))
+
+
+async def _verify_creator_live_post_url(
+    db: AsyncSession,
+    *,
+    creator_id: uuid.UUID,
+    live_url: str,
+) -> None:
+    normalized_live = _normalize_url_for_compare(live_url)
+    if not normalized_live:
+        raise HTTPException(status_code=400, detail="Live post URL must be a valid http(s) URL")
+
+    portfolio_result = await db.execute(
+        select(CreatorPortfolioItem.content_url).where(
+            CreatorPortfolioItem.creator_id == creator_id,
+        )
+    )
+    for content_url in portfolio_result.scalars().all():
+        normalized_content = _normalize_url_for_compare(content_url)
+        if normalized_content and normalized_content == normalized_live:
+            return
+
+    profile_result = await db.execute(
+        select(CreatorSocialProfile).where(CreatorSocialProfile.creator_id == creator_id)
+    )
+    profiles = list(profile_result.scalars().all())
+    if any(_matches_creator_platform_url(live_url, profile) for profile in profiles):
+        return
+
+    raise HTTPException(
+        status_code=400,
+        detail="Live post URL must belong to one of your connected creator platforms or synced content items",
+    )
+
+
 async def publish_content(
     db: AsyncSession, contract_id: uuid.UUID, live_url: str, creator_id: uuid.UUID
 ) -> "Contract":
@@ -1416,6 +1996,7 @@ async def publish_content(
         raise HTTPException(status_code=403, detail="Not your contract")
     if contract.status != "content_approved":
         raise HTTPException(status_code=400, detail="Content must be approved before publishing")
+    await _verify_creator_live_post_url(db, creator_id=creator_id, live_url=live_url)
 
     contract.live_post_url = live_url
     contract.status = "published"

@@ -104,6 +104,7 @@ CREATE TYPE campaign_status AS ENUM (
 CREATE TYPE application_status AS ENUM (
     'pending',      -- creator applied, brand hasn't responded
     'shortlisted',  -- brand interested, not final
+    'pending_agreement', -- brand selected creator and sent final terms
     'accepted',     -- brand confirmed this creator
     'rejected',     -- brand passed
     'withdrawn',    -- creator pulled out
@@ -642,6 +643,34 @@ CREATE INDEX idx_deliverable_req_campaign ON campaign_deliverable_requirements(c
 
 ---
 
+## Step 6.5: Campaign Application Gatekeeper
+
+```sql
+-- Brand-defined screening questions. Max 5 questions enforced by service layer.
+CREATE TABLE campaign_application_questions (
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    campaign_id    UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+    question_text  TEXT NOT NULL,
+    question_type  VARCHAR(20) NOT NULL DEFAULT 'text'
+                   CHECK (question_type IN ('text', 'single_choice', 'multi_choice')),
+    options_json   JSONB,
+    is_required    BOOLEAN DEFAULT TRUE,
+    sort_order     SMALLINT DEFAULT 0,
+    created_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE campaign_acknowledgments (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    campaign_id     UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+    statement_text  TEXT NOT NULL,
+    is_required     BOOLEAN DEFAULT TRUE,
+    sort_order      SMALLINT DEFAULT 0,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+---
+
 ## Step 7: Applications (The Matching Bridge)
 
 ```sql
@@ -681,6 +710,25 @@ CREATE TABLE campaign_applications (
 CREATE INDEX idx_applications_campaign ON campaign_applications(campaign_id);
 CREATE INDEX idx_applications_creator  ON campaign_applications(creator_id);
 CREATE INDEX idx_applications_status   ON campaign_applications(status);
+
+-- Creator answers and accepted legal/campaign acknowledgments.
+CREATE TABLE campaign_application_answers (
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    application_id      UUID NOT NULL REFERENCES campaign_applications(id) ON DELETE CASCADE,
+    question_id         UUID NOT NULL REFERENCES campaign_application_questions(id) ON DELETE CASCADE,
+    answer_text         TEXT,
+    answer_options_json JSONB,
+    created_at          TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(application_id, question_id)
+);
+
+CREATE TABLE campaign_application_acknowledgments (
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    application_id     UUID NOT NULL REFERENCES campaign_applications(id) ON DELETE CASCADE,
+    acknowledgment_id  UUID NOT NULL REFERENCES campaign_acknowledgments(id) ON DELETE CASCADE,
+    accepted_at        TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(application_id, acknowledgment_id)
+);
 ```
 
 ---
@@ -868,6 +916,34 @@ CREATE TABLE contracts (
 CREATE INDEX ix_contracts_brand_id   ON contracts(brand_id);
 CREATE INDEX ix_contracts_creator_id ON contracts(creator_id);
 CREATE INDEX ix_contracts_status     ON contracts(status);
+```
+
+### `live_content_metric_snapshots` — live post performance tracking (migration `0021_live_content_metric_snapshots`)
+```sql
+-- Time-series performance snapshots for approved creator content.
+-- v1 attaches snapshots directly to contracts because contracts already own live_post_url.
+-- Future platform sync jobs can write into the same table.
+
+CREATE TABLE live_content_metric_snapshots (
+    id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    contract_id            UUID NOT NULL REFERENCES contracts(id) ON DELETE CASCADE,
+    platform               VARCHAR(30),
+    captured_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+    views                  INTEGER NOT NULL DEFAULT 0 CHECK (views >= 0),
+    impressions            INTEGER NOT NULL DEFAULT 0 CHECK (impressions >= 0),
+    likes                  INTEGER NOT NULL DEFAULT 0 CHECK (likes >= 0),
+    comments               INTEGER NOT NULL DEFAULT 0 CHECK (comments >= 0),
+    shares                 INTEGER NOT NULL DEFAULT 0 CHECK (shares >= 0),
+    saves                  INTEGER NOT NULL DEFAULT 0 CHECK (saves >= 0),
+    engagement_rate        FLOAT NOT NULL DEFAULT 0,
+    estimated_revenue_bdt  INTEGER NOT NULL DEFAULT 0,
+    revenue_basis          VARCHAR(80),
+    source                 VARCHAR(30) NOT NULL DEFAULT 'manual',
+    created_at             TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_live_metric_snapshots_contract_time
+    ON live_content_metric_snapshots(contract_id, captured_at);
 ```
 
 ### `ai_match_scores` — AI matching results (migrations `53f8d9a8a155`, `0014_add_platform_recency_semantic_to_match_scores`)
