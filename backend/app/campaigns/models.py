@@ -186,6 +186,7 @@ class CampaignDeliverableRequirement(Base):
         ),
         nullable=False,
     )
+    deliverable_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     quantity: Mapped[int] = mapped_column(SmallInteger, server_default="1")
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 

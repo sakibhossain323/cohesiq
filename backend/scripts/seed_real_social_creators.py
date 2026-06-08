@@ -1,4 +1,5 @@
 import asyncio
+import math
 import os
 import re
 from dataclasses import dataclass
@@ -9,6 +10,7 @@ from sqlalchemy import text
 from app.auth import models as auth_models  # noqa: F401
 from app.brands import models as brand_models  # noqa: F401
 from app.campaigns import models as campaign_models  # noqa: F401
+from app.common.deliverables import DELIVERABLE_DEFINITIONS
 from app.creators.normalization import classify_public_social_niche_with_groq
 from app.creators.service import (
     build_public_social_profile_values,
@@ -107,6 +109,11 @@ async def seed_real_social_creators(recent_post_limit: int = 12) -> None:
                         is_primary=index == 0,
                     )
                 await _upsert_verified_social_profile(
+                    session,
+                    creator_id=creator_id,
+                    enrichment=enrichment,
+                )
+                await _upsert_social_rate_cards(
                     session,
                     creator_id=creator_id,
                     enrichment=enrichment,
@@ -377,6 +384,165 @@ async def _upsert_verified_social_profile(
                 is_primary_platform = true;
         """),
         {"creator_id": creator_id, **values},
+    )
+
+
+def _clamp(value: float, minimum: float, maximum: float) -> float:
+    return max(minimum, min(value, maximum))
+
+
+def _round_to_nearest(value: float, step: int = 500) -> int:
+    return int(round(value / step) * step)
+
+
+def _follower_price_ratio(follower_count: int | None) -> float:
+    followers = max(int(follower_count or 0), 5_000)
+    normalized = (math.log10(followers) - math.log10(5_000)) / (
+        math.log10(10_000_000) - math.log10(5_000)
+    )
+    return _clamp(normalized, 0.0, 1.0)
+
+
+def _bounded_price(follower_count: int | None, *, minimum: int, maximum: int) -> int:
+    ratio = _follower_price_ratio(follower_count)
+    return _round_to_nearest(minimum + ((maximum - minimum) * ratio))
+
+
+def _suggest_social_rate_cards(enrichment: PublicSocialProfileEnrichment) -> list[dict[str, int | str]]:
+    follower_count = enrichment.follower_count or 0
+    if enrichment.platform == "instagram":
+        return [
+            {
+                "platform": "instagram",
+                "deliverable_code": "instagram_story",
+                "deliverable_type": DELIVERABLE_DEFINITIONS["instagram_story"].legacy_type,
+                "label": DELIVERABLE_DEFINITIONS["instagram_story"].label,
+                "price_bdt": _bounded_price(follower_count, minimum=1_000, maximum=6_000),
+                "turnaround_days": 2,
+            },
+            {
+                "platform": "instagram",
+                "deliverable_code": "instagram_feed",
+                "deliverable_type": DELIVERABLE_DEFINITIONS["instagram_feed"].legacy_type,
+                "label": DELIVERABLE_DEFINITIONS["instagram_feed"].label,
+                "price_bdt": _bounded_price(follower_count, minimum=1_500, maximum=8_000),
+                "turnaround_days": 3,
+            },
+            {
+                "platform": "instagram",
+                "deliverable_code": "instagram_reel",
+                "deliverable_type": DELIVERABLE_DEFINITIONS["instagram_reel"].legacy_type,
+                "label": DELIVERABLE_DEFINITIONS["instagram_reel"].label,
+                "price_bdt": _bounded_price(follower_count, minimum=2_000, maximum=15_000),
+                "turnaround_days": 4,
+            },
+            {
+                "platform": "instagram",
+                "deliverable_code": "instagram_live",
+                "deliverable_type": DELIVERABLE_DEFINITIONS["instagram_live"].legacy_type,
+                "label": DELIVERABLE_DEFINITIONS["instagram_live"].label,
+                "price_bdt": _bounded_price(follower_count, minimum=10_000, maximum=50_000),
+                "turnaround_days": 5,
+            },
+        ]
+    if enrichment.platform == "tiktok":
+        return [
+            {
+                "platform": "tiktok",
+                "deliverable_code": "tiktok_story",
+                "deliverable_type": DELIVERABLE_DEFINITIONS["tiktok_story"].legacy_type,
+                "label": DELIVERABLE_DEFINITIONS["tiktok_story"].label,
+                "price_bdt": _bounded_price(follower_count, minimum=1_000, maximum=6_000),
+                "turnaround_days": 2,
+            },
+            {
+                "platform": "tiktok",
+                "deliverable_code": "tiktok_video",
+                "deliverable_type": DELIVERABLE_DEFINITIONS["tiktok_video"].legacy_type,
+                "label": DELIVERABLE_DEFINITIONS["tiktok_video"].label,
+                "price_bdt": _bounded_price(follower_count, minimum=2_000, maximum=14_000),
+                "turnaround_days": 4,
+            },
+            {
+                "platform": "tiktok",
+                "deliverable_code": "tiktok_live",
+                "deliverable_type": DELIVERABLE_DEFINITIONS["tiktok_live"].legacy_type,
+                "label": DELIVERABLE_DEFINITIONS["tiktok_live"].label,
+                "price_bdt": _bounded_price(follower_count, minimum=10_000, maximum=50_000),
+                "turnaround_days": 5,
+            },
+        ]
+    return []
+
+
+async def _upsert_social_rate_cards(session, *, creator_id, enrichment: PublicSocialProfileEnrichment) -> None:
+    rate_cards = _suggest_social_rate_cards(enrichment)
+    if not rate_cards:
+        return
+
+    platform = enrichment.platform
+    await session.execute(
+        text("""
+            DELETE FROM creator_rate_cards
+            WHERE creator_id = :creator_id
+              AND platform = :platform;
+        """),
+        {"creator_id": creator_id, "platform": platform},
+    )
+
+    for rate_card in rate_cards:
+        await session.execute(
+            text("""
+                INSERT INTO creator_rate_cards (
+                    creator_id,
+                    platform,
+                    deliverable_type,
+                    deliverable_code,
+                    price_bdt,
+                    suggested_price_bdt,
+                    includes,
+                    turnaround_days,
+                    is_negotiable,
+                    is_active
+                )
+                VALUES (
+                    :creator_id,
+                    :platform,
+                    :deliverable_type,
+                    :deliverable_code,
+                    :price_bdt,
+                    :suggested_price_bdt,
+                    :includes,
+                    :turnaround_days,
+                    true,
+                    true
+                );
+            """),
+            {
+                "creator_id": creator_id,
+                "platform": rate_card["platform"],
+                "deliverable_type": rate_card["deliverable_type"],
+                "deliverable_code": rate_card["deliverable_code"],
+                "price_bdt": rate_card["price_bdt"],
+                "suggested_price_bdt": rate_card["price_bdt"],
+                "includes": f"1 {rate_card['label']}",
+                "turnaround_days": rate_card["turnaround_days"],
+            },
+        )
+
+    await session.execute(
+        text("""
+            UPDATE creator_profiles
+            SET min_budget = CASE
+                WHEN min_budget IS NULL THEN :min_budget
+                ELSE LEAST(min_budget, :min_budget)
+            END
+            WHERE id = :creator_id;
+        """),
+        {
+            "creator_id": creator_id,
+            "min_budget": min(int(rate_card["price_bdt"]) for rate_card in rate_cards),
+        },
     )
 
 

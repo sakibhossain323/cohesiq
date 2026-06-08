@@ -13,6 +13,11 @@ from sqlalchemy.orm import selectinload
 from app.config import settings
 from app.brands.models import BrandProfile
 from app.brands.service import normalize_brand_category
+from app.common.deliverables import (
+    canonical_deliverable_code,
+    deliverable_platform,
+    legacy_deliverable_type,
+)
 from app.campaigns.models import (
     Campaign,
     CampaignApplication,
@@ -112,6 +117,58 @@ def _passes_budget_gate(
 
     estimated_rate = (tier_min + tier_max) // 2
     return estimated_rate <= int(campaign_budget_max * BUDGET_RATE_HARD_CAP)
+
+
+def _matching_rate_for_campaign(campaign: Campaign, creator) -> int | None:
+    active_rate_cards = [
+        rate_card
+        for rate_card in creator.rate_cards
+        if getattr(rate_card, "is_active", True) and (rate_card.price_bdt or 0) > 0
+    ]
+    if not active_rate_cards:
+        return creator.min_budget
+
+    if campaign.deliverable_requirements:
+        total_price = 0
+        matched_all_requirements = True
+        for requirement in campaign.deliverable_requirements:
+            exact_matches = [
+                rate_card
+                for rate_card in active_rate_cards
+                if rate_card.platform == requirement.platform
+                and (
+                    (
+                        requirement.deliverable_code
+                        and rate_card.deliverable_code == requirement.deliverable_code
+                    )
+                    or rate_card.deliverable_type == requirement.deliverable_type
+                )
+            ]
+            fallback_matches = [
+                rate_card
+                for rate_card in active_rate_cards
+                if rate_card.platform == requirement.platform
+            ]
+            selected_matches = exact_matches or fallback_matches
+            if not selected_matches:
+                matched_all_requirements = False
+                break
+            unit_price = min(rate_card.price_bdt for rate_card in selected_matches)
+            total_price += unit_price * max(requirement.quantity or 1, 1)
+
+        if matched_all_requirements:
+            return total_price
+
+    required_platforms = set(campaign.required_platforms or [])
+    platform_cards = [
+        rate_card
+        for rate_card in active_rate_cards
+        if not required_platforms or rate_card.platform in required_platforms
+    ]
+    if platform_cards:
+        return min(rate_card.price_bdt for rate_card in platform_cards)
+
+    return creator.min_budget
 
 
 def _select_matching_social_profile(social_profiles, required_platforms: list[str]):
@@ -327,10 +384,27 @@ async def create_campaign(
         ))
 
     for req in data.deliverable_requirements:
+        deliverable_code = canonical_deliverable_code(
+            platform=req.platform,
+            deliverable_code=req.deliverable_code,
+            legacy_type=req.deliverable_type,
+        )
+        platform = deliverable_platform(
+            deliverable_code=deliverable_code,
+            platform=req.platform,
+        )
+        legacy_type = legacy_deliverable_type(
+            deliverable_code=deliverable_code,
+            platform=platform,
+            legacy_type=req.deliverable_type,
+        )
+        if not platform or not legacy_type:
+            raise HTTPException(status_code=400, detail="Unsupported deliverable requirement")
         db.add(CampaignDeliverableRequirement(
             campaign_id=campaign.id,
-            platform=req.platform,
-            deliverable_type=req.deliverable_type,
+            platform=platform,
+            deliverable_type=legacy_type,
+            deliverable_code=deliverable_code,
             quantity=req.quantity,
             notes=req.notes,
         ))
@@ -345,10 +419,49 @@ async def create_campaign(
 async def update_campaign(
     db: AsyncSession, campaign: Campaign, data: CampaignUpdate
 ) -> Campaign:
-    for field, value in data.model_dump(exclude_none=True).items():
+    update_data = data.model_dump(exclude_none=True)
+    deliverable_requirements = update_data.pop("deliverable_requirements", None)
+
+    for field, value in update_data.items():
         if field == "brand_category":
             value = normalize_brand_category(value)
         setattr(campaign, field, value)
+
+    if deliverable_requirements is not None:
+        await db.execute(
+            select(CampaignDeliverableRequirement).where(
+                CampaignDeliverableRequirement.campaign_id == campaign.id
+            )
+        )
+        campaign.deliverable_requirements.clear()
+        await db.flush()
+        for req in deliverable_requirements:
+            deliverable_code = canonical_deliverable_code(
+                platform=req.get("platform"),
+                deliverable_code=req.get("deliverable_code"),
+                legacy_type=req.get("deliverable_type"),
+            )
+            platform = deliverable_platform(
+                deliverable_code=deliverable_code,
+                platform=req.get("platform"),
+            )
+            legacy_type = legacy_deliverable_type(
+                deliverable_code=deliverable_code,
+                platform=platform,
+                legacy_type=req.get("deliverable_type"),
+            )
+            if not platform or not legacy_type:
+                raise HTTPException(status_code=400, detail="Unsupported deliverable requirement")
+            campaign.deliverable_requirements.append(
+                CampaignDeliverableRequirement(
+                    campaign_id=campaign.id,
+                    platform=platform,
+                    deliverable_type=legacy_type,
+                    deliverable_code=deliverable_code,
+                    quantity=req.get("quantity", 1),
+                    notes=req.get("notes"),
+                )
+            )
     await db.commit()
     refreshed_campaign = await get_campaign(db, campaign.id)
     if not refreshed_campaign:
@@ -954,13 +1067,7 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
         creator_platforms = [sp.platform for sp in creator.social_profiles]
 
         # Determine creator rate for campaign platforms
-        creator_rate = None
-        for rc in creator.rate_cards:
-            if rc.platform in campaign_plats:
-                creator_rate = rc.price_bdt
-                break
-        if creator_rate is None:
-            creator_rate = creator.min_budget
+        creator_rate = _matching_rate_for_campaign(campaign, creator)
 
         if campaign_plats and not any(p in creator_platforms for p in campaign_plats):
             continue

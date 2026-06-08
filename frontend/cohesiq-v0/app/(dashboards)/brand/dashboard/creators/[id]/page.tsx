@@ -25,7 +25,7 @@ export default async function PrivateCreatorDetailPage({ params }: PrivateCreato
     <BrandCreatorMediaKit
       creator={creator}
       reviews={creatorReviews}
-      actionSlot={<InviteModal creatorId={id} />}
+      actionSlot={<InviteModal key={`invite-${id}`} creatorId={id} />}
     />
   );
 }

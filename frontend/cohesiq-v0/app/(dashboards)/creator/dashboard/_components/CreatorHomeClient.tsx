@@ -8,7 +8,7 @@ import { PlatformBadge, getPlatformLabel } from "@/components/shared/PlatformBad
 import { NicheBadge } from "@/components/shared/NicheBadge";
 import { ApplicationStatusBadge } from "@/components/application/ApplicationStatusBadge";
 import { getAvatarInitials } from "@/lib/avatar";
-import { formatDate, formatFollowerCount } from "@/lib/utils";
+import { formatDate, formatFollowerCount, sanitizeImageUrl } from "@/lib/utils";
 import type { Application, Campaign, Creator, CreatorPortfolioItem, CreatorSocialProfile, PlatformType } from "@/lib/types";
 import {
   ArrowRight,
@@ -91,10 +91,11 @@ export function CreatorHomeClient({ creator, applications, suggestedCampaigns }:
   const selectedProfile = profiles.find(profile => profile.platform === selectedPlatform) ?? primary;
   const selectedContent = topContent(creator.portfolio_items, selectedProfile?.platform);
   const allTopContent = topContent(creator.portfolio_items);
-  const coverImage =
+  const coverImage = sanitizeImageUrl(
     contentCover(creator.portfolio_items, selectedProfile?.platform)
     || contentCover(creator.portfolio_items)
-    || creator.profile_photo_url;
+    || creator.profile_photo_url,
+  );
   const displayBio = bioMode === "platform" ? platformBio(creator, selectedProfile) : (creator.bio || platformBio(creator, selectedProfile));
   const pendingApps = applications.filter(app => app.status === "pending" || app.status === "shortlisted").length;
   const connectedCount = profiles.length;
@@ -112,7 +113,7 @@ export function CreatorHomeClient({ creator, applications, suggestedCampaigns }:
         <div className="bd-header-inner">
           <div className="flex max-w-3xl items-end gap-5">
             <Avatar className="h-20 w-20 border-4 border-background shadow-md">
-              <AvatarImage src={creator.profile_photo_url} alt={creator.display_name} />
+              <AvatarImage src={sanitizeImageUrl(creator.profile_photo_url)} alt={creator.display_name} />
               <AvatarFallback className="text-xl font-bold">{getAvatarInitials(creator.display_name)}</AvatarFallback>
             </Avatar>
             <div>
@@ -250,7 +251,7 @@ export function CreatorHomeClient({ creator, applications, suggestedCampaigns }:
             ) : (
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
                 {(selectedContent.length ? selectedContent : allTopContent).map(item => (
-                  <TopContentCard key={item.id} item={item} />
+                  <TopContentCard key={item.id ?? item.content_url} item={item} />
                 ))}
               </div>
             )}
@@ -329,11 +330,13 @@ function EmptyPanel({ title, description }: { title: string; description: string
 }
 
 function TopContentCard({ item }: { item: CreatorPortfolioItem }) {
+  const thumbnailUrl = sanitizeImageUrl(item.thumbnail_url);
+
   return (
     <Link href={item.content_url} target="_blank" className="group overflow-hidden rounded-lg border border-border bg-background transition-colors hover:border-primary/50">
       <div className="aspect-video bg-muted">
-        {item.thumbnail_url ? (
-          <img src={item.thumbnail_url} alt={item.title || "Creator content"} className="h-full w-full object-cover transition-transform group-hover:scale-[1.03]" />
+        {thumbnailUrl ? (
+          <img src={thumbnailUrl} alt={item.title || "Creator content"} className="h-full w-full object-cover transition-transform group-hover:scale-[1.03]" />
         ) : (
           <div className="flex h-full items-center justify-center">
             <ImageIcon className="h-8 w-8 text-muted-foreground" />

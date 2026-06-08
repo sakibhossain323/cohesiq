@@ -9,7 +9,7 @@ import { NicheBadge } from "@/components/shared/NicheBadge";
 import { StarRating } from "@/components/shared/StarRating";
 import { RateCardTable } from "@/components/creator/RateCardTable";
 import { getAvatarInitials } from "@/lib/avatar";
-import { formatBDT, formatDate, formatFollowerCount } from "@/lib/utils";
+import { formatBDT, formatDate, formatFollowerCount, sanitizeImageUrl } from "@/lib/utils";
 import type { Creator, CreatorPortfolioItem, CreatorSocialProfile, PlatformType, Review } from "@/lib/types";
 import {
   ArrowLeft,
@@ -81,7 +81,9 @@ export function BrandCreatorMediaKit({ creator, reviews, actionSlot }: BrandCrea
   const selectedProfile = profiles.find(profile => profile.platform === selectedPlatform) ?? firstProfile;
   const selectedContent = topContent(creator.portfolio_items, selectedProfile?.platform);
   const fallbackContent = topContent(creator.portfolio_items);
-  const heroImage = coverImage(creator.portfolio_items, selectedProfile?.platform) || coverImage(creator.portfolio_items) || creator.profile_photo_url;
+  const heroImage = sanitizeImageUrl(
+    coverImage(creator.portfolio_items, selectedProfile?.platform) || coverImage(creator.portfolio_items) || creator.profile_photo_url,
+  );
   const displayBio = bioMode === "platform" ? platformBio(creator, selectedProfile) : (creator.bio || platformBio(creator, selectedProfile));
   const totalReach = profiles.reduce((sum, profile) => sum + numberOrZero(profile.follower_count), 0);
   const avgViews = profiles.length
@@ -103,7 +105,7 @@ export function BrandCreatorMediaKit({ creator, reviews, actionSlot }: BrandCrea
         <div className="bd-header-inner">
           <div className="flex max-w-3xl items-end gap-5">
             <Avatar className="h-20 w-20 border-4 border-background shadow-md">
-              <AvatarImage src={creator.profile_photo_url} alt={creator.display_name} />
+              <AvatarImage src={sanitizeImageUrl(creator.profile_photo_url)} alt={creator.display_name} />
               <AvatarFallback className="text-xl font-bold">{getAvatarInitials(creator.display_name)}</AvatarFallback>
             </Avatar>
             <div>
@@ -116,8 +118,8 @@ export function BrandCreatorMediaKit({ creator, reviews, actionSlot }: BrandCrea
               <p className="bd-header-sub max-w-2xl">{displayBio}</p>
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <NicheBadge niche={creator.primary_niche} size="sm" />
-                {creator.niches.filter(niche => niche !== creator.primary_niche).slice(0, 3).map(niche => (
-                  <NicheBadge key={niche} niche={niche} variant="outline" size="sm" />
+                {creator.niches.filter(niche => niche !== creator.primary_niche).slice(0, 3).map((niche, index) => (
+                  <NicheBadge key={`${niche}-${index}`} niche={niche} variant="outline" size="sm" />
                 ))}
                 {selectedProfile?.is_api_verified && (
                   <span className="bd-status bd-status-active">
@@ -174,9 +176,9 @@ export function BrandCreatorMediaKit({ creator, reviews, actionSlot }: BrandCrea
             <div className="bd-section-head">
               <span className="bd-section-title">Platform Analytics</span>
               <div className="flex flex-wrap gap-2">
-                {profiles.map(profile => (
+                {profiles.map((profile, index) => (
                   <button
-                    key={profile.id}
+                    key={profile.id ?? `${profile.platform}-${profile.handle}-${index}`}
                     type="button"
                     onClick={() => setSelectedPlatform(profile.platform)}
                     className={`bd-status ${selectedProfile?.platform === profile.platform ? "bd-status-active" : "bd-status-draft"}`}
@@ -246,12 +248,12 @@ export function BrandCreatorMediaKit({ creator, reviews, actionSlot }: BrandCrea
             <span className="text-xs text-muted-foreground">Stored from creator syncs</span>
           </div>
           <div className="bd-section-body">
-            {(selectedContent.length ? selectedContent : fallbackContent).length === 0 ? (
+            {((selectedContent.length ? selectedContent : fallbackContent).length === 0) ? (
               <EmptyPanel title="No stored content yet" description="Top posts appear after the creator syncs YouTube, TikTok, or Instagram." />
             ) : (
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-                {(selectedContent.length ? selectedContent : fallbackContent).map(item => (
-                  <TopContentCard key={item.id} item={item} />
+                {(selectedContent.length ? selectedContent : fallbackContent).map((item, index) => (
+                  <TopContentCard key={item.id ?? `${item.platform}-${item.content_url}-${index}`} item={item} />
                 ))}
               </div>
             )}
@@ -275,8 +277,8 @@ export function BrandCreatorMediaKit({ creator, reviews, actionSlot }: BrandCrea
             <div className="bd-section-body">
               {reviews.length === 0 ? (
                 <EmptyPanel title="No public reviews yet" description="Completed collaborations will add public proof here." />
-              ) : reviews.map(review => (
-                <div key={review.id} className="bd-campaign-row">
+              ) : reviews.map((review, index) => (
+                <div key={review.id ?? `${review.created_at}-${review.rating}-${index}`} className="bd-campaign-row">
                   <div>
                     <p className="text-sm font-semibold text-foreground">
                       {review.reviewer_brand_id ? "Verified Brand" : "Verified Creator"}
@@ -315,11 +317,13 @@ function EmptyPanel({ title, description }: { title: string; description: string
 }
 
 function TopContentCard({ item }: { item: CreatorPortfolioItem }) {
+  const thumbnailUrl = sanitizeImageUrl(item.thumbnail_url);
+
   return (
     <Link href={item.content_url} target="_blank" className="group overflow-hidden rounded-lg border border-border bg-background transition-colors hover:border-primary/50">
       <div className="aspect-video bg-muted">
-        {item.thumbnail_url ? (
-          <img src={item.thumbnail_url} alt={item.title || "Creator content"} className="h-full w-full object-cover transition-transform group-hover:scale-[1.03]" />
+        {thumbnailUrl ? (
+          <img src={thumbnailUrl} alt={item.title || "Creator content"} className="h-full w-full object-cover transition-transform group-hover:scale-[1.03]" />
         ) : (
           <div className="flex h-full items-center justify-center">
             <ImageIcon className="h-8 w-8 text-muted-foreground" />

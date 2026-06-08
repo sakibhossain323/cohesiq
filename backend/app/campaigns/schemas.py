@@ -30,7 +30,8 @@ class LanguageTargetRef(BaseModel):
 
 class DeliverableRequirementCreate(BaseModel):
     platform: str
-    deliverable_type: str
+    deliverable_type: Optional[str] = None
+    deliverable_code: Optional[str] = None
     quantity: int = 1
     notes: Optional[str] = None
 
@@ -39,6 +40,7 @@ class DeliverableRequirementOut(BaseModel):
     id: uuid.UUID
     platform: str
     deliverable_type: str
+    deliverable_code: Optional[str] = None
     quantity: int
     notes: Optional[str] = None
     model_config = {"from_attributes": True}
@@ -104,6 +106,7 @@ class CampaignUpdate(BaseModel):
     kpi_targets: Optional[KpiTargets] = None
     hashtags: Optional[List[str]] = None
     tracking_notes: Optional[str] = None
+    deliverable_requirements: Optional[List[DeliverableRequirementCreate]] = None
 
 
 class CampaignStatusUpdate(BaseModel):

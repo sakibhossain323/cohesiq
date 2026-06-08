@@ -1,26 +1,9 @@
 import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
-import { Plus_Jakarta_Sans, DM_Sans } from 'next/font/google'
 import { Toaster } from '@/components/ui/toaster'
 import { ClerkProvider } from '@clerk/nextjs'
 import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
-
-// Cohesiq design system: display / heading font
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-display',
-  display: 'swap',
-})
-
-// Cohesiq design system: body / UI font
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-body',
-  display: 'swap',
-})
 
 export const metadata: Metadata = {
   title: 'Cohesiq - Match Creators and Brands in Bangladesh',
@@ -53,7 +36,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`bg-background ${plusJakartaSans.variable} ${dmSans.variable}`}
+      className="bg-background"
+      style={
+        {
+          '--font-display': '"Plus Jakarta Sans", "Avenir Next", "Segoe UI", system-ui, sans-serif',
+          '--font-body': '"DM Sans", "Avenir Next", "Segoe UI", system-ui, sans-serif',
+        } as React.CSSProperties
+      }
       suppressHydrationWarning
     >
       <body className="antialiased" suppressHydrationWarning>

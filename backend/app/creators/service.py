@@ -16,6 +16,11 @@ from app.creators.models import (
     CreatorRateCard,
     CreatorSocialProfile,
 )
+from app.common.deliverables import (
+    canonical_deliverable_code,
+    deliverable_platform,
+    legacy_deliverable_type,
+)
 from app.common.models import Niche
 from app.creators.normalization import (
     classify_public_social_niche_with_groq,
@@ -757,7 +762,36 @@ def _truncate(value: str | None, max_length: int) -> str | None:
 async def add_rate_card(
     db: AsyncSession, creator_id: uuid.UUID, data: RateCardCreate
 ) -> CreatorRateCard:
-    rc = CreatorRateCard(creator_id=creator_id, **data.model_dump())
+    deliverable_code = canonical_deliverable_code(
+        platform=data.platform,
+        deliverable_code=data.deliverable_code,
+        legacy_type=data.deliverable_type,
+    )
+    platform = deliverable_platform(
+        deliverable_code=deliverable_code,
+        platform=data.platform,
+    )
+    legacy_type = legacy_deliverable_type(
+        deliverable_code=deliverable_code,
+        platform=platform,
+        legacy_type=data.deliverable_type,
+    )
+    if not platform or not legacy_type:
+        raise HTTPException(status_code=400, detail="Unsupported rate card deliverable")
+
+    rc = CreatorRateCard(
+        creator_id=creator_id,
+        platform=platform,
+        deliverable_type=legacy_type,
+        deliverable_code=deliverable_code,
+        price_bdt=data.price_bdt,
+        suggested_price_bdt=data.suggested_price_bdt,
+        price_usd=data.price_usd,
+        includes=data.includes,
+        excludes=data.excludes,
+        turnaround_days=data.turnaround_days,
+        is_negotiable=data.is_negotiable,
+    )
     db.add(rc)
     await db.commit()
     await db.refresh(rc)
@@ -783,7 +817,26 @@ async def update_rate_card(
     db: AsyncSession, creator_id: uuid.UUID, rate_card_id: uuid.UUID, data: RateCardUpdate
 ) -> CreatorRateCard:
     rc = await _get_rate_card(db, creator_id, rate_card_id)
-    for field, value in data.model_dump(exclude_none=True).items():
+    update_data = data.model_dump(exclude_none=True)
+    if "deliverable_code" in update_data or "deliverable_type" in update_data:
+        deliverable_code = canonical_deliverable_code(
+            platform=rc.platform,
+            deliverable_code=update_data.get("deliverable_code"),
+            legacy_type=update_data.get("deliverable_type"),
+        )
+        legacy_type = legacy_deliverable_type(
+            deliverable_code=deliverable_code,
+            platform=rc.platform,
+            legacy_type=update_data.get("deliverable_type"),
+        )
+        if not legacy_type:
+            raise HTTPException(status_code=400, detail="Unsupported rate card deliverable")
+        rc.deliverable_code = deliverable_code
+        rc.deliverable_type = legacy_type
+        update_data.pop("deliverable_code", None)
+        update_data.pop("deliverable_type", None)
+
+    for field, value in update_data.items():
         setattr(rc, field, value)
     await db.commit()
     await db.refresh(rc)

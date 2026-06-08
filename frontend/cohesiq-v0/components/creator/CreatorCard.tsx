@@ -10,6 +10,7 @@ import { MapPin } from "lucide-react";
 import { EstimatedTag } from "@/components/shared/EstimatedTag";
 import { AuthenticityBadge } from "@/components/creator/AuthenticityBadge";
 import { getAvatarInitials } from "@/lib/avatar";
+import { sanitizeImageUrl } from "@/lib/utils";
 import type { Creator } from "@/lib/types";
 
 interface CreatorCardProps {
@@ -27,7 +28,7 @@ export function CreatorCard({ creator, basePath = "/brand/dashboard/creators" }:
         <CardContent className="flex h-full flex-col p-5">
           <div className="flex items-start gap-4">
             <Avatar className="h-14 w-14 border-2 border-border">
-              <AvatarImage src={creator.profile_photo_url} alt={creator.display_name} />
+              <AvatarImage src={sanitizeImageUrl(creator.profile_photo_url)} alt={creator.display_name} />
               <AvatarFallback className="bg-muted text-sm font-medium">
                 {initials}
               </AvatarFallback>

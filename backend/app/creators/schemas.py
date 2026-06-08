@@ -135,8 +135,10 @@ class PublicSocialEnrichmentRequest(BaseModel):
 
 class RateCardCreate(BaseModel):
     platform: str
-    deliverable_type: str
+    deliverable_type: Optional[str] = None
+    deliverable_code: Optional[str] = None
     price_bdt: int
+    suggested_price_bdt: Optional[int] = None
     price_usd: Optional[int] = None
     includes: Optional[str] = None
     excludes: Optional[str] = None
@@ -145,7 +147,10 @@ class RateCardCreate(BaseModel):
 
 
 class RateCardUpdate(BaseModel):
+    deliverable_type: Optional[str] = None
+    deliverable_code: Optional[str] = None
     price_bdt: Optional[int] = None
+    suggested_price_bdt: Optional[int] = None
     price_usd: Optional[int] = None
     includes: Optional[str] = None
     excludes: Optional[str] = None
@@ -158,7 +163,9 @@ class RateCardOut(BaseModel):
     id: uuid.UUID
     platform: str
     deliverable_type: str
+    deliverable_code: Optional[str] = None
     price_bdt: int
+    suggested_price_bdt: Optional[int] = None
     price_usd: Optional[int] = None
     includes: Optional[str] = None
     excludes: Optional[str] = None

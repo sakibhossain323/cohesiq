@@ -8,6 +8,7 @@ import { NicheBadge } from "@/components/shared/NicheBadge";
 import { MapPin, MessageCircle } from "lucide-react";
 import { AuthenticityBadge } from "@/components/creator/AuthenticityBadge";
 import { getAvatarInitials } from "@/lib/avatar";
+import { sanitizeImageUrl } from "@/lib/utils";
 import type { Creator } from "@/lib/types";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -36,7 +37,7 @@ export function CreatorProfileHeader({ creator, actionSlot }: CreatorProfileHead
     <div className="rounded-lg border border-border bg-card p-6">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
         <Avatar className="h-24 w-24 border-4 border-border">
-          <AvatarImage src={creator.profile_photo_url} alt={creator.display_name} />
+          <AvatarImage src={sanitizeImageUrl(creator.profile_photo_url)} alt={creator.display_name} />
           <AvatarFallback className="bg-muted text-2xl font-bold">
             {initials}
           </AvatarFallback>

@@ -11,17 +11,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { StarRating } from "@/components/shared/StarRating";
 import { getAvatarInitials } from "@/lib/avatar";
+import { getDeliverableLabel } from "@/lib/deliverables";
 import type { Creator } from "@/lib/types";
 
 const PLATFORM_LABELS: Record<string, string> = {
   youtube: "YouTube", instagram: "Instagram", facebook: "Facebook",
   tiktok: "TikTok", twitter_x: "Twitter/X", linkedin: "LinkedIn",
-};
-
-const DELIVERABLE_LABELS: Record<string, string> = {
-  dedicated_video: "Dedicated Video", integrated_mention: "Integrated Mention",
-  short_video: "Short Video", photo_post: "Photo Post", story: "Story",
-  live_stream: "Live Stream", blog_post: "Blog Post", other: "Other",
 };
 
 function formatBDT(n: number) {
@@ -182,7 +177,7 @@ export function CompareClient({ creators, returnHref = "/brand/dashboard/creator
             <div className="space-y-1 text-left">
               {(c.rate_cards as any[]).filter(rc => rc.is_active).slice(0, 3).map((rc: any, index: number) => (
                 <div key={rc.id ?? `${c.id}-${rc.platform}-${rc.deliverable_type}-${index}`} className="text-xs">
-                  <span className="font-medium">{DELIVERABLE_LABELS[rc.deliverable_type] ?? rc.deliverable_type}</span>
+                  <span className="font-medium">{getDeliverableLabel(rc.platform, rc.deliverable_code, rc.deliverable_type)}</span>
                   <span className="text-muted-foreground ml-1">({PLATFORM_LABELS[rc.platform] ?? rc.platform})</span>
                   <span className="font-semibold ml-1">{formatBDT(rc.price_bdt)}</span>
                 </div>

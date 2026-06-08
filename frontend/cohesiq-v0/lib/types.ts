@@ -2,6 +2,17 @@ export type PlatformType = "youtube" | "instagram" | "facebook" | "tiktok" | "tw
 export type CampaignStatus = "draft" | "active" | "in_progress" | "completed" | "cancelled" | "archived";
 export type ApplicationStatus = "invited" | "declined" | "pending" | "shortlisted" | "accepted" | "rejected" | "withdrawn" | "completed";
 export type DeliverableType = "dedicated_video" | "integrated_mention" | "short_video" | "photo_post" | "story" | "live_stream" | "blog_post" | "other";
+export type DeliverableCode =
+  | "youtube_live"
+  | "youtube_short"
+  | "youtube_video"
+  | "instagram_live"
+  | "instagram_feed"
+  | "instagram_reel"
+  | "instagram_story"
+  | "tiktok_live"
+  | "tiktok_story"
+  | "tiktok_video";
 
 // Contract types — engagement type lives here, NOT on Campaign
 export type ContractType = "content_collaboration" | "product_seeding" | "talent_engagement";
@@ -83,7 +94,9 @@ export interface CreatorRateCard {
   id: string;
   platform: PlatformType;
   deliverable_type: DeliverableType;
+  deliverable_code?: DeliverableCode;
   price_bdt: number;
+  suggested_price_bdt?: number;
   is_negotiable: boolean;
 }
 
@@ -155,13 +168,17 @@ export interface Campaign {
   content_deadline?: string;
   status: CampaignStatus;
   application_count: number;
+  deliverables?: CampaignDeliverable[];
   created_at?: string;
 }
 
 export interface CampaignDeliverable {
+  id?: string;
   platform: PlatformType;
   deliverable_type: DeliverableType;
+  deliverable_code?: DeliverableCode;
   quantity: number;
+  notes?: string;
 }
 
 export interface Application {

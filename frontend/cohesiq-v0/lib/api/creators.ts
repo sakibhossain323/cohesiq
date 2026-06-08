@@ -23,6 +23,7 @@ const NICHE_MAP: Record<number, string> = {
   12: "entertainment",
   13: "news",
   14: "other",
+  19: "comedy",
 };
 
 function mapCreatorResponse(c: any): Creator {
@@ -40,7 +41,11 @@ function mapCreatorResponse(c: any): Creator {
     niches: c.niches ? c.niches.map((n: any) => NICHE_MAP[n.niche_id] || `Niche ${n.niche_id}`) : [],
     languages: c.languages ? c.languages.map((l: any) => l.language_code) : [],
     social_profiles: c.social_profiles || [],
-    rate_cards: c.rate_cards || [],
+    rate_cards: c.rate_cards ? c.rate_cards.map((card: any) => ({
+      ...card,
+      deliverable_code: card.deliverable_code,
+      suggested_price_bdt: card.suggested_price_bdt,
+    })) : [],
     portfolio_items: c.portfolio_items || [],
     is_available: c.is_available,
     total_collaborations: c.total_collaborations,

@@ -19,7 +19,10 @@ from app.creators.service import (
     build_youtube_portfolio_item_values,
 )
 from app.youtube.schemas import YouTubeChannelEnrichment, YouTubeRecentVideo
-from scripts.seed_real_youtube_creators import _build_creator_bio
+from scripts.seed_real_youtube_creators import (
+    _build_creator_bio,
+    _suggest_youtube_rate_cards,
+)
 
 
 class CreatorYouTubeEnrichmentTests(unittest.TestCase):
@@ -202,6 +205,30 @@ class CreatorYouTubeEnrichmentTests(unittest.TestCase):
         self.assertEqual(profile.handle, "@test")
         self.assertEqual(profile.api_channel_id, "UC_test")
         self.assertTrue(profile.is_api_verified)
+
+    def test_seeded_youtube_rate_cards_are_bounded_and_monotonic(self):
+        small = self._enrichment().model_copy(update={"subscriber_count": 20_000})
+        large = self._enrichment().model_copy(update={"subscriber_count": 3_500_000})
+
+        small_cards = {
+            card["deliverable_code"]: card["price_bdt"]
+            for card in _suggest_youtube_rate_cards(small)
+        }
+        large_cards = {
+            card["deliverable_code"]: card["price_bdt"]
+            for card in _suggest_youtube_rate_cards(large)
+        }
+
+        self.assertGreaterEqual(small_cards["youtube_short"], 1_000)
+        self.assertLessEqual(small_cards["youtube_short"], 10_000)
+        self.assertGreaterEqual(small_cards["youtube_video"], 5_000)
+        self.assertLessEqual(small_cards["youtube_video"], 20_000)
+        self.assertGreaterEqual(small_cards["youtube_live"], 10_000)
+        self.assertLessEqual(small_cards["youtube_live"], 50_000)
+
+        self.assertGreater(large_cards["youtube_short"], small_cards["youtube_short"])
+        self.assertGreater(large_cards["youtube_video"], small_cards["youtube_video"])
+        self.assertGreater(large_cards["youtube_live"], small_cards["youtube_live"])
 
 
 if __name__ == "__main__":

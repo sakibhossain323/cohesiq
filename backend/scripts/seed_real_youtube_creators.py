@@ -1,4 +1,5 @@
 import asyncio
+import math
 import os
 import re
 from dataclasses import dataclass
@@ -9,6 +10,7 @@ from sqlalchemy import text
 from app.auth import models as auth_models  # noqa: F401
 from app.brands import models as brand_models  # noqa: F401
 from app.campaigns import models as campaign_models  # noqa: F401
+from app.common.deliverables import DELIVERABLE_DEFINITIONS
 from app.creators.service import (
     build_youtube_social_profile_values,
     import_youtube_recent_videos_to_portfolio,
@@ -209,6 +211,11 @@ async def seed_real_youtube_creators(recent_video_limit: int = 10) -> None:
                         is_primary=index == 0,
                     )
                 await _upsert_verified_youtube_profile(
+                    session,
+                    creator_id=creator_id,
+                    enrichment=enrichment,
+                )
+                await _upsert_youtube_rate_cards(
                     session,
                     creator_id=creator_id,
                     enrichment=enrichment,
@@ -533,6 +540,128 @@ async def _upsert_verified_youtube_profile(session, *, creator_id, enrichment) -
                 is_primary_platform = true;
         """),
         {"creator_id": creator_id, **values},
+    )
+
+
+def _clamp(value: float, minimum: float, maximum: float) -> float:
+    return max(minimum, min(value, maximum))
+
+
+def _round_to_nearest(value: float, step: int = 500) -> int:
+    return int(round(value / step) * step)
+
+
+def _subscriber_price_ratio(subscriber_count: int | None) -> float:
+    subscribers = max(int(subscriber_count or 0), 10_000)
+    # Use a log curve so 50K vs 500K vs 5M creators do not all collapse
+    # into the lowest band while still remaining monotonic with subscribers.
+    normalized = (math.log10(subscribers) - math.log10(10_000)) / (
+        math.log10(5_000_000) - math.log10(10_000)
+    )
+    return _clamp(normalized, 0.0, 1.0)
+
+
+def _bounded_price(subscriber_count: int | None, *, minimum: int, maximum: int) -> int:
+    ratio = _subscriber_price_ratio(subscriber_count)
+    raw_price = minimum + ((maximum - minimum) * ratio)
+    return _round_to_nearest(raw_price)
+
+
+def _suggest_youtube_rate_cards(enrichment) -> list[dict[str, int | str]]:
+    subscriber_count = enrichment.subscriber_count or 0
+    return [
+        {
+            "platform": "youtube",
+            "deliverable_code": "youtube_short",
+            "deliverable_type": DELIVERABLE_DEFINITIONS["youtube_short"].legacy_type,
+            "label": DELIVERABLE_DEFINITIONS["youtube_short"].label,
+            "price_bdt": _bounded_price(subscriber_count, minimum=1_000, maximum=10_000),
+            "turnaround_days": 3,
+        },
+        {
+            "platform": "youtube",
+            "deliverable_code": "youtube_video",
+            "deliverable_type": DELIVERABLE_DEFINITIONS["youtube_video"].legacy_type,
+            "label": DELIVERABLE_DEFINITIONS["youtube_video"].label,
+            "price_bdt": _bounded_price(subscriber_count, minimum=5_000, maximum=20_000),
+            "turnaround_days": 7,
+        },
+        {
+            "platform": "youtube",
+            "deliverable_code": "youtube_live",
+            "deliverable_type": DELIVERABLE_DEFINITIONS["youtube_live"].legacy_type,
+            "label": DELIVERABLE_DEFINITIONS["youtube_live"].label,
+            "price_bdt": _bounded_price(subscriber_count, minimum=10_000, maximum=50_000),
+            "turnaround_days": 5,
+        },
+    ]
+
+
+async def _upsert_youtube_rate_cards(session, *, creator_id, enrichment) -> None:
+    rate_cards = _suggest_youtube_rate_cards(enrichment)
+    await session.execute(
+        text("""
+            DELETE FROM creator_rate_cards
+            WHERE creator_id = :creator_id
+              AND platform = 'youtube'
+              AND (
+                deliverable_code IN ('youtube_short', 'youtube_video', 'youtube_live')
+                OR deliverable_type IN ('short_video', 'dedicated_video', 'live_stream')
+              );
+        """),
+        {"creator_id": creator_id},
+    )
+
+    for rate_card in rate_cards:
+        await session.execute(
+            text("""
+                INSERT INTO creator_rate_cards (
+                    creator_id,
+                    platform,
+                    deliverable_type,
+                    deliverable_code,
+                    price_bdt,
+                    suggested_price_bdt,
+                    includes,
+                    turnaround_days,
+                    is_negotiable,
+                    is_active
+                )
+                VALUES (
+                    :creator_id,
+                    :platform,
+                    :deliverable_type,
+                    :deliverable_code,
+                    :price_bdt,
+                    :suggested_price_bdt,
+                    :includes,
+                    :turnaround_days,
+                    true,
+                    true
+                );
+            """),
+            {
+                "creator_id": creator_id,
+                "platform": rate_card["platform"],
+                "deliverable_type": rate_card["deliverable_type"],
+                "deliverable_code": rate_card["deliverable_code"],
+                "price_bdt": rate_card["price_bdt"],
+                "suggested_price_bdt": rate_card["price_bdt"],
+                "includes": f"1 {rate_card['label']}",
+                "turnaround_days": rate_card["turnaround_days"],
+            },
+        )
+
+    await session.execute(
+        text("""
+            UPDATE creator_profiles
+            SET min_budget = :min_budget
+            WHERE id = :creator_id;
+        """),
+        {
+            "creator_id": creator_id,
+            "min_budget": min(int(rate_card["price_bdt"]) for rate_card in rate_cards),
+        },
     )
 
 
