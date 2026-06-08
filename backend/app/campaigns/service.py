@@ -3,7 +3,7 @@ import logging
 import re
 from datetime import date, datetime, timedelta, timezone
 from typing import List
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 from fastapi import HTTPException, status
 from groq import AsyncGroq
@@ -64,6 +64,7 @@ from app.services.matching_config import (
     TOP_MATCH_LIMIT,
 )
 from app.services.semantic_match import get_gemini_embedding, semantic_similarity
+from app.youtube import service as youtube_service
 
 logger = logging.getLogger(__name__)
 GROQ_RATIONALE_MODEL = "llama-3.1-8b-instant"
@@ -1618,6 +1619,26 @@ def infer_platform_from_url(url: str | None) -> str | None:
     return None
 
 
+def extract_youtube_video_id(url: str | None) -> str | None:
+    if not url:
+        return None
+    parsed = urlparse(url.strip())
+    host = parsed.netloc.lower().removeprefix("www.")
+    parts = [part for part in parsed.path.split("/") if part]
+    if "youtu.be" in host:
+        return parts[0] if parts else None
+    if "youtube.com" not in host:
+        return None
+    watch_id = parse_qs(parsed.query).get("v", [None])[0]
+    if watch_id:
+        return watch_id
+    for marker in ("shorts", "embed", "live"):
+        if marker in parts:
+            index = parts.index(marker)
+            return parts[index + 1] if len(parts) > index + 1 else None
+    return None
+
+
 def _snapshot_totals(snapshot: LiveContentMetricSnapshot | None) -> dict:
     if not snapshot:
         return {
@@ -1692,6 +1713,69 @@ async def create_live_metric_snapshot(
     return snapshot
 
 
+async def sync_contract_live_metrics(
+    db: AsyncSession,
+    contract_id: uuid.UUID,
+    brand_id: uuid.UUID,
+) -> LiveContentMetricSnapshot:
+    contract = await get_contract(db, contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if contract.brand_id != brand_id:
+        raise HTTPException(status_code=403, detail="Not your contract")
+    if contract.status not in ("published", "closed"):
+        raise HTTPException(status_code=400, detail="Metrics can only be synced after content is published")
+
+    platform = infer_platform_from_url(contract.live_post_url)
+    if platform != "youtube":
+        raise HTTPException(
+            status_code=400,
+            detail="Automatic metric sync is currently available for YouTube live post URLs",
+        )
+
+    video_id = extract_youtube_video_id(contract.live_post_url)
+    if not video_id:
+        raise HTTPException(status_code=400, detail="Could not parse YouTube video id from live post URL")
+
+    try:
+        video = await youtube_service.get_video(video_id)
+    except youtube_service.YouTubeConfigError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except youtube_service.YouTubeAPIError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+
+    views = video.view_count or 0
+    likes = video.like_count or 0
+    comments = video.comment_count or 0
+    engagement_rate = calculate_engagement_rate(
+        views=views,
+        impressions=views,
+        likes=likes,
+        comments=comments,
+        shares=0,
+        saves=0,
+    )
+    snapshot = LiveContentMetricSnapshot(
+        contract_id=contract.id,
+        platform="youtube",
+        captured_at=datetime.now(timezone.utc),
+        views=views,
+        impressions=views,
+        likes=likes,
+        comments=comments,
+        shares=0,
+        saves=0,
+        engagement_rate=engagement_rate,
+        estimated_revenue_bdt=estimate_live_content_revenue_bdt(views, likes, comments, 0, 0),
+        revenue_basis="YouTube API stats: 0.25/view + 1/like + 3/comment BDT",
+        source="youtube_api",
+    )
+    db.add(snapshot)
+    await db.commit()
+    await db.refresh(snapshot)
+    return snapshot
+
+
 async def get_contract_live_analytics(
     db: AsyncSession,
     contract_id: uuid.UUID,
@@ -1705,7 +1789,10 @@ async def get_contract_live_analytics(
 
     result = await db.execute(
         select(LiveContentMetricSnapshot)
-        .where(LiveContentMetricSnapshot.contract_id == contract_id)
+        .where(
+            LiveContentMetricSnapshot.contract_id == contract_id,
+            LiveContentMetricSnapshot.source != "manual",
+        )
         .order_by(LiveContentMetricSnapshot.captured_at.asc())
     )
     snapshots = list(result.scalars().all())
@@ -1765,7 +1852,10 @@ async def get_campaign_live_analytics(
     }
 
     for contract in contracts:
-        snapshots = sorted(contract.metric_snapshots, key=lambda snap: snap.captured_at)
+        snapshots = sorted(
+            (snap for snap in contract.metric_snapshots if snap.source != "manual"),
+            key=lambda snap: snap.captured_at,
+        )
         first = snapshots[0] if snapshots else None
         latest = snapshots[-1] if snapshots else None
         latest_totals = _snapshot_totals(latest)

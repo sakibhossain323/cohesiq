@@ -127,6 +127,21 @@ class CampaignApplicationGatekeeperTests(unittest.TestCase):
         )
         self.assertEqual(service.calculate_engagement_rate(0, 0, 0, 0, 0, 0), 0.0)
 
+    def test_youtube_live_metric_sync_extracts_video_ids(self):
+        self.assertEqual(
+            service.extract_youtube_video_id("https://www.youtube.com/watch?v=llopFi5XDYw"),
+            "llopFi5XDYw",
+        )
+        self.assertEqual(
+            service.extract_youtube_video_id("https://youtu.be/llopFi5XDYw"),
+            "llopFi5XDYw",
+        )
+        self.assertEqual(
+            service.extract_youtube_video_id("https://www.youtube.com/shorts/llopFi5XDYw"),
+            "llopFi5XDYw",
+        )
+        self.assertIsNone(service.extract_youtube_video_id("https://www.instagram.com/reel/abc"))
+
 
 if __name__ == "__main__":
     unittest.main()

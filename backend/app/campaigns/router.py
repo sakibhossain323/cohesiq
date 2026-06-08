@@ -26,7 +26,6 @@ from app.campaigns.schemas import (
     ContentDraftSubmit,
     ContentPublishSubmit,
     LiveContractAnalyticsOut,
-    LiveMetricSnapshotCreate,
     LiveMetricSnapshotOut,
 )
 from app.common.dependencies import get_current_user, get_db
@@ -352,18 +351,17 @@ async def close_contract(
     return await service.close_contract(db, contract_id, brand.id)
 
 
-@router.post("/contracts/{contract_id}/metrics-snapshots", response_model=LiveMetricSnapshotOut, status_code=201)
-async def create_contract_metric_snapshot(
+@router.post("/contracts/{contract_id}/sync-metrics", response_model=LiveMetricSnapshotOut, status_code=201)
+async def sync_contract_metric_snapshot(
     contract_id: uuid.UUID,
-    data: LiveMetricSnapshotCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
     from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
     brand = await get_brand_by_user_id(db, current_user.id)
     if not brand:
-        raise HTTPException(status_code=403, detail="Only brands can record contract metrics")
-    return await service.create_live_metric_snapshot(db, contract_id, brand.id, data)
+        raise HTTPException(status_code=403, detail="Only brands can sync contract metrics")
+    return await service.sync_contract_live_metrics(db, contract_id, brand.id)
 
 
 @router.get("/contracts/{contract_id}/analytics", response_model=LiveContractAnalyticsOut)

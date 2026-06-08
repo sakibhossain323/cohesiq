@@ -1,6 +1,5 @@
 "use client";
 
-import type { FormEvent } from "react";
 import { useMemo, useState, useTransition } from "react";
 import {
   Bar,
@@ -34,7 +33,6 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -45,7 +43,7 @@ import {
 } from "@/components/ui/select";
 import { EstimatedTag } from "@/components/shared/EstimatedTag";
 import { cn, formatBDT } from "@/lib/utils";
-import { createMetricSnapshot, getCampaignLiveAnalytics } from "@/lib/api/contracts";
+import { getCampaignLiveAnalytics, syncContractMetrics } from "@/lib/api/contracts";
 import type { Campaign, CampaignLiveAnalytics, Contract } from "@/lib/types";
 
 interface Props {
@@ -108,11 +106,6 @@ function contentThumbnailUrl(url?: string) {
   return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
 }
 
-function numberValue(form: FormData, key: string) {
-  const value = Number(form.get(key) || 0);
-  return Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0;
-}
-
 function StatCard({
   label,
   value,
@@ -173,32 +166,41 @@ export function CampaignAnalyticsTab({
       ]
     : [];
 
-  const handleCreateSnapshot = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const refreshAnalytics = async () => {
+    const token = await getToken();
+    if (!token) throw new Error("Not authenticated");
+    const fresh = await getCampaignLiveAnalytics(campaign.id, token);
+    setAnalytics(fresh);
+    onAnalyticsUpdate(fresh);
+    return fresh;
+  };
+
+  const handleRefreshAnalytics = () => {
+    setMessage(null);
+    setError(null);
+    startTransition(async () => {
+      try {
+        await refreshAnalytics();
+        setMessage("Analytics refreshed.");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Could not refresh analytics");
+      }
+    });
+  };
+
+  const handleSyncMetrics = () => {
     if (!selectedContract) return;
-    const formData = new FormData(event.currentTarget);
     setMessage(null);
     setError(null);
     startTransition(async () => {
       try {
         const token = await getToken();
         if (!token) throw new Error("Not authenticated");
-        await createMetricSnapshot(selectedContract.id, {
-          captured_at: new Date().toISOString(),
-          views: numberValue(formData, "views"),
-          impressions: numberValue(formData, "impressions"),
-          likes: numberValue(formData, "likes"),
-          comments: numberValue(formData, "comments"),
-          shares: numberValue(formData, "shares"),
-          saves: numberValue(formData, "saves"),
-          source: "manual",
-        }, token);
-        const fresh = await getCampaignLiveAnalytics(campaign.id, token);
-        setAnalytics(fresh);
-        onAnalyticsUpdate(fresh);
-        setMessage("Snapshot saved. Charts updated.");
+        await syncContractMetrics(selectedContract.id, token);
+        await refreshAnalytics();
+        setMessage("Metrics synced from the platform API.");
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Could not save snapshot");
+        setError(err instanceof Error ? err.message : "Could not sync metrics");
       }
     });
   };
@@ -212,9 +214,15 @@ export function CampaignAnalyticsTab({
             Time-based views, engagement, and estimated revenue from published creator content.
           </p>
         </div>
-        <Badge variant="outline" className="w-fit">
-          {totals?.published_contracts ?? publishedContracts.length} live content items
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="w-fit">
+            {totals?.published_contracts ?? publishedContracts.length} live content items
+          </Badge>
+          <Button type="button" variant="outline" size="sm" onClick={handleRefreshAnalytics} disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Refresh
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -379,9 +387,9 @@ export function CampaignAnalyticsTab({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Add Live Snapshot</CardTitle>
+          <CardTitle className="text-base">Sync Live Metrics</CardTitle>
           <CardDescription>
-            Use this now for testing. Later the same endpoint can be filled by platform API polling.
+            Pull the latest performance directly from the connected platform API.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -390,7 +398,7 @@ export function CampaignAnalyticsTab({
               A contract must be published before live metrics can be tracked.
             </p>
           ) : (
-            <form onSubmit={handleCreateSnapshot} className="space-y-4">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Live content</Label>
                 <Select
@@ -410,15 +418,6 @@ export function CampaignAnalyticsTab({
                 </Select>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-                {["views", "impressions", "likes", "comments", "shares", "saves"].map((field) => (
-                  <div key={field} className="space-y-1.5">
-                    <Label htmlFor={field} className="capitalize">{field}</Label>
-                    <Input id={field} name={field} type="number" min={0} defaultValue={0} />
-                  </div>
-                ))}
-              </div>
-
               {(message || error) && (
                 <p className={cn("text-sm", error ? "text-destructive" : "text-brand")}>
                   {error || message}
@@ -427,14 +426,14 @@ export function CampaignAnalyticsTab({
 
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs text-muted-foreground">
-                  Revenue is estimated from views and engagement actions, not confirmed sales.
+                  YouTube metrics sync now. Instagram and TikTok can use the same endpoint once platform metric APIs are wired.
                 </p>
-                <Button type="submit" disabled={isPending}>
+                <Button type="button" disabled={isPending || !selectedContract} onClick={handleSyncMetrics}>
                   {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Save snapshot
+                  Sync from API
                 </Button>
               </div>
-            </form>
+            </div>
           )}
         </CardContent>
       </Card>

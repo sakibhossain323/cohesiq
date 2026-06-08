@@ -15,18 +15,6 @@ export interface ContractCreatePayload {
   kill_fee_percentage?: number;
 }
 
-export interface LiveMetricSnapshotPayload {
-  captured_at?: string;
-  platform?: string;
-  views?: number;
-  impressions?: number;
-  likes?: number;
-  comments?: number;
-  shares?: number;
-  saves?: number;
-  source?: string;
-}
-
 export async function createContract(
   campaignId: string,
   applicationId: string,
@@ -119,15 +107,13 @@ export async function closeContract(contractId: string, token: string): Promise<
   });
 }
 
-export async function createMetricSnapshot(
+export async function syncContractMetrics(
   contractId: string,
-  payload: LiveMetricSnapshotPayload,
   token: string
 ): Promise<LiveMetricSnapshot> {
-  return fetchApi<LiveMetricSnapshot>(`/campaigns/contracts/${contractId}/metrics-snapshots`, {
+  return fetchApi<LiveMetricSnapshot>(`/campaigns/contracts/${contractId}/sync-metrics`, {
     method: "POST",
     token,
-    body: JSON.stringify(payload),
   });
 }
 

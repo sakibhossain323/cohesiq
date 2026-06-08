@@ -240,7 +240,7 @@ Analytics APIs:
 - Summary tiles use latest snapshot.
 - Line chart uses snapshots over time.
 - Engagement bar chart uses latest likes/comments/shares/saves.
-- `POST /campaigns/contracts/{contract_id}/metrics-snapshots` stores a snapshot for a published contract.
+- `POST /campaigns/contracts/{contract_id}/sync-metrics` stores a snapshot from the platform API for a published contract.
 - `GET /campaigns/contracts/{contract_id}/analytics` returns one contract timeline.
 - `GET /campaigns/{campaign_id}/live-analytics` returns campaign totals, per-contract timelines, and aggregate chart points.
 
