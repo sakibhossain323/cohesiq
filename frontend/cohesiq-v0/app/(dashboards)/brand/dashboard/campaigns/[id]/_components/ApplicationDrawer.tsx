@@ -57,8 +57,8 @@ export function ApplicationDrawer({
   const initials = getAvatarInitials(creatorName);
   const status = application.status;
 
-  const canShortlist = status === "pending" || status === "invited";
-  const canAccept = status === "pending" || status === "invited" || status === "shortlisted";
+  const canShortlist = status === "pending";
+  const canAccept = status === "pending" || status === "shortlisted" || status === "pending_agreement";
   const canReject = status === "pending" || status === "invited" || status === "shortlisted";
   const isTerminal = status === "accepted" || status === "rejected" || status === "withdrawn" || status === "completed";
 
@@ -175,11 +175,11 @@ export function ApplicationDrawer({
               <Button
                 variant="outline"
                 className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
-                disabled={isPending || status === "shortlisted"}
+                disabled={isPending}
                 onClick={() => handleAction("shortlisted")}
               >
                 {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {status === "shortlisted" ? "Already Shortlisted" : "Shortlist"}
+                Shortlist
               </Button>
             )}
             {canAccept && (

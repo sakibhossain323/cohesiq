@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { getDeliverableLabel } from "@/lib/deliverables";
 
 export interface BenchmarkRow {
   platform: string;
@@ -28,12 +29,6 @@ const TIER_CONFIG: Record<string, { label: string; dot: string; order: number }>
 const PLATFORM_LABELS: Record<string, string> = {
   youtube: "YouTube", instagram: "Instagram", facebook: "Facebook",
   tiktok: "TikTok", twitter_x: "Twitter/X", linkedin: "LinkedIn", other: "Other",
-};
-
-const DELIVERABLE_LABELS: Record<string, string> = {
-  dedicated_video: "Dedicated Video", integrated_mention: "Integrated Mention",
-  short_video: "Short Video", photo_post: "Photo Post", story: "Story",
-  live_stream: "Live Stream", blog_post: "Blog Post", other: "Other",
 };
 
 function formatBDT(n: number) {
@@ -115,7 +110,7 @@ export function RateBenchmarkClient({ rows }: { rows: BenchmarkRow[] }) {
                     <SelectContent>
                       {deliverables.map(d => (
                         <SelectItem key={d} value={d}>
-                          {d === "all" ? "All Types" : (DELIVERABLE_LABELS[d] ?? d)}
+                          {d === "all" ? "All Types" : getDeliverableLabel(undefined, d, d as any)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -142,7 +137,7 @@ export function RateBenchmarkClient({ rows }: { rows: BenchmarkRow[] }) {
                             <p className="font-semibold text-sm">
                               {PLATFORM_LABELS[row.platform] ?? row.platform}
                               {" · "}
-                              {DELIVERABLE_LABELS[row.deliverable_type] ?? row.deliverable_type}
+                              {getDeliverableLabel(row.platform as any, row.deliverable_type, row.deliverable_type as any)}
                             </p>
                             <p className="text-xs text-muted-foreground">{tier?.label ?? row.tier}</p>
                           </div>

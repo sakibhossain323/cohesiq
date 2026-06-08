@@ -2,6 +2,7 @@ import unittest
 
 from app.creators.normalization import classify_public_social_niche_from_keywords
 from app.social_ingestion import service
+from scripts.seed_real_social_creators import _suggest_social_rate_cards
 
 
 class SocialIngestionServiceTests(unittest.TestCase):
@@ -86,6 +87,25 @@ class SocialIngestionServiceTests(unittest.TestCase):
         self.assertEqual(
             classify_public_social_niche_from_keywords(enrichment),
             "Food",
+        )
+
+    def test_build_instagram_enrichment_normalizes_thumbnail_urls(self):
+        enrichment = service.build_instagram_enrichment(
+            username="creator.bd",
+            profile_url="https://www.instagram.com/creator.bd/",
+            items=[
+                {
+                    "id": "profile-1",
+                    "username": "creator.bd",
+                    "followersCount": 1000,
+                    "profilePicUrl": "//instagram.fdac1-1.fna.fbcdn.net/avatar.jpg?x=1&amp;y=2",
+                },
+            ],
+        )
+
+        self.assertEqual(
+            enrichment.thumbnail_url,
+            "https://instagram.fdac1-1.fna.fbcdn.net/avatar.jpg?x=1&y=2",
         )
 
     def test_build_tiktok_enrichment_aggregates_videos(self):
@@ -175,6 +195,67 @@ class SocialIngestionServiceTests(unittest.TestCase):
 
         self.assertEqual(classify_public_social_niche_from_keywords(education), "Education")
         self.assertEqual(classify_public_social_niche_from_keywords(cricket), "Fitness")
+
+    def test_social_seed_rate_cards_are_bounded_and_monotonic(self):
+        low_instagram = service.build_instagram_enrichment(
+            username="creator.low",
+            profile_url="https://www.instagram.com/creator.low/",
+            items=[
+                {
+                    "id": "profile-low",
+                    "username": "creator.low",
+                    "followersCount": 7_000,
+                    "fullName": "Creator Low",
+                    "latestPosts": [],
+                }
+            ],
+        )
+        high_instagram = service.build_instagram_enrichment(
+            username="creator.high",
+            profile_url="https://www.instagram.com/creator.high/",
+            items=[
+                {
+                    "id": "profile-high",
+                    "username": "creator.high",
+                    "followersCount": 1_200_000,
+                    "fullName": "Creator High",
+                    "latestPosts": [],
+                }
+            ],
+        )
+        low_tiktok = service.build_tiktok_enrichment(
+            username="creatorlow",
+            profile_url="https://www.tiktok.com/@creatorlow",
+            items=[
+                {
+                    "id": "video-low",
+                    "authorMeta": {"name": "creatorlow", "fans": 7_000},
+                }
+            ],
+        )
+        high_tiktok = service.build_tiktok_enrichment(
+            username="creatorhigh",
+            profile_url="https://www.tiktok.com/@creatorhigh",
+            items=[
+                {
+                    "id": "video-high",
+                    "authorMeta": {"name": "creatorhigh", "fans": 1_200_000},
+                }
+            ],
+        )
+
+        for low, high, codes in (
+            (low_instagram, high_instagram, {"instagram_story", "instagram_feed", "instagram_reel", "instagram_live"}),
+            (low_tiktok, high_tiktok, {"tiktok_story", "tiktok_video", "tiktok_live"}),
+        ):
+            low_cards = {card["deliverable_code"]: card["price_bdt"] for card in _suggest_social_rate_cards(low)}
+            high_cards = {card["deliverable_code"]: card["price_bdt"] for card in _suggest_social_rate_cards(high)}
+
+            self.assertTrue(codes.issubset(low_cards.keys()))
+            self.assertTrue(codes.issubset(high_cards.keys()))
+            for code in codes:
+                self.assertGreaterEqual(low_cards[code], 0)
+                self.assertGreaterEqual(high_cards[code], low_cards[code])
 
 
 if __name__ == "__main__":

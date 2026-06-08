@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import List
 
 from fastapi import HTTPException, status
-from sqlalchemy import and_, select
+from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -15,6 +15,11 @@ from app.creators.models import (
     CreatorProfile,
     CreatorRateCard,
     CreatorSocialProfile,
+)
+from app.common.deliverables import (
+    canonical_deliverable_code,
+    deliverable_platform,
+    legacy_deliverable_type,
 )
 from app.common.models import Niche
 from app.creators.normalization import (
@@ -35,7 +40,7 @@ from app.creators.schemas import (
     SocialProfileUpdate,
 )
 from app.social_ingestion import service as social_ingestion_service
-from app.social_ingestion.schemas import PublicSocialProfileEnrichment
+from app.social_ingestion.schemas import PublicSocialProfileEnrichment, SocialRecentPost
 from app.youtube import service as youtube_service
 from app.youtube.schemas import YouTubeChannelEnrichment, YouTubeRecentVideo
 
@@ -122,6 +127,27 @@ async def list_creators(db: AsyncSession, filters: CreatorFilters) -> List[Creat
         .options(*_with_all_relations())
     )
 
+    search = filters.search.strip() if filters.search else ""
+    if search:
+        search_term = f"%{search}%"
+        query = query.where(
+            or_(
+                CreatorProfile.display_name.ilike(search_term),
+                CreatorProfile.full_name.ilike(search_term),
+                CreatorProfile.tagline.ilike(search_term),
+                CreatorProfile.bio.ilike(search_term),
+                CreatorProfile.city.ilike(search_term),
+                CreatorProfile.id.in_(
+                    select(CreatorSocialProfile.creator_id).where(
+                        or_(
+                            CreatorSocialProfile.handle.ilike(search_term),
+                            CreatorSocialProfile.display_name_on_platform.ilike(search_term),
+                        )
+                    )
+                ),
+            )
+        )
+
     if filters.is_available is not None:
         query = query.where(CreatorProfile.is_available == filters.is_available)
 
@@ -159,6 +185,37 @@ async def list_creators(db: AsyncSession, filters: CreatorFilters) -> List[Creat
                 CreatorSocialProfile.follower_count <= filters.max_followers
             )
         query = query.where(CreatorProfile.id.in_(social_subq))
+
+    sort_by = filters.sort_by or "followers_desc"
+    if sort_by in {"followers_desc", "engagement_desc", "avg_views_desc"}:
+        metric_column = {
+            "followers_desc": CreatorSocialProfile.follower_count,
+            "engagement_desc": CreatorSocialProfile.engagement_rate,
+            "avg_views_desc": CreatorSocialProfile.avg_views_per_post,
+        }[sort_by]
+        metric_subq = (
+            select(
+                CreatorSocialProfile.creator_id.label("creator_id"),
+                func.max(metric_column).label("sort_metric"),
+            )
+            .group_by(CreatorSocialProfile.creator_id)
+            .subquery()
+        )
+        query = (
+            query
+            .outerjoin(metric_subq, CreatorProfile.id == metric_subq.c.creator_id)
+            .order_by(desc(metric_subq.c.sort_metric).nullslast(), CreatorProfile.display_name.asc())
+        )
+    elif sort_by == "rating_desc":
+        query = query.order_by(desc(CreatorProfile.average_rating).nullslast(), CreatorProfile.display_name.asc())
+    elif sort_by == "collaborations_desc":
+        query = query.order_by(desc(CreatorProfile.total_collaborations), CreatorProfile.display_name.asc())
+    elif sort_by == "newest":
+        query = query.order_by(desc(CreatorProfile.created_at), CreatorProfile.display_name.asc())
+    elif sort_by == "name_asc":
+        query = query.order_by(CreatorProfile.display_name.asc())
+    else:
+        query = query.order_by(CreatorProfile.display_name.asc())
 
     query = query.offset(filters.offset).limit(filters.limit)
     result = await db.execute(query)
@@ -237,6 +294,7 @@ def build_youtube_social_profile_values(
         "data_source": "verified",
         "content_languages": enrichment.detected_content_languages
         or detect_content_languages(enrichment),
+        "notes": enrichment.description,
         "stats_reported_at": reported_at,
         "stats_reported_for_period": f"recent {len(enrichment.recent_videos)} uploads",
     }
@@ -332,6 +390,7 @@ def build_public_social_profile_values(
         "api_verified_at": reported_at,
         "data_source": "verified",
         "content_languages": enrichment.detected_content_languages or ["en"],
+        "notes": enrichment.bio,
         "stats_reported_at": reported_at,
         "stats_reported_for_period": f"recent {len(enrichment.recent_posts)} posts",
     }
@@ -402,6 +461,11 @@ async def enrich_public_social_profile(
         enrichment=enrichment,
     )
     await sync_public_social_ingestion_niche(
+        db,
+        creator_id=creator_id,
+        enrichment=enrichment,
+    )
+    await import_public_social_recent_posts_to_portfolio(
         db,
         creator_id=creator_id,
         enrichment=enrichment,
@@ -582,6 +646,78 @@ def build_youtube_portfolio_item_values(
     }
 
 
+async def import_public_social_recent_posts_to_portfolio(
+    db: AsyncSession,
+    *,
+    creator_id: uuid.UUID,
+    enrichment: PublicSocialProfileEnrichment,
+    niche_name: str | None = None,
+) -> int:
+    existing_result = await db.execute(
+        select(CreatorPortfolioItem.content_url).where(
+            CreatorPortfolioItem.creator_id == creator_id,
+            CreatorPortfolioItem.platform == enrichment.platform,
+        )
+    )
+    existing_urls = set(existing_result.scalars().all())
+    niche_id = await _resolve_public_social_portfolio_niche_id(
+        db,
+        enrichment,
+        niche_name=niche_name,
+    )
+
+    imported_count = 0
+    for index, post in enumerate(enrichment.recent_posts):
+        values = build_public_social_portfolio_item_values(
+            post,
+            platform=enrichment.platform,
+            niche_id=niche_id,
+            sort_order=index,
+        )
+        if not values["content_url"] or values["content_url"] in existing_urls:
+            continue
+        db.add(CreatorPortfolioItem(creator_id=creator_id, **values))
+        existing_urls.add(values["content_url"])
+        imported_count += 1
+    return imported_count
+
+
+def build_public_social_portfolio_item_values(
+    post: SocialRecentPost,
+    *,
+    platform: str,
+    niche_id: int | None,
+    sort_order: int = 0,
+) -> dict:
+    return {
+        "platform": platform,
+        "content_url": post.url or "",
+        "title": _truncate(post.title, 255),
+        "thumbnail_url": post.thumbnail_url,
+        "niche_id": niche_id,
+        "views": post.view_count,
+        "likes": post.like_count,
+        "comments": post.comment_count,
+        "published_at": post.published_at.date() if post.published_at else None,
+        "is_featured": sort_order == 0,
+        "sort_order": sort_order,
+    }
+
+
+async def _resolve_public_social_portfolio_niche_id(
+    db: AsyncSession,
+    enrichment: PublicSocialProfileEnrichment,
+    *,
+    niche_name: str | None = None,
+) -> int | None:
+    selected_niche = niche_name or classify_public_social_niche_with_groq(enrichment)
+    if not selected_niche:
+        return None
+    result = await db.execute(select(Niche).where(Niche.name == selected_niche))
+    niche = result.scalar_one_or_none()
+    return niche.id if niche else None
+
+
 async def _resolve_youtube_portfolio_niche_id(
     db: AsyncSession,
     enrichment: YouTubeChannelEnrichment,
@@ -626,7 +762,36 @@ def _truncate(value: str | None, max_length: int) -> str | None:
 async def add_rate_card(
     db: AsyncSession, creator_id: uuid.UUID, data: RateCardCreate
 ) -> CreatorRateCard:
-    rc = CreatorRateCard(creator_id=creator_id, **data.model_dump())
+    deliverable_code = canonical_deliverable_code(
+        platform=data.platform,
+        deliverable_code=data.deliverable_code,
+        legacy_type=data.deliverable_type,
+    )
+    platform = deliverable_platform(
+        deliverable_code=deliverable_code,
+        platform=data.platform,
+    )
+    legacy_type = legacy_deliverable_type(
+        deliverable_code=deliverable_code,
+        platform=platform,
+        legacy_type=data.deliverable_type,
+    )
+    if not platform or not legacy_type:
+        raise HTTPException(status_code=400, detail="Unsupported rate card deliverable")
+
+    rc = CreatorRateCard(
+        creator_id=creator_id,
+        platform=platform,
+        deliverable_type=legacy_type,
+        deliverable_code=deliverable_code,
+        price_bdt=data.price_bdt,
+        suggested_price_bdt=data.suggested_price_bdt,
+        price_usd=data.price_usd,
+        includes=data.includes,
+        excludes=data.excludes,
+        turnaround_days=data.turnaround_days,
+        is_negotiable=data.is_negotiable,
+    )
     db.add(rc)
     await db.commit()
     await db.refresh(rc)
@@ -652,7 +817,26 @@ async def update_rate_card(
     db: AsyncSession, creator_id: uuid.UUID, rate_card_id: uuid.UUID, data: RateCardUpdate
 ) -> CreatorRateCard:
     rc = await _get_rate_card(db, creator_id, rate_card_id)
-    for field, value in data.model_dump(exclude_none=True).items():
+    update_data = data.model_dump(exclude_none=True)
+    if "deliverable_code" in update_data or "deliverable_type" in update_data:
+        deliverable_code = canonical_deliverable_code(
+            platform=rc.platform,
+            deliverable_code=update_data.get("deliverable_code"),
+            legacy_type=update_data.get("deliverable_type"),
+        )
+        legacy_type = legacy_deliverable_type(
+            deliverable_code=deliverable_code,
+            platform=rc.platform,
+            legacy_type=update_data.get("deliverable_type"),
+        )
+        if not legacy_type:
+            raise HTTPException(status_code=400, detail="Unsupported rate card deliverable")
+        rc.deliverable_code = deliverable_code
+        rc.deliverable_type = legacy_type
+        update_data.pop("deliverable_code", None)
+        update_data.pop("deliverable_type", None)
+
+    for field, value in update_data.items():
         setattr(rc, field, value)
     await db.commit()
     await db.refresh(rc)

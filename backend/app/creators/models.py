@@ -270,7 +270,9 @@ class CreatorRateCard(Base):
         ),
         nullable=False,
     )
+    deliverable_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     price_bdt: Mapped[int] = mapped_column(Integer, nullable=False)
+    suggested_price_bdt: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     price_usd: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     includes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     excludes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

@@ -11,17 +11,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { StarRating } from "@/components/shared/StarRating";
 import { getAvatarInitials } from "@/lib/avatar";
+import { getDeliverableLabel } from "@/lib/deliverables";
 import type { Creator } from "@/lib/types";
 
 const PLATFORM_LABELS: Record<string, string> = {
   youtube: "YouTube", instagram: "Instagram", facebook: "Facebook",
   tiktok: "TikTok", twitter_x: "Twitter/X", linkedin: "LinkedIn",
-};
-
-const DELIVERABLE_LABELS: Record<string, string> = {
-  dedicated_video: "Dedicated Video", integrated_mention: "Integrated Mention",
-  short_video: "Short Video", photo_post: "Photo Post", story: "Story",
-  live_stream: "Live Stream", blog_post: "Blog Post", other: "Other",
 };
 
 function formatBDT(n: number) {
@@ -44,11 +39,21 @@ function getCreatorTier(creator: Creator): string {
   return "Nano";
 }
 
-interface CompareClientProps {
-  creators: Creator[];
+function nicheLabel(niche: unknown): string {
+  if (typeof niche === "string") return niche.replace(/_/g, " ");
+  if (niche && typeof niche === "object") {
+    const value = (niche as { name?: unknown; niche_name?: unknown }).name ?? (niche as { niche_name?: unknown }).niche_name;
+    if (typeof value === "string") return value.replace(/_/g, " ");
+  }
+  return "Creator";
 }
 
-export function CompareClient({ creators }: CompareClientProps) {
+interface CompareClientProps {
+  creators: Creator[];
+  returnHref?: string;
+}
+
+export function CompareClient({ creators, returnHref = "/brand/dashboard/creators" }: CompareClientProps) {
   const [brief, setBrief] = useState("");
   const [recommendation, setRecommendation] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -72,7 +77,7 @@ export function CompareClient({ creators }: CompareClientProps) {
       <div className="mx-auto max-w-4xl px-4 py-16 text-center">
         <p className="text-muted-foreground">Select at least 2 creators from the Find Creators page to compare.</p>
         <Button asChild className="mt-4" variant="outline">
-          <Link href="/brand/dashboard/creators">Back to Find Creators</Link>
+          <Link href={returnHref}>Back to Creators</Link>
         </Button>
       </div>
     );
@@ -82,11 +87,11 @@ export function CompareClient({ creators }: CompareClientProps) {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
         <Link
-          href="/brand/dashboard/creators"
+          href={returnHref}
           className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Find Creators
+          Back to Creators
         </Link>
         <h1 className="text-3xl font-bold tracking-tight">Creator Comparison</h1>
         <p className="text-muted-foreground mt-1">Side-by-side stats for {creators.length} creators.</p>
@@ -107,7 +112,7 @@ export function CompareClient({ creators }: CompareClientProps) {
                 <div>
                   <p className="font-bold text-base leading-tight">{creator.display_name}</p>
                   <p className="text-xs text-muted-foreground capitalize">
-                    {creator.niches?.[0]?.name?.replace(/_/g, " ") ?? "Creator"}
+                    {nicheLabel(creator.niches?.[0])}
                   </p>
                   <Badge variant="outline" className="mt-1 text-xs">{getCreatorTier(creator)}</Badge>
                 </div>
@@ -145,7 +150,7 @@ export function CompareClient({ creators }: CompareClientProps) {
           render: (c: Creator) => (
             <div className="space-y-1 text-left">
               {(c.social_profiles as any[]).map((sp: any) => (
-                <div key={sp.id ?? sp.platform} className="text-xs">
+                <div key={sp.id ?? `${c.id}-${sp.platform}-${sp.handle}`} className="text-xs">
                   <span className="font-medium">{PLATFORM_LABELS[sp.platform] ?? sp.platform}</span>
                   {sp.follower_count != null && (
                     <span className="text-muted-foreground ml-1">{formatFollowers(sp.follower_count)} followers</span>
@@ -170,9 +175,9 @@ export function CompareClient({ creators }: CompareClientProps) {
           label: "Rate Cards",
           render: (c: Creator) => (
             <div className="space-y-1 text-left">
-              {(c.rate_cards as any[]).filter(rc => rc.is_active).slice(0, 3).map((rc: any) => (
-                <div key={rc.id} className="text-xs">
-                  <span className="font-medium">{DELIVERABLE_LABELS[rc.deliverable_type] ?? rc.deliverable_type}</span>
+              {(c.rate_cards as any[]).filter(rc => rc.is_active).slice(0, 3).map((rc: any, index: number) => (
+                <div key={rc.id ?? `${c.id}-${rc.platform}-${rc.deliverable_type}-${index}`} className="text-xs">
+                  <span className="font-medium">{getDeliverableLabel(rc.platform, rc.deliverable_code, rc.deliverable_type)}</span>
                   <span className="text-muted-foreground ml-1">({PLATFORM_LABELS[rc.platform] ?? rc.platform})</span>
                   <span className="font-semibold ml-1">{formatBDT(rc.price_bdt)}</span>
                 </div>
@@ -187,9 +192,9 @@ export function CompareClient({ creators }: CompareClientProps) {
           label: "Niches",
           render: (c: Creator) => (
             <div className="flex flex-wrap gap-1">
-              {(c.niches as any[]).slice(0, 3).map((n: any) => (
-                <Badge key={n.niche_id ?? n.name} variant="secondary" className="text-xs capitalize">
-                  {(n.name ?? "").replace(/_/g, " ")}
+              {(c.niches as any[]).slice(0, 3).map((n: any, index: number) => (
+                <Badge key={`${c.id}-niche-${n?.niche_id ?? nicheLabel(n)}-${index}`} variant="secondary" className="text-xs capitalize">
+                  {nicheLabel(n)}
                 </Badge>
               ))}
               {(c.niches as any[]).length === 0 && <span className="text-muted-foreground text-sm">—</span>}

@@ -1,7 +1,18 @@
 export type PlatformType = "youtube" | "instagram" | "facebook" | "tiktok" | "twitter_x" | "linkedin" | "snapchat" | "other";
 export type CampaignStatus = "draft" | "active" | "in_progress" | "completed" | "cancelled" | "archived";
-export type ApplicationStatus = "invited" | "declined" | "pending" | "shortlisted" | "accepted" | "rejected" | "withdrawn" | "completed";
+export type ApplicationStatus = "invited" | "declined" | "pending" | "shortlisted" | "pending_agreement" | "accepted" | "rejected" | "withdrawn" | "completed";
 export type DeliverableType = "dedicated_video" | "integrated_mention" | "short_video" | "photo_post" | "story" | "live_stream" | "blog_post" | "other";
+export type DeliverableCode =
+  | "youtube_live"
+  | "youtube_short"
+  | "youtube_video"
+  | "instagram_live"
+  | "instagram_feed"
+  | "instagram_reel"
+  | "instagram_story"
+  | "tiktok_live"
+  | "tiktok_story"
+  | "tiktok_video";
 
 // Contract types — engagement type lives here, NOT on Campaign
 export type ContractType = "content_collaboration" | "product_seeding" | "talent_engagement";
@@ -47,11 +58,69 @@ export interface Contract {
   updated_at: string;
 }
 
+export interface LiveMetricSnapshot {
+  id: string;
+  contract_id: string;
+  platform?: PlatformType;
+  captured_at: string;
+  views: number;
+  impressions: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  saves: number;
+  engagement_rate: number;
+  estimated_revenue_bdt: number;
+  revenue_basis?: string;
+  source: string;
+  created_at: string;
+}
+
+export interface LiveContractAnalytics {
+  contract_id: string;
+  creator_id: string;
+  live_post_url?: string;
+  status: ContractStatus;
+  latest?: LiveMetricSnapshot;
+  snapshots: LiveMetricSnapshot[];
+  total_views_delta: number;
+  total_engagement_delta: number;
+  revenue_delta_bdt: number;
+}
+
+export interface CampaignLiveAnalytics {
+  campaign_id: string;
+  totals: {
+    published_contracts: number;
+    views: number;
+    impressions: number;
+    likes: number;
+    comments: number;
+    shares: number;
+    saves: number;
+    engagements: number;
+    estimated_revenue_bdt: number;
+    engagement_rate: number;
+  };
+  contracts: LiveContractAnalytics[];
+  timeline: Array<{
+    captured_at: string;
+    views: number;
+    likes: number;
+    comments: number;
+    shares: number;
+    saves: number;
+    engagements: number;
+    estimated_revenue_bdt: number;
+  }>;
+}
+
 export interface CreatorSocialProfile {
   id: string;
   platform: PlatformType;
   handle: string;
   profile_url: string;
+  display_name_on_platform?: string;
   follower_count?: number;
   following_count?: number;
   avg_views_per_post?: number;
@@ -73,6 +142,7 @@ export interface CreatorSocialProfile {
   audience_gender_majority?: string;
   audience_gender_pct?: number;
   content_languages: string[];
+  notes?: string;
   stats_reported_at?: string;
   stats_reported_for_period?: string;
 }
@@ -81,8 +151,24 @@ export interface CreatorRateCard {
   id: string;
   platform: PlatformType;
   deliverable_type: DeliverableType;
+  deliverable_code?: DeliverableCode;
   price_bdt: number;
+  suggested_price_bdt?: number;
   is_negotiable: boolean;
+}
+
+export interface CreatorPortfolioItem {
+  id: string;
+  platform: PlatformType;
+  content_url: string;
+  title?: string;
+  thumbnail_url?: string;
+  views?: number;
+  likes?: number;
+  comments?: number;
+  published_at?: string;
+  is_featured: boolean;
+  sort_order: number;
 }
 
 export interface Creator {
@@ -97,6 +183,7 @@ export interface Creator {
   languages: string[];
   social_profiles: CreatorSocialProfile[];
   rate_cards: CreatorRateCard[];
+  portfolio_items: CreatorPortfolioItem[];
   is_available: boolean;
   total_collaborations: number;
   average_rating?: number;
@@ -133,18 +220,28 @@ export interface Campaign {
   creator_min_followers?: number;
   creator_max_followers?: number;
   number_of_creators?: number;
+  kpi_targets?: {
+    reach?: number;
+    engagement_rate?: number;
+    conversions?: number;
+    roi_target?: number;
+  };
   visibility?: string;
   application_deadline?: string;
   content_deadline?: string;
   status: CampaignStatus;
   application_count: number;
+  deliverables?: CampaignDeliverable[];
   created_at?: string;
 }
 
 export interface CampaignDeliverable {
+  id?: string;
   platform: PlatformType;
   deliverable_type: DeliverableType;
+  deliverable_code?: DeliverableCode;
   quantity: number;
+  notes?: string;
 }
 
 export interface Application {
@@ -180,6 +277,7 @@ export interface Review {
 }
 
 export interface CreatorFilters {
+  search?: string;
   niche?: string;
   platform?: PlatformType;
   min_followers?: number;
@@ -187,9 +285,20 @@ export interface CreatorFilters {
   language?: string;
   city?: string;
   is_available?: boolean;
+  max_rate?: number;
+  sort_by?: CreatorSortBy;
   page?: number;
   page_size?: number;
 }
+
+export type CreatorSortBy =
+  | "followers_desc"
+  | "engagement_desc"
+  | "avg_views_desc"
+  | "rating_desc"
+  | "collaborations_desc"
+  | "newest"
+  | "name_asc";
 
 export interface CampaignFilters {
   search?: string;

@@ -9,6 +9,8 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Float,
+    Index,
     Integer,
     SmallInteger,
     String,
@@ -123,6 +125,12 @@ class Campaign(Base):
     deliverable_requirements: Mapped[List["CampaignDeliverableRequirement"]] = relationship(
         "CampaignDeliverableRequirement", back_populates="campaign", cascade="all, delete-orphan"
     )
+    application_questions: Mapped[List["CampaignApplicationQuestion"]] = relationship(
+        "CampaignApplicationQuestion", back_populates="campaign", cascade="all, delete-orphan"
+    )
+    acknowledgments: Mapped[List["CampaignAcknowledgment"]] = relationship(
+        "CampaignAcknowledgment", back_populates="campaign", cascade="all, delete-orphan"
+    )
     applications: Mapped[List["CampaignApplication"]] = relationship(
         "CampaignApplication", back_populates="campaign", cascade="all, delete-orphan"
     )
@@ -186,11 +194,66 @@ class CampaignDeliverableRequirement(Base):
         ),
         nullable=False,
     )
+    deliverable_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     quantity: Mapped[int] = mapped_column(SmallInteger, server_default="1")
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     campaign: Mapped["Campaign"] = relationship(
         "Campaign", back_populates="deliverable_requirements"
+    )
+
+
+class CampaignApplicationQuestion(Base):
+    __tablename__ = "campaign_application_questions"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
+    )
+    campaign_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("campaigns.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    question_text: Mapped[str] = mapped_column(Text, nullable=False)
+    question_type: Mapped[str] = mapped_column(String(20), nullable=False, server_default="text")
+    options_json: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
+    is_required: Mapped[bool] = mapped_column(Boolean, server_default="true")
+    sort_order: Mapped[int] = mapped_column(SmallInteger, server_default="0")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    campaign: Mapped["Campaign"] = relationship("Campaign", back_populates="application_questions")
+    answers: Mapped[List["CampaignApplicationAnswer"]] = relationship(
+        "CampaignApplicationAnswer", back_populates="question", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        CheckConstraint("question_type IN ('text', 'single_choice', 'multi_choice')", name="ck_campaign_question_type"),
+    )
+
+
+class CampaignAcknowledgment(Base):
+    __tablename__ = "campaign_acknowledgments"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
+    )
+    campaign_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("campaigns.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    statement_text: Mapped[str] = mapped_column(Text, nullable=False)
+    is_required: Mapped[bool] = mapped_column(Boolean, server_default="true")
+    sort_order: Mapped[int] = mapped_column(SmallInteger, server_default="0")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    campaign: Mapped["Campaign"] = relationship("Campaign", back_populates="acknowledgments")
+    accepted_applications: Mapped[List["CampaignApplicationAcknowledgment"]] = relationship(
+        "CampaignApplicationAcknowledgment", back_populates="acknowledgment", cascade="all, delete-orphan"
     )
 
 
@@ -216,7 +279,7 @@ class CampaignApplication(Base):
     status: Mapped[str] = mapped_column(
         ENUM(
             "invited", "pending", "shortlisted", "accepted", "rejected",
-            "declined", "withdrawn", "completed",
+            "pending_agreement", "declined", "withdrawn", "completed",
             name="application_status",
             create_type=False,
         ),
@@ -244,6 +307,70 @@ class CampaignApplication(Base):
     )
     contract: Mapped[Optional["Contract"]] = relationship(
         "Contract", back_populates="application", uselist=False
+    )
+    answers: Mapped[List["CampaignApplicationAnswer"]] = relationship(
+        "CampaignApplicationAnswer", back_populates="application", cascade="all, delete-orphan"
+    )
+    acknowledgments: Mapped[List["CampaignApplicationAcknowledgment"]] = relationship(
+        "CampaignApplicationAcknowledgment", back_populates="application", cascade="all, delete-orphan"
+    )
+
+
+class CampaignApplicationAnswer(Base):
+    __tablename__ = "campaign_application_answers"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
+    )
+    application_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("campaign_applications.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    question_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("campaign_application_questions.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    answer_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    answer_options_json: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    application: Mapped["CampaignApplication"] = relationship("CampaignApplication", back_populates="answers")
+    question: Mapped["CampaignApplicationQuestion"] = relationship("CampaignApplicationQuestion", back_populates="answers")
+
+    __table_args__ = (
+        UniqueConstraint("application_id", "question_id", name="uq_application_answer_question"),
+    )
+
+
+class CampaignApplicationAcknowledgment(Base):
+    __tablename__ = "campaign_application_acknowledgments"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
+    )
+    application_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("campaign_applications.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    acknowledgment_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("campaign_acknowledgments.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    accepted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    application: Mapped["CampaignApplication"] = relationship("CampaignApplication", back_populates="acknowledgments")
+    acknowledgment: Mapped["CampaignAcknowledgment"] = relationship("CampaignAcknowledgment", back_populates="accepted_applications")
+
+    __table_args__ = (
+        UniqueConstraint("application_id", "acknowledgment_id", name="uq_application_acknowledgment"),
     )
 
 
@@ -379,6 +506,51 @@ class Contract(Base):
 
     application: Mapped["CampaignApplication"] = relationship(
         "CampaignApplication", back_populates="contract"
+    )
+    metric_snapshots: Mapped[List["LiveContentMetricSnapshot"]] = relationship(
+        "LiveContentMetricSnapshot", back_populates="contract", cascade="all, delete-orphan"
+    )
+
+
+class LiveContentMetricSnapshot(Base):
+    __tablename__ = "live_content_metric_snapshots"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
+    )
+    contract_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("contracts.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    platform: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)
+    captured_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    views: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    impressions: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    likes: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    comments: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    shares: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    saves: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    engagement_rate: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")
+    estimated_revenue_bdt: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    revenue_basis: Mapped[Optional[str]] = mapped_column(String(80), nullable=True)
+    source: Mapped[str] = mapped_column(String(30), nullable=False, server_default="manual")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    contract: Mapped["Contract"] = relationship("Contract", back_populates="metric_snapshots")
+
+    __table_args__ = (
+        CheckConstraint("views >= 0", name="ck_live_metric_views_nonnegative"),
+        CheckConstraint("impressions >= 0", name="ck_live_metric_impressions_nonnegative"),
+        CheckConstraint("likes >= 0", name="ck_live_metric_likes_nonnegative"),
+        CheckConstraint("comments >= 0", name="ck_live_metric_comments_nonnegative"),
+        CheckConstraint("shares >= 0", name="ck_live_metric_shares_nonnegative"),
+        CheckConstraint("saves >= 0", name="ck_live_metric_saves_nonnegative"),
+        Index("idx_live_metric_snapshots_contract_time", "contract_id", "captured_at"),
     )
 
 

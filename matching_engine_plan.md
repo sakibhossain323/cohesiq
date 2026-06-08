@@ -18,9 +18,18 @@ The YouTube pipeline has now seeded:
 
 - 67 real Bangladesh-oriented YouTube channels from the 100-name inventory
 - 67 verified YouTube social profiles
+- deterministic YouTube rate cards generated from subscriber count:
+  - `youtube_short`: BDT 1,000 to 10,000
+  - `youtube_video`: BDT 5,000 to 20,000
+  - `youtube_live`: BDT 10,000 to 50,000
 - 67 estimated Instagram companion profiles
 - 67 estimated TikTok companion profiles
 - YouTube portfolio items from recent uploads for resolved creators
+
+The social pipeline now also seeds deterministic per-unit pricing for:
+
+- Instagram: `instagram_story`, `instagram_feed`, `instagram_reel`, `instagram_live`
+- TikTok: `tiktok_story`, `tiktok_video`, `tiktok_live`
 
 The unresolved handles from the 100-name inventory are not needed for the current demo supply pool.
 
@@ -52,6 +61,13 @@ tiktok    -> data_source = "estimated"
 - content languages
 - API verification metadata
 - data source labels
+
+`creator_rate_cards`:
+
+- canonical `deliverable_code` values such as `youtube_short`, `youtube_video`, and `youtube_live`
+- deterministic seeded `price_bdt` and `suggested_price_bdt`
+- platform-level pricing that can now be summed against campaign deliverable requirements
+- deterministic Instagram/TikTok per-unit pricing from follower count as well
 
 `creator_niches` and `creator_languages`:
 
@@ -136,6 +152,14 @@ Active today:
 - budget gate via `_passes_budget_gate`
 - unavailable/deleted creator gate
 - recent direct-competitor conflict gate when `campaign.brand_category` is present
+
+Budget logic now prefers exact creator pricing when we have it:
+
+- if a campaign has `deliverable_requirements`, matching sums the creator's relevant rate cards by
+  `deliverable_code` and `quantity`
+- if an exact deliverable code is missing, matching falls back to the cheapest active rate card on
+  that platform
+- only when creator pricing is unavailable do we fall back to follower-tier estimates
 
 Needed improvements:
 
@@ -238,6 +262,14 @@ SCORE_WEIGHTS = {
 ```
 
 Both the service and scripts should import this constant. Docs should reference that file instead of repeating weights in multiple places.
+
+Budget scoring assumption update:
+
+- seeded YouTube rate cards are deterministic, not manually entered or randomly generated
+- subscriber count is converted to a monotonic bounded price curve so reseeding the same creator
+  yields the same short/video/live suggestions
+- exact rate-card totals should now drive budget realism for YouTube campaigns more often than tier
+  midpoint estimates
 
 ### Stage 5: Rationale
 

@@ -10,6 +10,7 @@ import { MapPin } from "lucide-react";
 import { EstimatedTag } from "@/components/shared/EstimatedTag";
 import { AuthenticityBadge } from "@/components/creator/AuthenticityBadge";
 import { getAvatarInitials } from "@/lib/avatar";
+import { sanitizeImageUrl } from "@/lib/utils";
 import type { Creator } from "@/lib/types";
 
 interface CreatorCardProps {
@@ -22,12 +23,12 @@ export function CreatorCard({ creator, basePath = "/brand/dashboard/creators" }:
   const initials = getAvatarInitials(creator.display_name);
 
   return (
-    <Link href={`${basePath}/${creator.id}`}>
-      <Card className="group h-full transition-all duration-200 hover:border-primary/50 hover:shadow-md">
-        <CardContent className="p-5">
+    <Link href={`${basePath}/${creator.id}`} className="block h-full">
+      <Card className="group h-full min-h-80 transition-all duration-200 hover:border-primary/50 hover:shadow-md">
+        <CardContent className="flex h-full flex-col p-5">
           <div className="flex items-start gap-4">
             <Avatar className="h-14 w-14 border-2 border-border">
-              <AvatarImage src={creator.profile_photo_url} alt={creator.display_name} />
+              <AvatarImage src={sanitizeImageUrl(creator.profile_photo_url)} alt={creator.display_name} />
               <AvatarFallback className="bg-muted text-sm font-medium">
                 {initials}
               </AvatarFallback>
@@ -58,7 +59,7 @@ export function CreatorCard({ creator, basePath = "/brand/dashboard/creators" }:
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex min-h-7 flex-wrap gap-2">
             <NicheBadge niche={creator.primary_niche} size="sm" />
             {creator.niches
               .filter(n => n !== creator.primary_niche)
@@ -68,34 +69,38 @@ export function CreatorCard({ creator, basePath = "/brand/dashboard/creators" }:
               ))}
           </div>
 
-          {primaryProfile && (
-            <div className="mt-4 flex items-center gap-3">
-              <PlatformBadge platform={primaryProfile.platform} showLabel />
-              {primaryProfile.follower_count && (
-                <FollowerCount count={primaryProfile.follower_count} />
-              )}
-            </div>
-          )}
+          <div className="mt-4 min-h-6">
+            {primaryProfile && (
+              <div className="flex items-center gap-3">
+                <PlatformBadge platform={primaryProfile.platform} showLabel />
+                {primaryProfile.follower_count && (
+                  <FollowerCount count={primaryProfile.follower_count} />
+                )}
+              </div>
+            )}
+          </div>
 
-          {primaryProfile?.engagement_rate && (
-            <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">
-                {primaryProfile.engagement_rate}%
-              </span>{" "}
-              engagement rate
-              <EstimatedTag variant="self-reported" />
-            </div>
-          )}
+          <div className="mt-2 min-h-6">
+            {primaryProfile?.engagement_rate && (
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  {primaryProfile.engagement_rate}%
+                </span>{" "}
+                engagement rate
+                <EstimatedTag variant="self-reported" />
+              </div>
+            )}
+          </div>
 
-          <div className="mt-3 flex items-center gap-2 flex-wrap">
+          <div className="mt-auto flex flex-wrap items-center gap-2 pt-3">
             <AuthenticityBadge score={creator.trust_score} size="sm" />
           </div>
 
-          {creator.average_rating && (
-            <div className="mt-3 border-t border-border pt-3">
+          <div className="mt-3 min-h-9 border-t border-border pt-3">
+            {creator.average_rating && (
               <StarRating rating={creator.average_rating} size="sm" />
-            </div>
-          )}
+            )}
+          </div>
         </CardContent>
       </Card>
     </Link>

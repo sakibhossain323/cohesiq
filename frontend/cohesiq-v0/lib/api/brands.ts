@@ -4,7 +4,7 @@ import { fetchApi } from "./client";
 const NICHE_MAP: Record<number, string> = {
   1: "technology", 2: "fashion", 3: "food", 4: "travel", 5: "lifestyle",
   6: "finance", 7: "gaming", 8: "education", 9: "health", 10: "beauty",
-  11: "fitness", 12: "entertainment", 13: "sports"
+  11: "fitness", 12: "entertainment", 13: "sports", 19: "comedy"
 };
 
 function mapBrandResponse(b: any): Brand {

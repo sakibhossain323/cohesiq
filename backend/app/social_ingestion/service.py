@@ -1,3 +1,4 @@
+import html
 from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlparse
@@ -185,24 +186,26 @@ def build_instagram_enrichment(
         profile_url=_first_str(profile, "url", "profileUrl") or profile_url,
         display_name=_first_str(profile, "fullName", "ownerFullName", "owner.fullName"),
         bio=_first_str(profile, "biography", "bio"),
-        thumbnail_url=_first_str(
-            profile,
-            "profilePicUrl",
-            "profilePicUrlHD",
-            "profilePictureUrl",
-            "profilePicture",
-            "profile_pic_url",
-            "profile_pic_url_hd",
-            "profilePic",
-            "avatar",
-            "avatarUrl",
-            "image",
-            "imageUrl",
-            "ownerProfilePicUrl",
-            "owner.profilePicUrl",
-            "owner.profilePicUrlHD",
-            "owner.profile_pic_url",
-            "owner.avatar",
+        thumbnail_url=_normalize_image_url(
+            _first_str(
+                profile,
+                "profilePicUrl",
+                "profilePicUrlHD",
+                "profilePictureUrl",
+                "profilePicture",
+                "profile_pic_url",
+                "profile_pic_url_hd",
+                "profilePic",
+                "avatar",
+                "avatarUrl",
+                "image",
+                "imageUrl",
+                "ownerProfilePicUrl",
+                "owner.profilePicUrl",
+                "owner.profilePicUrlHD",
+                "owner.profile_pic_url",
+                "owner.avatar",
+            )
         ),
         follower_count=follower_count,
         following_count=_first_int(profile, "followsCount", "followingCount", "following"),
@@ -266,11 +269,13 @@ def build_tiktok_enrichment(
             "displayName",
         ),
         bio=_first_str(profile, "authorMeta.signature", "author.signature", "bio"),
-        thumbnail_url=_first_str(
-            profile,
-            "authorMeta.avatar",
-            "author.avatarThumb",
-            "avatar",
+        thumbnail_url=_normalize_image_url(
+            _first_str(
+                profile,
+                "authorMeta.avatar",
+                "author.avatarThumb",
+                "avatar",
+            )
         ),
         follower_count=follower_count,
         following_count=_first_int(
@@ -337,7 +342,7 @@ def _parse_instagram_post(item: dict[str, Any]) -> SocialRecentPost | None:
         like_count=_first_int(item, "likesCount", "likeCount", "likes"),
         comment_count=_first_int(item, "commentsCount", "commentCount", "comments"),
         share_count=_first_int(item, "shareCount", "sharesCount", "shares"),
-        thumbnail_url=_first_str(item, "displayUrl", "thumbnailUrl", "imageUrl"),
+        thumbnail_url=_normalize_image_url(_first_str(item, "displayUrl", "thumbnailUrl", "imageUrl")),
     )
 
 
@@ -377,7 +382,7 @@ def _parse_tiktok_post(item: dict[str, Any]) -> SocialRecentPost | None:
         like_count=_first_int(item, "diggCount", "stats.diggCount", "likeCount"),
         comment_count=_first_int(item, "commentCount", "stats.commentCount"),
         share_count=_first_int(item, "shareCount", "stats.shareCount"),
-        thumbnail_url=_first_str(item, "videoMeta.coverUrl", "covers.default", "cover"),
+        thumbnail_url=_normalize_image_url(_first_str(item, "videoMeta.coverUrl", "covers.default", "cover")),
     )
 
 
@@ -458,6 +463,21 @@ def _detect_social_content_languages(
         if value
     )
     return ["bn"] if _BANGLA_RE.search(text) else ["en"]
+
+
+def _normalize_image_url(url: str | None) -> str | None:
+    if not url:
+        return None
+
+    normalized = html.unescape(url.strip())
+    if normalized.startswith("//"):
+        normalized = f"https:{normalized}"
+
+    parsed = urlparse(normalized)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return None
+
+    return normalized
 
 
 def _first_str(item: dict[str, Any], *paths: str) -> str | None:

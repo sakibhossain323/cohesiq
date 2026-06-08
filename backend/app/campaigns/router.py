@@ -22,8 +22,11 @@ from app.campaigns.schemas import (
     ApplicationRespondInvite,
     ContractCreate,
     ContractOut,
+    CampaignLiveAnalyticsOut,
     ContentDraftSubmit,
     ContentPublishSubmit,
+    LiveContractAnalyticsOut,
+    LiveMetricSnapshotOut,
 )
 from app.common.dependencies import get_current_user, get_db
 
@@ -348,6 +351,32 @@ async def close_contract(
     return await service.close_contract(db, contract_id, brand.id)
 
 
+@router.post("/contracts/{contract_id}/sync-metrics", response_model=LiveMetricSnapshotOut, status_code=201)
+async def sync_contract_metric_snapshot(
+    contract_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+    brand = await get_brand_by_user_id(db, current_user.id)
+    if not brand:
+        raise HTTPException(status_code=403, detail="Only brands can sync contract metrics")
+    return await service.sync_contract_live_metrics(db, contract_id, brand.id)
+
+
+@router.get("/contracts/{contract_id}/analytics", response_model=LiveContractAnalyticsOut)
+async def get_contract_live_analytics(
+    contract_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+    brand = await get_brand_by_user_id(db, current_user.id)
+    if not brand:
+        raise HTTPException(status_code=403, detail="Only brands can view contract analytics")
+    return await service.get_contract_live_analytics(db, contract_id, brand.id)
+
+
 @router.get("/brands/me/contracts", response_model=List[ContractOut])
 async def list_brand_contracts(
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -371,6 +400,19 @@ async def list_creator_contracts(
     if not creator:
         raise HTTPException(status_code=403, detail="Creator profile not found")
     return await service.list_contracts_for_creator(db, creator.id)
+
+
+@router.get("/{campaign_id}/live-analytics", response_model=CampaignLiveAnalyticsOut)
+async def get_campaign_live_analytics(
+    campaign_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+    brand = await get_brand_by_user_id(db, current_user.id)
+    if not brand:
+        raise HTTPException(status_code=403, detail="Only brands can view campaign analytics")
+    return await service.get_campaign_live_analytics(db, campaign_id, brand.id)
 
 
 @router.get("/{campaign_id}/matches", response_model=List[AIMatchScoreOut])

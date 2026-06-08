@@ -1,10 +1,12 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
-import { updateCampaignStatus, runCampaignMatching, updateApplicationStatus } from "@/lib/api/campaigns";
+import { inviteCreatorToCampaign, updateCampaignStatus, runCampaignMatching, updateApplicationStatus } from "@/lib/api/campaigns";
 import { revalidatePath } from "next/cache";
 
-export async function updateCampaignStatusAction(campaignId: string, status: string) {
+type MutableCampaignStatus = "active" | "in_progress" | "completed" | "cancelled" | "archived";
+
+export async function updateCampaignStatusAction(campaignId: string, status: MutableCampaignStatus) {
   const { getToken } = await auth();
   const token = await getToken();
   
@@ -63,6 +65,28 @@ export async function runMatchingAction(campaignId: string) {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to run matching engine",
+    };
+  }
+}
+
+export async function inviteCreatorAction(campaignId: string, creatorId: string, brandNotes?: string) {
+  const { getToken } = await auth();
+  const token = await getToken();
+
+  if (!token) {
+    return { success: false, error: "Unauthorized. Please sign in again." };
+  }
+
+  try {
+    const application = await inviteCreatorToCampaign(campaignId, creatorId, brandNotes, token);
+    revalidatePath(`/brand/dashboard/campaigns/${campaignId}`);
+    revalidatePath(`/brand/dashboard/campaigns/${campaignId}/matches`);
+    return { success: true, application };
+  } catch (error) {
+    console.error("Failed to invite creator:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to invite creator",
     };
   }
 }

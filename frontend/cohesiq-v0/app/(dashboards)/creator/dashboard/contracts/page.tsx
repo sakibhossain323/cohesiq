@@ -1,12 +1,15 @@
 import { auth } from "@clerk/nextjs/server";
 import { listCreatorContracts } from "@/lib/api/contracts";
+import { getMyCreatorProfile } from "@/lib/api/creators";
 import { CreatorContractsClient } from "./_components/CreatorContractsClient";
 
 export default async function CreatorContractsPage() {
   const { getToken } = await auth();
   const token = await getToken();
 
-  const contracts = token ? await listCreatorContracts(token) : [];
+  const [contracts, creator] = token
+    ? await Promise.all([listCreatorContracts(token), getMyCreatorProfile(token)])
+    : [[], null];
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
@@ -16,7 +19,7 @@ export default async function CreatorContractsPage() {
           Track deliverables, submit content, and manage your active brand deals.
         </p>
       </div>
-      <CreatorContractsClient contracts={contracts} />
+      <CreatorContractsClient contracts={contracts} creator={creator} />
     </div>
   );
 }

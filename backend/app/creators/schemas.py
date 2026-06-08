@@ -110,6 +110,7 @@ class SocialProfileOut(BaseModel):
     audience_gender_majority: Optional[str] = None
     audience_gender_pct: Optional[int] = None
     content_languages: List[str]
+    notes: Optional[str] = None
     stats_reported_at: Optional[datetime] = None
     stats_reported_for_period: Optional[str] = None
     created_at: datetime
@@ -134,8 +135,10 @@ class PublicSocialEnrichmentRequest(BaseModel):
 
 class RateCardCreate(BaseModel):
     platform: str
-    deliverable_type: str
+    deliverable_type: Optional[str] = None
+    deliverable_code: Optional[str] = None
     price_bdt: int
+    suggested_price_bdt: Optional[int] = None
     price_usd: Optional[int] = None
     includes: Optional[str] = None
     excludes: Optional[str] = None
@@ -144,7 +147,10 @@ class RateCardCreate(BaseModel):
 
 
 class RateCardUpdate(BaseModel):
+    deliverable_type: Optional[str] = None
+    deliverable_code: Optional[str] = None
     price_bdt: Optional[int] = None
+    suggested_price_bdt: Optional[int] = None
     price_usd: Optional[int] = None
     includes: Optional[str] = None
     excludes: Optional[str] = None
@@ -157,7 +163,9 @@ class RateCardOut(BaseModel):
     id: uuid.UUID
     platform: str
     deliverable_type: str
+    deliverable_code: Optional[str] = None
     price_bdt: int
+    suggested_price_bdt: Optional[int] = None
     price_usd: Optional[int] = None
     includes: Optional[str] = None
     excludes: Optional[str] = None
@@ -299,6 +307,7 @@ class CreatorProfileOut(BaseModel):
 # ------------------------------------------------------------------ #
 
 class CreatorFilters(BaseModel):
+    search: Optional[str] = None
     niche: Optional[int] = None          # niche_id
     platform: Optional[str] = None
     min_followers: Optional[int] = None
@@ -307,5 +316,6 @@ class CreatorFilters(BaseModel):
     city: Optional[str] = None
     is_available: Optional[bool] = None
     max_rate: Optional[int] = None       # max price_bdt in rate cards
+    sort_by: str = "followers_desc"
     limit: int = 20
     offset: int = 0

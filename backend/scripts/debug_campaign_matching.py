@@ -10,6 +10,7 @@ from app.auth import models as auth_models  # noqa: F401
 from app.brands import models as brand_models  # noqa: F401
 from app.campaigns import models as campaign_models  # noqa: F401
 from app.campaigns.service import (
+    _matching_rate_for_campaign,
     _passes_budget_gate,
     _select_matching_social_profile,
     get_campaign,
@@ -156,13 +157,7 @@ async def main() -> None:
             follower_count = follower_count or 0
             creator_platforms = [profile.platform for profile in creator.social_profiles]
 
-            creator_rate = None
-            for rate_card in creator.rate_cards:
-                if rate_card.platform in campaign_plats:
-                    creator_rate = rate_card.price_bdt
-                    break
-            if creator_rate is None:
-                creator_rate = creator.min_budget
+            creator_rate = _matching_rate_for_campaign(campaign, creator)
 
             if campaign_plats and not any(p in creator_platforms for p in campaign_plats):
                 reasons.append("platform_mismatch")

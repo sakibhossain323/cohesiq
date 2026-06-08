@@ -11,6 +11,10 @@ const isBrandDashboardRoute = createRouteMatcher(['/brand/dashboard(.*)'])
 const isCreatorDashboardRoute = createRouteMatcher(['/creator/dashboard(.*)'])
 
 export default clerkMiddleware(async (auth, req) => {
+  // Allow the image proxy to be called without Clerk auth (bypasses dev-browser checks)
+  if (req.nextUrl && req.nextUrl.pathname && req.nextUrl.pathname.startsWith('/api/image-proxy')) {
+    return NextResponse.next();
+  }
   // Public routes: skip auth entirely — no Clerk API call, instant response
   if (!isProtectedRoute(req) && !isOnboardingRoute(req)) {
     return NextResponse.next()
@@ -47,8 +51,7 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    '/((?!_next|[^?]*\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     '/__clerk/(.*)',
-    '/(api|trpc)(.*)',
   ],
 }

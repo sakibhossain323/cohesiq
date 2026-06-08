@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { runMatchingAction } from "../../_actions/campaign-actions";
+import { inviteCreatorAction, runMatchingAction } from "../../_actions/campaign-actions";
 import type { Campaign, AIMatchScore } from "@/lib/types";
 import { formatBDT, formatFollowerCount } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,8 +15,11 @@ import { getBrandCategoryLabel } from "@/lib/brand-categories";
 import {
   Sparkles,
   Brain,
+  Check,
   ChevronLeft,
   Briefcase,
+  GitCompareArrows,
+  X,
 } from "lucide-react";
 
 interface MatchesClientProps {
@@ -29,6 +32,25 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
   const [isPending, startTransition] = useTransition();
   const [matchingError, setMatchingError] = useState<string | null>(null);
   const [matchingNotice, setMatchingNotice] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [invitingId, setInvitingId] = useState<string | null>(null);
+  const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
+
+  const returnTo = `/brand/dashboard/campaigns/${campaign.id}/matches`;
+  const compareHref = `/brand/dashboard/creators/compare?ids=${Array.from(selectedIds).join(",")}&returnTo=${encodeURIComponent(returnTo)}`;
+
+  const toggleSelect = (creatorId: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(creatorId)) {
+        next.delete(creatorId);
+        return next;
+      }
+      if (next.size >= 3) return prev;
+      next.add(creatorId);
+      return next;
+    });
+  };
 
   const handleRunMatching = () => {
     setMatchingError(null);
@@ -38,6 +60,7 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
       if (result.success && result.matches) {
         const sortedMatches = result.matches.sort((a: AIMatchScore, b: AIMatchScore) => (b.score_total || 0) - (a.score_total || 0));
         setMatches(sortedMatches);
+        setSelectedIds(new Set());
         setMatchingNotice(
           sortedMatches.length > 0
             ? `Matching completed: ${sortedMatches.length} creators ranked.`
@@ -45,6 +68,26 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
         );
       } else {
         setMatchingError(result.error || "Failed to run matching engine.");
+      }
+    });
+  };
+
+  const handleInvite = (creatorId: string, creatorName: string) => {
+    setMatchingError(null);
+    setMatchingNotice(null);
+    setInvitingId(creatorId);
+    startTransition(async () => {
+      const result = await inviteCreatorAction(
+        campaign.id,
+        creatorId,
+        `Invited from AI matches for ${campaign.title}`,
+      );
+      setInvitingId(null);
+      if (result.success) {
+        setInvitedIds(prev => new Set(prev).add(creatorId));
+        setMatchingNotice(`${creatorName} has been invited to this campaign.`);
+      } else {
+        setMatchingError(result.error || "Failed to invite creator.");
       }
     });
   };
@@ -158,13 +201,39 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
 
       {/* Matches Content */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             Matched Creators
             <Badge variant="outline" className="bg-primary/5 text-primary text-xs font-semibold">
               {matches.length} matches found
             </Badge>
           </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            {selectedIds.size > 0 && (
+              <span className="text-sm font-medium text-muted-foreground">
+                {selectedIds.size} selected
+              </span>
+            )}
+            {selectedIds.size >= 2 ? (
+              <Button asChild variant="outline">
+                <Link href={compareHref}>
+                  <GitCompareArrows className="mr-2 h-4 w-4" />
+                  Compare Selected
+                </Link>
+              </Button>
+            ) : (
+              <Button type="button" variant="outline" disabled>
+                <GitCompareArrows className="mr-2 h-4 w-4" />
+                Compare Selected
+              </Button>
+            )}
+            {selectedIds.size > 0 && (
+              <Button type="button" variant="ghost" onClick={() => setSelectedIds(new Set())}>
+                <X className="mr-2 h-4 w-4" />
+                Clear
+              </Button>
+            )}
+          </div>
         </div>
 
         {matchingError && (
@@ -203,11 +272,13 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
               
               const pctScore = Math.round((match.score_total || 0) * 100);
               const fitHighlights = getFitHighlights(match);
+              const isSelected = selectedIds.has(creator.id);
+              const isInvited = invitedIds.has(creator.id);
               
               return (
                 <Card 
                   key={match.id} 
-                  className="overflow-hidden border border-border bg-card hover:shadow-md transition-all duration-300 group"
+                  className={`overflow-hidden border bg-card transition-all duration-300 group hover:shadow-md ${isSelected ? "border-primary ring-2 ring-primary/30" : "border-border"}`}
                 >
                   <div className="grid md:grid-cols-12">
                     {/* Creator Info Column */}
@@ -231,6 +302,19 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
                               <NicheBadge niche={creator.primary_niche} size="sm" />
                             </div>
                           </div>
+                          <button
+                            type="button"
+                            onClick={() => toggleSelect(creator.id)}
+                            className={`ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
+                              isSelected
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-muted-foreground/30 bg-background text-transparent hover:border-primary/60"
+                            }`}
+                            aria-label={isSelected ? "Remove from comparison" : "Select for comparison"}
+                            title={selectedIds.size >= 3 && !isSelected ? "Max 3 creators" : isSelected ? "Remove from comparison" : "Select for comparison"}
+                          >
+                            {isSelected ? <Check className="h-4 w-4" /> : null}
+                          </button>
                         </div>
                         
                         <p className="text-xs text-muted-foreground line-clamp-2">
@@ -306,8 +390,13 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
                             View Profile
                           </Button>
                         </Link>
-                        <Button size="sm" className="flex-1 text-xs">
-                          Invite
+                        <Button
+                          size="sm"
+                          className="flex-1 text-xs"
+                          disabled={invitingId === creator.id || isInvited}
+                          onClick={() => handleInvite(creator.id, creator.display_name)}
+                        >
+                          {invitingId === creator.id ? "Inviting..." : isInvited ? "Invited" : "Invite"}
                         </Button>
                       </div>
                     </div>
@@ -318,6 +407,24 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
           </div>
         )}
       </div>
+
+      {selectedIds.size >= 2 && (
+        <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-full border border-border bg-background px-5 py-3 shadow-xl">
+          <GitCompareArrows className="h-5 w-5 text-primary" />
+          <span className="text-sm font-medium">{selectedIds.size} recommended creators selected</span>
+          <Button size="sm" asChild>
+            <Link href={compareHref}>Compare</Link>
+          </Button>
+          <button
+            type="button"
+            onClick={() => setSelectedIds(new Set())}
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Clear comparison selection"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -3,16 +3,19 @@ import { CompareClient } from "./_components/CompareClient";
 import type { Creator } from "@/lib/types";
 
 interface ComparePageProps {
-  searchParams: Promise<{ ids?: string }>;
+  searchParams: Promise<{ ids?: string; returnTo?: string }>;
 }
 
 export default async function CreatorComparePage({ searchParams }: ComparePageProps) {
-  const { ids } = await searchParams;
+  const { ids, returnTo } = await searchParams;
   const idList = (ids ?? "").split(",").map(s => s.trim()).filter(Boolean).slice(0, 3);
+  const returnHref = returnTo?.startsWith("/brand/dashboard/")
+    ? returnTo
+    : "/brand/dashboard/creators";
 
   const creators = (
     await Promise.all(idList.map(id => getCreatorById(id).catch(() => null)))
   ).filter((c): c is Creator => c !== null);
 
-  return <CompareClient creators={creators} />;
+  return <CompareClient creators={creators} returnHref={returnHref} />;
 }

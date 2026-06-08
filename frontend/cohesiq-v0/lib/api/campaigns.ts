@@ -16,6 +16,7 @@ export const NICHE_MAP: Record<number, string> = {
   12: "entertainment",
   13: "news",
   14: "other",
+  19: "comedy",
 };
 
 let brandsCache: Record<string, any> = {};
@@ -39,6 +40,16 @@ async function resolveBrand(brandId: string): Promise<any> {
 async function mapCampaignResponse(c: any): Promise<Campaign> {
   const primaryNicheName = c.primary_niche_id ? NICHE_MAP[c.primary_niche_id] || `Niche ${c.primary_niche_id}` : "general";
   const brandData = await resolveBrand(c.brand_id);
+  const deliverables = c.deliverable_requirements
+    ? c.deliverable_requirements.map((req: any) => ({
+        id: req.id,
+        platform: req.platform,
+        deliverable_type: req.deliverable_type,
+        deliverable_code: req.deliverable_code,
+        quantity: req.quantity,
+        notes: req.notes,
+      }))
+    : [];
 
   return {
     ...c,
@@ -60,6 +71,7 @@ async function mapCampaignResponse(c: any): Promise<Campaign> {
     application_deadline: c.application_deadline ? new Date(c.application_deadline).toISOString() : "",
     status: c.status as CampaignStatus,
     application_count: 0,
+    deliverables,
   } as Campaign; // Typecast because UI expects application_count and some other optionals
 }
 
@@ -79,7 +91,12 @@ function mapCreatorFromRaw(c: any) {
     niches: c.niches ? c.niches.map((n: any) => NICHE_MAP[n.niche_id] || `Niche ${n.niche_id}`) : [],
     languages: c.languages ? c.languages.map((l: any) => l.language_code) : [],
     social_profiles: c.social_profiles || [],
-    rate_cards: c.rate_cards || [],
+    rate_cards: c.rate_cards ? c.rate_cards.map((card: any) => ({
+      ...card,
+      deliverable_code: card.deliverable_code,
+      suggested_price_bdt: card.suggested_price_bdt,
+    })) : [],
+    portfolio_items: c.portfolio_items || [],
     is_available: c.is_available ?? true,
     total_collaborations: c.total_collaborations ?? 0,
     average_rating: c.average_rating ? Number(c.average_rating) : undefined,

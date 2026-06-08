@@ -26,7 +26,7 @@ import {
 import { formatBDT, formatDate, cn } from "@/lib/utils";
 import { getAvatarInitials } from "@/lib/avatar";
 import { getBrandCategoryLabel } from "@/lib/brand-categories";
-import type { Campaign, Application, AIMatchScore, ApplicationStatus, Contract } from "@/lib/types";
+import type { Campaign, Application, AIMatchScore, ApplicationStatus, Contract, CampaignLiveAnalytics } from "@/lib/types";
 import { updateCampaignStatusAction, runMatchingAction } from "../_actions/campaign-actions";
 import { ApplicationDrawer } from "./ApplicationDrawer";
 import { CampaignAnalyticsTab } from "./CampaignAnalyticsTab";
@@ -38,6 +38,7 @@ interface CampaignDetailClientProps {
   applications: Application[];
   initialMatches: AIMatchScore[];
   initialContracts: Contract[];
+  initialLiveAnalytics: CampaignLiveAnalytics | null;
 }
 
 const PIPELINE_COLUMNS = [
@@ -52,10 +53,12 @@ export function CampaignDetailClient({
   applications,
   initialMatches,
   initialContracts,
+  initialLiveAnalytics,
 }: CampaignDetailClientProps) {
   const [matches, setMatches] = useState<AIMatchScore[]>(initialMatches);
   const [localApplications, setLocalApplications] = useState<Application[]>(applications);
   const [localContracts, setLocalContracts] = useState<Contract[]>(initialContracts);
+  const [liveAnalytics, setLiveAnalytics] = useState<CampaignLiveAnalytics | null>(initialLiveAnalytics);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [contractModalApp, setContractModalApp] = useState<Application | null>(null);
   const [activeTab, setActiveTab] = useState("pipeline");
@@ -247,7 +250,7 @@ export function CampaignDetailClient({
 
           <TabsTrigger value="details" className="py-2 px-4 flex items-center gap-2 rounded-lg">
             <BarChart2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Details</span>
+            <span className="hidden sm:inline">Analytics</span>
           </TabsTrigger>
         </TabsList>
 
@@ -483,7 +486,12 @@ export function CampaignDetailClient({
             </div>
           </div>
 
-          <CampaignAnalyticsTab campaign={campaign} />
+          <CampaignAnalyticsTab
+            campaign={campaign}
+            contracts={localContracts}
+            initialAnalytics={liveAnalytics}
+            onAnalyticsUpdate={setLiveAnalytics}
+          />
 
           <p className="text-xs text-muted-foreground px-1">
             Payment terms, engagement type, and clauses are defined per creator on each{" "}

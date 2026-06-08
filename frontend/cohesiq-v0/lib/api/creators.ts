@@ -23,6 +23,7 @@ const NICHE_MAP: Record<number, string> = {
   12: "entertainment",
   13: "news",
   14: "other",
+  19: "comedy",
 };
 
 function mapCreatorResponse(c: any): Creator {
@@ -40,7 +41,12 @@ function mapCreatorResponse(c: any): Creator {
     niches: c.niches ? c.niches.map((n: any) => NICHE_MAP[n.niche_id] || `Niche ${n.niche_id}`) : [],
     languages: c.languages ? c.languages.map((l: any) => l.language_code) : [],
     social_profiles: c.social_profiles || [],
-    rate_cards: c.rate_cards || [],
+    rate_cards: c.rate_cards ? c.rate_cards.map((card: any) => ({
+      ...card,
+      deliverable_code: card.deliverable_code,
+      suggested_price_bdt: card.suggested_price_bdt,
+    })) : [],
+    portfolio_items: c.portfolio_items || [],
     is_available: c.is_available,
     total_collaborations: c.total_collaborations,
     average_rating: c.average_rating ? Number(c.average_rating) : undefined,
@@ -51,6 +57,8 @@ export async function getCreatorSearchPage(filters?: CreatorFilters): Promise<Cr
   const query = new URLSearchParams();
   const page = Math.max(1, filters?.page ?? 1);
   const pageSize = Math.min(Math.max(1, filters?.page_size ?? 12), 60);
+
+  if (filters?.search) query.append("search", filters.search);
   
   if (filters?.niche) {
     // Reverse map niche name to ID
@@ -64,6 +72,8 @@ export async function getCreatorSearchPage(filters?: CreatorFilters): Promise<Cr
   if (filters?.language) query.append("language", filters.language);
   if (filters?.city) query.append("city", filters.city);
   if (filters?.is_available !== undefined) query.append("is_available", filters.is_available.toString());
+  if (filters?.max_rate) query.append("max_rate", filters.max_rate.toString());
+  if (filters?.sort_by) query.append("sort_by", filters.sort_by);
   query.append("limit", (pageSize + 1).toString());
   query.append("offset", ((page - 1) * pageSize).toString());
   
