@@ -882,7 +882,7 @@ CREATE TABLE contracts (
     contract_type           contract_type NOT NULL,
     status                  contract_status NOT NULL DEFAULT 'active',
     -- Payment clause
-    payment_structure       VARCHAR(20) NOT NULL DEFAULT 'none',   -- 'flat_fee' | 'none'
+    payment_structure       VARCHAR(20) NOT NULL DEFAULT 'none',   -- 'flat_fee' | 'non_cash' | 'none' (non_cash added migration 0022)
     payment_amount_bdt      INTEGER,
     payment_schedule        payment_schedule_type,
     -- Product transfer clause (product_seeding only)
@@ -890,6 +890,7 @@ CREATE TABLE contracts (
     product_disposition     product_disposition_type,
     -- Deliverable clause
     deliverable_notes       TEXT,
+    non_cash_compensation   TEXT,  -- migration 0022: free product / SaaS access / affiliate value when payment_structure='non_cash'
     -- Exclusivity clause
     exclusivity_days        SMALLINT,
     usage_rights_days       SMALLINT,
@@ -968,9 +969,53 @@ CREATE TABLE ai_match_scores (
 );
 ```
 
+### `contract_deliverables` — per-creator deliverable subset (migration `0022_offer_contract_deliverables_negotiation`)
+```sql
+-- A brand may take a few creators across platforms and want only a PORTION of the
+-- campaign's deliverables from a specific creator. Chosen at offer time; one row per
+-- (contract, campaign deliverable requirement) with a per-creator quantity override.
+CREATE TABLE contract_deliverables (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    contract_id     UUID NOT NULL REFERENCES contracts(id) ON DELETE CASCADE,
+    requirement_id  UUID NOT NULL REFERENCES campaign_deliverable_requirements(id) ON DELETE CASCADE,
+    quantity        SMALLINT NOT NULL DEFAULT 1,
+    notes           TEXT,
+    UNIQUE(contract_id, requirement_id)
+);
+```
+
+### `negotiation_turns` — multi-turn offer/counter-offer thread (migration `0022_offer_contract_deliverables_negotiation`)
+```sql
+-- One turn per offer/counter in the bilateral negotiation for an application.
+-- The brand opens with an offer (also creates the drafted contract); either party may
+-- counter; either party may accept the OTHER party's latest 'proposed' turn — which
+-- flips the contract to 'active' and the application to 'accepted'.
+CREATE TABLE negotiation_turns (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    application_id  UUID NOT NULL REFERENCES campaign_applications(id) ON DELETE CASCADE,
+    author_role     VARCHAR(10) NOT NULL CHECK (author_role IN ('brand','creator')),
+    status          VARCHAR(12) NOT NULL DEFAULT 'proposed',  -- 'proposed' | 'accepted' | 'superseded'
+    message         TEXT,
+    proposed_rate   INTEGER,
+    proposed_terms  JSONB,          -- snapshot of clause deltas for this turn
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_negotiation_turns_application_time
+    ON negotiation_turns(application_id, created_at);
+```
+
+> **Offer-time contract creation (migration 0022 behaviour change).** A `contracts` row is now
+> created when the brand **sends an offer** (status `drafted`), not when the application reaches
+> `accepted`. Accepting the final offer flips it to `active`. The legacy
+> `POST …/applications/{id}/contract` endpoint (accepted-only) still exists; the new flow uses
+> `POST …/applications/{id}/offer` + `…/negotiate` + `…/offer/accept|decline`.
+
 ### `campaign_status` — extra states (migrations `959ef947cd0f`, `fd300ea6267e`)
 `campaign_visibility` plus `archived` were added to the campaign lifecycle; `application_status`
-gained `invited` / `declined` for brand-initiated invitations.
+gained `invited` / `declined` for brand-initiated invitations. In the offer flow, `invited`
+means **an offer was sent**, `pending_agreement` means **negotiation is in progress**, and
+`shortlisted` is an independent pre-offer pool (filled from AI matches or Find Creators in any
+campaign status, including draft).
 
 ### YouTube ingestion
 `app/youtube/` is a **read-only public-API client**; it does not persist. The creator domain exposes

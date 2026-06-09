@@ -212,6 +212,111 @@ export async function inviteCreatorToCampaign(campaignId: string, creatorId: str
   });
 }
 
+// ── Shortlist / Offer / Negotiation ────────────────────────────────────────
+
+export async function addToShortlist(
+  campaignId: string,
+  creatorId: string,
+  note: string | undefined,
+  token: string,
+): Promise<any> {
+  return fetchApi<any>(`/campaigns/${campaignId}/shortlist`, {
+    method: "POST",
+    body: JSON.stringify({ creator_id: creatorId, note }),
+    token,
+  });
+}
+
+export interface OfferPayload {
+  contract_type: string;
+  payment_structure?: string;
+  payment_amount_bdt?: number;
+  payment_schedule?: string;
+  non_cash_compensation?: string;
+  has_product_transfer?: boolean;
+  product_disposition?: string;
+  deliverable_notes?: string;
+  deliverables?: { requirement_id: string; quantity: number; notes?: string }[];
+  exclusivity_days?: number;
+  usage_rights_days?: number;
+  max_revision_rounds?: number;
+  kill_fee_percentage?: number;
+  message?: string;
+}
+
+export async function sendOffer(
+  campaignId: string,
+  applicationId: string,
+  payload: OfferPayload,
+  token: string,
+): Promise<any> {
+  return fetchApi<any>(`/campaigns/${campaignId}/applications/${applicationId}/offer`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+    token,
+  });
+}
+
+export interface CounterPayload {
+  message?: string;
+  proposed_rate?: number;
+  proposed_terms?: Record<string, unknown>;
+}
+
+export async function counterOffer(
+  campaignId: string,
+  applicationId: string,
+  payload: CounterPayload,
+  token: string,
+): Promise<any> {
+  return fetchApi<any>(`/campaigns/${campaignId}/applications/${applicationId}/negotiate`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+    token,
+  });
+}
+
+export async function acceptOffer(
+  campaignId: string,
+  applicationId: string,
+  message: string | undefined,
+  token: string,
+): Promise<any> {
+  return fetchApi<any>(`/campaigns/${campaignId}/applications/${applicationId}/offer/accept`, {
+    method: "POST",
+    body: JSON.stringify({ message }),
+    token,
+  });
+}
+
+export async function declineOffer(
+  campaignId: string,
+  applicationId: string,
+  reason: string | undefined,
+  token: string,
+): Promise<any> {
+  return fetchApi<any>(`/campaigns/${campaignId}/applications/${applicationId}/offer/decline`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+    token,
+  });
+}
+
+export async function getNegotiationThread(
+  campaignId: string,
+  applicationId: string,
+  token: string,
+): Promise<any[]> {
+  try {
+    return await fetchApi<any[]>(
+      `/campaigns/${campaignId}/applications/${applicationId}/negotiation`,
+      { token },
+    );
+  } catch {
+    return [];
+  }
+}
+
 export async function respondToInvitation(campaignId: string, applicationId: string, action: "accept" | "decline", proposalText: string | undefined, proposedRate: number | undefined, token: string): Promise<any> {
   return fetchApi<any>(`/campaigns/${campaignId}/applications/${applicationId}/respond-invite`, {
     method: "PATCH",

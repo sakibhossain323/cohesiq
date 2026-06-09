@@ -22,6 +22,34 @@ export type ContractStatus =
 export type PaymentSchedule = "upfront" | "on_delivery" | "milestone";
 export type ProductDisposition = "keep" | "return";
 
+export type PaymentStructure = "flat_fee" | "non_cash" | "none";
+
+export interface ContractDeliverable {
+  id: string;
+  requirement_id: string;
+  quantity: number;
+  notes?: string;
+  requirement?: {
+    id: string;
+    platform: PlatformType;
+    deliverable_type: DeliverableType;
+    deliverable_code?: DeliverableCode;
+    quantity: number;
+    notes?: string;
+  };
+}
+
+export interface NegotiationTurn {
+  id: string;
+  application_id: string;
+  author_role: "brand" | "creator";
+  status: "proposed" | "accepted" | "superseded";
+  message?: string;
+  proposed_rate?: number;
+  proposed_terms?: Record<string, unknown> | null;
+  created_at: string;
+}
+
 export interface Contract {
   id: string;
   application_id: string;
@@ -30,14 +58,17 @@ export interface Contract {
   contract_type: ContractType;
   status: ContractStatus;
   // Payment clause
-  payment_structure: "flat_fee" | "none";
+  payment_structure: PaymentStructure;
   payment_amount_bdt?: number;
   payment_schedule?: PaymentSchedule;
+  // Non-cash compensation (free product, SaaS access, affiliate revenue, …)
+  non_cash_compensation?: string;
   // Product transfer clause
   has_product_transfer: boolean;
   product_disposition?: ProductDisposition;
   // Other clauses
   deliverable_notes?: string;
+  deliverables?: ContractDeliverable[];
   exclusivity_days?: number;
   usage_rights_days?: number;
   max_revision_rounds: number;
