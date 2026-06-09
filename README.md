@@ -64,20 +64,21 @@ Cohesiq uses a decoupled full-stack architecture, utilizing Docker to orchestrat
 - **Documentation**: The complete schema map is available in `/docs/schema.md`. Always refer to this before altering models.
 ## Data Seeding
 
-To populate the database with realistic AI-generated demo data and sync your Clerk users, run the following commands sequentially inside the backend container:
+The canonical seed lives at `db/seed.sql` — a symlink to the latest snapshot in `db/snapshots/`. Snapshots are data-only dumps of ~86 real Bangladeshi creators with live YouTube/Instagram/TikTok data. Load once after first `docker compose up`:
 
-1. **Generate Seed Data:** Uses Tavily and Groq to generate ~100 realistic Bangladeshi creators and brands (JSON files saved to `backend/data/`).
-   ```bash
-   docker compose exec backend python -m scripts.generate_seed_data
-   ```
-2. **Sync Clerk Users:** Fetches users from Clerk and assigns `brand` or `creator` roles to those with `@test.com` emails.
-   ```bash
-   docker compose exec backend python -m scripts.sync_clerk_users
-   ```
-3. **Seed Database:** Purges old business data, maps test users to the generated profiles, and seeds mock campaigns.
-   ```bash
-   docker compose exec backend python -m scripts.seed_db
-   ```
+```bash
+docker compose exec -T postgres psql -U cohesiq -d cohesiq < db/seed.sql
+```
+
+To reset and re-seed from scratch:
+
+```bash
+docker compose exec backend python -m scripts.reset_db                          # wipe all data (schema-agnostic)
+docker compose exec -T postgres psql -U cohesiq -d cohesiq < db/seed.sql        # restore from latest snapshot
+docker compose exec backend python -m scripts.sync_clerk_users                  # re-link @test.com Clerk accounts (optional)
+```
+
+See [`docs/seeding.md`](docs/seeding.md) for the full breakdown — snapshot structure, what survives a reset, how to regenerate, and why the older scripts are no longer used.
 
 ## AI & Agentic Tooling
 

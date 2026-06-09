@@ -9,6 +9,7 @@ export default async function OnboardingPage() {
     | undefined;
 
   if (metadata?.onboardingComplete) {
+    if (metadata.role === "admin") redirect("/admin");
     const role = metadata.role === "brand" ? "brand" : "creator";
     redirect(`/${role}/dashboard`);
   }

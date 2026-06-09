@@ -48,7 +48,7 @@ export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
   const pathname = usePathname()
 
   function isActive(href: string): boolean {
-    if (href === '/creator/dashboard' || href === '/brand/dashboard') {
+    if (href === '/creator/dashboard' || href === '/brand/dashboard' || href === '/admin') {
       return pathname === href
     }
     return pathname === href || pathname.startsWith(href + '/')
@@ -56,7 +56,7 @@ export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
 
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar collapsible="icon">
 
         {/* ── Logo ───────────────────────────────────────── */}
         <SidebarHeader className="border-b border-sidebar-border p-0">
@@ -64,14 +64,14 @@ export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
             <div className="sb-mark">
               <CohesiqMark />
             </div>
-            <span className="sb-wordmark">Cohesiq</span>
+            <span className="sb-wordmark group-data-[collapsible=icon]:hidden">Cohesiq</span>
           </Link>
         </SidebarHeader>
 
         {/* ── Nav ────────────────────────────────────────── */}
-        <SidebarContent>
+        <SidebarContent className="px-2">
           <span className="sb-section-label">Navigation</span>
-          <SidebarMenu>
+          <SidebarMenu className="group-data-[collapsible=icon]:items-center">
             {navItems.map((item) => (
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
@@ -96,7 +96,7 @@ export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
               <UserButton
                 appearance={{ elements: { avatarBox: 'h-8 w-8' } }}
               />
-              <div className="sb-user-info">
+              <div className="sb-user-info group-data-[collapsible=icon]:hidden">
                 <span className="sb-user-name">My Account</span>
                 <span className="sb-user-sub">Manage profile</span>
               </div>
@@ -105,7 +105,7 @@ export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
 
           <Show when="signed-out">
             <SignInButton mode="modal" forceRedirectUrl="/onboarding">
-              <Button variant="outline" size="sm" className="w-full gap-2">
+              <Button variant="outline" size="sm" className="w-full gap-2 group-data-[collapsible=icon]:hidden">
                 <LogIn className="h-4 w-4" />
                 Sign In
               </Button>
@@ -116,8 +116,8 @@ export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
       </Sidebar>
 
       <SidebarInset>
-        <header className="flex h-14 items-center gap-2 border-b border-border bg-background px-4">
-          <SidebarTrigger className="-ml-1" />
+        <header className="sb-topbar flex h-14 items-center gap-2 px-4">
+          <SidebarTrigger className="sb-trigger" />
           <div className="flex-1" />
         </header>
         <main className="flex-1 overflow-auto">

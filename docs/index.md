@@ -35,7 +35,9 @@ Never silently edit `srs.md` to match a shortcut. Record divergences in `plan.md
 |---|---|---|
 | [`tasks/tasks-sakib.md`](tasks/tasks-sakib.md) | Sakib | Campaign UI, marketplace, contract entity, analytics, AI features |
 | [`tasks/tasks-navid.md`](tasks/tasks-navid.md) | Navid | YouTube enrichment, matching engine, seeding pipeline, semantic/LLM services |
+| [`tasks/tasks-labib.md`](tasks/tasks-labib.md) | Labib | Campaign creation UX (modal popup, 3-step wizard), invitation lifecycle (Invited→Negotiation→Accepted Kanban, shortlist-as-bookmark) |
 | [`tasks/n01-persist-youtube-enrichment.md`](tasks/n01-persist-youtube-enrichment.md) | Navid | Detailed spec for N01 — persisting YouTube API data to creator profiles |
+| [`tasks/admin-panel.md`](tasks/admin-panel.md) | Sakib | **TOP PRIORITY** step-by-step runbook (F00–F13) — role-gated admin panel: Clerk-metadata auth, `/admin` route group, read-only `/admin/*` endpoints |
 
 ---
 
@@ -101,6 +103,7 @@ These files are background research — informational, not prescriptive.
 
 | File | What it contains |
 |---|---|
+| [`seeding.md`](seeding.md) | **Seeding reference** — use `seed.sql` (real creator data); reset procedure; what survives a DB reset; legacy scripts status |
 | [`deployment-guide.md`](deployment-guide.md) | Deployment instructions, Docker Compose configuration, environment setup |
 | [`openapi.json`](openapi.json) | OpenAPI 3.x specification for all backend API endpoints |
 | [`submittable.md`](submittable.md) | BuildFest deliverables checklist |

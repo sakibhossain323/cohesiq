@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useSession } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { resetOnboarding } from "@/app/(auth)/onboarding/_actions/onboarding";
 
 export function ResetOnboardingButton() {
-  const router = useRouter();
+  const { session } = useSession();
   const [isResetting, setIsResetting] = useState(false);
 
   const handleReset = async () => {
@@ -14,9 +14,11 @@ export function ResetOnboardingButton() {
     try {
       const res = await resetOnboarding();
       if (res.success) {
-        // Force refresh the router to clear any middleware cache/redirect state
-        router.push("/onboarding");
-        router.refresh();
+        // Reload the Clerk session so the JWT reflects the cleared metadata
+        // before the middleware runs — otherwise the onboardingComplete guard
+        // redirects back here on a stale token.
+        await session?.reload();
+        window.location.href = "/onboarding";
       } else {
         alert(res.error || "Failed to reset onboarding.");
         setIsResetting(false);
