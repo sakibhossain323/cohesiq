@@ -94,3 +94,34 @@ async def get_current_user(
     if user is None or not user.is_active:
         raise credentials_exception
     return user
+
+
+async def require_admin(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
+    current_user=Depends(get_current_user),
+):
+    role = None
+    if settings.clerk_issuer_url:
+        try:
+            jwks = get_jwks()
+            claims = jwt.decode(
+                credentials.credentials,
+                key=jwks,
+                algorithms=["RS256"],
+                issuer=settings.clerk_issuer_url,
+                options={"verify_aud": False},
+            )
+            role = claims.get("metadata", {}).get("role")
+        except JWTError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+            )
+    else:
+        role = getattr(current_user, "role", None)
+    if role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+    return current_user

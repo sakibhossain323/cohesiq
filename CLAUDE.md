@@ -10,7 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Before planning, proposing changes, or touching any file:
 
-1. Check `graphify-out/wiki/index.md` for broad architecture navigation.
+1. Check `docs/index.md` for a full navigation map of every documentation file in the repo.
+2. Check `graphify-out/wiki/index.md` for broad architecture navigation.
 2. Run `graphify query "<question>"` to locate relevant nodes — this returns a scoped subgraph and is faster than grepping source files.
 3. Use `graphify explain "<concept>"` to understand a module or pattern.
 4. Use `graphify path "<A>" "<B>"` to trace relationships between two files or symbols.
@@ -116,6 +117,8 @@ Always add new env vars to `.env.example` in both `frontend/` and `backend/`.
 Before altering any SQLAlchemy model, read `docs/schema.md` first — it is the authoritative schema reference. After substantial model changes, update `docs/schema.md` and `docs/plan.md`.
 
 ## Documentation source-of-truth hierarchy
+
+For a full navigation map of every file under `docs/`, see **`docs/index.md`** first.
 
 When docs disagree, resolve in this order (defined in `docs/plan.md` §0):
 

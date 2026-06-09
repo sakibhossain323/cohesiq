@@ -37,6 +37,7 @@ Never silently edit `srs.md` to match a shortcut. Record divergences in `plan.md
 | [`tasks/tasks-navid.md`](tasks/tasks-navid.md) | Navid | YouTube enrichment, matching engine, seeding pipeline, semantic/LLM services |
 | [`tasks/tasks-labib.md`](tasks/tasks-labib.md) | Labib | Campaign creation UX (modal popup, 3-step wizard), invitation lifecycle (Invited→Negotiation→Accepted Kanban, shortlist-as-bookmark) |
 | [`tasks/n01-persist-youtube-enrichment.md`](tasks/n01-persist-youtube-enrichment.md) | Navid | Detailed spec for N01 — persisting YouTube API data to creator profiles |
+| [`tasks/admin-panel.md`](tasks/admin-panel.md) | Sakib | **TOP PRIORITY** step-by-step runbook (F00–F13) — role-gated admin panel: Clerk-metadata auth, `/admin` route group, read-only `/admin/*` endpoints |
 
 ---
 

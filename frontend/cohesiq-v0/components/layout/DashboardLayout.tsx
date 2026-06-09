@@ -48,7 +48,7 @@ export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
   const pathname = usePathname()
 
   function isActive(href: string): boolean {
-    if (href === '/creator/dashboard' || href === '/brand/dashboard') {
+    if (href === '/creator/dashboard' || href === '/brand/dashboard' || href === '/admin') {
       return pathname === href
     }
     return pathname === href || pathname.startsWith(href + '/')

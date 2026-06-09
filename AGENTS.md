@@ -2,6 +2,10 @@
 
 This document contains strictly enforced conventions and rules for any AI agent or LLM operating within the `cohesiq` codebase. 
 
+## Documentation index
+
+**`docs/index.md`** is the navigation map for every file under `docs/` — source-of-truth hierarchy, task backlogs, diagrams, design, concepts, revisions, and operations. Read it before opening any doc file.
+
 ## Project Overview
 
 Cohesiq is a B2B SaaS Influencer Matching Platform. It utilizes a Modular Monolith architecture for the backend (FastAPI + PostgreSQL) and a modern frontend (Next.js App Router). Authentication is fully managed via Clerk.
@@ -128,6 +132,7 @@ The frontend uses **two separate env vars** to route API calls correctly based o
 
 ## Documentation Sync
 
+- Read **`docs/index.md`** first to locate the right doc file before opening anything under `docs/`.
 - Use `graphify` (if available via workflow) to maintain up-to-date knowledge of the codebase structure.
 - When making substantial architectural or model changes, you MUST update `docs/schema.md` and `docs/plan.md`.
 

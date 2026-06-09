@@ -1,5 +1,38 @@
 # Tasks — Sakib (Brand & Creator Marketplace · Campaign Workflow · UI)
 
+> ## 🔴 TOP PRIORITY — Admin Panel (Phase F) — do this before anything else
+>
+> **Full step-by-step runbook (exact code, in order): [`admin-panel.md`](admin-panel.md)**
+>
+> Phases A–E below are all `[x]` complete — historical record only. The tasks in this banner
+> are the **only active work** and take precedence over everything else in this file.
+>
+> | # | Task | File |
+> |---|---|---|
+> | F00 | Set Clerk `publicMetadata.role='admin'` on `admin@cohesiq.com` (manual) | Clerk dashboard |
+> | F01 | Add `require_admin` dependency | `backend/app/common/dependencies.py` |
+> | F02 | Create admin package | `backend/app/admin/__init__.py` |
+> | F03 | Admin Pydantic schemas | `backend/app/admin/schemas.py` |
+> | F04 | Admin service (unscoped queries) | `backend/app/admin/service.py` |
+> | F05 | Admin router (gated endpoints) | `backend/app/admin/router.py` |
+> | F06 | Register router | `backend/app/main.py` |
+> | F07 | Middleware admin gate | `frontend/cohesiq-v0/proxy.ts` |
+> | F08 | Admin API client | `frontend/cohesiq-v0/lib/api/admin.ts` |
+> | F09 | Admin shell layout | `app/(admin)/admin/layout.tsx` |
+> | F10 | Dashboard (stats) page | `app/(admin)/admin/page.tsx` |
+> | F11 | Users page | `app/(admin)/admin/users/page.tsx` |
+> | F12 | Campaigns page | `app/(admin)/admin/campaigns/page.tsx` |
+> | F13 | Verify end-to-end | — |
+>
+> **Checklist** (mark `[x]` as completed):
+> - [x] F00 &nbsp; [x] F01 &nbsp; [x] F02 &nbsp; [x] F03 &nbsp; [x] F04 &nbsp; [x] F05 &nbsp; [x] F06 &nbsp; [x] F07 &nbsp; [x] F08 &nbsp; [x] F09 &nbsp; [x] F10 &nbsp; [x] F11 &nbsp; [x] F12 &nbsp; [x] F13
+>
+> Security model (do not change): admin identity = Clerk `publicMetadata.role==='admin'` set once
+> in the dashboard; middleware gates the frontend, backend `require_admin` is the authoritative
+> lock. Additive only — no new container, no new env var, no DB migration.
+
+---
+
 Derived from `docs/plan.md` (the unified plan). Source of truth chain:
 `requirements.md` → `srs.md` → `plan.md` → this file.
 
