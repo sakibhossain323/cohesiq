@@ -1,8 +1,43 @@
-# Admin Panel — Implementation Runbook (TOP PRIORITY)
+# Admin Panel — Implementation Runbook
 
-> **Execute steps in order. Each step = one file + exact code. No decisions left open.**
-> This is the active top-priority work for the marketplace workstream. See the banner at the
-> top of [`tasks-sakib.md`](tasks-sakib.md).
+> **Last updated: 2026-06-09**
+> Phase F (base panel), Phase G (moderation + pagination), and Phase H-partial (user delete + identity) are **complete**.
+> Active next work: remaining Phase H items — see bottom of this file.
+> See [`tasks-sakib.md`](tasks-sakib.md) for the full checklist.
+
+## Current state (as-built)
+
+| Area | What exists |
+|---|---|
+| Auth gate | `proxy.ts` + `require_admin` FastAPI dep — Clerk `publicMetadata.role === 'admin'` |
+| Layout | Reuses `DashboardLayout` (brand/creator sidebar pattern, Clerk `UserButton` for sign-out) |
+| Dashboard `/admin` | Platform stats: 6 overview cards (users, creators, brands, campaigns, active campaigns, applications) + 2 activity cards (signups/applications last 7 days) |
+| Users `/admin/users` | Filterable table (search email, role, is_active, clerk_id, profile status); suspend/unsuspend toggle; **hard delete with DB cascade**; paginated 20/page |
+| Campaigns `/admin/campaigns` | Filterable table (status, visibility); inline status override; paginated 20/page |
+| Reviews `/admin/reviews` | Table with rating stars, public/private badge; delete action; paginated 20/page |
+| Pagination | `Paginated[T]` generic on backend; `AdminPaginationBar` client component with ellipsis; filter params preserved across pages |
+| Auto-migrations | `entrypoint.sh` runs `alembic upgrade head` on every container start |
+
+## Phase H — Completed items (2026-06-09 session)
+
+| # | Task | Status |
+|---|---|---|
+| H-S01 | `DELETE /admin/users/{user_id}` — hard delete with full PostgreSQL CASCADE; self-delete guard (400 if admin deletes own account) | `[x]` |
+| H-S02 | `AdminUserOut` schema extended — `clerk_id`, `has_profile` (checks creator/brand profile exists) | `[x]` |
+| H-S03 | Users table UI — added Clerk ID column (monospace, truncated with hover tooltip), Profile status badge (Complete/Pending), red Delete button with confirm dialog | `[x]` |
+| H-S04 | Hydration fix — `toLocaleDateString('en-US', { timeZone: 'UTC' })` across all three admin client components (users, campaigns, reviews) | `[x]` |
+| H-S05 | `ResetOnboardingButton` — fixed stuck "Resetting…" button; added `session.reload()` to force Clerk JWT refresh before navigating to `/onboarding`, preventing stale-token redirect loop | `[x]` |
+
+## Phase H — Remaining tasks
+
+| # | Task | Notes |
+|---|---|---|
+| H01 | Admin chat interface | Anthropic API + `tool_use` in the browser admin page; no MCP needed for the frontend path |
+| H02 | MCP server for DB insights | Python/FastAPI SSE-based MCP sharing backend deps; decision pending on whether to build separate service or embed |
+| H03 | Applications oversight | Basic counts visible on dashboard; detailed view deferred |
+| H04 | RAG / GraphRAG | Navid's domain; blocked on pgvector/Neo4j (Phase-E layers, see `plan.md`) |
+
+---
 
 ## What you are building
 A master-access admin panel: a role-gated `/admin` section in the existing Next.js app +

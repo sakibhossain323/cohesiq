@@ -59,10 +59,16 @@ pnpm run lint     # ESLint
 ## Backend scripts (run inside the backend container)
 
 ```bash
-docker compose exec backend python -m scripts.generate_seed_data   # generate ~100 creators/brands via Tavily+Groq
-docker compose exec backend python -m scripts.sync_clerk_users      # assign roles to @test.com Clerk users
-docker compose exec backend python -m scripts.seed_db               # seed database with generated data
+# Primary seeding — db/seed.sql is a symlink to the latest snapshot in db/snapshots/
+docker compose exec -T postgres psql -U cohesiq -d cohesiq < db/seed.sql
+
+docker compose exec backend python -m scripts.reset_db             # wipe all data (schema-agnostic, skips alembic_version)
+docker compose exec backend python -m scripts.sync_clerk_users     # assign roles to @test.com Clerk users
 ```
+
+> The old `scripts/generate_seed_data.py` and `scripts/seed_db.py` used Tavily+Groq to produce synthetic data.
+> They are superseded by `seed.sql` (real YouTube/Instagram/TikTok data). Do not use them.
+> See `docs/seeding.md` for the full seeding reference.
 
 ## Architecture
 

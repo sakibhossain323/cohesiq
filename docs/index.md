@@ -103,6 +103,7 @@ These files are background research — informational, not prescriptive.
 
 | File | What it contains |
 |---|---|
+| [`seeding.md`](seeding.md) | **Seeding reference** — use `seed.sql` (real creator data); reset procedure; what survives a DB reset; legacy scripts status |
 | [`deployment-guide.md`](deployment-guide.md) | Deployment instructions, Docker Compose configuration, environment setup |
 | [`openapi.json`](openapi.json) | OpenAPI 3.x specification for all backend API endpoints |
 | [`submittable.md`](submittable.md) | BuildFest deliverables checklist |

@@ -65,13 +65,38 @@ async def get_current_user(
             result = await db.execute(select(User).where(User.clerk_id == clerk_id))
             user = result.scalar_one_or_none()
 
-            # Lazy create user if webhook hasn't fired yet (local dev)
+            # Lazy create user if webhook hasn't fired yet (e.g. after a DB reset in dev)
             if not user:
+                email = f"{clerk_id}@placeholder.local"
+                role = "creator"
+
+                # Pull real data from Clerk so the row is usable immediately
+                if settings.clerk_secret_key:
+                    try:
+                        req = urllib.request.Request(
+                            f"https://api.clerk.com/v1/users/{clerk_id}",
+                            headers={"Authorization": f"Bearer {settings.clerk_secret_key}"},
+                        )
+                        with urllib.request.urlopen(req) as resp:
+                            clerk_user = json.loads(resp.read().decode())
+                        emails = clerk_user.get("email_addresses", [])
+                        primary_id = clerk_user.get("primary_email_address_id")
+                        real_email = next(
+                            (e["email_address"] for e in emails if e["id"] == primary_id), None
+                        )
+                        if real_email:
+                            email = real_email
+                        meta_role = clerk_user.get("public_metadata", {}).get("role", "creator")
+                        if meta_role in ("creator", "brand", "admin"):
+                            role = meta_role
+                    except Exception:
+                        pass  # fall back to placeholder if Clerk API is unreachable
+
                 user = User(
-                    email=f"{clerk_id}@placeholder.local",
+                    email=email,
                     password_hash=None,
                     clerk_id=clerk_id,
-                    role="creator",
+                    role=role,
                     is_email_verified=True,
                     is_active=True,
                 )
