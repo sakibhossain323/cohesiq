@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { inviteCreatorAction, runMatchingAction } from "../../_actions/campaign-actions";
+import { shortlistAction, runMatchingAction } from "../../_actions/campaign-actions";
 import type { Campaign, AIMatchScore } from "@/lib/types";
 import { formatBDT, formatFollowerCount } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,8 +33,8 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
   const [matchingError, setMatchingError] = useState<string | null>(null);
   const [matchingNotice, setMatchingNotice] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [invitingId, setInvitingId] = useState<string | null>(null);
-  const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
+  const [shortlistingId, setShortlistingId] = useState<string | null>(null);
+  const [shortlistedIds, setShortlistedIds] = useState<Set<string>>(new Set());
 
   const returnTo = `/brand/dashboard/campaigns/${campaign.id}/matches`;
   const compareHref = `/brand/dashboard/creators/compare?ids=${Array.from(selectedIds).join(",")}&returnTo=${encodeURIComponent(returnTo)}`;
@@ -72,22 +72,22 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
     });
   };
 
-  const handleInvite = (creatorId: string, creatorName: string) => {
+  const handleShortlist = (creatorId: string, creatorName: string) => {
     setMatchingError(null);
     setMatchingNotice(null);
-    setInvitingId(creatorId);
+    setShortlistingId(creatorId);
     startTransition(async () => {
-      const result = await inviteCreatorAction(
+      const result = await shortlistAction(
         campaign.id,
         creatorId,
-        `Invited from AI matches for ${campaign.title}`,
+        `Shortlisted from AI matches for ${campaign.title}`,
       );
-      setInvitingId(null);
+      setShortlistingId(null);
       if (result.success) {
-        setInvitedIds(prev => new Set(prev).add(creatorId));
-        setMatchingNotice(`${creatorName} has been invited to this campaign.`);
+        setShortlistedIds(prev => new Set(prev).add(creatorId));
+        setMatchingNotice(`${creatorName} added to the shortlist. Send a contract offer from the campaign pipeline.`);
       } else {
-        setMatchingError(result.error || "Failed to invite creator.");
+        setMatchingError(result.error || "Failed to add creator to shortlist.");
       }
     });
   };
@@ -273,7 +273,7 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
               const pctScore = Math.round((match.score_total || 0) * 100);
               const fitHighlights = getFitHighlights(match);
               const isSelected = selectedIds.has(creator.id);
-              const isInvited = invitedIds.has(creator.id);
+              const isShortlisted = shortlistedIds.has(creator.id);
               
               return (
                 <Card 
@@ -379,7 +379,7 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
                             Best Use
                           </p>
                           <p className="mt-2 text-sm leading-5 text-muted-foreground">
-                            Review their profile and recent content, then invite them if their tone fits your campaign creative.
+                            Review their profile and recent content, then shortlist them if their tone fits your campaign creative.
                           </p>
                         </div>
                       </div>
@@ -393,10 +393,10 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
                         <Button
                           size="sm"
                           className="flex-1 text-xs"
-                          disabled={invitingId === creator.id || isInvited}
-                          onClick={() => handleInvite(creator.id, creator.display_name)}
+                          disabled={shortlistingId === creator.id || isShortlisted}
+                          onClick={() => handleShortlist(creator.id, creator.display_name)}
                         >
-                          {invitingId === creator.id ? "Inviting..." : isInvited ? "Invited" : "Invite"}
+                          {shortlistingId === creator.id ? "Adding..." : isShortlisted ? "Shortlisted" : "Add to Shortlist"}
                         </Button>
                       </div>
                     </div>

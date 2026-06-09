@@ -1,22 +1,19 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
-const isProtectedRoute = createRouteMatcher([
-  '/(brand|creator)/dashboard(.*)',
-])
-const isOnboardingRoute = createRouteMatcher([
-  '/onboarding(.*)',
-])
+const isProtectedRoute = createRouteMatcher(['/(brand|creator)/dashboard(.*)'])
+const isOnboardingRoute = createRouteMatcher(['/onboarding(.*)'])
+const isAdminRoute = createRouteMatcher(['/admin(.*)'])
 const isBrandDashboardRoute = createRouteMatcher(['/brand/dashboard(.*)'])
 const isCreatorDashboardRoute = createRouteMatcher(['/creator/dashboard(.*)'])
 
 export default clerkMiddleware(async (auth, req) => {
-  // Allow the image proxy to be called without Clerk auth (bypasses dev-browser checks)
-  if (req.nextUrl && req.nextUrl.pathname && req.nextUrl.pathname.startsWith('/api/image-proxy')) {
-    return NextResponse.next();
+  // Allow the image proxy to be called without Clerk auth
+  if (req.nextUrl?.pathname?.startsWith('/api/image-proxy')) {
+    return NextResponse.next()
   }
   // Public routes: skip auth entirely — no Clerk API call, instant response
-  if (!isProtectedRoute(req) && !isOnboardingRoute(req)) {
+  if (!isProtectedRoute(req) && !isOnboardingRoute(req) && !isAdminRoute(req)) {
     return NextResponse.next()
   }
 
@@ -25,6 +22,15 @@ export default clerkMiddleware(async (auth, req) => {
   // Unauthenticated user hitting a gated route → redirect to sign-in
   if (!userId) {
     return redirectToSignIn({ returnBackUrl: req.url })
+  }
+
+  // Admin routes: only Clerk publicMetadata.role === 'admin'. Handled BEFORE the
+  // onboarding/role logic so the admin is never bounced to /onboarding.
+  if (isAdminRoute(req)) {
+    if (sessionClaims?.metadata?.role !== 'admin') {
+      return NextResponse.redirect(new URL('/', req.url))
+    }
+    return NextResponse.next()
   }
 
   // Authenticated but onboarding incomplete → redirect to /onboarding
@@ -44,8 +50,9 @@ export default clerkMiddleware(async (auth, req) => {
 
   // Onboarding complete but trying to access /onboarding → send to dashboard
   if (isOnboardingRoute(req) && sessionClaims?.metadata?.onboardingComplete) {
-    const role = sessionClaims?.metadata?.role === 'brand' ? 'brand' : 'creator'
-    return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url))
+    const role = sessionClaims?.metadata?.role
+    if (role === 'admin') return NextResponse.redirect(new URL('/admin', req.url))
+    return NextResponse.redirect(new URL(`/${role === 'brand' ? 'brand' : 'creator'}/dashboard`, req.url))
   }
 })
 

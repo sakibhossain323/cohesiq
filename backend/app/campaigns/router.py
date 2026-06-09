@@ -27,6 +27,11 @@ from app.campaigns.schemas import (
     ContentPublishSubmit,
     LiveContractAnalyticsOut,
     LiveMetricSnapshotOut,
+    ShortlistCreate,
+    OfferCreate,
+    NegotiationCounter,
+    OfferDecision,
+    NegotiationTurnOut,
 )
 from app.common.dependencies import get_current_user, get_db
 
@@ -207,6 +212,127 @@ async def respond_to_invitation(
     if not creator:
         raise HTTPException(status_code=403, detail="Only creators can respond to invites")
     return await service.respond_invite(db, campaign_id, application_id, creator.id, data)
+
+
+# ------------------------------------------------------------------ #
+# Shortlist + Offer + Negotiation                                     #
+# ------------------------------------------------------------------ #
+
+async def _resolve_brand(db: AsyncSession, current_user: User):
+    from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+    brand = await get_brand_by_user_id(db, current_user.id)
+    if not brand:
+        raise HTTPException(status_code=403, detail="Brand profile not found")
+    return brand
+
+
+async def _resolve_party(db: AsyncSession, current_user: User) -> tuple[str, uuid.UUID]:
+    """Resolve the acting party (brand or creator) and their profile id."""
+    if current_user.role == "brand":
+        from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+        brand = await get_brand_by_user_id(db, current_user.id)
+        if not brand:
+            raise HTTPException(status_code=403, detail="Brand profile not found")
+        return "brand", brand.id
+    if current_user.role == "creator":
+        from app.creators.service import get_creator_by_user_id  # noqa: PLC0415
+        creator = await get_creator_by_user_id(db, current_user.id)
+        if not creator:
+            raise HTTPException(status_code=403, detail="Creator profile not found")
+        return "creator", creator.id
+    raise HTTPException(status_code=403, detail="Only brands or creators can negotiate")
+
+
+@router.post("/{campaign_id}/shortlist", response_model=ApplicationOut, status_code=201)
+async def shortlist_creator(
+    campaign_id: uuid.UUID,
+    data: ShortlistCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """Add a creator to a campaign's shortlist (allowed in any status, no contract)."""
+    brand = await _resolve_brand(db, current_user)
+    return await service.add_to_shortlist(db, campaign_id, brand.id, data)
+
+
+@router.post(
+    "/{campaign_id}/applications/{application_id}/offer",
+    response_model=ApplicationOut,
+    status_code=201,
+)
+async def send_offer(
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    data: OfferCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """Brand sends a contract offer to a shortlisted creator or applicant (campaign must be active)."""
+    brand = await _resolve_brand(db, current_user)
+    return await service.send_offer(db, campaign_id, application_id, brand.id, data)
+
+
+@router.post(
+    "/{campaign_id}/applications/{application_id}/negotiate",
+    response_model=ApplicationOut,
+)
+async def negotiate_offer(
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    data: NegotiationCounter,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """Either party counters the other party's latest proposed terms."""
+    role, profile_id = await _resolve_party(db, current_user)
+    return await service.counter_offer(db, campaign_id, application_id, role, profile_id, data)
+
+
+@router.post(
+    "/{campaign_id}/applications/{application_id}/offer/accept",
+    response_model=ApplicationOut,
+)
+async def accept_offer(
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    data: OfferDecision,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """Accept the other party's latest offer — activates the contract."""
+    role, profile_id = await _resolve_party(db, current_user)
+    return await service.accept_offer(db, campaign_id, application_id, role, profile_id, data)
+
+
+@router.post(
+    "/{campaign_id}/applications/{application_id}/offer/decline",
+    response_model=ApplicationOut,
+)
+async def decline_offer(
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    data: OfferDecision,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """Either party walks away from an open offer."""
+    role, profile_id = await _resolve_party(db, current_user)
+    return await service.decline_offer(db, campaign_id, application_id, role, profile_id, data)
+
+
+@router.get(
+    "/{campaign_id}/applications/{application_id}/negotiation",
+    response_model=List[NegotiationTurnOut],
+)
+async def get_negotiation_thread(
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """Full offer/counter-offer history for an application (brand or creator party)."""
+    role, profile_id = await _resolve_party(db, current_user)
+    return await service.list_negotiation_turns(db, campaign_id, application_id, role, profile_id)
 
 
 # ------------------------------------------------------------------ #

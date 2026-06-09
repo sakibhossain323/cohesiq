@@ -10,7 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Before planning, proposing changes, or touching any file:
 
-1. Check `graphify-out/wiki/index.md` for broad architecture navigation.
+1. Check `docs/index.md` for a full navigation map of every documentation file in the repo.
+2. Check `graphify-out/wiki/index.md` for broad architecture navigation.
 2. Run `graphify query "<question>"` to locate relevant nodes — this returns a scoped subgraph and is faster than grepping source files.
 3. Use `graphify explain "<concept>"` to understand a module or pattern.
 4. Use `graphify path "<A>" "<B>"` to trace relationships between two files or symbols.
@@ -58,10 +59,16 @@ pnpm run lint     # ESLint
 ## Backend scripts (run inside the backend container)
 
 ```bash
-docker compose exec backend python -m scripts.generate_seed_data   # generate ~100 creators/brands via Tavily+Groq
-docker compose exec backend python -m scripts.sync_clerk_users      # assign roles to @test.com Clerk users
-docker compose exec backend python -m scripts.seed_db               # seed database with generated data
+# Primary seeding — db/seed.sql is a symlink to the latest snapshot in db/snapshots/
+docker compose exec -T postgres psql -U cohesiq -d cohesiq < db/seed.sql
+
+docker compose exec backend python -m scripts.reset_db             # wipe all data (schema-agnostic, skips alembic_version)
+docker compose exec backend python -m scripts.sync_clerk_users     # assign roles to @test.com Clerk users
 ```
+
+> The old `scripts/generate_seed_data.py` and `scripts/seed_db.py` used Tavily+Groq to produce synthetic data.
+> They are superseded by `seed.sql` (real YouTube/Instagram/TikTok data). Do not use them.
+> See `docs/seeding.md` for the full seeding reference.
 
 ## Architecture
 
@@ -116,6 +123,8 @@ Always add new env vars to `.env.example` in both `frontend/` and `backend/`.
 Before altering any SQLAlchemy model, read `docs/schema.md` first — it is the authoritative schema reference. After substantial model changes, update `docs/schema.md` and `docs/plan.md`.
 
 ## Documentation source-of-truth hierarchy
+
+For a full navigation map of every file under `docs/`, see **`docs/index.md`** first.
 
 When docs disagree, resolve in this order (defined in `docs/plan.md` §0):
 

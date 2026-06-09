@@ -8,21 +8,11 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Cohesiq - Match Creators and Brands in Bangladesh',
   description: 'The smart way to match influencers and brands in Bangladesh. Find creators, post campaigns, and grow together.',
-  generator: 'v0.app',
   icons: {
     icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon-light-32x32.png', media: '(prefers-color-scheme: light)' },
+      { url: '/icon-dark-32x32.png',  media: '(prefers-color-scheme: dark)'  },
     ],
     apple: '/apple-icon.png',
   },

@@ -2,14 +2,9 @@
 
 import { useState, useTransition } from "react";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -17,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { ApplicationStatusBadge } from "@/components/application/ApplicationStatusBadge";
 import { getAvatarInitials } from "@/lib/avatar";
 import { formatBDT, formatDate } from "@/lib/utils";
-import { CheckCircle2, XCircle, Star, Users, ExternalLink, Loader2, ChevronRight } from "lucide-react";
+import { Send, XCircle, Star, Users, ExternalLink, Loader2, ChevronRight, BookmarkX, BookmarkPlus, Lock } from "lucide-react";
 import type { Application, ApplicationStatus } from "@/lib/types";
 import { updateApplicationStatusAction } from "../_actions/campaign-actions";
 import Link from "next/link";
@@ -25,26 +20,26 @@ import Link from "next/link";
 interface ApplicationDrawerProps {
   application: Application | null;
   campaignId: string;
+  campaignActive: boolean;
   onClose: () => void;
   onStatusChange: (applicationId: string, newStatus: ApplicationStatus) => void;
-  onAcceptAndContract?: (app: Application) => void;
+  onSendOffer: (app: Application) => void;
+  onReShortlist?: (app: Application) => void;
 }
 
 const PLATFORM_LABELS: Record<string, string> = {
-  youtube: "YouTube",
-  instagram: "Instagram",
-  facebook: "Facebook",
-  tiktok: "TikTok",
-  twitter: "Twitter/X",
-  linkedin: "LinkedIn",
+  youtube: "YouTube", instagram: "Instagram", facebook: "Facebook",
+  tiktok: "TikTok", twitter_x: "Twitter/X", linkedin: "LinkedIn",
 };
 
 export function ApplicationDrawer({
   application,
   campaignId,
+  campaignActive,
   onClose,
   onStatusChange,
-  onAcceptAndContract,
+  onSendOffer,
+  onReShortlist,
 }: ApplicationDrawerProps) {
   const [isPending, startTransition] = useTransition();
   const [showRejectForm, setShowRejectForm] = useState(false);
@@ -56,27 +51,19 @@ export function ApplicationDrawer({
   const creatorName = creator?.display_name || "Unknown Creator";
   const initials = getAvatarInitials(creatorName);
   const status = application.status;
-
-  const canShortlist = status === "pending";
-  const canAccept = status === "pending" || status === "shortlisted" || status === "pending_agreement";
-  const canReject = status === "pending" || status === "invited" || status === "shortlisted";
-  const isTerminal = status === "accepted" || status === "rejected" || status === "withdrawn" || status === "completed";
+  const isApplicant = status === "pending"; // creator-initiated, awaiting brand
+  const isShortlisted = status === "shortlisted";
+  const canOffer = isApplicant || isShortlisted;
+  const isDeclined = ["rejected", "declined", "withdrawn"].includes(status);
 
   const handleAction = (newStatus: ApplicationStatus, reason?: string) => {
     startTransition(async () => {
-      const result = await updateApplicationStatusAction(
-        application.id,
-        newStatus,
-        campaignId,
-        reason
-      );
+      const result = await updateApplicationStatusAction(application.id, newStatus, campaignId, reason);
       if (result.success) {
         onStatusChange(application.id, newStatus);
         setShowRejectForm(false);
         setRejectionReason("");
-        if (newStatus === "accepted" && onAcceptAndContract) {
-          onAcceptAndContract(application);
-        }
+        onClose();
       }
     });
   };
@@ -102,13 +89,14 @@ export function ApplicationDrawer({
           </SheetTitle>
           <SheetDescription className="flex items-center gap-2">
             <ApplicationStatusBadge status={status} />
-            <span className="text-xs text-muted-foreground">Applied {formatDate(application.applied_at)}</span>
+            <span className="text-xs text-muted-foreground">
+              {isApplicant ? "Applied" : "Added"} {formatDate(application.applied_at)}
+            </span>
           </SheetDescription>
         </SheetHeader>
 
         <Separator className="mb-4" />
 
-        {/* Creator stats */}
         {(creator as any)?.social_profiles?.length > 0 && (
           <div className="mb-5">
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Platforms</h4>
@@ -150,7 +138,6 @@ export function ApplicationDrawer({
           )}
         </div>
 
-        {/* Proposal */}
         {application.proposal_text && (
           <div className="mb-5">
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Proposal</h4>
@@ -160,56 +147,37 @@ export function ApplicationDrawer({
           </div>
         )}
 
-        {/* Rejection reason (read-only) */}
-        {status === "rejected" && application.rejection_reason && (
-          <div className="mb-5 border border-red-200 bg-red-50 dark:bg-red-950/20 rounded-lg p-3">
-            <h4 className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-1">Rejection Reason</h4>
-            <p className="text-sm text-red-700 dark:text-red-400">{application.rejection_reason}</p>
-          </div>
-        )}
-
-        {/* Action buttons */}
-        {!isTerminal && !showRejectForm && (
+        {/* Actions */}
+        {canOffer && !showRejectForm && (
           <div className="flex flex-col gap-2 mt-4">
-            {canShortlist && (
-              <Button
-                variant="outline"
-                className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
-                disabled={isPending}
-                onClick={() => handleAction("shortlisted")}
-              >
-                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Shortlist
-              </Button>
+            <Button
+              className="w-full"
+              disabled={isPending || !campaignActive}
+              onClick={() => onSendOffer(application)}
+            >
+              {campaignActive ? <Send className="mr-2 h-4 w-4" /> : <Lock className="mr-2 h-4 w-4" />}
+              Send Offer
+            </Button>
+            {!campaignActive && (
+              <p className="text-xs text-muted-foreground text-center">
+                Launch the campaign to start sending offers.
+              </p>
             )}
-            {canAccept && (
-              <Button
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-                disabled={isPending}
-                onClick={() => handleAction("accepted")}
-              >
-                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
-                {onAcceptAndContract ? "Accept & Set Contract Terms" : "Accept"}
-              </Button>
-            )}
-            {canReject && (
-              <Button
-                variant="outline"
-                className="w-full border-red-300 text-red-600 hover:bg-red-50"
-                disabled={isPending}
-                onClick={() => setShowRejectForm(true)}
-              >
-                <XCircle className="mr-2 h-4 w-4" />
-                Reject
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              className="w-full text-destructive border-destructive/30 hover:bg-destructive/10"
+              disabled={isPending}
+              onClick={() => (isApplicant ? setShowRejectForm(true) : handleAction("withdrawn"))}
+            >
+              {isApplicant ? <XCircle className="mr-2 h-4 w-4" /> : <BookmarkX className="mr-2 h-4 w-4" />}
+              {isApplicant ? "Decline applicant" : "Remove from shortlist"}
+            </Button>
           </div>
         )}
 
-        {/* Rejection form (B04) */}
         {showRejectForm && (
-          <div className="mt-4 space-y-3 border border-red-200 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-red-600">Reject Application</h4>
+          <div className="mt-4 space-y-3 border border-destructive/30 rounded-lg p-4">
+            <h4 className="text-sm font-semibold text-destructive">Decline applicant</h4>
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Reason (shown to creator, optional)</Label>
               <Textarea
@@ -225,14 +193,34 @@ export function ApplicationDrawer({
               </Button>
               <Button
                 size="sm"
-                className="bg-red-600 hover:bg-red-700 text-white"
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 disabled={isPending}
                 onClick={() => handleAction("rejected", rejectionReason || undefined)}
               >
                 {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Confirm Reject
+                Confirm decline
               </Button>
             </div>
+          </div>
+        )}
+
+        {isDeclined && (
+          <div className="flex flex-col gap-2 mt-4">
+            {application.rejection_reason && (
+              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 mb-1">
+                <p className="text-xs font-semibold text-destructive mb-1">Decline reason</p>
+                <p className="text-sm text-foreground">{application.rejection_reason}</p>
+              </div>
+            )}
+            <Button
+              variant="outline"
+              className="w-full"
+              disabled={isPending}
+              onClick={() => onReShortlist?.(application)}
+            >
+              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BookmarkPlus className="mr-2 h-4 w-4" />}
+              Re-add to Shortlist
+            </Button>
           </div>
         )}
 
