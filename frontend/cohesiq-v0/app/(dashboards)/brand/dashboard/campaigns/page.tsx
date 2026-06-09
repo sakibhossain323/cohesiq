@@ -9,7 +9,7 @@ import {
 import { CampaignStatusBadge } from "./_components/CampaignStatusBadge";
 import { formatBDT, formatDate, daysUntil } from "@/lib/utils";
 import { getBrandCategoryLabel } from "@/lib/brand-categories";
-import { Briefcase, Plus, Calculator, BarChart3, ArrowRight } from "lucide-react";
+import { Briefcase, Plus, ArrowRight } from "lucide-react";
 
 export default async function BrandCampaignsPage() {
   const { getToken } = await auth();
@@ -31,18 +31,6 @@ export default async function BrandCampaignsPage() {
             </p>
           </div>
           <div className="bd-header-actions">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/brand/dashboard/campaigns/rate-benchmark">
-                <BarChart3 className="mr-2 h-4 w-4" />
-                Rate Benchmarks
-              </Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/brand/dashboard/campaigns/roi-calculator">
-                <Calculator className="mr-2 h-4 w-4" />
-                ROI Calculator
-              </Link>
-            </Button>
             <Button asChild>
               <Link href="/brand/dashboard/campaigns/new">
                 <Plus className="mr-2 h-4 w-4" />

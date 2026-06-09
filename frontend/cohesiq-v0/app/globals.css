@@ -176,8 +176,8 @@
   --muted-foreground:       #8B8170;
   --accent:                 var(--brand-primary-soft);
   --accent-foreground:      var(--brand-primary-strong);
-  --destructive:            var(--brand-secondary-soft);
-  --destructive-foreground: var(--brand-secondary-strong);
+  --destructive:            var(--brand-secondary);
+  --destructive-foreground: #FFFFFF;
   --border:                 #2D281F;
   --input:                  #2D281F;
   --ring:                   var(--brand-primary);

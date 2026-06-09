@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/sidebar'
 import { LogIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { CohesiqMark } from '@/components/brand/CohesiqLogo'
+import { ThemeToggle } from '@/components/theme-provider'
 import './sidebar.css'
 
 export interface NavItem {
@@ -28,20 +30,6 @@ export interface NavItem {
 interface DashboardLayoutProps {
   children: React.ReactNode
   navItems: NavItem[]
-}
-
-/* ── Cohesiq node-graph mark (matches Navbar SVG exactly) ── */
-function CohesiqMark() {
-  return (
-    <svg viewBox="0 0 32 32" fill="none" aria-hidden style={{ width: 22, height: 22 }}>
-      <circle cx="8"  cy="8"  r="4"   fill="white" />
-      <circle cx="24" cy="9"  r="3"   fill="white" opacity="0.75" />
-      <circle cx="22" cy="24" r="4.5" fill="white" opacity="0.88" />
-      <line x1="8"  y1="8"  x2="24" y2="9"  stroke="white" strokeWidth="1.6" opacity="0.5" />
-      <line x1="8"  y1="8"  x2="22" y2="24" stroke="white" strokeWidth="1.6" opacity="0.5" />
-      <line x1="24" y1="9"  x2="22" y2="24" stroke="white" strokeWidth="1.6" opacity="0.5" />
-    </svg>
-  )
 }
 
 export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
@@ -59,7 +47,7 @@ export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
       <Sidebar collapsible="icon">
 
         {/* ── Logo ───────────────────────────────────────── */}
-        <SidebarHeader className="border-b border-sidebar-border p-0">
+        <SidebarHeader className="border-sidebar-border p-0">
           <Link href="/" className="sb-logo-link">
             <div className="sb-mark">
               <CohesiqMark />
@@ -116,9 +104,10 @@ export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
       </Sidebar>
 
       <SidebarInset>
-        <header className="sb-topbar flex h-14 items-center gap-2 px-4">
+        <header className="sb-topbar flex items-center gap-2 px-4">
           <SidebarTrigger className="sb-trigger" />
           <div className="flex-1" />
+          <ThemeToggle />
         </header>
         <main className="flex-1 overflow-auto">
           {children}
