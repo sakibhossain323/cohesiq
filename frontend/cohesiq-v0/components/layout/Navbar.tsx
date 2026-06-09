@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/theme-provider";
+import { CohesiqMark } from "@/components/brand/CohesiqLogo";
 
 const navLinks = [
   { href: "/#how", label: "How it Works" },
@@ -51,14 +52,7 @@ export function Navbar() {
       >
         {/* Logo */}
         <Link href="/" className="logo" aria-label="Cohesiq home">
-          <svg className="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden>
-            <circle cx="8" cy="8" r="4" fill="var(--brand-primary)" />
-            <circle cx="24" cy="9" r="3" fill="var(--brand-secondary)" />
-            <circle cx="22" cy="24" r="4.5" fill="var(--brand-primary)" />
-            <line x1="8" y1="8" x2="24" y2="9" stroke="var(--brand-primary)" strokeWidth="1.6" opacity="0.55" />
-            <line x1="8" y1="8" x2="22" y2="24" stroke="var(--brand-primary)" strokeWidth="1.6" opacity="0.55" />
-            <line x1="24" y1="9" x2="22" y2="24" stroke="var(--brand-secondary)" strokeWidth="1.6" opacity="0.55" />
-          </svg>
+          <CohesiqMark className="logo-mark" />
           Cohesiq
           {pathname === "/design-system" && (
             <span style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: "var(--color-text-muted)", fontSize: "var(--text-sm)" }}>
