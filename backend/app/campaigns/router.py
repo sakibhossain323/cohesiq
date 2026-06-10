@@ -43,6 +43,7 @@ router = APIRouter()
 # ------------------------------------------------------------------ #
 
 @router.get("/", response_model=List[CampaignOut])
+@router.get("", response_model=List[CampaignOut])  # no-slash variant for proxy compatibility
 async def list_campaigns(
     db: Annotated[AsyncSession, Depends(get_db)],
     niche: Optional[int] = Query(None),
@@ -68,6 +69,7 @@ async def list_campaigns(
 
 
 @router.post("/", response_model=CampaignOut, status_code=201)
+@router.post("", response_model=CampaignOut, status_code=201)  # no-slash variant for proxy compatibility
 async def create_campaign(
     data: CampaignCreate,
     db: Annotated[AsyncSession, Depends(get_db)],

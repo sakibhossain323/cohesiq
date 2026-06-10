@@ -138,7 +138,7 @@ Structured **JSON-mode** prompts tightly coupled to Pydantic v2 schemas for dete
 ### MCP Usage (20 pts)
 **Tick:** [x] We used MCP servers/clients.
 We **used** (did not build) MCP servers as part of the development workflow:
-- **graphify** — codebase knowledge-graph MCP: `query` / `explain` / `path` / god-nodes / shortest-path over 2,533 nodes / 7,806 edges. Drives the graphify-first workflow.
+- **graphify** — codebase knowledge-graph MCP: `query` / `explain` / `path` / god-nodes / shortest-path over 7,470 nodes / 18,064 edges. Drives the graphify-first workflow.
 - **context7** — live framework documentation MCP (Next.js, FastAPI, Clerk).
 - **next-devtools** — Next.js devtools MCP (client config in `.vscode/mcp.json`).
 *(Honesty: we did not author a custom MCP server; claims are "used" only.)*

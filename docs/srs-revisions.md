@@ -6,6 +6,7 @@ All revision records have moved to `docs/revisions/`. This file is kept as a nav
 |---|---|---|---|
 | [srs-revisions-26-06-06.md](revisions/srs-revisions-26-06-06.md) | 2026-06-06 | Sakib | Contract Entity — `Contract` as first-class entity, campaign type deprecation, revised US-5/US-10/US-16 |
 | [srs-revisions-26-06-07.md](revisions/srs-revisions-26-06-07.md) | 2026-06-07 | Navid | Matching weight rebalance (D13), YouTube enrichment persistence, sub-score expansion |
+| [srs-revisions-26-06-10.md](revisions/srs-revisions-26-06-10.md) | 2026-06-10 | Documentation overhaul (team) | Docs reconciled to code — SRS→IEEE shape, user stories/personas extracted, diagrams single-sourced, matching-weight drift fixed (0.35/0.30→0.45/0.20), migration head 0017→0022 |
 
 Supporting implementation reference docs (also in `docs/revisions/`):
 

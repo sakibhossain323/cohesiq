@@ -196,7 +196,7 @@ export async function getCampaignMatches(campaignId: string, token: string): Pro
 }
 
 export async function createCampaign(data: any, token: string): Promise<Campaign> {
-  const result = await fetchApi<any>("/campaigns/", {
+  const result = await fetchApi<any>("/campaigns", {
     method: "POST",
     body: JSON.stringify(data),
     token,

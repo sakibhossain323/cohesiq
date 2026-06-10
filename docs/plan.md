@@ -3,8 +3,10 @@
 **Bangladesh's Creator & Talent Marketplace, powered by Graph AI**
 The Infinity AI BuildFest 2026 · MarTech Track · Influencer Matching Engine
 
-> **Status:** Living document · Last unified **2026-06-07** · Phase B complete · Phase C partial · Phase D partially done (D03/D04/D05 + N01–N03/N12 shipped) · Supersedes the original
+> **Status:** Living document · Last unified **2026-06-10** · Phase B complete · Phase C partial · Phase D substantially done (offer-driven lifecycle, voice/PDF + AI brief campaign creation, admin panel, conflict-of-interest check, ROI/rate-benchmark tools shipped) · Supersedes the original
 > "Phase 1 YouTube-only" plan (archived in git history at commit before this rewrite).
+>
+> **2026-06-10 documentation overhaul:** This revision reconciled the docs to code — fixed the matching-weight drift (D13: niche 0.45 / budget 0.20 per `matching_config.py`, superseding the older 0.35/0.30 doc value), corrected the migration head to `0022` and listed its new tables, restructured the SRS to IEEE shape with diagrams revalidated against the live schema. Full record: `docs/revisions/srs-revisions-26-06-10.md`.
 
 ---
 
@@ -39,7 +41,7 @@ talent is the supply side seeded first to beat the cold start.
 
 ---
 
-## 2. Current architecture (code reality, 2026-06-05)
+## 2. Current architecture (code reality, 2026-06-10)
 
 This is what actually runs today — the baseline every new task builds on.
 
@@ -54,7 +56,8 @@ This is what actually runs today — the baseline every new task builds on.
 | Time-series | **none** | TimescaleDB | not deployed |
 | Cache | **none** | Redis (score cache, quota) | not deployed |
 | Auth | Clerk RS256 JWT (`common.dependencies.get_current_user`) | email/password in SRS ER | Clerk chosen instead — **better**, keep |
-| LLM (generative) | **Groq LLaMA-3.1-8b-instant (primary)** for match rationale, brief analyzer, niche classification; Gemini 1.5 Flash (matching fallback); Gemini 2.0 Flash (brief fallback) | Gemini 1.5 Flash | Groq is primary — not documented in SRS |
+| LLM (generative) | **Groq llama-3.1-8b-instant (primary)** for match rationale, brief analyzer, niche classification, synthetic seed; Gemini 1.5 Flash (rationale/matching fallback); Gemini 2.0 Flash (brief fallback) | Gemini 1.5 Flash | Groq is primary — not documented in SRS |
+| Speech-to-text | **Groq Whisper large-v3-turbo** — voice→text campaign creation | (not in SRS) | new AI feature; shipped |
 | Embeddings | Gemini `text-embedding-004` with token-similarity fallback (`services/semantic_match.py`) | sentence-transformers + pgvector | not persisted; computed on the fly |
 | YouTube | **Tier-0 public read wrapper** (`app/youtube/`) + persistence via `creators/normalization.py` | YouTube Data API v3 Tier-0 | wrapper aligned; persistence layer shipped (N01–N03/N12) |
 | Seeding | Tavily + Groq LLaMA-3.1-8b-instant synthetic generator + DB seeder (`backend/scripts/`) | 18–20 real channels via `Channels.list` | real-YT seeding done: 19 channels verified |
@@ -69,11 +72,11 @@ graph/vector/timeseries are **additive layers** (see §4 phases), never MVP bloc
 `auth/` · `brands/` · `creators/` *(+ `normalization.py`)* · `campaigns/` · `youtube/` *(stateless API client, Navid)* · `common/` (shared deps)
 · `services/` (cross-domain: `matching.py`, `matching_config.py`, `semantic_match.py`, `llm_matching.py`) · `webhooks/` (Clerk).
 Routers parse/return only; logic lives in services; no cross-domain imports in routers.
-**LLM stack (as-built):** Groq LLaMA-3.1-8b-instant is the primary generative model for all AI features; Gemini APIs serve embeddings (`text-embedding-004`) and generative fallback (`1.5 Flash` for matching, `2.0 Flash` for brief analyzer).
+**LLM stack (as-built):** Groq llama-3.1-8b-instant is the primary generative model for all AI features (match rationale, brief analyzer, niche classification, synthetic seed); Groq Whisper large-v3-turbo powers voice→text campaign creation; Gemini APIs serve embeddings (`text-embedding-004`, not persisted) and generative fallback (`1.5 Flash` for matching/rationale, `2.0 Flash` for brief analyzer).
 
 ### 2.3 Live data model (authoritative: `docs/schema.md`)
 
-Relational core, all present and migrated (heads `0001`→`0013` plus three merge migrations):
+Relational core, all present and migrated (**migration head `0022`**):
 `users` → `creator_profiles` / `brand_profiles`; creator extension tables
 (`creator_social_profiles` one-row-per-platform, `creator_niches`, `creator_languages`,
 `creator_rate_cards`, `creator_portfolio_items`, `creator_collaboration_history`);
@@ -84,11 +87,18 @@ lookup tables `niches`, `languages`.
 **Migration 0013 (Sakib) added to `campaigns`:** `campaign_type` enum (six values),
 `kpi_targets` JSONB, `hashtags` TEXT[], `tracking_notes` TEXT.
 
-**Migrations 0014–0017 (Navid):**
+**Migrations 0014–0017:**
 - `0014_add_platform_recency_semantic_to_match_scores` — adds `score_platform`, `score_recency`, `score_semantic` (FLOAT, nullable) to `ai_match_scores`
 - `0015_add_contract_model` — Contract as first-class entity (Sakib)
 - `0016_add_api_verified_social_profile_fields` — adds `is_api_verified`, `api_verified_at`, `api_channel_id`, `data_source` to `creator_social_profiles`
 - `0017_restore_social_creator_platform_unique` — restores `UNIQUE(creator_id, platform)` constraint accidentally dropped by an earlier migration
+
+**Migrations 0018–0022 (offer-driven lifecycle + analytics, current head `0022`):** added four new tables and extended `campaigns`:
+- **`negotiation_turns`** — multi-turn offer/counter-offer ledger backing the negotiation flow (4 s frontend polling)
+- **`ai_match_scores`** *(extended)* — persisted six-factor + semantic sub-scores (from 0014)
+- **`contract_deliverables`** — per-creator deliverable subset attached to a contract
+- **`live_content_metric_snapshots`** — Day-7/14/30 live content metric capture for ROI tracking (replaces the earlier estimate-only path)
+- `campaigns` gained **visibility / invitation fields** and the **`archived`** status value; campaign statuses are now `draft` / `active` / `in_progress` / `completed` / `cancelled` / `archived`
 
 ### 2.4 Navid's YouTube module — exact scope
 
@@ -129,8 +139,8 @@ SRS honest without rewriting it. Each entry is a *decision*, not an accident.
 | D10 | Full Bangla UI toggle (FR-24, P0) | not implemented (no i18n library) | **Phase C.** Currency/date already BDT/Asia-Dhaka; needs an i18n layer. High rubric value (localization), keep on the demo cut-line. |
 | D11 | Escrow + per-type fee (FR-18/19, US-16) | fee % defined per `contract_type` on Contract entity; no real ledger | **Phase D, simulated.** Fee locked at contract creation (content_collaboration=15%, product_seeding=10%, talent_engagement=18%); displayed as escrow simulation. No real bKash/Nagad in the hackathon window. |
 | D12 | `campaign_type` on Campaign (FR-6/7) | `contract_type` on Contract entity; `campaigns.campaign_type` **DEPRECATED** (nullable, no new writes) | **Contract as first-class entity.** Engagement type (Content Collaboration / Product Seeding / Talent Engagement) now lives on `Contract`, not `Campaign`. Campaign is type-agnostic with a `visibility` flag (public/private). `campaign_type` column kept nullable for backward compat — safe to DROP once all references are confirmed gone. See `docs/revisions/srs-revisions-26-06-06.md` for full change request. |
-| D13 | SRS FR-11 matching weights: niche .30 / engagement .20 / budget .20 / platform .15 / language .10 / recency .05 | As-built (`matching_config.py`): niche .35 / budget .30 / platform .15 / engagement .10 / language .08 / recency .02 | **Weight rebalance for BD market.** Budget and niche raised; engagement reduced (noisy at micro tier). Source of truth: `SCORE_WEIGHTS` in `backend/app/services/matching_config.py`. See `docs/revisions/srs-revisions-26-06-07.md` §2. |
-| D14 | Linear application lifecycle; contract terms set after acceptance | **Offer-driven lifecycle** (migration `0022`): brand creates draft → **launches** (active) → **shortlists** (independent pool, allowed in draft) → **sends offer** (creates `drafted` contract + opens negotiation) → **multi-turn negotiation** (`negotiation_turns`) → either party accepts → contract `active`. Per-creator deliverable subset (`contract_deliverables`) + non-cash compensation (`contracts.non_cash_compensation`). Offers gated on `active`; offers carry only `content_collaboration`/`product_seeding` (talent_engagement hidden in the offer UI as it conflicts with content deliverables). Terminal applications (`rejected`/`declined`/`withdrawn`) can be re-shortlisted/re-offered. | **Intuitive real-world flow.** Terms now travel **with the offer**, not after acceptance. Status mapping: `shortlisted`/`pending`=Shortlist lane, `invited`=Offered, `pending_agreement`=Negotiating, `accepted`=contract active. Legacy `respond-invite` + accepted-only `…/contract` endpoints retained for back-compat; new endpoints: `…/shortlist`, `…/offer`, `…/negotiate`, `…/offer/accept`, `…/offer/decline`, `…/negotiation`. |
+| D13 | SRS FR-11 matching weights: niche .30 / engagement .20 / budget .20 / platform .15 / language .10 / recency .05 | As-built (`matching_config.py`): **niche .45 / budget .20** / platform .15 / engagement .10 / language .08 / recency .02 | **Weight rebalance for BD market.** Niche is the dominant relevance signal; engagement reduced (noisy at micro tier). **Code is the source of truth** — `SCORE_WEIGHTS` in `backend/app/services/matching_config.py`. The earlier documented value (niche .35 / budget .30) was a stale doc figure now **superseded** by the live config. See `docs/revisions/srs-revisions-26-06-10.md`. |
+| D14 | Linear application lifecycle; contract terms set after acceptance | **Offer-driven lifecycle** (migration `0022`). **Important:** the lifecycle is *not* modelled as campaign states — campaign statuses remain `draft` / `active` / `in_progress` / `completed` / `cancelled` / `archived`. The offer flow lives across **`campaign_applications`** (application status), **`negotiation_turns`** (multi-turn offer/counter ledger), and **`contracts`** (+ `contract_deliverables`, `contracts.non_cash_compensation`). Flow: brand creates draft campaign → **launches** (campaign→active) → **shortlists** creators (independent pool, allowed in draft) → **sends offer** (creates `drafted` contract + opens a negotiation) → **multi-turn negotiation** (`negotiation_turns`, 4 s frontend polling) → either party accepts → contract `active`. Offers gated on campaign `active`; offers carry only `content_collaboration`/`product_seeding` (talent_engagement hidden in the offer UI as it conflicts with content deliverables). Terminal applications (`rejected`/`declined`/`withdrawn`) can be re-shortlisted/re-offered. | **Intuitive real-world flow.** Terms now travel **with the offer**, not after acceptance. The lifecycle is application/negotiation/contract-driven, **not** campaign-status-driven. Application status mapping: `shortlisted`/`pending`=Shortlist lane, `invited`=Offered, `pending_agreement`=Negotiating, `accepted`=contract active. Legacy `respond-invite` + accepted-only `…/contract` endpoints retained for back-compat; new endpoints: `…/shortlist`, `…/offer`, `…/negotiate`, `…/offer/accept`, `…/offer/decline`, `…/negotiation`. |
 
 ### 3.1 Type taxonomies — three systems, do not merge
 
@@ -176,31 +186,35 @@ FRs it satisfies and its current status.
 - `[x]` Active Contracts tab wired to `localApplications.filter(a => a.status === 'accepted' || a.status === 'completed')`; Sent Invitations tab wired to `initiated_by === 'brand'`
 - `[x]` Edit form parity with the wizard (`campaigns/[id]/edit`) — "Campaign Type & Goals" card with campaign_type, hashtags, tracking_notes, KPI grid added (A11)
 - `[x]` Campaign application gatekeeper backend slice — migration `0020` adds application questions, acknowledgments, submitted answers, accepted acknowledgment rows, and `pending_agreement`; service validates required answers/acks on apply and invite acceptance, with capacity guard for `pending_agreement`/`accepted`
-- `[ ]` FR-15 explicit state machine with timestamped audit-trail transitions (currently status-field only)
+- `[x]` FR-15 **offer-driven lifecycle** (migration `0022`) — draft→launch→shortlist→offer→multi-turn negotiation (`negotiation_turns`, 4 s polling)→accept→contract `active`; terms travel with the offer (see §3 D14). New endpoints `…/shortlist`, `…/offer`, `…/negotiate`, `…/offer/accept`, `…/offer/decline`, `…/negotiation`.
+- `[x]` **Voice + PDF campaign creation** — Groq Whisper large-v3-turbo transcribes voice briefs; PDF upload parsed into the wizard
+- `[x]` **AI brief analysis** — Groq analyzes a free-text/voice/PDF brief and pre-fills wizard fields
+- `[x]` **Admin panel** — platform administration surface
 
 ### Phase C — Matching transparency + localization *(SRS US-6, US-7, US-8, US-9; FR-9…FR-11, FR-24)* — **[~] partial**
 - `[x]` `POST /campaigns/{id}/run-matching` + `GET /campaigns/{id}/matches`, persisted to `ai_match_scores`
-- `[x]` Pure deterministic scorer (`services/matching.py`) with weights externalised to `services/matching_config.py`: niche .35 / budget .30 / platform .15 / engagement .10 / language .08 / recency .02 (rebalanced from SRS FR-11 — see plan §3 D13 and `docs/revisions/srs-revisions-26-06-07.md`)
+- `[x]` Pure deterministic scorer (`services/matching.py`) with weights externalised to `services/matching_config.py`: niche .45 / budget .20 / platform .15 / engagement .10 / language .08 / recency .02 (rebalanced from SRS FR-11 — see plan §3 D13 and `docs/revisions/srs-revisions-26-06-10.md`). **Five-stage pipeline:** hard SQL filter → 90-day relational conflict-of-interest check → deterministic niche + capped semantic rescue → six-factor weighted score → heuristic rationale (Groq personalizes the top 5).
 - `[x]` Sub-score breakdown UI: all six sub-scores now persisted (`score_niche`, `score_engagement`, `score_budget`, `score_language`, `score_platform`, `score_recency`) + `score_semantic` in `ai_match_scores` (migration 0014); `MatchesClient` renders Platform Fit, Recency, and Semantic Similarity bars alongside the original four
-- `[~]` Rationale is heuristic; Gemini path is optional — formalize a bounded LLM rationale (FR-9)
+- `[x]` FR-9 LLM rationale — heuristic baseline for all matches; Groq llama-3.1-8b-instant personalizes the top `LLM_RATIONALE_TOP_N` (5), Gemini 1.5 Flash fallback
 - `[~]` Live discovery grid + profile drawer (matches page + creator detail exist; live-filter URL grid partial)
 - `[ ]` **FR-24 full Bangla UI toggle** (D10) — add i18n, translate core flows
 
-### Phase D — Differentiators: trust, real data, fees *(SRS US-3, US-4, US-11, US-12, US-16, US-19, US-20)* — **[~] partial**
-- `[~]` US-20 ROI summary: brand-dashboard ROI cards done (Sakib C01); per-campaign Day-7/14/30 snapshots pending (C02 UI done with estimate data; real snapshot data blocked on N10 — engagement snapshots table)
+### Phase D — Differentiators: trust, real data, fees *(SRS US-3, US-4, US-11, US-12, US-16, US-19, US-20)* — **[x] substantially done**
+- `[~]` US-20 ROI summary: brand-dashboard ROI cards done (Sakib C01); per-campaign Day-7/14/30 snapshots — the **`live_content_metric_snapshots`** table now exists (migration ≤0022), unblocking real snapshot capture; backfill/population of live metrics still in progress
 - `[x]` C03 Creator performance comparison — table in Active Contracts tab comparing accepted creators by niche, followers, proposed vs agreed rate (with savings diff), deliverables, and status; sorted by agreed rate; shown only when 2+ creators accepted
 - `[x]` Budget & ROI Calculator — `/brand/dashboard/campaigns/roi-calculator`; pure client widget; per-tier (nano/micro/macro/mega) reach, engagements, conversions, revenue, ROI % — zero API calls (Sakib D03)
 - `[x]` Rate Card Benchmark — `/brand/dashboard/campaigns/rate-benchmark`; Server Component fetches `/creators/?limit=200`, groups by `platform||deliverable_type||tier`, computes median/min/max; filterable client table (Sakib D04)
 - `[x]` Creator Comparison Tool — `/brand/dashboard/creators/compare`; reads `?ids=` param, fetches up to 3 creators in parallel; side-by-side stat grid (Rating, Collaborations, Available, Platforms, Min Rate, Rate Cards, Niches) + AI brief placeholder pending N05; selection UI with checkbox overlay + sticky compare bar on Find Creators page (Sakib D05)
 - `[x]` US-2/US-3/US-4 **persist YouTube enrichment + real-data seeding + Tier-0 normalization** → `creator_social_profiles` verified via `POST /creators/{creator_id}/platforms/youtube/enrich`; deterministic topic niche, content language, city fallback, and engagement-vs-tier ratio are verified; `backend/scripts/seed_real_youtube_creators.py` seeded 19 real BD YouTube channels plus 38 estimated companion profiles and 190 YouTube portfolio items. Seed bios come from channel/recent-video descriptions, and city is intentionally unset for real YouTube seeds.
 - `[ ]` US-11/FR-12 Authenticity/Trust Score (engagement-vs-tier proxy first; expand signals)
-- `[~]` US-12 five-stage gated pipeline: hard filter + weighted score + optional semantic exist; **formalize the funnel** (Stage labels, top-N gating) and document which stages are active
+- `[x]` US-12 **five-stage gated pipeline (formalized + active)**: (1) hard SQL filter → (2) 90-day relational conflict-of-interest check (`creator_collaboration_history`, `CONFLICT_LOOKBACK_DAYS=90`) → (3) deterministic niche + capped semantic rescue → (4) six-factor weighted score → (5) heuristic rationale with Groq personalizing the top 5. Satisfies FR-13 relationally without Neo4j.
+- `[x]` US-11/FR-13 **conflict-of-interest check** — 90-day same-`brand_category` collision via `creator_collaboration_history` (relational, no Neo4j); now active as pipeline Stage 2
 - `[x]` US-16/FR-19 simulated per-type fee compute + display — `lib/campaignFees.ts` maps each `campaign_type` to a fee %; campaign list shows fee % column; campaign detail shows 3-cell breakdown (Budget / Platform Fee / Net to Creator) with "Simulated · No real payment" badge
 - `[x]` US-19 ethical-AI safeguards: `EstimatedTag` component (3 variants: self-reported/estimated/ai-scored, each with tooltip explanation) applied to engagement rate and avg views on creator cards and profile, and to Overall Match + Engagement Strength on match cards
-- `[ ]` US-14/FR-8 AI Brief Generator (Gemini → pre-filled wizard; coordinate with Navid N05)
+- `[x]` US-14/FR-8 **AI Brief Generator / analysis** — Groq analyzes a free-text, voice (Whisper), or PDF brief and pre-fills the campaign wizard
 
 ### Phase E — Optional heavy layers *(SRS US-13, US-15; FR-13, FR-17; NFR-3/4)* — **[ ] deferred by design (D1–D5)**
-- `[ ]` Neo4j graph + conflict-of-interest (FR-13) — *or* relational 90-day conflict check as a lighter first cut
+- `[x]` Relational 90-day conflict-of-interest check (FR-13) — **shipped** as pipeline Stage 2 (see Phase D); Neo4j multi-hop graph version remains deferred
 - `[ ]` pgvector persistence for embeddings (D1)
 - `[ ]` TimescaleDB follower history → authenticity growth Z-score (D3)
 - `[ ]` Redis score cache + YouTube quota manager / `Search.list` circuit-breaker (D4, D8)

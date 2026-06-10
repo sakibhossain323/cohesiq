@@ -5,6 +5,7 @@ app = FastAPI(
     title="Cohesiq API",
     description="Influencer Matching Platform — Phase 1",
     version="0.1.0",
+    redirect_slashes=False,
 )
 
 # Allow all origins in development; restrict in production

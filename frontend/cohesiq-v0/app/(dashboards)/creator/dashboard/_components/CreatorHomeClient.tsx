@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PlatformBadge, getPlatformLabel } from "@/components/shared/PlatformBadge";
@@ -19,9 +19,11 @@ import {
   Heart,
   ImageIcon,
   MessageCircle,
+  Music2,
   RefreshCw,
   Settings,
   Users,
+  Youtube,
 } from "lucide-react";
 
 interface CreatorHomeClientProps {
@@ -79,6 +81,8 @@ function platformHref(platform: PlatformType) {
   return "/creator/dashboard/profile";
 }
 
+type SyncingPlatform = "youtube" | "tiktok" | null;
+
 export function CreatorHomeClient({ creator, applications, suggestedCampaigns }: CreatorHomeClientProps) {
   const profiles = useMemo(
     () => [...creator.social_profiles].sort((a, b) => PLATFORM_ORDER.indexOf(a.platform) - PLATFORM_ORDER.indexOf(b.platform)),
@@ -87,6 +91,31 @@ export function CreatorHomeClient({ creator, applications, suggestedCampaigns }:
   const primary = pickPrimaryPlatform(profiles);
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformType | undefined>(primary?.platform);
   const [bioMode, setBioMode] = useState<"profile" | "platform">("profile");
+  const [syncing, setSyncing] = useState<SyncingPlatform>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+
+  const handleSyncYouTube = useCallback(async () => {
+    setSyncing("youtube");
+    setSyncError(null);
+    try {
+      const response = await fetch("/api/auth/youtube/authorize", { method: "POST" });
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "Failed to generate YouTube auth URL.");
+      }
+      const { authUrl } = await response.json();
+      window.location.href = authUrl;
+    } catch (err) {
+      console.error("Failed to connect YouTube:", err);
+      setSyncError("Could not start YouTube sync. Please try again.");
+      setSyncing(null);
+    }
+  }, []);
+
+  const handleSyncTikTok = useCallback(() => {
+    setSyncing("tiktok");
+    window.location.href = "/creator/dashboard/connect-tiktok?autoStart=true";
+  }, []);
 
   const selectedProfile = profiles.find(profile => profile.platform === selectedPlatform) ?? primary;
   const selectedContent = topContent(creator.portfolio_items, selectedProfile?.platform);
@@ -207,16 +236,84 @@ export function CreatorHomeClient({ creator, applications, suggestedCampaigns }:
                           Last synced {selectedProfile.stats_reported_at ? formatDate(selectedProfile.stats_reported_at) : "manually"} · {selectedProfile.stats_reported_for_period || "stored profile metrics"}
                         </p>
                       </div>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={selectedProfile.profile_url} target="_blank">
-                          Open profile <ArrowRight className="ml-2 h-3.5 w-3.5" />
-                        </Link>
-                      </Button>
+                      <div className="flex flex-wrap gap-2">
+                        {(selectedProfile.platform === "youtube" || !selectedProfile) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleSyncYouTube}
+                            disabled={syncing !== null}
+                          >
+                            <RefreshCw className={`mr-2 h-3.5 w-3.5${syncing === "youtube" ? " animate-spin" : ""}`} />
+                            {syncing === "youtube" ? "Syncing…" : "Re-sync YouTube"}
+                          </Button>
+                        )}
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={selectedProfile.profile_url} target="_blank">
+                            Open profile <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </>
               ) : (
-                <EmptyPanel title="No platform connected" description="Sync YouTube or TikTok, or add Instagram manually from My Platforms." />
+                <>
+                  {/* ── Sync CTA when no platform is connected ─── */}
+                  <div className="rounded-xl border border-border bg-muted/20 p-6 space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Verify your channel with OAuth for an instant, trusted sync — or add a platform manually from your profile. Verified handles boost your authenticity score and match rank.
+                    </p>
+                    {syncError && (
+                      <p className="text-sm font-medium text-destructive">{syncError}</p>
+                    )}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-4 rounded-lg border border-border bg-background p-4">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10 text-red-500">
+                          <Youtube className="h-5 w-5" />
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-foreground">Verify with YouTube</p>
+                          <p className="text-xs text-muted-foreground">Sync your channel &amp; subscriber count directly from Google.</p>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={handleSyncYouTube}
+                          disabled={syncing !== null}
+                        >
+                          <RefreshCw className={`mr-2 h-3.5 w-3.5${syncing === "youtube" ? " animate-spin" : ""}`} />
+                          {syncing === "youtube" ? "Syncing…" : "Sync YouTube"}
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-4 rounded-lg border border-border bg-background p-4">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/10 text-foreground dark:bg-white/10">
+                          <Music2 className="h-5 w-5" />
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-foreground">Verify with TikTok</p>
+                          <p className="text-xs text-muted-foreground">Sync your TikTok profile from your authorized account.</p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleSyncTikTok}
+                          disabled={syncing !== null}
+                        >
+                          <RefreshCw className={`mr-2 h-3.5 w-3.5${syncing === "tiktok" ? " animate-spin" : ""}`} />
+                          {syncing === "tiktok" ? "Redirecting…" : "Sync TikTok"}
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="h-px flex-1 bg-border" />
+                      <span className="text-xs text-muted-foreground">or add manually</span>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
+                    <Button variant="ghost" size="sm" className="w-full" asChild>
+                      <Link href="/creator/dashboard/profile">Manage platforms manually</Link>
+                    </Button>
+                  </div>
+                </>
               )}
             </div>
           </section>

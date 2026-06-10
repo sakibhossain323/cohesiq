@@ -47,21 +47,42 @@ always NULL depending on who is reviewing. Clean, indexable, joinable.
 ```
 users
   ├── creator_profiles          (1:1)
-  │     ├── creator_social_profiles   (1:many — one per platform)
-  │     ├── creator_niches            (many:many with niches)
-  │     ├── creator_languages         (1:many)
-  │     ├── creator_rate_cards        (1:many)
-  │     └── creator_portfolio_items   (1:many — sample content URLs)
+  │     ├── creator_social_profiles      (1:many — one per platform)
+  │     ├── creator_niches               (many:many with niches)
+  │     ├── creator_languages            (1:many)
+  │     ├── creator_rate_cards           (1:many)
+  │     ├── creator_portfolio_items      (1:many — sample content URLs)
+  │     └── creator_collaboration_history (1:many — past brand work)
   │
   └── brand_profiles            (1:1)
         └── campaigns           (1:many)
+              ├── campaign_niche_targets        (many:many with niches)
+              ├── campaign_language_targets     (many:many with languages)
+              ├── campaign_deliverable_requirements (1:many)
+              ├── campaign_application_questions (1:many — gatekeeper)
+              ├── campaign_acknowledgments      (1:many — gatekeeper)
               └── campaign_applications  (many:many with creator_profiles)
-                    └── reviews          (1:many — after completion)
+                    ├── campaign_application_answers          (1:many)
+                    ├── campaign_application_acknowledgments  (1:many)
+                    ├── negotiation_turns      (1:many — offer/counter thread)
+                    ├── reviews                (1:many — after completion)
+                    └── contracts              (1:1 — created at offer time)
+                          ├── contract_deliverables          (1:many — per-creator subset)
+                          └── live_content_metric_snapshots  (1:many — performance over time)
+
+-- AI / cross-domain --
+ai_match_scores  (one row per campaign×creator ranked match)
 
 -- Shared lookup tables --
-niches       (referenced by creator_niches + campaign_niche_targets)
+niches       (referenced by creator_niches + campaign_niche_targets + brand_profiles + portfolio/history)
 languages    (referenced by creator_languages + campaign_language_targets)
 ```
+
+> **Migration head: `0022`** (`0022_offer_contract_deliverables_negotiation`). The numbered chain
+> `0001 → 0022` plus three hash-revision migrations in history
+> (`53f8d9a8a155` ai_match_scores, `959ef947cd0f` campaign visibility + invitation statuses,
+> `fd300ea6267e` archived campaign status) make up the full schema. Storage is **relational-only
+> PostgreSQL 16** — no pgvector / Neo4j / Redis / TimescaleDB.
 
 ---
 
@@ -403,8 +424,10 @@ CREATE TABLE creator_rate_cards (
     creator_id        UUID NOT NULL REFERENCES creator_profiles(id) ON DELETE CASCADE,
     platform          platform_type NOT NULL,
     deliverable_type  deliverable_type NOT NULL,
+    deliverable_code  VARCHAR(50),             -- canonical deliverable code (migration 0019)
 
     price_bdt         INTEGER NOT NULL,        -- Price in BDT (Bangladeshi Taka)
+    suggested_price_bdt INTEGER,               -- System-suggested benchmark price
     price_usd         INTEGER,                 -- Optional USD equivalent
     includes          TEXT,                    -- What's included: "1 video, 2 revisions, 30-day exclusivity"
     excludes          TEXT,                    -- What's NOT included
@@ -634,6 +657,7 @@ CREATE TABLE campaign_deliverable_requirements (
     campaign_id       UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
     platform          platform_type NOT NULL,
     deliverable_type  deliverable_type NOT NULL,
+    deliverable_code  VARCHAR(50),             -- canonical deliverable code (migration 0019)
     quantity          SMALLINT DEFAULT 1,      -- How many of this deliverable
     notes             TEXT                     -- Specific requirements (length, format, etc.)
 );
@@ -821,9 +845,19 @@ brand_profiles (1) ──── (many) campaigns
 campaigns (1) ────────── (many) campaign_niche_targets      [junction with niches]
 campaigns (1) ────────── (many) campaign_language_targets   [junction with languages]
 campaigns (1) ────────── (many) campaign_deliverable_requirements
+campaigns (1) ────────── (many) campaign_application_questions   [gatekeeper]
+campaigns (1) ────────── (many) campaign_acknowledgments         [gatekeeper]
 campaigns (1) ────────── (many) campaign_applications
+campaigns (1) ────────── (many) ai_match_scores             [AI ranked matches]
 
+campaign_applications (1) ── (many) campaign_application_answers
+campaign_applications (1) ── (many) campaign_application_acknowledgments
+campaign_applications (1) ── (many) negotiation_turns        [offer/counter thread]
 campaign_applications (1) ── (many) reviews
+campaign_applications (1) ── (1)    contracts                [created at offer time]
+
+contracts (1) ── (many) contract_deliverables               [per-creator deliverable subset]
+contracts (1) ── (many) live_content_metric_snapshots       [performance over time]
 
 niches    (1) ── (many) creator_niches
 niches    (1) ── (many) campaign_niche_targets
