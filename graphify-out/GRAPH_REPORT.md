@@ -1,16 +1,16 @@
 # Graph Report - cohesiq  (2026-06-10)
 
 ## Corpus Check
-- 369 files · ~323,753 words
+- 373 files · ~382,166 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3961 nodes · 10542 edges · 226 communities (202 shown, 24 thin omitted)
-- Extraction: 82% EXTRACTED · 18% INFERRED · 0% AMBIGUOUS · INFERRED: 1849 edges (avg confidence: 0.53)
+- 7244 nodes · 17832 edges · 376 communities (252 shown, 124 thin omitted)
+- Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 1906 edges (avg confidence: 0.54)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `055f6165`
+- Built from commit: `57d00489`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -156,6 +156,7 @@
 - [[_COMMUNITY_Community 138|Community 138]]
 - [[_COMMUNITY_Community 139|Community 139]]
 - [[_COMMUNITY_Community 142|Community 142]]
+- [[_COMMUNITY_Community 144|Community 144]]
 - [[_COMMUNITY_Community 145|Community 145]]
 - [[_COMMUNITY_Community 146|Community 146]]
 - [[_COMMUNITY_Community 147|Community 147]]
@@ -182,33 +183,181 @@
 - [[_COMMUNITY_Community 205|Community 205]]
 - [[_COMMUNITY_Community 206|Community 206]]
 - [[_COMMUNITY_Community 207|Community 207]]
+- [[_COMMUNITY_Community 208|Community 208]]
 - [[_COMMUNITY_Community 209|Community 209]]
 - [[_COMMUNITY_Community 210|Community 210]]
+- [[_COMMUNITY_Community 211|Community 211]]
 - [[_COMMUNITY_Community 212|Community 212]]
 - [[_COMMUNITY_Community 213|Community 213]]
+- [[_COMMUNITY_Community 214|Community 214]]
+- [[_COMMUNITY_Community 215|Community 215]]
+- [[_COMMUNITY_Community 216|Community 216]]
 - [[_COMMUNITY_Community 217|Community 217]]
 - [[_COMMUNITY_Community 218|Community 218]]
+- [[_COMMUNITY_Community 219|Community 219]]
+- [[_COMMUNITY_Community 220|Community 220]]
 - [[_COMMUNITY_Community 221|Community 221]]
+- [[_COMMUNITY_Community 222|Community 222]]
+- [[_COMMUNITY_Community 223|Community 223]]
 - [[_COMMUNITY_Community 224|Community 224]]
 - [[_COMMUNITY_Community 225|Community 225]]
 - [[_COMMUNITY_Community 226|Community 226]]
 - [[_COMMUNITY_Community 227|Community 227]]
+- [[_COMMUNITY_Community 228|Community 228]]
 - [[_COMMUNITY_Community 229|Community 229]]
+- [[_COMMUNITY_Community 230|Community 230]]
 - [[_COMMUNITY_Community 235|Community 235]]
+- [[_COMMUNITY_Community 236|Community 236]]
 - [[_COMMUNITY_Community 237|Community 237]]
 - [[_COMMUNITY_Community 238|Community 238]]
+- [[_COMMUNITY_Community 239|Community 239]]
+- [[_COMMUNITY_Community 240|Community 240]]
+- [[_COMMUNITY_Community 241|Community 241]]
+- [[_COMMUNITY_Community 242|Community 242]]
+- [[_COMMUNITY_Community 243|Community 243]]
+- [[_COMMUNITY_Community 244|Community 244]]
+- [[_COMMUNITY_Community 245|Community 245]]
+- [[_COMMUNITY_Community 246|Community 246]]
+- [[_COMMUNITY_Community 247|Community 247]]
+- [[_COMMUNITY_Community 248|Community 248]]
+- [[_COMMUNITY_Community 249|Community 249]]
+- [[_COMMUNITY_Community 250|Community 250]]
+- [[_COMMUNITY_Community 251|Community 251]]
+- [[_COMMUNITY_Community 252|Community 252]]
+- [[_COMMUNITY_Community 253|Community 253]]
+- [[_COMMUNITY_Community 254|Community 254]]
+- [[_COMMUNITY_Community 255|Community 255]]
+- [[_COMMUNITY_Community 256|Community 256]]
+- [[_COMMUNITY_Community 257|Community 257]]
+- [[_COMMUNITY_Community 258|Community 258]]
+- [[_COMMUNITY_Community 259|Community 259]]
+- [[_COMMUNITY_Community 260|Community 260]]
+- [[_COMMUNITY_Community 261|Community 261]]
+- [[_COMMUNITY_Community 262|Community 262]]
+- [[_COMMUNITY_Community 263|Community 263]]
+- [[_COMMUNITY_Community 264|Community 264]]
+- [[_COMMUNITY_Community 265|Community 265]]
+- [[_COMMUNITY_Community 266|Community 266]]
+- [[_COMMUNITY_Community 267|Community 267]]
+- [[_COMMUNITY_Community 268|Community 268]]
+- [[_COMMUNITY_Community 269|Community 269]]
+- [[_COMMUNITY_Community 270|Community 270]]
+- [[_COMMUNITY_Community 271|Community 271]]
+- [[_COMMUNITY_Community 272|Community 272]]
+- [[_COMMUNITY_Community 273|Community 273]]
+- [[_COMMUNITY_Community 274|Community 274]]
+- [[_COMMUNITY_Community 275|Community 275]]
+- [[_COMMUNITY_Community 276|Community 276]]
+- [[_COMMUNITY_Community 277|Community 277]]
+- [[_COMMUNITY_Community 278|Community 278]]
+- [[_COMMUNITY_Community 279|Community 279]]
+- [[_COMMUNITY_Community 280|Community 280]]
+- [[_COMMUNITY_Community 281|Community 281]]
+- [[_COMMUNITY_Community 282|Community 282]]
+- [[_COMMUNITY_Community 283|Community 283]]
+- [[_COMMUNITY_Community 284|Community 284]]
+- [[_COMMUNITY_Community 285|Community 285]]
+- [[_COMMUNITY_Community 286|Community 286]]
+- [[_COMMUNITY_Community 287|Community 287]]
+- [[_COMMUNITY_Community 288|Community 288]]
+- [[_COMMUNITY_Community 289|Community 289]]
+- [[_COMMUNITY_Community 290|Community 290]]
+- [[_COMMUNITY_Community 291|Community 291]]
+- [[_COMMUNITY_Community 292|Community 292]]
+- [[_COMMUNITY_Community 293|Community 293]]
+- [[_COMMUNITY_Community 294|Community 294]]
+- [[_COMMUNITY_Community 295|Community 295]]
+- [[_COMMUNITY_Community 296|Community 296]]
+- [[_COMMUNITY_Community 297|Community 297]]
+- [[_COMMUNITY_Community 298|Community 298]]
+- [[_COMMUNITY_Community 299|Community 299]]
+- [[_COMMUNITY_Community 300|Community 300]]
+- [[_COMMUNITY_Community 301|Community 301]]
+- [[_COMMUNITY_Community 302|Community 302]]
+- [[_COMMUNITY_Community 303|Community 303]]
+- [[_COMMUNITY_Community 304|Community 304]]
+- [[_COMMUNITY_Community 305|Community 305]]
+- [[_COMMUNITY_Community 306|Community 306]]
+- [[_COMMUNITY_Community 307|Community 307]]
+- [[_COMMUNITY_Community 308|Community 308]]
+- [[_COMMUNITY_Community 309|Community 309]]
+- [[_COMMUNITY_Community 310|Community 310]]
+- [[_COMMUNITY_Community 311|Community 311]]
+- [[_COMMUNITY_Community 312|Community 312]]
+- [[_COMMUNITY_Community 313|Community 313]]
+- [[_COMMUNITY_Community 314|Community 314]]
+- [[_COMMUNITY_Community 315|Community 315]]
+- [[_COMMUNITY_Community 316|Community 316]]
+- [[_COMMUNITY_Community 317|Community 317]]
+- [[_COMMUNITY_Community 318|Community 318]]
+- [[_COMMUNITY_Community 319|Community 319]]
+- [[_COMMUNITY_Community 320|Community 320]]
+- [[_COMMUNITY_Community 321|Community 321]]
+- [[_COMMUNITY_Community 322|Community 322]]
+- [[_COMMUNITY_Community 323|Community 323]]
+- [[_COMMUNITY_Community 324|Community 324]]
+- [[_COMMUNITY_Community 325|Community 325]]
+- [[_COMMUNITY_Community 326|Community 326]]
+- [[_COMMUNITY_Community 327|Community 327]]
+- [[_COMMUNITY_Community 328|Community 328]]
+- [[_COMMUNITY_Community 329|Community 329]]
+- [[_COMMUNITY_Community 330|Community 330]]
+- [[_COMMUNITY_Community 331|Community 331]]
+- [[_COMMUNITY_Community 332|Community 332]]
+- [[_COMMUNITY_Community 333|Community 333]]
+- [[_COMMUNITY_Community 334|Community 334]]
+- [[_COMMUNITY_Community 335|Community 335]]
+- [[_COMMUNITY_Community 336|Community 336]]
+- [[_COMMUNITY_Community 337|Community 337]]
+- [[_COMMUNITY_Community 338|Community 338]]
+- [[_COMMUNITY_Community 339|Community 339]]
+- [[_COMMUNITY_Community 340|Community 340]]
+- [[_COMMUNITY_Community 341|Community 341]]
+- [[_COMMUNITY_Community 342|Community 342]]
+- [[_COMMUNITY_Community 343|Community 343]]
+- [[_COMMUNITY_Community 344|Community 344]]
+- [[_COMMUNITY_Community 345|Community 345]]
+- [[_COMMUNITY_Community 346|Community 346]]
+- [[_COMMUNITY_Community 347|Community 347]]
+- [[_COMMUNITY_Community 348|Community 348]]
+- [[_COMMUNITY_Community 349|Community 349]]
+- [[_COMMUNITY_Community 350|Community 350]]
+- [[_COMMUNITY_Community 351|Community 351]]
+- [[_COMMUNITY_Community 352|Community 352]]
+- [[_COMMUNITY_Community 353|Community 353]]
+- [[_COMMUNITY_Community 354|Community 354]]
+- [[_COMMUNITY_Community 355|Community 355]]
+- [[_COMMUNITY_Community 356|Community 356]]
+- [[_COMMUNITY_Community 357|Community 357]]
+- [[_COMMUNITY_Community 358|Community 358]]
+- [[_COMMUNITY_Community 359|Community 359]]
+- [[_COMMUNITY_Community 360|Community 360]]
+- [[_COMMUNITY_Community 361|Community 361]]
+- [[_COMMUNITY_Community 362|Community 362]]
+- [[_COMMUNITY_Community 363|Community 363]]
+- [[_COMMUNITY_Community 364|Community 364]]
+- [[_COMMUNITY_Community 365|Community 365]]
+- [[_COMMUNITY_Community 366|Community 366]]
+- [[_COMMUNITY_Community 367|Community 367]]
+- [[_COMMUNITY_Community 368|Community 368]]
+- [[_COMMUNITY_Community 369|Community 369]]
+- [[_COMMUNITY_Community 370|Community 370]]
+- [[_COMMUNITY_Community 371|Community 371]]
+- [[_COMMUNITY_Community 372|Community 372]]
+- [[_COMMUNITY_Community 373|Community 373]]
+- [[_COMMUNITY_Community 374|Community 374]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `cn()` - 312 edges
 2. `CreatorProfile` - 178 edges
-3. `User` - 126 edges
-4. `get_db` - 97 edges
-5. `Campaign` - 91 edges
-6. `CampaignFilters` - 82 edges
-7. `CreatorFilters` - 77 edges
-8. `AsyncSession` - 69 edges
-9. `AsyncSession` - 68 edges
-10. `UUID` - 67 edges
+3. `warn()` - 157 edges
+4. `ConfigNamespace` - 141 edges
+5. `User` - 127 edges
+6. `TemplateNamespace` - 115 edges
+7. `shadow()` - 98 edges
+8. `get_db` - 97 edges
+9. `Campaign` - 91 edges
+10. `getStringOption()` - 85 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `niches Lookup Table` --references--> `CampaignNicheTarget`  [EXTRACTED]
@@ -233,51 +382,47 @@
 - **YouTube Enrichment → Normalization → Creator Profile Persistence Pipeline** — revisions_youtube_impl_unit1_enrichment, revisions_youtube_impl_normalization_py, revisions_youtube_impl_unit2_persist, revisions_youtube_impl_unit3_portfolio, docs_schema_creator_social_profiles_table [EXTRACTED 1.00]
 - **Contract Entity: Campaign Application → Contract Creation → State Machine → Escrow** — docs_schema_campaign_applications_table, docs_schema_contracts_table, revisions_srs_06_06_contract_state_machine, tasks_sakib_e10_contract_modal, tasks_sakib_e11_campaign_detail [EXTRACTED 0.95]
 
-## Communities (226 total, 24 thin omitted)
+## Communities (376 total, 124 thin omitted)
 
 ### Community 0 - "Creator Profile & Social"
-Cohesion: 0.12
-Nodes (20): clauseSummary(), ContractCard(), SM_STEPS, STATUS_CONFIG, TYPE_ICONS, TYPE_LABELS, ACTIVE_STATUSES, cleanHandle() (+12 more)
+Cohesion: 0.00
+Nodes (375): AbortException, Acrobat7, ADBE_JSConsole, ADBE_JSDebugger, AddSilentPrint, AddViewerPreferences, AdjustData, AdobeExtensionLevel (+367 more)
 
 ### Community 1 - "Campaign & Application API"
-Cohesion: 0.18
-Nodes (18): runCampaignMatching(), AIMatchScore, bool, Namespace, str, _build_campaign_text(), _build_creator_text(), _days_since_latest_portfolio_item() (+10 more)
+Cohesion: 0.47
+Nodes (5): Namespace, str, _find_campaign_id(), main(), _parse_args()
 
 ### Community 2 - "Onboarding Flow"
-Cohesion: 0.05
-Nodes (80): completeOnboarding(), resetOnboarding(), submitBrandOnboarding(), submitCreatorOnboarding(), niches, platforms, statuses, activeFilterCount() (+72 more)
+Cohesion: 0.04
+Nodes (105): completeOnboarding(), resetOnboarding(), submitBrandOnboarding(), submitCreatorOnboarding(), NICHE_MAP, activeFilterCount(), BrandCreatorsClient(), BrandCreatorsClientProps (+97 more)
 
 ### Community 3 - "shadcn/ui Primitives"
-Cohesion: 0.04
-Nodes (63): cn(), AccordionContent(), AccordionItem(), AccordionTrigger(), Breadcrumb(), BreadcrumbEllipsis(), BreadcrumbItem(), BreadcrumbLink() (+55 more)
+Cohesion: 0.02
+Nodes (140): Props, cn(), NewCampaignPage(), AccordionContent(), AccordionItem(), AccordionTrigger(), Breadcrumb(), BreadcrumbEllipsis() (+132 more)
 
 ### Community 4 - "YouTube Integration & Config"
 Cohesion: 0.13
 Nodes (63): Any, int, str, Any, float, int, Response, str (+55 more)
 
 ### Community 5 - "Brand/Campaign UI Components"
-Cohesion: 0.07
-Nodes (42): dmSans, fraunces, geistMono, geistSans, metadata, plusJakartaSans, Action, ActionType (+34 more)
-
-### Community 6 - "Dashboard Layouts & Nav"
-Cohesion: 0.16
-Nodes (16): ApplicationStatusUpdate, NegotiationCounter, OfferDecision, accept_offer(), counter_offer(), decline_offer(), _latest_proposed_turn(), list_negotiation_turns() (+8 more)
+Cohesion: 0.06
+Nodes (45): dmSans, fraunces, geistMono, geistSans, metadata, plusJakartaSans, Theme, ThemeContext (+37 more)
 
 ### Community 7 - "Backend Routes & Reviews"
-Cohesion: 0.05
-Nodes (44): adminNavItems, BrandDashboardLayout(), brandNavItems, CreatorDashboardLayout(), creatorNavItems, useIsMobile(), DashboardLayout(), DashboardLayoutProps (+36 more)
+Cohesion: 0.03
+Nodes (72): adminNavItems, getNegotiationThread(), ApplicationStatusBadge(), CohesiqMark(), PLATFORM_COLORS, PLATFORM_LABELS, ThemeToggle(), AuthenticityBadge() (+64 more)
 
 ### Community 8 - "OpenAPI Spec"
-Cohesion: 0.05
-Nodes (81): bool, float, int, PublicSocialProfileEnrichment, str, YouTubeChannelEnrichment, bool, float (+73 more)
+Cohesion: 0.06
+Nodes (78): bool, float, int, PublicSocialProfileEnrichment, str, YouTubeChannelEnrichment, bool, float (+70 more)
 
 ### Community 9 - "Project Dependencies"
 Cohesion: 0.07
-Nodes (51): dependencies, autoprefixer, class-variance-authority, @clerk/nextjs, clsx, cmdk, date-fns, embla-carousel-react (+43 more)
+Nodes (52): dependencies, autoprefixer, class-variance-authority, @clerk/nextjs, clsx, cmdk, date-fns, embla-carousel-react (+44 more)
 
 ### Community 10 - "Growth & Market Analysis Docs"
-Cohesion: 0.07
-Nodes (59): ApplicationStatusBadge(), statusConfig, BrandCard(), BrandCardProps, ApplyModal(), ApplicationDrawer(), PLATFORM_LABELS, BrandCreatorMediaKit() (+51 more)
+Cohesion: 0.05
+Nodes (87): ApplicationStatusBadgeProps, statusConfig, BrandCard(), BrandCardProps, CampaignCard(), CampaignDetailView(), ApplicationDrawer(), BrandCreatorMediaKit() (+79 more)
 
 ### Community 11 - "YouTube Data Strategy Docs"
 Cohesion: 0.04
@@ -288,20 +433,20 @@ Cohesion: 0.05
 Nodes (48): 2.1 Niches, 2.2 Languages, 4.1 Core Profile, 4.2 Creator Social Profiles, 4.3 Creator Niches, 4.4 Creator Languages, 4.5 Creator Rate Cards, 4.6 Creator Portfolio Items (+40 more)
 
 ### Community 13 - "Root Layout & Fonts"
-Cohesion: 0.06
-Nodes (46): getApplicationsByBrandId(), getApplicationsByCreatorId(), mapApplicationResponse(), submitApplication(), SubmitApplicationPayload, updateApplicationStatus(), withdrawApplication(), CreatorSearchPage (+38 more)
+Cohesion: 0.05
+Nodes (80): acceptOfferAction(), declineOfferAction(), friendlyError(), inviteCreatorAction(), MutableCampaignStatus, negotiateAction(), revalidateCampaign(), runMatchingAction() (+72 more)
 
 ### Community 14 - "OpenAPI Paths"
-Cohesion: 0.11
-Nodes (20): Props, AlertDialog(), AlertDialogAction(), AlertDialogCancel(), AlertDialogContent(), AlertDialogDescription(), AlertDialogFooter(), AlertDialogHeader() (+12 more)
+Cohesion: 0.08
+Nodes (31): BrandCollaborationsPage(), CampaignAnalyticsTab(), formatCompact(), CampaignDetailClient(), NEGOTIATION_STATUSES, PIPELINE_COLUMNS, CampaignStatusBadge(), OfferModal() (+23 more)
 
 ### Community 15 - "Auth & Password Service"
 Cohesion: 0.05
 Nodes (41): 10. Quality, Governance & Observability, 11. Publish local environment to internet, 1. Data Sources, 1. Project Overview & Core Directives, 2. Acquisition Methods, 2. Submission Form Data Schema (Actionable Fields for AI), 3. AI Detail Usage (AI Depth Score), 3. Parsing, Formats & Cleaning (+33 more)
 
 ### Community 16 - "Campaign Browse UI"
-Cohesion: 0.06
-Nodes (108): content, description, content, description, description, content, description, schema (+100 more)
+Cohesion: 0.16
+Nodes (37): get, get, get, get, get, get, get, patch (+29 more)
 
 ### Community 17 - "Schema Reference Docs"
 Cohesion: 0.06
@@ -315,17 +460,13 @@ Nodes (27): Backend Configuration, Backend Main Entrypoint, YouTube Router, YouT
 Cohesion: 0.09
 Nodes (27): D12 — Contract as first-class entity (campaign_type deprecated), D13 — Matching weight rebalance for BD market, D1 — pgvector deferred (embeddings on-the-fly), D2 — Neo4j deferred (relational conflict check first), Divergence Ledger (D1–D13), Schema Extension Point — Neo4j graph sync, Schema Extension Point — pgvector bio_embedding, Matching Stage 2 — Conflict-of-Interest Check (planned N08) (+19 more)
 
-### Community 20 - "Creator Detail & Profile Form"
-Cohesion: 0.08
-Nodes (24): CompareClientProps, DELIVERABLE_LABELS, PLATFORM_LABELS, ConnectTikTokClient(), errorMessages, ConnectYouTubeClient(), errorMessages, OnboardingRoleSelect() (+16 more)
-
 ### Community 21 - "Brand Campaigns & Deliverables"
-Cohesion: 0.05
-Nodes (110): content, description, content, description, description, content, description, schema (+102 more)
+Cohesion: 0.16
+Nodes (37): get, get, get, get, get, get, get, patch (+29 more)
 
 ### Community 22 - "YouTube Compliance Research"
-Cohesion: 0.11
-Nodes (36): User, BrandProfileUpdate, int, int, NegotiationCounter, OfferCreate, ShortlistCreate, get_db (+28 more)
+Cohesion: 0.07
+Nodes (67): brand_reviews(), creator_applications(), creator_reviews(), Creator views their own application history., Creator views their own application history., Public reviews for a creator., Public reviews for a creator., Public reviews for a brand. (+59 more)
 
 ### Community 23 - "YouTube Discovery Research"
 Cohesion: 0.07
@@ -336,16 +477,16 @@ Cohesion: 0.07
 Nodes (36): 1. Budget: hard ceiling with soft penalty buffer, 1. Keep the hard gates strict, 2. Choose the best social profile carefully, 2. Normalize every sub-score to 0-1, 3. Recency should penalize unknown activity slightly, 3. Treat estimated data as useful but lower confidence, 4. Deterministic ranking, 4. Use portfolio freshness for recency (+28 more)
 
 ### Community 25 - "Cohesiq-V0 Group 25"
-Cohesion: 0.13
-Nodes (30): getCampaignsByBrandId(), CampaignCard(), CampaignDetailView(), DeliverableTable(), DeliverableTableProps, BrandCampaignsPage(), ApplicationCard(), CampaignDetailClient() (+22 more)
+Cohesion: 0.15
+Nodes (23): updateProfileAction(), getBrandById(), getMyBrandProfile(), mapBrandResponse(), NICHE_MAP, updateBrandProfile(), getCampaignsByBrandId(), DeliverableTable() (+15 more)
 
 ### Community 26 - "Docs Group 26"
 Cohesion: 0.08
 Nodes (25): 1. Keep the hard gates strict, 2. Choose the best social profile carefully, 3. Treat estimated data as useful but lower confidence, 4. Use portfolio freshness for recency, 5. Do not overfit to city, Campaign demand data, Cohesiq Matching Engine Plan, Creator profile fields now useful for matching (+17 more)
 
 ### Community 27 - "Ui Group 27"
-Cohesion: 0.17
-Nodes (18): float, int, str, clamp_score(), compute_match_score(), get_tier(), MatchScores, Pure function. All inputs are pre-fetched primitives.     No database calls. Ful (+10 more)
+Cohesion: 0.16
+Nodes (19): float, int, str, clamp_score(), compute_match_score(), get_tier(), MatchScores, Pure function. All inputs are pre-fetched primitives.     No database calls. Ful (+11 more)
 
 ### Community 28 - "Cohesiq-V0 Group 28"
 Cohesion: 0.09
@@ -384,8 +525,8 @@ Cohesion: 0.10
 Nodes (21): Plan Phase C — Matching Transparency + Localization, ai_match_scores Table (migrations 53f8d9a8a155 + 0014), Migration 0014 — score_platform, score_recency, score_semantic on ai_match_scores, SRS §5 — AI Logic (deterministic math decides, LLM explains), SRS §5.4 — Authenticity Engine (engagement-vs-tier, Z-score, BanglaBERT), SRS §5.1 — Five-Stage Matching Pipeline (gated funnel), SRS FR-11 MVP Score Weights (niche .30 / engagement .20 / budget .20 / platform .15 / language .10 / recency .05), Matching Engine Plan — moved to docs/revisions/matching-engine-plan-26-06-07.md (+13 more)
 
 ### Community 37 - "Tests Group 37"
-Cohesion: 0.21
-Nodes (15): CampaignFilters(), CreatorDiscoverCampaignsPage(), CreatorDiscoverCampaignsPageProps, CreatorCampaignsClient(), BrandFindCreatorsPageProps, getBoolean(), getBoundedNumber(), getNumber() (+7 more)
+Cohesion: 0.15
+Nodes (23): getCreators(), getCreatorSearchPage(), CreatorDiscoverCampaignsPage(), CreatorDiscoverCampaignsPageProps, CreatorCampaignsClient(), BenchmarkRow, RateBenchmarkClient(), BrandFindCreatorsPage() (+15 more)
 
 ### Community 38 - "Base-Prompts Group 38"
 Cohesion: 0.11
@@ -404,28 +545,28 @@ Cohesion: 0.11
 Nodes (17): aliases, components, hooks, lib, ui, utils, iconLibrary, rsc (+9 more)
 
 ### Community 42 - "Ui Group 42"
-Cohesion: 0.16
-Nodes (21): Campaign Lifecycle State Machine, Campaign Visibility Model (Public vs Private), Contract Clause Structure, Contract as First-Class Entity (migration 0015), Contract State Machine, Contract Engagement Types (Content Collaboration, Product Seeding, Talent Engagement), Simulated Escrow Payment Model, Inbound vs Outbound Influencer Reach Model (+13 more)
+Cohesion: 0.13
+Nodes (25): Campaign Lifecycle State Machine, Campaign Visibility Model (Public vs Private), Contract Clause Structure, Contract as First-Class Entity (migration 0015), Contract State Machine, Contract Engagement Types (Content Collaboration, Product Seeding, Talent Engagement), Creator Data Verification (API vs Self-Reported), Simulated Escrow Payment Model (+17 more)
 
 ### Community 43 - "Ui Group 43"
 Cohesion: 0.11
 Nodes (17): Authentication Choice, Backend Files, Current Status, Current Useful Browser URLs, Existing Endpoints, Get Channel Details, Get Channel Enrichment, Get Video Details (+9 more)
 
 ### Community 44 - "Misc Group 44"
-Cohesion: 0.20
-Nodes (15): brand_reviews(), creator_applications(), creator_reviews(), Creator views their own application history., Creator views their own application history., Public reviews for a creator., Public reviews for a creator., Public reviews for a brand. (+7 more)
+Cohesion: 0.02
+Nodes (56): a, applyAssist(), Area, ariaLabel(), Br, Button, Caption, CheckButton (+48 more)
 
 ### Community 45 - "Base-Prompts Group 45"
-Cohesion: 0.12
-Nodes (47): ApplicationAnswerCreate, ApplicationCreate, ApplicationInviteCreate, ApplicationRespondInvite, AsyncSession, Review, ReviewCreate, UUID (+39 more)
+Cohesion: 0.05
+Nodes (121): runCampaignMatching(), ApplicationAnswerCreate, AIMatchScore, ApplicationCreate, ApplicationInviteCreate, ApplicationRespondInvite, ApplicationStatusUpdate, AsyncSession (+113 more)
 
 ### Community 46 - "Api Group 46"
-Cohesion: 0.06
-Nodes (69): acceptOfferAction(), declineOfferAction(), friendlyError(), inviteCreatorAction(), MutableCampaignStatus, negotiateAction(), revalidateCampaign(), runMatchingAction() (+61 more)
+Cohesion: 0.05
+Nodes (51): brandsCache, mapCreatorFromRaw(), mapMatchScore(), CreatorSearchPage, Alembic Migration 0013, ApplyModalProps, CampaignCardProps, CampaignFilters() (+43 more)
 
 ### Community 47 - "Analysis-Reports Group 47"
-Cohesion: 0.15
-Nodes (22): Agent Safety Checks & Best Practices, Design System Agent Rules, Bangladesh Market Matching Weights (niche .35 budget .30), Clerk RS256 JWT Authentication, Frontend Colocation Pattern (_actions, _components), Creator Data Verification (API vs Self-Reported), Domain-Driven Design Backend Structure, Design Token System (+14 more)
+Cohesion: 0.30
+Nodes (10): Agent Safety Checks & Best Practices, Design System Agent Rules, Frontend Colocation Pattern (_actions, _components), Domain-Driven Design Backend Structure, Design Token System, fetchApi() Centralized API Client, Server Component to Client Island Pattern, Two-Variable API URL Contract (+2 more)
 
 ### Community 48 - "Cohesiq-V0 Group 48"
 Cohesion: 0.14
@@ -440,8 +581,8 @@ Cohesion: 0.53
 Nodes (5): Context Diagram (Level 0), Data Flow Annotations, Data Flow Diagram (DFD), Level 1 DFD — Major Processes, Data Flow Diagram
 
 ### Community 51 - "Docs Group 51"
-Cohesion: 0.07
-Nodes (144): getMyCreatorProfile(), updateSocialProfile(), AsyncSession, bool, Depends, get_current_user, get_db, int (+136 more)
+Cohesion: 0.24
+Nodes (52): bool, int, str, CollabHistoryCreate, CreatorProfileUpdate, PortfolioItemCreate, RateCardCreate, RateCardUpdate (+44 more)
 
 ### Community 52 - "Analysis-Reports Group 52"
 Cohesion: 0.14
@@ -456,20 +597,16 @@ Cohesion: 0.14
 Nodes (13): ADDITIONAL RELEVANT FACTS DISCOVERED, DECISION CRITICAL FINDINGS, LOW IMPACT FINDINGS, SECTION A - Bangladesh Market Claims, SECTION B - Global Influencer Market Claims, SECTION C - Competitive Landscape Claims, SECTION D - Trust & Authenticity Claims, SECTION E - Technical & API Claims (+5 more)
 
 ### Community 55 - "Ui Group 55"
-Cohesion: 0.08
-Nodes (61): Run migrations in 'offline' mode., Run migrations in 'offline' mode., Run migrations in 'online' async mode., Run migrations in 'online' async mode., run_async_migrations(), run_migrations_offline(), run_migrations_online(), Config (+53 more)
+Cohesion: 0.13
+Nodes (47): Any, int, Response, str, Any, bool, float, int (+39 more)
 
 ### Community 56 - "Alembic Group 56"
 Cohesion: 0.16
 Nodes (7): LandingClient(), FACES, FIGURES, HomePage(), NICHES, portrait(), SIGNALS
 
 ### Community 57 - "Analysis-Reports Group 57"
-Cohesion: 0.16
-Nodes (18): AI Brief Analyzer (Groq + Gemini Fallback), CreatorDashboardPage(), Frontend Page Reference, `/`, `/campaigns`, `/campaigns/[id]`, `/creator/dashboard`, `/creator/dashboard/campaigns` (+10 more)
-
-### Community 58 - "Base-Prompts Group 58"
-Cohesion: 0.10
-Nodes (22): syncContractMetrics(), CampaignAnalyticsTab(), contentThumbnailUrl(), formatCompact(), Props, youtubeVideoId(), CampaignDetailClientProps, Props (+14 more)
+Cohesion: 0.14
+Nodes (17): AI Brief Analyzer (Groq + Gemini Fallback), Frontend Page Reference, `/`, `/campaigns`, `/campaigns/[id]`, `/creator/dashboard`, `/creator/dashboard/campaigns`, `/creator/dashboard/campaigns/[id]` (+9 more)
 
 ### Community 59 - "Base-Prompts Group 59"
 Cohesion: 0.12
@@ -484,16 +621,16 @@ Cohesion: 0.19
 Nodes (13): Carousel(), CarouselApi, CarouselContent(), CarouselContext, CarouselContextProps, CarouselItem(), CarouselNext(), CarouselOptions (+5 more)
 
 ### Community 62 - "Docs Group 62"
-Cohesion: 0.12
-Nodes (11): DropdownMenu(), DropdownMenuCheckboxItem(), DropdownMenuContent(), DropdownMenuItem(), DropdownMenuLabel(), DropdownMenuRadioItem(), DropdownMenuSeparator(), DropdownMenuShortcut() (+3 more)
+Cohesion: 0.05
+Nodes (17): AppearanceStreamEvaluator, Catalog, createValidAbsoluteUrl(), deepCompare(), FeatureTest, fetchDest(), fetchRemoteDest(), FileSpec (+9 more)
 
 ### Community 63 - "Docs Group 63"
-Cohesion: 0.15
-Nodes (23): Campaign, CampaignCreate, CampaignStatusUpdate, CampaignUpdate, ShortlistCreate, str, CampaignAcknowledgment, CampaignApplicationQuestion (+15 more)
+Cohesion: 0.14
+Nodes (27): CampaignCreate, CampaignUpdate, Base, BrandProfile, Campaign, CampaignAcknowledgment, CampaignApplication, CampaignApplicationAcknowledgment (+19 more)
 
 ### Community 64 - "Layout Group 64"
-Cohesion: 0.17
-Nodes (12): 7.1 Strategy, 7.2 Setup Prerequisites, 7.3 Target Channel Selection (18-20 Real BD Channels), 7.4 Step-by-Step API Integration, 7.5 Quota Budget Summary, 7. Demo Data Strategy — Real YouTube API Integration, Step 1 — Build seed_channels.json, Step 2 — Batch Fetch Channel Stats (1 quota unit for all 20) (+4 more)
+Cohesion: 0.29
+Nodes (7): 7.4 Step-by-Step API Integration, Step 1 — Build seed_channels.json, Step 2 — Batch Fetch Channel Stats (1 quota unit for all 20), Step 3 — Fetch Recent Video Engagement (2 quota units per channel = 40 units total), Step 4 — Map to Cohesiq Creator Schema, Step 5 — Generate Proportional Synthetic Companion Data, Step 6 — Seed Neo4j Graph & Pre-Run Demo Matching
 
 ### Community 65 - "Analysis-Reports Group 65"
 Cohesion: 0.12
@@ -508,8 +645,8 @@ Cohesion: 0.17
 Nodes (12): 3.1 Market Size & Growth, 3.2 The Creator Supply, 3.3 Engagement Rates, 3.4 Influencer Rates, 3.5 Creator Communities — Supply-Side Seeding, 3. Bangladesh Market — Verified Data, 3.1 Market Size & Growth ✅ VERIFIED, 3.2 The Creator Supply — Corrected (+4 more)
 
 ### Community 68 - "Community 68"
-Cohesion: 0.05
-Nodes (43): 1. Landing Page, 1. Strict Layer Separation, 2. Browse Creators, 2. Single Responsibility Components, 3. Creator Public Profile, 3. Swappable API Layer, 4. Browse Campaigns, 4. No Logic in Pages/Views (+35 more)
+Cohesion: 0.15
+Nodes (13): Code Quality Rules, code:typescript (export type PlatformType = "youtube" | "instagram" | "facebo), code:block6 (components/), code:typescript (export const sleep = (ms: number) => new Promise(res => setT), Cohesiq — Frontend Generation Prompt, Component Organization, Final Notes, Mock Data Requirements (+5 more)
 
 ### Community 69 - "Community 69"
 Cohesion: 0.18
@@ -528,16 +665,16 @@ Cohesion: 0.18
 Nodes (10): 1. Change Summary, 2. Matching Weight Rebalance (FR-11 divergence → plan.md D13), 4. Sub-score Expansion — migration `0014_add_platform_recency_semantic_to_match_scores`, 5. New Infrastructure — `matching_config.py`, 6. FR Mapping, 7. Deferred from This Batch, As-built weights (`backend/app/services/matching_config.py` — authoritative), Original weights (SRS FR-11 / plan.md Phase C as-documented before this batch) (+2 more)
 
 ### Community 73 - "Base-Prompts Group 73"
-Cohesion: 0.23
-Nodes (16): CreatorSocialProfile, str, _build_personalized_rationale_prompt(), _clean_handle(), _creator_evidence_brief(), _english_only_text(), _first_sentences(), _fit_label() (+8 more)
+Cohesion: 0.02
+Nodes (45): AppearanceFilter, BatchOutput, Bind, Calculate, Certificates, Compress, Connect, CurrencySymbol (+37 more)
 
 ### Community 74 - "Cohesiq-V0 Group 74"
 Cohesion: 0.35
 Nodes (25): admin_campaigns(), admin_delete_review(), admin_delete_user(), admin_reviews(), admin_stats(), admin_toggle_user_active(), admin_update_campaign_status(), admin_users() (+17 more)
 
 ### Community 75 - "Ui Group 75"
-Cohesion: 0.23
-Nodes (10): FormControl(), FormDescription(), FormFieldContext, FormFieldContextValue, FormItem(), FormItemContext, FormItemContextValue, FormLabel() (+2 more)
+Cohesion: 0.05
+Nodes (20): ButtonWidgetAnnotation, ChoiceWidgetAnnotation, createImage(), createImageDict(), ErrorFont, escapeString(), FakeUnicodeFont, FreeTextAnnotation (+12 more)
 
 ### Community 76 - "Ui Group 76"
 Cohesion: 0.20
@@ -552,16 +689,16 @@ Cohesion: 0.18
 Nodes (11): 6. Sad Paths, Brand Ghosts Post-Contract, Creator Declines Invitation, Creator Does Not Deliver, Product Not Returned (Product Seeding with disposition = return), Revision Limit Exceeded, 6. Violations & Enforcement, Brand ghosts without paying (most common) (+3 more)
 
 ### Community 79 - "App Group 79"
-Cohesion: 0.12
-Nodes (11): Menubar(), MenubarCheckboxItem(), MenubarContent(), MenubarItem(), MenubarLabel(), MenubarRadioItem(), MenubarSeparator(), MenubarShortcut() (+3 more)
+Cohesion: 0.04
+Nodes (21): addCachedImageOps(), CheckedOperatorList, DummyShading, fetchBinaryData(), getFontSubstitution(), getStandardFontName(), getXfaFontDict(), getXfaFontName() (+13 more)
 
 ### Community 80 - "Versions Group 80"
 Cohesion: 0.15
 Nodes (13): AI Agent Instructions for Cohesiq, Core Architecture & Stack Conventions, Current Implementation Snapshot (June 3, 2026), Data Seeding & Mock Data, Design System, Development & Execution Rules, Documentation index, Documentation Sync (+5 more)
 
 ### Community 81 - "Versions Group 81"
-Cohesion: 0.22
-Nodes (8): 1.1 From Influencer Platform to Creator & Talent Marketplace, 1.2 Host & Event Talent: A High-Value New Vertical, 1.3 Updated Platform Positioning, 1. Platform Identity & Scope Expansion, 6.1 Overview, 6.2 Authenticity Auditor — Implementation Detail, 6. Quality-of-Life Features, Strategic Development & Expansion Document
+Cohesion: 0.20
+Nodes (9): 5.1 Design Philosophy, 5.2 Brand-Side Experience, 5.3 Creator and Talent-Side Experience, 5.4 Platform-Wide Engagement & Vitality Features, 5. Platform Interactivity & UX Design, 6.1 Overview, 6.2 Authenticity Auditor — Implementation Detail, 6. Quality-of-Life Features (+1 more)
 
 ### Community 82 - "Versions Group 82"
 Cohesion: 0.22
@@ -572,8 +709,8 @@ Cohesion: 0.22
 Nodes (9): 4.1 Core Principle: Brands are the Revenue Engine, 4.2 Three-Phase Revenue Introduction, 4.3 Subscription Tier Structure, 4.4 Additional Revenue Streams, 4.5 Break-Even & Projection Model, 4. Business Model & Monetization Strategy, Phase 1 — Free Access (Months 0–6), Phase 2 — Transaction Fees Only (Months 7–18) (+1 more)
 
 ### Community 84 - "Versions Group 84"
-Cohesion: 0.06
-Nodes (194): AIMatchScore, createCampaign(), getCampaigns(), inviteCreatorToCampaign(), respondToInvitation(), updateApplicationStatus(), updateCampaign(), updateCampaignStatus() (+186 more)
+Cohesion: 0.11
+Nodes (84): createCampaign(), getCampaigns(), inviteCreatorToCampaign(), mapCampaignResponse(), resolveBrand(), respondToInvitation(), updateCampaign(), updateCampaignStatus() (+76 more)
 
 ### Community 85 - "Versions Group 85"
 Cohesion: 0.25
@@ -604,8 +741,8 @@ Cohesion: 0.61
 Nodes (7): float, str, _cosine_similarity(), get_gemini_embedding(), _jaccard_similarity(), semantic_similarity(), _token_set()
 
 ### Community 92 - "Versions Group 92"
-Cohesion: 0.21
-Nodes (14): AsyncSession, BrandProfileUpdate, int, str, UUID, BrandProfile, BrandProfile, create_brand_profile() (+6 more)
+Cohesion: 0.23
+Nodes (13): AsyncSession, BrandProfileUpdate, int, str, UUID, BrandProfile, create_brand_profile(), get_brand() (+5 more)
 
 ### Community 93 - "Versions Group 93"
 Cohesion: 0.07
@@ -637,15 +774,15 @@ Nodes (7): Done — current baseline, Legend, Notes, Phase D — Hardening (foun
 
 ### Community 100 - "Rules Group 100"
 Cohesion: 0.08
-Nodes (27): deleteUser(), AdminDashboardPage(), AdminCampaign, AdminReview, AdminStats, AdminUser, getAdminCampaigns(), getAdminReviews() (+19 more)
+Nodes (27): deleteReview(), updateCampaignStatus(), AdminDashboardPage(), AdminCampaign, AdminReview, AdminStats, getAdminCampaigns(), getAdminReviews() (+19 more)
 
 ### Community 101 - "Workflows Group 101"
 Cohesion: 0.29
 Nodes (7): 4.1 YouTube — No Auth Required for Public Data, 4.2 Instagram — Graph API, 4.3 Meta App Review Timeline, 4.4 TikTok OAuth, 4.5 Trust & Authenticity, 4.6 bKash Merchant API, 4. Data Sources & API Feasibility
 
 ### Community 102 - "Backend Group 102"
-Cohesion: 0.12
-Nodes (9): ContextMenuCheckboxItem(), ContextMenuContent(), ContextMenuItem(), ContextMenuLabel(), ContextMenuRadioItem(), ContextMenuSeparator(), ContextMenuShortcut(), ContextMenuSubContent() (+1 more)
+Cohesion: 0.04
+Nodes (38): adjustWidths(), amendFallbackToUnicode(), applyStandardFontGlyphMap(), buildToFontChar(), compileFontInfo(), CompositeGlyph, convertCidString(), createCmapTable() (+30 more)
 
 ### Community 103 - "Scripts Group 103"
 Cohesion: 0.33
@@ -692,8 +829,8 @@ Cohesion: 0.21
 Nodes (12): POST(), buildRedirect(), GET(), buildYouTubeAuthUrl(), exchangeYouTubeCode(), getAuthorizedYouTubeChannel(), getYouTubeOAuthConfig(), YOUTUBE_SCOPES (+4 more)
 
 ### Community 114 - "Common Group 114"
-Cohesion: 0.15
-Nodes (12): 1. Runtime Topology, 2. Internal Structure, 2a. Next.js — Server / Client Island Pattern, 2b. FastAPI — Domain Structure, 3. Request Paths, 4. Environment Variables, Architecture Diagram, Brand: "Accept Creator → Create Contract" (+4 more)
+Cohesion: 0.12
+Nodes (20): Bangladesh Market Matching Weights (niche .35 budget .30), Clerk RS256 JWT Authentication, Docker Compose Stack (frontend, backend, db), LLM Rationale Generation (Groq Primary, Gemini Fallback, Heuristic), matching_config.py — Externalised Score Weights, 6-Signal Deterministic Matching Engine, Semantic Rescue via Gemini Embeddings, 1. Runtime Topology (+12 more)
 
 ### Community 115 - "Creators Group 115"
 Cohesion: 0.33
@@ -704,8 +841,8 @@ Cohesion: 0.33
 Nodes (6): 5.1 Confirmed Free Stack, 5.2 Platform Architecture, 5.3 Knowledge Graph — Why GraphDB Is Architecturally Necessary, 5.4 Matching Score Weights, 5. Technical Architecture, code:block3 (┌───────────────────────────────────────────────────────────)
 
 ### Community 117 - "Data Group 117"
-Cohesion: 0.06
-Nodes (51): analyzeBriefAction(), BriefAnalysisResult, callGemini(), callGroq(), NICHE_MAP, CAMPAIGN_DELIVERABLES_BY_PLATFORM, CAMPAIGN_PLATFORMS, STEPS (+43 more)
+Cohesion: 0.47
+Nodes (5): analyzeBriefAction(), BriefAnalysisResult, callGemini(), callGroq(), NICHE_MAP
 
 ### Community 118 - "Data Group 118"
 Cohesion: 0.33
@@ -728,12 +865,12 @@ Cohesion: 0.40
 Nodes (5): 5.1 Free Stack, 5.2 Platform Architecture, 5.3 Knowledge Graph — Why GraphDB Is Architecturally Necessary, 5.4 Matching Score Weights, 5. Technical Architecture
 
 ### Community 123 - "App Group 123"
-Cohesion: 0.18
-Nodes (11): Field(), FieldContent(), FieldDescription(), FieldError(), FieldGroup(), FieldLabel(), FieldLegend(), FieldSeparator() (+3 more)
+Cohesion: 0.04
+Nodes (12): AnnotationFactory, clearGlobalCaches(), computeIDs(), getIndexes(), getNewAnnotationsMap(), incrementalUpdate(), isRefsEqual(), NetworkPdfManager (+4 more)
 
 ### Community 124 - "Docs Group 124"
-Cohesion: 0.33
-Nodes (10): OfferCreate, _apply_offer_terms_to_contract(), create_contract(), _get_full_contract(), _offer_terms_snapshot(), Brand sends a contract offer to a shortlisted creator or a public     applicant., Reload a contract with deliverables (+ requirement) eagerly loaded for ContractO, _replace_contract_deliverables() (+2 more)
+Cohesion: 0.05
+Nodes (16): buildPostScriptWasmFunction(), getPdfColorArray(), getQuadPoints(), getRgbColor(), getTilingPatternIR(), getTransformMatrix(), isNumberArray(), lookupMatrix() (+8 more)
 
 ### Community 125 - "Tests Group 125"
 Cohesion: 0.25
@@ -764,20 +901,20 @@ Cohesion: 0.33
 Nodes (6): 6. Sad Paths, Brand Ghosts Post-Contract, Creator Declines Invitation, Creator Does Not Deliver, Product Not Returned (Product Seeding with disposition = return), Revision Limit Exceeded
 
 ### Community 132 - "Community 132"
-Cohesion: 0.17
-Nodes (9): CohesiqMark(), Theme, ThemeContext, ThemeProvider(), ThemeToggle(), columns, Footer(), Navbar() (+1 more)
+Cohesion: 0.03
+Nodes (26): Barcode, Break, BreakAfter, BreakBefore, Comb, config_Area, DayNames, Equate (+18 more)
 
 ### Community 133 - "Community 133"
-Cohesion: 0.18
-Nodes (12): Item(), ItemActions(), ItemContent(), ItemDescription(), ItemFooter(), ItemGroup(), ItemHeader(), ItemMedia() (+4 more)
+Cohesion: 0.06
+Nodes (10): collectActions(), _collectJS(), Dict, escapePDFName(), getInheritableProperty(), isDict(), isName(), PopupAnnotation (+2 more)
 
 ### Community 134 - "Community 134"
 Cohesion: 0.50
 Nodes (4): 7.1 Commission Structure, 7.2 Revenue Streams, 7.3 IZEA's Cautionary Lesson, 7. Revised Business Model
 
 ### Community 135 - "Community 135"
-Cohesion: 0.25
-Nodes (23): login(), me(), onboarding_sync(), Register a new creator or brand account. Returns a JWT on success., Authenticate and return a JWT access token., Return the currently authenticated user's info., Sync onboarding data and create necessary profiles., register() (+15 more)
+Cohesion: 0.17
+Nodes (32): login(), me(), onboarding_sync(), Register a new creator or brand account. Returns a JWT on success., Authenticate and return a JWT access token., Return the currently authenticated user's info., Sync onboarding data and create necessary profiles., register() (+24 more)
 
 ### Community 136 - "Community 136"
 Cohesion: 0.29
@@ -796,16 +933,20 @@ Cohesion: 0.36
 Nodes (8): AsyncSession, Depends, bearer_scheme, get_current_user(), get_jwks(), Decode the JWT Bearer token and return the User ORM object.     Supports both Cl, require_admin(), HTTPAuthorizationCredentials
 
 ### Community 142 - "Community 142"
-Cohesion: 0.07
-Nodes (35): get_db(), AsyncSession, str, int, Namespace, str, str, Namespace (+27 more)
+Cohesion: 0.36
+Nodes (10): str, _creator_ids(), _ensure_ready(), _get_conflict_audit_rows(), _get_demo_campaign_id(), _get_or_create_competitor_brand_id(), _insert_recent_collaboration(), _print_conflict_audit() (+2 more)
+
+### Community 144 - "Community 144"
+Cohesion: 0.04
+Nodes (12): CFF, Commands, compileCharString(), CompiledFont, compileGlyf(), EvaluatorPreprocessor, isDefaultDecodeHelper(), lookupCmap() (+4 more)
 
 ### Community 147 - "Community 147"
 Cohesion: 0.20
 Nodes (13): normalizeTikTokUsername(), POST(), buildRedirect(), GET(), buildTikTokAuthUrl(), exchangeTikTokCode(), getAuthorizedTikTokUser(), getTikTokOAuthConfig() (+5 more)
 
 ### Community 168 - "Community 168"
-Cohesion: 0.29
-Nodes (18): getMyBrandProfile(), AsyncSession, Depends, get_current_user, get_db, User, UUID, get_brand() (+10 more)
+Cohesion: 0.06
+Nodes (21): Ascii85Stream, buildComponentData(), buildHuffmanTable(), bytesToString(), CipherTransform, decodeScan(), doRun(), findNextFileMarker() (+13 more)
 
 ### Community 170 - "Community 170"
 Cohesion: 0.22
@@ -823,29 +964,65 @@ Nodes (8): ChartConfig, ChartContainer(), ChartContext, ChartContextProps, Chart
 Cohesion: 0.17
 Nodes (11): Conflict Of Interest, Core Rule, Data Model, Logging, Matching Gate, Missing Data Behavior, Product Guidance, Purpose (+3 more)
 
+### Community 208 - "Community 208"
+Cohesion: 0.29
+Nodes (60): AIMatchScore, ApplicationCreate, ApplicationInviteCreate, ApplicationRespondInvite, ApplicationStatusUpdate, ApplicationCreate, ApplicationInviteCreate, ApplicationRespondInvite (+52 more)
+
 ### Community 209 - "Community 209"
 Cohesion: 0.18
 Nodes (11): AI Prompt Templates, Concepts, Design & UI, Diagrams, Docs Index, Documentation Hierarchy (highest → lowest authority), Operations & Delivery, Research & Analysis (+3 more)
 
 ### Community 210 - "Community 210"
-Cohesion: 0.09
-Nodes (27): deleteReview(), addPlatformAction(), createRateCardAction(), deletePlatformAction(), updatePlatformAction(), updateRateCardAction(), toggleUserActive(), updateProfileAction() (+19 more)
+Cohesion: 0.06
+Nodes (43): addPlatformAction(), createRateCardAction(), deletePlatformAction(), updatePlatformAction(), updateRateCardAction(), ApplyModal(), buildSuggestedRateCards(), clamp() (+35 more)
+
+### Community 211 - "Community 211"
+Cohesion: 0.06
+Nodes (25): addHex(), BinaryCMapReader, BinaryCMapStream, CMapFactory, createBuiltInCMap(), expectInt(), expectString(), extendCMap() (+17 more)
 
 ### Community 213 - "Community 213"
-Cohesion: 0.33
-Nodes (4): Alembic Migration 0013, TYPE_CONFIG, Application Drawer Component, Sakib's Task List
+Cohesion: 0.04
+Nodes (10): BaseLocalCache, BasePdfManager, BasePDFStreamRangeReader, BasePDFStreamReader, BaseShading, BaseStream, Pattern, PatternCS (+2 more)
+
+### Community 214 - "Community 214"
+Cohesion: 0.12
+Nodes (51): updateSocialProfile(), str, AsyncSession, CreatorProfile, CreatorSocialProfile, int, PublicSocialProfileEnrichment, SocialRecentPost (+43 more)
+
+### Community 215 - "Community 215"
+Cohesion: 0.05
+Nodes (9): GlobalColorSpaceCache, objectSize(), parseMarkedContentProps(), _parseVisibilityExpression(), Ref, RefSet, RefSetCache, writeObject() (+1 more)
+
+### Community 216 - "Community 216"
+Cohesion: 0.07
+Nodes (9): addChildren(), arrayBuffersToBytes(), ChunkedStream, ChunkedStreamManager, encodeToXmlString(), generateFont(), ObjectLoader, Type1CharString (+1 more)
 
 ### Community 217 - "Community 217"
 Cohesion: 0.22
 Nodes (8): Database Seeding Guide, DB Reset + Re-seed, How `db/snapshots/2026-06-09.sql` Was Generated (background), Legacy scripts (do not use), Snapshot Structure, TL;DR — Use `db/seed.sql`, What `seed.sql` Contains, What survives a DB reset
 
 ### Community 218 - "Community 218"
-Cohesion: 0.28
-Nodes (8): InputGroup(), InputGroupAddon(), inputGroupAddonVariants, InputGroupButton(), inputGroupButtonVariants, InputGroupInput(), InputGroupText(), InputGroupTextarea()
+Cohesion: 0.07
+Nodes (8): adjustMapping(), CFFDict, CFFParser, CFFPrivateDict, CFFTopDict, ColorSpaceUtils, FontFinder, parseIndex()
+
+### Community 219 - "Community 219"
+Cohesion: 0.13
+Nodes (8): encodeASCIIString(), _nodesEqual(), PsJsCompiler, PSStackToTree, PsWasmCompiler, section(), unsignedLEB128(), vec()
+
+### Community 220 - "Community 220"
+Cohesion: 0.05
+Nodes (12): addHTML(), Border, createLine(), ExclGroup, flushHTML(), getAvailableSpace(), getRelevant(), PageArea (+4 more)
 
 ### Community 221 - "Community 221"
-Cohesion: 0.40
-Nodes (5): 5.1 Design Philosophy, 5.2 Brand-Side Experience, 5.3 Creator and Talent-Side Experience, 5.4 Platform-Wide Engagement & Vitality Features, 5. Platform Interactivity & UX Design
+Cohesion: 0.06
+Nodes (8): AsciiHexStream, BrotliStream, CCITTFaxStream, Jbig2Stream, JpxStream, PredictorStream, RunLengthStream, StreamsSequenceStream
+
+### Community 222 - "Community 222"
+Cohesion: 0.09
+Nodes (3): Annotation, AnnotationBorderStyle, MarkupAnnotation
+
+### Community 223 - "Community 223"
+Cohesion: 0.23
+Nodes (35): AsyncSession, Depends, get_current_user, get_db, User, UUID, add_collab_history(), add_platform() (+27 more)
 
 ### Community 224 - "Community 224"
 Cohesion: 0.50
@@ -860,32 +1037,200 @@ Cohesion: 0.50
 Nodes (3): Design System, Rules (strictly enforced), Token files
 
 ### Community 227 - "Community 227"
-Cohesion: 0.43
-Nodes (5): ToggleGroup(), ToggleGroupContext, ToggleGroupItem(), Toggle(), toggleVariants
+Cohesion: 0.09
+Nodes (9): Binder, createDataNode(), createText(), decodeString(), parseExpression(), parseXFAPath(), searchNode(), updateXFA() (+1 more)
+
+### Community 230 - "Community 230"
+Cohesion: 0.10
+Nodes (30): BaseModel, ApplicationAnswerCreate, ApplicationQuestionCreate, ApplicationQuestionOut, CampaignAcknowledgmentCreate, CampaignAcknowledgmentOut, CampaignFilters, CampaignLiveAnalyticsOut (+22 more)
+
+### Community 236 - "Community 236"
+Cohesion: 0.14
+Nodes (30): content, description, content, description, description, content, description, schema (+22 more)
 
 ### Community 237 - "Community 237"
+Cohesion: 0.07
+Nodes (8): B, FontSelector, I, layoutText(), P, stripQuotes(), TextMeasure, XhtmlObject
+
+### Community 238 - "Community 238"
+Cohesion: 0.13
+Nodes (4): convertBlackAndWhiteToRGBA(), convertToRGBA(), ImageResizer, PDFImage
+
+### Community 239 - "Community 239"
+Cohesion: 0.14
+Nodes (3): CFFCompiler, CFFOffsetTracker, CFFStrings
+
+### Community 240 - "Community 240"
+Cohesion: 0.16
+Nodes (28): content, description, content, description, description, content, description, schema (+20 more)
+
+### Community 241 - "Community 241"
+Cohesion: 0.10
+Nodes (4): find(), TextState, TimeSlotManager, WorkerTask
+
+### Community 242 - "Community 242"
+Cohesion: 0.07
+Nodes (8): BooleanElement, DateElement, DateTime, Decimal, Float, Integer, Time, valueToHtml()
+
+### Community 243 - "Community 243"
+Cohesion: 0.12
+Nodes (6): CFFFont, decrypt(), findBlock(), isHexDigit(), Type1Font, Type1Parser
+
+### Community 244 - "Community 244"
+Cohesion: 0.15
+Nodes (12): Arc, calculateSHA512(), ch(), hasMargin(), Line, littleSigma(), littleSigmaPrime(), maj() (+4 more)
+
+### Community 245 - "Community 245"
+Cohesion: 0.10
+Nodes (8): assert(), BasePDFStream, MessageHandler, PDFWorkerStreamRangeReader, PDFWorkerStreamReader, toRomanNumerals(), WorkerMessageHandler, wrapReason()
+
+### Community 247 - "Community 247"
+Cohesion: 0.12
+Nodes (14): calculate_sha256_ch(), calculate_sha256_littleSigma(), calculate_sha256_littleSigmaPrime(), calculate_sha256_maj(), calculate_sha256_sigma(), calculate_sha256_sigmaPrime(), calculateSHA256(), calculateSHA384() (+6 more)
+
+### Community 248 - "Community 248"
+Cohesion: 0.15
+Nodes (6): buildMeshVertexData(), FunctionBasedShading, getB(), LZWStream, MeshShading, MeshStreamReader
+
+### Community 249 - "Community 249"
+Cohesion: 0.15
+Nodes (8): PublicSocialProfileEnrichment, YouTubeChannelEnrichment, BrandProfileOut, BrandProfileUpdate, build_public_social_profile_values(), datetime, CreatorPublicSocialEnrichmentTests, CreatorYouTubeEnrichmentTests
+
+### Community 250 - "Community 250"
+Cohesion: 0.26
+Nodes (23): post, post, post, post, post, post, post, post (+15 more)
+
+### Community 251 - "Community 251"
+Cohesion: 0.15
+Nodes (3): StructTreePage, StructTreeRoot, XRefWrapper
+
+### Community 252 - "Community 252"
+Cohesion: 0.12
+Nodes (4): AlternateCS, DeviceRgbaCS, IccColorSpace, IndexedCS
+
+### Community 253 - "Community 253"
+Cohesion: 0.13
+Nodes (3): CalGrayCS, DeviceCmykCS, LabCS
+
+### Community 254 - "Community 254"
+Cohesion: 0.35
+Nodes (19): post, post, post, post, post, post, post, post (+11 more)
+
+### Community 255 - "Community 255"
+Cohesion: 0.11
+Nodes (3): Color, ColorSpace, Stipple
+
+### Community 256 - "Community 256"
+Cohesion: 0.16
+Nodes (8): Config, get_db(), AsyncSession, fetch_clerk_users(), sync_users(), live_smoke_test(), main(), test_parsers()
+
+### Community 260 - "Community 260"
+Cohesion: 0.32
+Nodes (14): delete, delete, delete, delete, operationId, parameters, responses, security (+6 more)
+
+### Community 261 - "Community 261"
+Cohesion: 0.34
+Nodes (14): delete, delete, delete, delete, operationId, parameters, responses, security (+6 more)
+
+### Community 263 - "Community 263"
+Cohesion: 0.17
+Nodes (11): BuildFest — Remaining Implementation Tasks, MCP Server (20 pts — biggest single gain), n8n Workflow Automation — optional (6 pts), Ollama Local LLM — optional (8 pts), pgvector + Persist Embeddings (3 + 5 pts), Submission form fields unlocked, Suggested workflow, Tasks (+3 more)
+
+### Community 264 - "Community 264"
+Cohesion: 0.27
+Nodes (3): ARCFourCipher, calculateMD5(), CipherTransformFactory
+
+### Community 271 - "Community 271"
+Cohesion: 0.20
+Nodes (7): CmykICCBasedCS, fetchSync(), getUint8ArrayMemory0(), passArray8ToWasm0(), t, __wbg_finalize_init(), __wbg_get_imports()
+
+### Community 273 - "Community 273"
+Cohesion: 0.25
+Nodes (7): Run migrations in 'offline' mode., Run migrations in 'offline' mode., Run migrations in 'online' async mode., Run migrations in 'online' async mode., run_async_migrations(), run_migrations_offline(), run_migrations_online()
+
+### Community 275 - "Community 275"
+Cohesion: 0.25
+Nodes (8): 1. Landing Page, 2. Browse Creators, 3. Creator Public Profile, 4. Browse Campaigns, 5. Campaign Detail, 6. Creator Dashboard, 7. Brand Dashboard, Pages to Build
+
+### Community 280 - "Community 280"
+Cohesion: 0.48
+Nodes (6): Namespace, str, _find_campaign_id(), main(), _parse_args(), _platforms_sql()
+
+### Community 281 - "Community 281"
+Cohesion: 0.29
+Nodes (7): 1. Strict Layer Separation, 2. Single Responsibility Components, 3. Swappable API Layer, 4. No Logic in Pages/Views, 5. Shared Components are Truly Generic, code:block1 (Mock Data Layer     →  lib/mock-data/       (raw data, no lo), Modularity & Abstraction Principles
+
+### Community 286 - "Community 286"
+Cohesion: 0.47
+Nodes (3): Settings, str, BaseSettings
+
+### Community 287 - "Community 287"
+Cohesion: 0.33
+Nodes (5): info, description, title, version, openapi
+
+### Community 288 - "Community 288"
+Cohesion: 0.53
+Nodes (6): /auth/onboarding, Auth onboarding pages, `/onboarding/brand/profile`, `/onboarding/creator/niches`, `/onboarding/creator/personal-info`, `/onboarding/creator/platforms`
+
+### Community 289 - "Community 289"
+Cohesion: 0.53
+Nodes (5): str, insert_brand(), insert_creator(), normalize_brand_category(), seed_db()
+
+### Community 290 - "Community 290"
+Cohesion: 0.33
+Nodes (5): int, Namespace, str, _parse_args(), seed_social_profile_for_creator()
+
+### Community 291 - "Community 291"
+Cohesion: 0.33
+Nodes (6): Color, Components & Interaction, Design Direction, Layout & Spacing, Tone, Typography
+
+### Community 292 - "Community 292"
+Cohesion: 0.33
+Nodes (5): info, description, title, version, openapi
+
+### Community 299 - "Community 299"
+Cohesion: 0.60
+Nodes (5): _ensure_schema_ready(), _ensure_seed_data_ready(), _get_or_create_demo_brand_id(), _get_or_create_demo_campaign_id(), test()
+
+### Community 300 - "Community 300"
+Cohesion: 0.40
+Nodes (5): 7.1 Strategy, 7.2 Setup Prerequisites, 7.3 Target Channel Selection (18-20 Real BD Channels), 7.5 Quota Budget Summary, 7. Demo Data Strategy — Real YouTube API Integration
+
+### Community 301 - "Community 301"
+Cohesion: 0.40
+Nodes (5): Auth, Brands, Campaigns, Creators, REST API Reference (Backend Contract)
+
+### Community 304 - "Community 304"
 Cohesion: 0.50
-Nodes (4): ButtonGroup(), ButtonGroupSeparator(), ButtonGroupText(), buttonGroupVariants
+Nodes (4): 1.1 From Influencer Platform to Creator & Talent Marketplace, 1.2 Host & Event Talent: A High-Value New Vertical, 1.3 Updated Platform Positioning, 1. Platform Identity & Scope Expansion
+
+### Community 305 - "Community 305"
+Cohesion: 0.50
+Nodes (4): code:block2 (lib/api/), code:typescript (// lib/api/campaigns.ts), code:block4 (lib/mock-data/), Data Abstraction Architecture
+
+### Community 310 - "Community 310"
+Cohesion: 0.83
+Nodes (3): live_smoke_test(), main(), test_parsers()
 
 ## Knowledge Gaps
-- **1195 isolated node(s):** `PreToolUse`, `allow`, `puku.embeddings.token`, `files.autoSave`, `editor.inlineSuggest.enabled` (+1190 more)
+- **1349 isolated node(s):** `PreToolUse`, `allow`, `puku.embeddings.token`, `files.autoSave`, `editor.inlineSuggest.enabled` (+1344 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **24 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **124 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Campaign` connect `Versions Group 84` to `Campaign & Application API`, `Onboarding Flow`, `Ui Group 36`, `Tests Group 37`, `Base-Prompts Group 73`, `Growth & Market Analysis Docs`, `Base-Prompts Group 45`, `Root Layout & Fonts`, `Api Group 46`, `Analysis-Reports Group 77`, `Community 210`, `Docs Group 51`, `Creator Detail & Profile Form`, `Brand Campaigns & Deliverables`, `Data Group 117`, `Cohesiq-V0 Group 25`, `Analysis-Reports Group 57`, `Docs Group 63`?**
-  _High betweenness centrality (0.134) - this node is a cross-community bridge._
-- **Why does `CreatorProfile` connect `Docs Group 51` to `Onboarding Flow`, `Brand/Campaign UI Components`, `Community 135`, `Base-Prompts Group 73`, `Growth & Market Analysis Docs`, `Base-Prompts Group 45`, `Root Layout & Fonts`, `Api Group 46`, `Community 210`, `Versions Group 84`, `Data Group 117`, `YouTube Compliance Research`, `Creator Detail & Profile Form`, `Base-Prompts Group 58`?**
-  _High betweenness centrality (0.117) - this node is a cross-community bridge._
-- **Why does `Frontend Page Reference` connect `Analysis-Reports Group 57` to `Ui Group 42`, `Versions Group 90`, `Brand Campaigns & Deliverables`, `Analysis-Reports Group 47`?**
-  _High betweenness centrality (0.077) - this node is a cross-community bridge._
+- **Why does `CreatorProfile` connect `Docs Group 51` to `Onboarding Flow`, `Brand/Campaign UI Components`, `Community 230`, `Community 135`, `Backend Routes & Reviews`, `Growth & Market Analysis Docs`, `Base-Prompts Group 45`, `Root Layout & Fonts`, `Api Group 46`, `Community 208`, `OpenAPI Paths`, `Community 210`, `Versions Group 84`, `Community 214`, `YouTube Compliance Research`, `Docs Group 63`, `Community 223`?**
+  _High betweenness centrality (0.141) - this node is a cross-community bridge._
+- **Why does `isWhiteSpace()` connect `Community 259` to `Creator Profile & Social`, `Community 168`, `Root Layout & Fonts`, `Community 241`, `Community 243`, `Community 211`?**
+  _High betweenness centrality (0.103) - this node is a cross-community bridge._
+- **Why does `Type1Parser` connect `Community 243` to `Creator Profile & Social`, `Community 211`, `Root Layout & Fonts`?**
+  _High betweenness centrality (0.100) - this node is a cross-community bridge._
 - **Are the 104 inferred relationships involving `CreatorProfile` (e.g. with `AIMatchScore` and `ApplicationCreate`) actually correct?**
   _`CreatorProfile` has 104 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 124 inferred relationships involving `User` (e.g. with `AsyncSession` and `AsyncSession`) actually correct?**
   _`User` has 124 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 96 inferred relationships involving `get_db` (e.g. with `AsyncSession` and `AsyncSession`) actually correct?**
-  _`get_db` has 96 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 34 inferred relationships involving `Campaign` (e.g. with `AIMatchScore` and `ApplicationCreate`) actually correct?**
-  _`Campaign` has 34 INFERRED edges - model-reasoned connections that need verification._
+- **What connects `PreToolUse`, `allow`, `puku.embeddings.token` to the rest of the system?**
+  _1451 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `Creator Profile & Social` be split into smaller, more focused modules?**
+  _Cohesion score 0.003483743516037641 - nodes in this community are weakly interconnected._
