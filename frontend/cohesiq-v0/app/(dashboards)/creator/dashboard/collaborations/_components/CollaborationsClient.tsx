@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+import { formatDistanceToNow } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,10 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { formatBDT, formatDate } from "@/lib/utils";
 import Link from "next/link";
-import { ArrowRight, Inbox, FileText, CheckCircle2, Clock, XCircle, FileSignature, ChevronRight, MessageSquare } from "lucide-react";
+import { ArrowRight, Inbox, FileText, CheckCircle2, Clock, XCircle, FileSignature, ChevronRight, MessageSquare, RefreshCw } from "lucide-react";
 import type { Application, ApplicationStatus } from "@/lib/types";
 import { NegotiationDrawer, type NegotiationActions } from "@/components/negotiation/NegotiationDrawer";
 import { acceptOfferAction, negotiateAction, declineOfferAction } from "../_actions/collaboration-actions";
+import { getApplicationsByCreatorId } from "@/lib/api/applications";
+import { usePolling } from "@/hooks/use-polling";
+import { cn } from "@/lib/utils";
 
 const STATUS_CONFIG: Record<ApplicationStatus, { label: string; className: string; icon: React.ElementType }> = {
   invited: { label: "Offer received", className: "border-purple-200 bg-purple-50 text-purple-700", icon: FileSignature },
@@ -27,6 +32,7 @@ const STATUS_CONFIG: Record<ApplicationStatus, { label: string; className: strin
 };
 
 interface CollaborationsClientProps {
+  creatorId: string;
   offers: Application[];
   myApplications: Application[];
   activeContracts: Application[];
@@ -38,12 +44,31 @@ const creatorActions: NegotiationActions = {
   decline: declineOfferAction,
 };
 
-export function CollaborationsClient({ offers, myApplications, activeContracts }: CollaborationsClientProps) {
+export function CollaborationsClient({ creatorId, offers, myApplications, activeContracts }: CollaborationsClientProps) {
   const router = useRouter();
+  const { getToken } = useAuth();
   const [negotiationApp, setNegotiationApp] = useState<Application | null>(null);
+
+  const [localOffers, setLocalOffers] = useState(offers);
+  const [localMyApps, setLocalMyApps] = useState(myApplications);
+  const [localActive, setLocalActive] = useState(activeContracts);
+
+  const fetchApplications = async () => {
+    const token = await getToken();
+    if (!token) return;
+    const apps = await getApplicationsByCreatorId(creatorId, token);
+    const sorted = apps.sort((a, b) => new Date(b.applied_at).getTime() - new Date(a.applied_at).getTime());
+    
+    setLocalOffers(sorted.filter((a) => a.status === 'invited' || a.status === 'pending_agreement'));
+    setLocalMyApps(sorted.filter((a) => !['invited', 'pending_agreement', 'accepted', 'completed'].includes(a.status)));
+    setLocalActive(sorted.filter((a) => a.status === 'accepted' || a.status === 'completed'));
+  };
+
+  const { lastUpdated, isRefreshing, refresh } = usePolling(fetchApplications, 30_000);
 
   const handleResult = () => {
     setNegotiationApp(null);
+    refresh();
     router.refresh();
   };
 
@@ -176,20 +201,38 @@ export function CollaborationsClient({ offers, myApplications, activeContracts }
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Collaborations</h1>
-        <p className="mt-2 text-muted-foreground">
-          Respond to brand offers, track your applications, and manage active contracts.
-        </p>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Collaborations</h1>
+          <p className="mt-2 text-muted-foreground">
+            Respond to brand offers, track your applications, and manage active contracts.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 pb-1">
+          {lastUpdated && (
+            <span className="text-xs text-muted-foreground hidden sm:inline-block">
+              Updated {formatDistanceToNow(lastUpdated, { addSuffix: true })}
+            </span>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Refresh"
+            onClick={() => { refresh(); router.refresh(); }}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+          </Button>
+        </div>
       </div>
 
-      <Tabs defaultValue={offers.length > 0 ? "offers" : "my_applications"} className="w-full">
+      <Tabs defaultValue={localOffers.length > 0 ? "offers" : "my_applications"} className="w-full">
         <TabsList className="mb-6 w-full sm:w-auto h-auto p-1 bg-muted/50">
           <TabsTrigger value="offers" className="py-2 px-4 flex gap-2">
             Offers
-            {offers.length > 0 && (
+            {localOffers.length > 0 && (
               <Badge variant="secondary" className="bg-primary/10 text-primary h-5 px-1.5 py-0 text-xs">
-                {offers.length}
+                {localOffers.length}
               </Badge>
             )}
           </TabsTrigger>
@@ -201,7 +244,7 @@ export function CollaborationsClient({ offers, myApplications, activeContracts }
         </TabsList>
 
         <TabsContent value="offers" className="space-y-4">
-          {offers.length === 0 ? (
+          {localOffers.length === 0 ? (
             <Card className="min-h-[40vh] flex items-center justify-center border-dashed">
               <CardContent className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
                 <Inbox className="mb-4 h-12 w-12 opacity-20" />
@@ -213,7 +256,7 @@ export function CollaborationsClient({ offers, myApplications, activeContracts }
             </Card>
           ) : (
             <div className="space-y-4">
-              {offers.map((offer) => (
+              {localOffers.map((offer) => (
                 <OfferCard key={offer.id} app={offer} />
               ))}
             </div>
@@ -221,7 +264,7 @@ export function CollaborationsClient({ offers, myApplications, activeContracts }
         </TabsContent>
 
         <TabsContent value="my_applications" className="space-y-6">
-          {myApplications.length === 0 ? (
+          {localMyApps.length === 0 ? (
             <Card className="min-h-[40vh] flex items-center justify-center border-dashed">
               <CardContent className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
                 <FileText className="mb-4 h-12 w-12 opacity-20" />
@@ -236,7 +279,7 @@ export function CollaborationsClient({ offers, myApplications, activeContracts }
             </Card>
           ) : (
             <div className="space-y-4">
-              {myApplications.map((app) => (
+              {localMyApps.map((app) => (
                 <ApplicationCard key={app.id} app={app} />
               ))}
             </div>
@@ -262,12 +305,12 @@ export function CollaborationsClient({ offers, myApplications, activeContracts }
               </Button>
             </CardContent>
           </Card>
-          {activeContracts.length > 0 && (
+          {localActive.length > 0 && (
             <div className="space-y-3">
               <p className="text-sm font-medium text-muted-foreground px-1">
-                Accepted applications ({activeContracts.length})
+                Accepted applications ({localActive.length})
               </p>
-              {activeContracts.map((app) => (
+              {localActive.map((app) => (
                 <ApplicationCard key={app.id} app={app} />
               ))}
             </div>

@@ -16,9 +16,12 @@ import { useAuth } from "@clerk/nextjs";
 import type { Contract, Creator, CreatorSocialProfile } from "@/lib/types";
 import {
   FileSignature, CheckCircle2, Clock, ExternalLink,
-  Upload, Send, AlertCircle, Loader2, FileVideo, Package, Mic2, Eye,
+  Upload, Send, AlertCircle, Loader2, FileVideo, Package, Mic2, Eye, RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
+import { listCreatorContracts } from "@/lib/api/contracts";
+import { usePolling } from "@/hooks/use-polling";
+import { formatDistanceToNow } from "date-fns";
 
 // ── Status config ────────────────────────────────────────────────────────────
 
@@ -456,7 +459,17 @@ function CreatorContractCard({
 // ── Page client ──────────────────────────────────────────────────────────────
 
 export function CreatorContractsClient({ contracts, creator }: { contracts: Contract[]; creator: Creator | null }) {
+  const { getToken } = useAuth();
   const [localContracts, setLocalContracts] = useState<Contract[]>(contracts);
+
+  const fetchContracts = async () => {
+    const token = await getToken();
+    if (!token) return;
+    const data = await listCreatorContracts(token);
+    setLocalContracts(data);
+  };
+
+  const { lastUpdated, isRefreshing, refresh } = usePolling(fetchContracts, 30_000);
 
   const handleUpdate = (updated: Contract) => {
     setLocalContracts((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
@@ -483,8 +496,27 @@ export function CreatorContractsClient({ contracts, creator }: { contracts: Cont
   }
 
   return (
-    <Tabs defaultValue="active" className="w-full">
-      <TabsList className="mb-6 bg-muted/50 p-1 h-auto w-full sm:w-auto">
+    <div className="w-full">
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {lastUpdated && (
+            <span className="text-xs text-muted-foreground hidden sm:inline-block">
+              Updated {formatDistanceToNow(lastUpdated, { addSuffix: true })}
+            </span>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Refresh"
+            onClick={refresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+          </Button>
+        </div>
+      </div>
+      <Tabs defaultValue="active" className="w-full">
+        <TabsList className="mb-6 bg-muted/50 p-1 h-auto w-full sm:w-auto">
         <TabsTrigger value="active" className="py-2 px-5 flex items-center gap-2">
           Active
           {active.length > 0 && (
@@ -537,5 +569,6 @@ export function CreatorContractsClient({ contracts, creator }: { contracts: Cont
         )}
       </TabsContent>
     </Tabs>
+    </div>
   );
 }

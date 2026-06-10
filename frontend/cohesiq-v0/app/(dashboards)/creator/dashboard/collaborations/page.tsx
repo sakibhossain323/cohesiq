@@ -36,6 +36,7 @@ export default async function CreatorCollaborationsPage() {
 
   return (
     <CollaborationsClient
+      creatorId={creator.id}
       offers={offers}
       myApplications={myApplications}
       activeContracts={activeContracts}
