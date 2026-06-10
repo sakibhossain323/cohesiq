@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ElementType } from "react";
 import Link from "next/link";
 import { shortlistAction, runMatchingAction } from "../../_actions/campaign-actions";
 import type { Campaign, AIMatchScore } from "@/lib/types";
@@ -20,6 +20,13 @@ import {
   Briefcase,
   GitCompareArrows,
   X,
+  Lightbulb,
+  TrendingUp,
+  DollarSign,
+  Monitor,
+  Globe,
+  Users,
+  FileText,
 } from "lucide-react";
 
 interface MatchesClientProps {
@@ -35,6 +42,8 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [shortlistingId, setShortlistingId] = useState<string | null>(null);
   const [shortlistedIds, setShortlistedIds] = useState<Set<string>>(new Set());
+  const [suggestions, setSuggestions] = useState<{ title: string; suggestion: string; dimension: string }[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
 
   const returnTo = `/brand/dashboard/campaigns/${campaign.id}/matches`;
   const compareHref = `/brand/dashboard/creators/compare?ids=${Array.from(selectedIds).join(",")}&returnTo=${encodeURIComponent(returnTo)}`;
@@ -52,9 +61,55 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
     });
   };
 
+  const avg = (arr: number[]) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+
+  const fetchSuggestions = async (sortedMatches: AIMatchScore[]) => {
+    const topScore = sortedMatches[0]?.score_total ?? 0;
+    const avgTotal = avg(sortedMatches.map(m => m.score_total ?? 0));
+    if (topScore >= 0.6 && avgTotal >= 0.45) return; // good enough, no suggestions needed
+    setSuggestionsLoading(true);
+    setSuggestions([]);
+    try {
+      const res = await fetch("/api/campaign-suggestion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          campaign: {
+            title: campaign.title,
+            description: campaign.description,
+            niche: campaign.primary_niche,
+            platforms: campaign.required_platforms,
+            budget_max: campaign.budget_per_creator_max,
+            min_followers: campaign.creator_min_followers,
+            max_followers: campaign.creator_max_followers,
+            brand_category: campaign.brand_category,
+          },
+          scores: {
+            avg_niche:      avg(sortedMatches.map(m => m.score_niche ?? 0)),
+            avg_budget:     avg(sortedMatches.map(m => m.score_budget ?? 0)),
+            avg_platform:   avg(sortedMatches.map(m => m.score_platform ?? 0)),
+            avg_language:   avg(sortedMatches.map(m => m.score_language ?? 0)),
+            avg_engagement: avg(sortedMatches.map(m => m.score_engagement ?? 0)),
+            avg_recency:    avg(sortedMatches.map(m => m.score_recency ?? 0)),
+            avg_total:      avgTotal,
+            top_total:      topScore,
+            match_count:    sortedMatches.length,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (data.suggestions?.length) setSuggestions(data.suggestions);
+    } catch {
+      // suggestions are best-effort, ignore failures
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  };
+
   const handleRunMatching = () => {
     setMatchingError(null);
     setMatchingNotice(null);
+    setSuggestions([]);
     startTransition(async () => {
       const result = await runMatchingAction(campaign.id);
       if (result.success && result.matches) {
@@ -66,6 +121,7 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
             ? `Matching completed: ${sortedMatches.length} creators ranked.`
             : "Matching completed, but no creators passed the campaign filters."
         );
+        fetchSuggestions(sortedMatches);
       } else {
         setMatchingError(result.error || "Failed to run matching engine.");
       }
@@ -248,6 +304,53 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
           <Card className="border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20">
             <CardContent className="py-3 text-sm text-emerald-700 dark:text-emerald-300">
               {matchingNotice}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* AI improvement suggestions */}
+        {suggestionsLoading && (
+          <Card className="border-amber-200 bg-amber-50/60 dark:bg-amber-950/20 dark:border-amber-800">
+            <CardContent className="py-4 flex items-center gap-3 text-sm text-amber-700 dark:text-amber-300">
+              <Brain className="h-4 w-4 animate-pulse shrink-0" />
+              Analyzing your campaign for improvement opportunities…
+            </CardContent>
+          </Card>
+        )}
+
+        {!suggestionsLoading && suggestions.length > 0 && (
+          <Card className="border-amber-200 bg-amber-50/60 dark:bg-amber-950/20 dark:border-amber-800">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2 text-amber-800 dark:text-amber-200">
+                <Lightbulb className="h-4 w-4 shrink-0" />
+                How to get better matches
+              </CardTitle>
+              <CardDescription className="text-amber-700/80 dark:text-amber-300/80 text-xs">
+                Your matches scored lower than expected. Here's what to adjust in your campaign settings.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-3">
+              {suggestions.map((s, i) => {
+                const iconMap: Record<string, ElementType> = {
+                  niche: TrendingUp, budget: DollarSign, platform: Monitor,
+                  language: Globe, followers: Users, description: FileText,
+                };
+                const Icon = iconMap[s.dimension] ?? Lightbulb;
+                return (
+                  <div key={i} className="flex gap-3">
+                    <div className="h-7 w-7 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0 mt-0.5">
+                      <Icon className="h-3.5 w-3.5 text-amber-700 dark:text-amber-300" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-amber-900 dark:text-amber-100 leading-tight">{s.title}</p>
+                      <p className="text-sm text-amber-800/80 dark:text-amber-200/80 mt-0.5 leading-relaxed">{s.suggestion}</p>
+                    </div>
+                  </div>
+                );
+              })}
+              <p className="text-xs text-amber-600/70 dark:text-amber-400/70 pt-1">
+                Edit your campaign settings then re-run matching to see improved results.
+              </p>
             </CardContent>
           </Card>
         )}

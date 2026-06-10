@@ -90,21 +90,28 @@ def score_budget_with_tier(
     tier_max = tier_range["max"]
 
     if not creator_rate or creator_rate <= 0:
-        # Creator has no explicit rate — use tier midpoint as estimate
-        creator_rate = (tier_min + tier_max) // 2
+        # Use tier_min (optimistic lower bound) — not midpoint. Midpoint
+        # over-penalises creators who haven't set a rate card: a micro creator
+        # at midpoint (14k) scores 0.0 on a 4k budget, even though they *might*
+        # accept a lower rate. tier_min is the same bound the gate uses.
+        creator_rate = tier_min
 
     if creator_rate <= campaign_budget_max:
         return 1.0
 
+    # Within soft buffer (budget → budget×1.3): linear decay 1.0 → 0.0
     hard_cap = campaign_budget_max * BUDGET_RATE_HARD_CAP
-    if creator_rate > hard_cap:
-        return 0.0
+    if creator_rate <= hard_cap:
+        over_budget = creator_rate - campaign_budget_max
+        buffer_amount = campaign_budget_max * BUDGET_SOFT_BUFFER_RATIO
+        if buffer_amount <= 0:
+            return 0.0
+        return round(clamp_score(1.0 - (over_budget / buffer_amount)), 4)
 
-    over_budget = creator_rate - campaign_budget_max
-    buffer_amount = campaign_budget_max * BUDGET_SOFT_BUFFER_RATIO
-    if buffer_amount <= 0:
-        return 0.0
-    return round(clamp_score(1.0 - (over_budget / buffer_amount)), 4)
+    # Beyond hard cap: budget score is 0.0.
+    # Creator still appears in results (gate allows up to 5× budget) so niche
+    # and platform scores drive their ranking.
+    return 0.0
 
 
 def score_engagement(engagement_rate: Optional[float], follower_count: int) -> float:

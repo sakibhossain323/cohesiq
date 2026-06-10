@@ -121,22 +121,24 @@ def _passes_budget_gate(
     creator_rate: int | None,
     follower_count: int,
 ) -> bool:
+    """
+    Only hard-filter when the creator has an explicit rate card that is wildly
+    unaffordable (more than 5× the campaign budget). Creators without an
+    explicit rate always pass — score_budget_with_tier gives them a 0.0 budget
+    score when their tier estimate is over budget, which lowers their rank
+    without hiding them from results. Tier-floor checks are removed because
+    they caused entire follower tiers to vanish when budget was just below the
+    floor threshold (e.g. mega creators disappearing at budget < 50k BDT).
+    """
     if not campaign_budget_max or campaign_budget_max <= 0:
         return True
 
-    tier = get_tier(follower_count)
-    tier_range = TIER_BUDGET_RANGES[tier]
-    tier_min = tier_range["min"]
-    tier_max = tier_range["max"]
+    # No explicit rate: always let through; scoring uses tier_min as estimate.
+    if not creator_rate or creator_rate <= 0:
+        return True
 
-    if campaign_budget_max < int(tier_min * TIER_MIN_FLOOR):
-        return False
-
-    if creator_rate and creator_rate > 0:
-        return creator_rate <= int(campaign_budget_max * BUDGET_RATE_HARD_CAP)
-
-    estimated_rate = (tier_min + tier_max) // 2
-    return estimated_rate <= int(campaign_budget_max * BUDGET_RATE_HARD_CAP)
+    # Explicit rate more than 5× budget is genuinely unaffordable — skip.
+    return creator_rate <= campaign_budget_max * 5
 
 
 def _matching_rate_for_campaign(campaign: Campaign, creator) -> int | None:
@@ -1654,6 +1656,7 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
     matches = []
     match_sort_followers = {}
     match_contexts = {}
+    _fallback_niche_skips: list = []  # creators skipped only by niche/semantic filter
     for creator in creators:
         if not creator.is_available or creator.deleted_at is not None:
             continue
@@ -1726,6 +1729,10 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             )
             semantic_used = semantic_score >= SEMANTIC_SIMILARITY_THRESHOLD
             if not semantic_used:
+                _fallback_niche_skips.append((
+                    creator, follower_count, engagement_rate, creator_rate,
+                    creator_platforms, creator_primary, creator_subs, creator_lang_profile,
+                ))
                 continue
             semantic_niche_score = min(semantic_score, SEMANTIC_RESCUE_NICHE_CAP)
             logger.info(
@@ -1794,6 +1801,64 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             "creator_tier": creator_tier,
             "fallback_rationale": rational_text,
         }
+
+    # Fallback: if strict matching produced zero results, include the best available
+    # creators regardless of niche alignment so something always appears.
+    if not matches:
+        from app.services.matching import get_tier  # noqa: PLC0415
+        _fb_campaign_plats = campaign.required_platforms or []
+        for (
+            creator, follower_count, engagement_rate, creator_rate,
+            creator_platforms, creator_primary, creator_subs, creator_lang_profile,
+        ) in _fallback_niche_skips:
+            days_since_post = _days_since_latest_portfolio_item(
+                creator.portfolio_items, _fb_campaign_plats
+            )
+            scores = compute_match_score(
+                campaign_niche=campaign_niche_name,
+                campaign_budget=campaign.budget_per_creator_max,
+                campaign_platforms=_fb_campaign_plats,
+                campaign_target_language=target_lang,
+                creator_primary_niche=creator_primary,
+                creator_sub_niches=creator_subs,
+                creator_engagement_rate=engagement_rate,
+                creator_follower_count=follower_count,
+                creator_rate=creator_rate,
+                creator_platforms=creator_platforms,
+                creator_language_profile=creator_lang_profile,
+                creator_days_since_post=days_since_post,
+            )
+            creator_tier = get_tier(follower_count)
+            total_score = scores.total
+            rational_text = generate_rationale(
+                creator_name=creator.display_name,
+                niche_match=scores.niche,
+                budget_match=scores.budget,
+                engagement_match=scores.engagement,
+                campaign_title=campaign.title,
+                creator_tier=creator_tier,
+            )
+            match_score_obj = AIMatchScore(
+                campaign_id=campaign.id,
+                creator_id=creator.id,
+                score_niche=scores.niche,
+                score_engagement=scores.engagement,
+                score_budget=scores.budget,
+                score_language=scores.language,
+                score_platform=scores.platform,
+                score_recency=scores.recency,
+                score_semantic=0.0,
+                score_total=total_score,
+                rationale=rational_text,
+            )
+            matches.append(match_score_obj)
+            match_sort_followers[creator.id] = follower_count
+            match_contexts[creator.id] = {
+                "creator": creator,
+                "scores": scores,
+                "creator_tier": creator_tier,
+                "fallback_rationale": rational_text,
+            }
 
     # Sort by score, then selected audience size, then creator id for stable rankings.
     matches.sort(

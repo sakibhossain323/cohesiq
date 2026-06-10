@@ -1,6 +1,6 @@
 SCORE_WEIGHTS = {
-    "niche": 0.35,
-    "budget": 0.30,
+    "niche": 0.45,
+    "budget": 0.20,
     "platform": 0.15,
     "engagement": 0.10,
     "language": 0.08,
