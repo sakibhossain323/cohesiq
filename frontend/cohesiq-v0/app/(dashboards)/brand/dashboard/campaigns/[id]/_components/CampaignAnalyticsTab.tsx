@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, useRef } from "react";
+import { formatDistanceToNow } from "date-fns";
 import {
   Bar,
   BarChart,
@@ -19,6 +20,7 @@ import {
   ImageIcon,
   Loader2,
   MessageCircle,
+  RefreshCw,
   ThumbsUp,
   TrendingUp,
 } from "lucide-react";
@@ -45,6 +47,7 @@ import { EstimatedTag } from "@/components/shared/EstimatedTag";
 import { cn, formatBDT } from "@/lib/utils";
 import { getCampaignLiveAnalytics, syncContractMetrics } from "@/lib/api/contracts";
 import type { Campaign, CampaignLiveAnalytics, Contract } from "@/lib/types";
+import { usePolling } from "@/hooks/use-polling";
 
 interface Props {
   campaign: Campaign;
@@ -143,6 +146,7 @@ export function CampaignAnalyticsTab({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const sessionSynced = useRef(false);
 
   const publishedContracts = contracts.filter((contract) =>
     ["published", "closed"].includes(contract.status)
@@ -188,6 +192,24 @@ export function CampaignAnalyticsTab({
     });
   };
 
+  const pollAction = async () => {
+    const token = await getToken();
+    if (!token) return;
+    
+    if (!sessionSynced.current && publishedContracts.length > 0) {
+      sessionSynced.current = true;
+      try {
+        await syncContractMetrics(publishedContracts[0].id, token);
+      } catch (err) {
+        console.error("Initial session sync failed:", err);
+      }
+    }
+    
+    await refreshAnalytics();
+  };
+
+  const { lastUpdated, isRefreshing, refresh } = usePolling(pollAction, 90_000);
+
   const handleSyncMetrics = () => {
     if (!selectedContract) return;
     setMessage(null);
@@ -214,12 +236,17 @@ export function CampaignAnalyticsTab({
             Time-based views, engagement, and estimated revenue from published creator content.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {lastUpdated && (
+            <span className="text-xs text-muted-foreground hidden sm:inline-block">
+              Updated {formatDistanceToNow(lastUpdated, { addSuffix: true })}
+            </span>
+          )}
           <Badge variant="outline" className="w-fit">
             {totals?.published_contracts ?? publishedContracts.length} live content items
           </Badge>
-          <Button type="button" variant="outline" size="sm" onClick={handleRefreshAnalytics} disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button type="button" variant="outline" size="sm" onClick={() => refresh()} disabled={isRefreshing}>
+            <RefreshCw className={cn("mr-2 h-4 w-4", isRefreshing && "animate-spin")} />
             Refresh
           </Button>
         </div>

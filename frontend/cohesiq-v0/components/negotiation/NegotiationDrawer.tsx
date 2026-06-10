@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { formatDistanceToNow } from "date-fns";
+import { usePolling } from "@/hooks/use-polling";
 import {
   Sheet, SheetContent, SheetTitle,
 } from "@/components/ui/sheet";
@@ -56,32 +58,24 @@ export function NegotiationDrawer({
   const status = application.status;
 
   useEffect(() => {
-    if (!open) return;
-    setShowCounter(false);
-    setError(null);
-    let cancelled = false;
+    if (!open) {
+      setShowCounter(false);
+      setError(null);
+    }
+  }, [open]);
 
-    const fetchTurns = async (initialLoad = false) => {
-      if (initialLoad) setLoading(true);
-      try {
-        const token = await getToken();
-        if (!token || cancelled) return;
-        const data = await getNegotiationThread(campaignId, application.id, token);
-        if (!cancelled) setTurns(data as NegotiationTurn[]);
-      } finally {
-        if (initialLoad && !cancelled) setLoading(false);
-      }
-    };
+  const fetchTurns = useCallback(async () => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+      const data = await getNegotiationThread(campaignId, application.id, token);
+      setTurns(data as NegotiationTurn[]);
+    } finally {
+      setLoading(false);
+    }
+  }, [getToken, campaignId, application.id]);
 
-    fetchTurns(true);
-    const interval = setInterval(() => fetchTurns(false), 4000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, application.id, campaignId]);
+  const { lastUpdated } = usePolling(fetchTurns, 4000, { enabled: open });
 
   const proposedTurns = turns.filter((t) => t.status === "proposed");
   const latestProposed = proposedTurns.length
@@ -138,8 +132,17 @@ export function NegotiationDrawer({
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-foreground leading-tight truncate">{counterpartyName}</p>
-              <div className="mt-1">
+              <div className="mt-1 flex items-center gap-3">
                 <ApplicationStatusBadge status={status} />
+                {lastUpdated && (
+                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    Live • {formatDistanceToNow(lastUpdated, { addSuffix: true })}
+                  </div>
+                )}
               </div>
             </div>
           </div>

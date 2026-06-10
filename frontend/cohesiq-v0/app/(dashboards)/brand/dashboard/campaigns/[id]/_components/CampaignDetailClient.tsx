@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+import { formatDistanceToNow } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +41,9 @@ import { CampaignAnalyticsTab } from "./CampaignAnalyticsTab";
 import { OfferModal } from "./OfferModal";
 import { ContractCard } from "./ContractCard";
 import { NegotiationDrawer, type NegotiationActions } from "@/components/negotiation/NegotiationDrawer";
+import { getApplicationsByCampaignId } from "@/lib/api/applications";
+import { listBrandContracts } from "@/lib/api/contracts";
+import { usePolling } from "@/hooks/use-polling";
 
 interface CampaignDetailClientProps {
   campaign: Campaign;
@@ -67,6 +72,7 @@ export function CampaignDetailClient({
 }: CampaignDetailClientProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const { getToken } = useAuth();
   const [matches, setMatches] = useState<AIMatchScore[]>(initialMatches);
   const [localApplications, setLocalApplications] = useState<Application[]>(applications);
   const [localContracts, setLocalContracts] = useState<Contract[]>(initialContracts);
@@ -93,6 +99,34 @@ export function CampaignDetailClient({
 
   const campaignActive = campaign.status === "active";
   const isDraft = campaign.status === "draft";
+
+  const fetchApplications = async () => {
+    const token = await getToken();
+    if (!token) return;
+    const fresh = await getApplicationsByCampaignId(campaign.id, token);
+    setLocalApplications(fresh);
+  };
+
+  const fetchContracts = async () => {
+    const token = await getToken();
+    if (!token) return;
+    const fresh = await listBrandContracts(token, campaign.id);
+    setLocalContracts(fresh);
+  };
+
+  const { lastUpdated: appsLastUpdated, isRefreshing: appsRefreshing, refresh: refreshApps } = usePolling(fetchApplications, 30_000);
+  const { lastUpdated: contractsLastUpdated, isRefreshing: contractsRefreshing, refresh: refreshContracts } = usePolling(fetchContracts, 30_000);
+
+  const handleManualRefresh = () => {
+    refreshApps();
+    refreshContracts();
+    router.refresh();
+  };
+
+  const isPollingRefreshing = appsRefreshing || contractsRefreshing;
+  const latestUpdate = appsLastUpdated && contractsLastUpdated
+    ? (appsLastUpdated > contractsLastUpdated ? appsLastUpdated : contractsLastUpdated)
+    : (appsLastUpdated || contractsLastUpdated);
 
   const upsertApplication = (updated: Application) => {
     setLocalApplications((prev) =>
@@ -283,15 +317,22 @@ export function CampaignDetailClient({
                 Launch Campaign
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              title="Refresh"
-              onClick={() => router.refresh()}
-              disabled={isPending}
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              {latestUpdate && (
+                <span className="text-xs text-muted-foreground hidden sm:inline-block">
+                  Updated {formatDistanceToNow(latestUpdate, { addSuffix: true })}
+                </span>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                title="Refresh"
+                onClick={handleManualRefresh}
+                disabled={isPending || isPollingRefreshing}
+              >
+                <RefreshCw className={cn("h-4 w-4", isPollingRefreshing && "animate-spin")} />
+              </Button>
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" disabled={isPending}>
