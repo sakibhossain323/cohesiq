@@ -34,10 +34,10 @@ export default async function BrandCampaignDetailPage({ params }: PageProps) {
   }
 
   const [applications, matches, contracts, liveAnalytics] = await Promise.all([
-    getApplicationsByCampaignId(id, token),
-    getCampaignMatches(id, token),
-    listBrandContracts(token, id),
-    getCampaignLiveAnalytics(id, token),
+    getApplicationsByCampaignId(id, token).catch(() => []),
+    getCampaignMatches(id, token).catch(() => []),
+    listBrandContracts(token, id).catch(() => []),
+    getCampaignLiveAnalytics(id, token).catch(() => null),
   ]);
 
   return (
