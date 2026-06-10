@@ -89,7 +89,7 @@ function toFormState(p: CreatorSocialProfile): PlatformFormState {
   return {
     id: p.id,
     platform: p.platform,
-    handle: p.handle,
+    handle: p.handle.startsWith('@') ? p.handle.substring(1) : p.handle,
     profile_url: p.profile_url || "",
     follower_count: p.follower_count?.toString() || "",
     following_count: p.following_count?.toString() || "",
@@ -262,6 +262,11 @@ export function CreatorProfileClient({ creatorId, initialProfiles, initialRateCa
   const handleConnectTikTok = () => {
     setShowDialog(false);
     router.push("/creator/dashboard/connect-tiktok?autoStart=true");
+  };
+
+  const handleConnectYouTube = () => {
+    setShowDialog(false);
+    router.push("/creator/dashboard/connect-youtube?autoStart=true");
   };
 
   const handleOpenRateCardEdit = (rateCard: CreatorRateCard) => {
@@ -449,7 +454,7 @@ export function CreatorProfileClient({ creatorId, initialProfiles, initialRateCa
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Handle</p>
                       <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
-                        @{profile.handle}
+                        {profile.handle.startsWith('@') ? profile.handle : `@${profile.handle}`}
                         {(profile.has_verified_badge || profile.is_api_verified) && (
                           <BadgeCheck className="h-5 w-5 text-primary" />
                         )}
@@ -684,21 +689,50 @@ export function CreatorProfileClient({ creatorId, initialProfiles, initialRateCa
             <div className="flex-1 overflow-y-auto px-1 py-4">
               <TabsContent value="basic" className="space-y-4 m-0">
                 {dialogMode === "add" && (
-                  <div className="rounded-lg border bg-muted/20 p-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-start gap-3">
-                        <PlatformBadge platform="tiktok" />
-                        <div>
-                          <p className="font-medium text-foreground">Sync with TikTok</p>
-                          <p className="text-sm text-muted-foreground">
-                            Verify your TikTok account and import profile metrics automatically.
-                          </p>
+                  <div className="space-y-3 mb-6">
+                    <div className="rounded-lg border bg-muted/20 p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-3">
+                          <PlatformBadge platform="youtube" />
+                          <div>
+                            <p className="font-medium text-foreground">Sync with YouTube</p>
+                            <p className="text-sm text-muted-foreground">
+                              Securely connect your channel to import stats and live metrics.
+                            </p>
+                          </div>
                         </div>
+                        <Button type="button" variant="secondary" onClick={handleConnectYouTube} className="shrink-0">
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Sync YouTube
+                        </Button>
                       </div>
-                      <Button type="button" variant="secondary" onClick={handleConnectTikTok} className="shrink-0">
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        Sync TikTok
-                      </Button>
+                    </div>
+
+                    <div className="rounded-lg border bg-muted/20 p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-3">
+                          <PlatformBadge platform="tiktok" />
+                          <div>
+                            <p className="font-medium text-foreground">Sync with TikTok</p>
+                            <p className="text-sm text-muted-foreground">
+                              Verify your TikTok account and import profile metrics automatically.
+                            </p>
+                          </div>
+                        </div>
+                        <Button type="button" variant="secondary" onClick={handleConnectTikTok} className="shrink-0">
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Sync TikTok
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="relative pt-4 pb-2">
+                      <div className="absolute inset-0 flex items-center pt-2">
+                        <span className="w-full border-t border-border" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">Or add manually</span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -731,7 +765,11 @@ export function CreatorProfileClient({ creatorId, initialProfiles, initialRateCa
                       id="handle"
                       placeholder="yourhandle"
                       value={form.handle}
-                      onChange={e => setForm(f => ({ ...f, handle: e.target.value }))}
+                      onChange={e => {
+                        let val = e.target.value;
+                        if (val.startsWith('@')) val = val.substring(1);
+                        setForm(f => ({ ...f, handle: val }));
+                      }}
                       className="pl-7"
                     />
                   </div>
