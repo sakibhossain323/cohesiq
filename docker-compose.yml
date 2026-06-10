@@ -57,7 +57,7 @@ services:
   ngrok:
     image: ngrok/ngrok:latest
     restart: unless-stopped
-    command: http frontend:3000 --log=stdout
+    command: http frontend:3000 --domain=subprime-ligament-sixfold.ngrok-free.dev --log=stdout
     env_file:
       - ./backend/.env
     ports:

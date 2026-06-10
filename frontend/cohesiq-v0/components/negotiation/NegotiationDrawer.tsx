@@ -60,18 +60,26 @@ export function NegotiationDrawer({
     setShowCounter(false);
     setError(null);
     let cancelled = false;
-    (async () => {
-      setLoading(true);
+
+    const fetchTurns = async (initialLoad = false) => {
+      if (initialLoad) setLoading(true);
       try {
         const token = await getToken();
-        if (!token) return;
+        if (!token || cancelled) return;
         const data = await getNegotiationThread(campaignId, application.id, token);
         if (!cancelled) setTurns(data as NegotiationTurn[]);
       } finally {
-        if (!cancelled) setLoading(false);
+        if (initialLoad && !cancelled) setLoading(false);
       }
-    })();
-    return () => { cancelled = true; };
+    };
+
+    fetchTurns(true);
+    const interval = setInterval(() => fetchTurns(false), 4000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, application.id, campaignId]);
 
@@ -136,12 +144,22 @@ export function NegotiationDrawer({
             </div>
           </div>
 
-          {latestProposed?.proposed_rate != null && (
+          {latestProposed != null && (
             <div className="mt-3 flex items-center justify-between rounded-xl bg-background border border-border px-4 py-3">
               <span className="text-xs text-muted-foreground font-medium">Current offer</span>
-              <span className="font-bold text-foreground text-xl tabular-nums">
-                {formatBDT(latestProposed.proposed_rate)}
-              </span>
+              {latestProposed.proposed_rate != null ? (
+                <span className="font-bold text-foreground text-xl tabular-nums">
+                  {formatBDT(latestProposed.proposed_rate)}
+                </span>
+              ) : (() => {
+                const terms = latestProposed.proposed_terms as Record<string, unknown> | null | undefined;
+                const structure = terms?.payment_structure as string | undefined;
+                const nonCash = terms?.non_cash_compensation as string | undefined;
+                if (structure === "non_cash") {
+                  return <span className="text-sm font-medium text-foreground">{nonCash ?? "Non-cash"}</span>;
+                }
+                return <span className="text-sm text-muted-foreground italic">No cash compensation</span>;
+              })()}
             </div>
           )}
         </div>
@@ -195,14 +213,31 @@ export function NegotiationDrawer({
                             ? "bg-primary/10 border border-primary/30"
                             : "bg-muted border border-border",
                     )}>
-                      {t.proposed_rate != null && (
+                      {t.proposed_rate != null ? (
                         <p className={cn(
                           "font-bold text-lg tabular-nums leading-tight",
                           isAccepted ? "text-green-700 dark:text-green-400" : "text-foreground",
                         )}>
                           {formatBDT(t.proposed_rate)}
                         </p>
-                      )}
+                      ) : (() => {
+                        const terms = t.proposed_terms as Record<string, unknown> | null | undefined;
+                        const structure = terms?.payment_structure as string | undefined;
+                        const nonCash = terms?.non_cash_compensation as string | undefined;
+                        if (structure === "non_cash") {
+                          return (
+                            <p className="text-sm font-medium text-foreground">
+                              {nonCash ?? "Non-cash compensation"}
+                            </p>
+                          );
+                        }
+                        if (structure === "none") {
+                          return (
+                            <p className="text-sm italic text-muted-foreground">No monetary compensation</p>
+                          );
+                        }
+                        return null;
+                      })()}
                       {t.message && (
                         <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
                           {t.message}

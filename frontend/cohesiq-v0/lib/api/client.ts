@@ -15,15 +15,13 @@ const isServer = typeof window === 'undefined';
  *   Default: http://backend:8000
  *
  * CLIENT (isServer = false) → NEXT_PUBLIC_API_URL
- *   Runs in the end-user's browser. Must be a PUBLICLY reachable URL.
- *   This MUST be set in .env for each environment:
- *     - Local dev: http://localhost:8000
- *     - Staging:   http://<staging-server-ip>:8000
- *   See frontend/cohesiq-v0/.env.example for reference.
+ *   Defaults to '/backend' — Next.js rewrites /backend/:path* → http://backend:8000/:path*
+ *   so browser calls stay same-origin and work through HTTPS tunnels (ngrok, etc.).
+ *   Override via NEXT_PUBLIC_API_URL only if proxying through Next.js is not desired.
  */
 export const API_BASE_URL = isServer
   ? (process.env.BACKEND_API_URL || 'http://backend:8000')
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
+  : (process.env.NEXT_PUBLIC_API_URL || '/backend');
 
 export interface FetchOptions extends RequestInit {
   token?: string;
