@@ -142,17 +142,13 @@ export function CampaignAnalyticsTab({
 }: Props) {
   const { getToken } = useAuth();
   const [analytics, setAnalytics] = useState(initialAnalytics);
-  const [selectedContractId, setSelectedContractId] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   const sessionSynced = useRef(false);
 
   const publishedContracts = contracts.filter((contract) =>
     ["published", "closed"].includes(contract.status)
   );
-  const selectedContract = publishedContracts.find((contract) => contract.id === selectedContractId)
-    ?? publishedContracts[0];
+
   const totals = analytics?.totals;
   const timeline = useMemo(
     () => (analytics?.timeline ?? []).map((point) => ({
@@ -179,17 +175,26 @@ export function CampaignAnalyticsTab({
     return fresh;
   };
 
-  const handleRefreshAnalytics = () => {
-    setMessage(null);
-    setError(null);
-    startTransition(async () => {
-      try {
-        await refreshAnalytics();
-        setMessage("Analytics refreshed.");
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Could not refresh analytics");
+  const handleManualRefresh = async () => {
+    setIsManualRefreshing(true);
+    try {
+      const token = await getToken();
+      if (!token) return;
+      
+      // Force sync from YouTube API for all published contracts
+      if (publishedContracts.length > 0) {
+        await Promise.all(
+          publishedContracts.map(c => syncContractMetrics(c.id, token).catch(e => console.error(e)))
+        );
       }
-    });
+      
+      await refreshAnalytics();
+      refresh(); // Reset polling interval and update timestamp
+    } catch (err) {
+      console.error("Failed to manually refresh analytics", err);
+    } finally {
+      setIsManualRefreshing(false);
+    }
   };
 
   const pollAction = async () => {
@@ -210,22 +215,7 @@ export function CampaignAnalyticsTab({
 
   const { lastUpdated, isRefreshing, refresh } = usePolling(pollAction, 90_000);
 
-  const handleSyncMetrics = () => {
-    if (!selectedContract) return;
-    setMessage(null);
-    setError(null);
-    startTransition(async () => {
-      try {
-        const token = await getToken();
-        if (!token) throw new Error("Not authenticated");
-        await syncContractMetrics(selectedContract.id, token);
-        await refreshAnalytics();
-        setMessage("Metrics synced from the platform API.");
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Could not sync metrics");
-      }
-    });
-  };
+
 
   return (
     <div className="space-y-6">
@@ -245,8 +235,8 @@ export function CampaignAnalyticsTab({
           <Badge variant="outline" className="w-fit">
             {totals?.published_contracts ?? publishedContracts.length} live content items
           </Badge>
-          <Button type="button" variant="outline" size="sm" onClick={() => refresh()} disabled={isRefreshing}>
-            <RefreshCw className={cn("mr-2 h-4 w-4", isRefreshing && "animate-spin")} />
+          <Button type="button" variant="outline" size="sm" onClick={handleManualRefresh} disabled={isRefreshing || isManualRefreshing}>
+            <RefreshCw className={cn("mr-2 h-4 w-4", (isRefreshing || isManualRefreshing) && "animate-spin")} />
             Refresh
           </Button>
         </div>
@@ -408,59 +398,6 @@ export function CampaignAnalyticsTab({
             <p className="text-sm text-text-secondary">
               Live post links will appear here after creators publish approved content.
             </p>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Sync Live Metrics</CardTitle>
-          <CardDescription>
-            Pull the latest performance directly from the connected platform API.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {publishedContracts.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              A contract must be published before live metrics can be tracked.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Live content</Label>
-                <Select
-                  value={selectedContract?.id}
-                  onValueChange={setSelectedContractId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select live content" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {publishedContracts.map((contract) => (
-                      <SelectItem key={contract.id} value={contract.id}>
-                        {contract.live_post_url || `Contract ${contract.id.slice(0, 8)}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {(message || error) && (
-                <p className={cn("text-sm", error ? "text-destructive" : "text-brand")}>
-                  {error || message}
-                </p>
-              )}
-
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-xs text-muted-foreground">
-                  YouTube metrics sync now. Instagram and TikTok can use the same endpoint once platform metric APIs are wired.
-                </p>
-                <Button type="button" disabled={isPending || !selectedContract} onClick={handleSyncMetrics}>
-                  {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Sync from API
-                </Button>
-              </div>
-            </div>
           )}
         </CardContent>
       </Card>
