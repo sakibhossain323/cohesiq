@@ -1,93 +1,145 @@
 # Cohesiq
 
-Cohesiq is a next-generation B2B SaaS Influencer Matching Platform designed to seamlessly connect brands with the right content creators. It features a budget-aware matching engine, AI-powered semantic search, and an end-to-end campaign management dashboard.
+> AI-powered B2B influencer-matching platform for the Bangladesh creator economy.
 
-## Core Features
-- **Intelligent Matching**: Uses a tier-aware scoring system combining budget constraints, follower metrics, and AI embeddings for perfect brand-creator alignment.
-- **Dual Dashboards**: Dedicated portals for Brands (to discover creators, post campaigns, and track applications) and Creators (to build portfolios, discover campaigns, and manage contracts).
-- **Secure Authentication**: Fully managed authentication via Clerk, utilizing robust RS256 JWT validation on the backend.
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
 
-## Tech Stack
+## What is Cohesiq
 
-- **Frontend:** Next.js 16 (App Router), React, Tailwind CSS v4, shadcn/ui.
-- **Backend:** FastAPI, Python 3.12.
-- **Database:** PostgreSQL 16 (accessed via SQLAlchemy 2.0 Async + asyncpg).
-- **Authentication:** Clerk (RS256 JWTs).
-- **Containerization:** Docker Compose for local development.
+Cohesiq is a B2B SaaS marketplace that connects brands with the right content creators using an explainable AI matching engine. Brands describe a campaign — by typing, talking, or uploading a brief — and Cohesiq ranks creators by niche, budget, platform, engagement, language, and recency, then drives the relationship through an offer, negotiation, and contract lifecycle. It is built for the Bangladesh influencer market and seeded with real, verified creator data.
 
-## Prerequisites
+## The problem
+
+Bangladesh's influencer marketing is fragmented and largely manual. Brands discover creators through word of mouth and spreadsheets, have no reliable way to gauge fit or fair pricing, and negotiate over scattered DMs with no contract trail. Creators, in turn, lack a single place to surface their reach and rates to serious buyers. Cohesiq replaces that guesswork with data-driven, explainable matching and a structured deal pipeline.
+
+## Key features
+
+- **Explainable AI matching engine** — a 6-factor weighted score (niche 0.45, budget 0.20, platform 0.15, engagement 0.10, language 0.08, recency 0.02) with a per-factor breakdown so brands understand *why* a creator ranks where they do.
+- **Voice + PDF campaign creation** — describe a campaign out loud (transcribed via Groq Whisper) or upload a brief PDF; an LLM extracts structured campaign fields automatically.
+- **Offer & negotiation flow** — brands send offers, creators counter, and both sides negotiate within the platform until terms are accepted.
+- **Contract lifecycle** — accepted offers convert into trackable contracts with engagement types, clauses, and a defined state machine.
+- **Creator discovery** — filterable, URL-driven marketplace of verified creators with profiles, rate cards, and portfolios.
+- **Admin panel** — role-gated `/admin` area (Clerk-metadata auth) for read-only oversight of users, campaigns, and platform activity.
+- **YouTube enrichment** — pulls live channel metrics from the YouTube Data API to keep creator profiles current.
+
+## Architecture
+
+Cohesiq is a decoupled full-stack application: a **Next.js 16** App Router frontend talks to a **FastAPI** backend over HTTP, and the backend persists everything to **PostgreSQL 16** (relational-only). The backend follows Domain-Driven Design (`auth`, `brands`, `creators`, `campaigns`, plus cross-domain `services`), where routers only parse requests and all logic lives in the service layer. Authentication is handled by Clerk using RS256 JWTs validated against Clerk's JWKS on the backend. The entire stack is orchestrated with Docker Compose (`postgres`, `backend`, `frontend`, `ngrok`).
+
+See **[`docs/diagrams/architecture.md`](docs/diagrams/architecture.md)** for the full as-built diagram (containers, ports, external services, request paths, and env vars).
+
+## Tech stack
+
+| Layer | Technologies |
+|---|---|
+| **Frontend** | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, shadcn/ui, Clerk auth |
+| **Backend** | FastAPI, Python 3.12, SQLAlchemy 2.0 (async), Alembic, Pydantic v2 |
+| **Data** | PostgreSQL 16 (relational-only); 67 verified Bangladesh YouTube channels seeded |
+| **AI** | Groq `llama-3.1-8b-instant` (extraction/matching), Groq Whisper `large-v3-turbo` (voice), Gemini `1.5-flash` + `text-embedding-004` (semantic) |
+| **Infra** | Docker Compose (`postgres`, `backend`, `frontend`, `ngrok`), Clerk, YouTube Data API |
+
+## Quick start
+
+### Prerequisites
 
 - [Docker](https://www.docker.com/products/docker-desktop) and Docker Compose
-- [Node.js](https://nodejs.org/en/) 20+ (for local frontend tooling/linting)
-- A [Clerk](https://clerk.com/) account for authentication keys.
+- A [Clerk](https://clerk.com/) account (publishable + secret keys)
+- API keys: [Groq](https://console.groq.com/) and [Google Gemini](https://aistudio.google.com/); a [YouTube Data API](https://console.cloud.google.com/) key for enrichment
 
-## Quick Start
+### 1. Clone
 
-1. **Clone the repository:**
-   ```bash
-   git clone <repository_url>
-   cd cohesiq
-   ```
+```bash
+git clone https://github.com/sakibhossain323/cohesiq.git
+cd cohesiq
+```
 
-2. **Environment Variables:**
-   - The platform requires environment variables for both the backend and frontend.
-   - **Docker Compose**: At the repository root, copy `.env.example` to `.env`. If your machine already has Postgres on `5432`, set `POSTGRES_HOST_PORT=5433` or another free port.
-   - **Frontend**: Navigate to `frontend/cohesiq-v0/`, copy `.env.example` to `.env.local`, and fill in your Clerk API keys (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`). Ensure you read the [Frontend README](frontend/cohesiq-v0/README.md) to understand the dual-variable API configuration.
-   - **Backend**: Navigate to `backend/`, copy `.env.example` to `.env` (if applicable), and configure your database and Clerk JWT verification keys.
+### 2. Configure environment variables
 
-3. **Running the Application:**
-   - The entire stack is containerized for consistency. Start it from the repository root:
-     ```bash
-     docker compose up --build
-     ```
+Copy the example files and fill in your keys. Never commit `.env` files.
 
-4. **Access the Application:**
-   - **Frontend:** [http://localhost:3000](http://localhost:3000)
-   - **Backend API Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
+```bash
+# Backend — set CLERK_SECRET_KEY, DATABASE_URL, GROQ_API_KEY, GEMINI_API_KEY, YouTube key
+cp backend/.env.example backend/.env
 
-## Project Architecture
+# Frontend — set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY
+cp frontend/cohesiq-v0/.env.example frontend/cohesiq-v0/.env
+```
 
-Cohesiq uses a decoupled full-stack architecture, utilizing Docker to orchestrate the environment.
+> The frontend uses a two-variable API contract: `BACKEND_API_URL` (`http://backend:8000`, server-side only) and `NEXT_PUBLIC_API_URL` (`http://localhost:8000`, browser only). Do not mix them up.
 
-### 1. Frontend (`/frontend/cohesiq-v0/`)
-- **Next.js 16 App Router**: Heavily leverages React Server Components for performance.
-- **Strict Colocation**: Follows a strict "Server Component -> Client Island" pattern. Data fetching happens exclusively on the server (`page.tsx`), while interactive UI and Server Actions are colocated in `_components/` and `_actions/` directories.
-- 📖 **Read more**: [Frontend Architecture & Setup](frontend/cohesiq-v0/README.md)
+### 3. Run the stack
 
-### 2. Backend (`/backend/`)
-- **FastAPI (Python 3.12)**: A performant, async API layer.
-- **Domain-Driven Design (DDD)**: Organized into distinct domains: `auth`, `brands`, `creators`, and `campaigns`.
-- **SQLAlchemy 2.0 Async**: Fully asynchronous database interactions.
+```bash
+docker compose up --build
+```
 
-### 3. Database & Data Model
-- **PostgreSQL 16**: The single source of truth, managed via Alembic migrations.
-- **Documentation**: The complete schema map is available in `/docs/schema.md`. Always refer to this before altering models.
-## Data Seeding
+- Frontend → http://localhost:3000
+- Backend → http://localhost:8000
+- Interactive API docs (Swagger) → http://localhost:8000/docs
 
-To populate the database with realistic AI-generated demo data and sync your Clerk users, run the following commands sequentially inside the backend container:
+### 4. Seed the database
 
-1. **Generate Seed Data:** Uses Tavily and Groq to generate ~100 realistic Bangladeshi creators and brands (JSON files saved to `backend/data/`).
-   ```bash
-   docker compose exec backend python -m scripts.generate_seed_data
-   ```
-2. **Sync Clerk Users:** Fetches users from Clerk and assigns `brand` or `creator` roles to those with `@test.com` emails.
-   ```bash
-   docker compose exec backend python -m scripts.sync_clerk_users
-   ```
-3. **Seed Database:** Purges old business data, maps test users to the generated profiles, and seeds mock campaigns.
-   ```bash
-   docker compose exec backend python -m scripts.seed_db
-   ```
+Load the canonical seed (real Bangladesh creator data) once the containers are up:
 
-## AI & Agentic Tooling
+```bash
+docker compose exec -T postgres psql -U cohesiq -d cohesiq < db/seed.sql
+```
 
-For developers using AI coding assistants (like Cursor, Windsurf, or Google AI), this repository utilizes **Model Context Protocol (MCP)** servers to enhance agent awareness:
+`db/seed.sql` is a symlink to the latest snapshot in `db/snapshots/`. To wipe and re-seed, see [`docs/seeding.md`](docs/seeding.md).
 
-1. **Context7**: Used for fetching real-time, up-to-date documentation for Next.js, FastAPI, and other dependencies.
-2. **Graphify**: Used to generate and query an AST-based knowledge graph of the entire repository (`graphify-out/`).
+## Project structure
 
-**Installation:** Ensure you have both the `context7` and `graphify` MCP servers configured in your agent environment before making large-scale architectural changes. 
+```
+cohesiq/
+├── frontend/cohesiq-v0/      # Next.js 16 App Router frontend
+│   └── app/                  # routes; _actions/ + _components/ colocated per feature
+├── backend/                  # FastAPI service
+│   ├── app/
+│   │   ├── auth/             # Clerk JWT validation, user sync
+│   │   ├── brands/           # brand profiles
+│   │   ├── creators/         # creator profiles, social profiles, rate cards, portfolio
+│   │   ├── campaigns/        # campaigns, applications, collaborations, reviews
+│   │   ├── admin/            # role-gated admin endpoints
+│   │   ├── services/         # cross-domain: matching, semantic_match, llm_matching
+│   │   ├── youtube/          # stateless YouTube Data API read wrapper
+│   │   └── common/           # shared deps (get_db, get_current_user)
+│   └── scripts/              # reset_db, sync_clerk_users, seeding utilities
+├── db/                       # seed.sql + dated snapshots
+└── docs/                     # source-of-truth documentation (start at docs/index.md)
+```
 
 ## Documentation
 
-For deep-dives into the database schema and future AI roadmap, please see the markdown files in the `/docs/` directory. If you are an AI assistant contributing to this repository, please strictly adhere to the rules outlined in `AGENTS.md`.
+Start at **[`docs/index.md`](docs/index.md)** — the full navigation map for every doc file and the source-of-truth hierarchy.
+
+| Doc | What it covers |
+|---|---|
+| [`docs/index.md`](docs/index.md) | Master navigation map for all documentation |
+| [`docs/srs.md`](docs/srs.md) | Product spec — functional/non-functional requirements, user stories, ERD |
+| [`docs/plan.md`](docs/plan.md) | Implementation plan, phase status, and the divergence ledger (§3) |
+| [`docs/schema.md`](docs/schema.md) | Code-true relational schema (read before changing any model) |
+| [`docs/matching-engine.md`](docs/matching-engine.md) | Matching engine architecture — stages, weights, semantic rescue |
+| [`docs/youtube-integration.md`](docs/youtube-integration.md) | YouTube Data API integration and enrichment flow |
+| [`docs/executive-summary.md`](docs/executive-summary.md) | High-level overview for non-technical stakeholders |
+
+## Contributing
+
+1. **Branch from `main`** — create a feature branch; never commit directly to `main`. Open a PR for review.
+2. **Graphify-first** — this repo ships a live AST knowledge graph at `graphify-out/`. Before grepping source, run `graphify query "<question>"`, `graphify explain "<concept>"`, or `graphify path "<A>" "<B>"` to locate relevant code. Run `graphify update .` after meaningful changes.
+3. **Track your work** — confirm the task exists in the relevant `docs/tasks/tasks-*.md` backlog before implementing, and mark it done/partial/broken afterward.
+4. **Respect the layering** — backend routers parse requests only; all logic lives in the service layer with no cross-domain imports. Frontend follows the Server Component → Client Island pattern and always uses `fetchApi()` from `lib/api/client.ts`.
+5. **Use design tokens** — never hardcode colors, font sizes, spacing, or shadows. See [`docs/design-system.md`](docs/design-system.md).
+
+Detailed conventions live in **[`AGENTS.md`](AGENTS.md)** (all AI agents and contributors) and **[`CLAUDE.md`](CLAUDE.md)** (Claude Code specifics).
+
+## License
+
+Released under the [MIT License](LICENSE).
+
+## Team
+
+Built by the Cohesiq Team for **BuildFest 2026** (MarTech Track).

@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/* Fonts are loaded via next/font/google in layout.tsx (Plus Jakarta Sans + DM Sans) */
+/* Font families are assigned on <html> in layout.tsx via CSS variables. */
 
 @custom-variant dark (&:is(.dark *));
 
@@ -176,8 +176,8 @@
   --muted-foreground:       #8B8170;
   --accent:                 var(--brand-primary-soft);
   --accent-foreground:      var(--brand-primary-strong);
-  --destructive:            var(--brand-secondary-soft);
-  --destructive-foreground: var(--brand-secondary-strong);
+  --destructive:            var(--brand-secondary);
+  --destructive-foreground: #FFFFFF;
   --border:                 #2D281F;
   --input:                  #2D281F;
   --ring:                   var(--brand-primary);

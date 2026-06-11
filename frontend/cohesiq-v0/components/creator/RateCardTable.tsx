@@ -7,27 +7,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { getDeliverableLabel } from "@/lib/deliverables";
 import { PlatformBadge, getPlatformLabel } from "@/components/shared/PlatformBadge";
 import { formatBDT } from "@/lib/utils";
-import { Check, X } from "lucide-react";
-import type { CreatorRateCard, DeliverableType } from "@/lib/types";
+import { Check, X, Edit2, Trash2 } from "lucide-react";
+import type { CreatorRateCard } from "@/lib/types";
 
 interface RateCardTableProps {
   rateCards: CreatorRateCard[];
+  onEdit?: (card: CreatorRateCard) => void;
+  onDelete?: (card: CreatorRateCard) => void;
 }
 
-const deliverableLabels: Record<DeliverableType, string> = {
-  dedicated_video: "Dedicated Video",
-  integrated_mention: "Integrated Mention",
-  short_video: "Short Video",
-  photo_post: "Photo Post",
-  story: "Story",
-  live_stream: "Live Stream",
-  blog_post: "Blog Post",
-  other: "Other",
-};
-
-export function RateCardTable({ rateCards }: RateCardTableProps) {
+export function RateCardTable({ rateCards, onEdit, onDelete }: RateCardTableProps) {
   if (rateCards.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-border bg-muted/30 py-8 text-center">
@@ -36,6 +29,9 @@ export function RateCardTable({ rateCards }: RateCardTableProps) {
     );
   }
 
+  const showActions = Boolean(onEdit || onDelete);
+  const showSuggested = rateCards.some(card => card.suggested_price_bdt);
+
   return (
     <div className="rounded-lg border border-border">
       <Table>
@@ -43,13 +39,15 @@ export function RateCardTable({ rateCards }: RateCardTableProps) {
           <TableRow className="bg-muted/50">
             <TableHead>Platform</TableHead>
             <TableHead>Deliverable</TableHead>
+            {showSuggested && <TableHead className="text-right">Suggested</TableHead>}
             <TableHead className="text-right">Price (BDT)</TableHead>
             <TableHead className="text-center">Negotiable</TableHead>
+            {showActions && <TableHead className="text-right">Actions</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rateCards.map(card => (
-            <TableRow key={card.id}>
+          {rateCards.map((card, index) => (
+            <TableRow key={card.id ?? `${card.platform}-${card.deliverable_code ?? card.deliverable_type}-${index}`}>
               <TableCell>
                 <div className="flex items-center gap-2">
                   <PlatformBadge platform={card.platform} />
@@ -57,8 +55,15 @@ export function RateCardTable({ rateCards }: RateCardTableProps) {
                 </div>
               </TableCell>
               <TableCell>
-                <span className="text-sm">{deliverableLabels[card.deliverable_type]}</span>
+                <span className="text-sm">{getDeliverableLabel(card.platform, card.deliverable_code, card.deliverable_type)}</span>
               </TableCell>
+              {showSuggested && (
+                <TableCell className="text-right">
+                  <span className="text-sm text-muted-foreground">
+                    {card.suggested_price_bdt ? formatBDT(card.suggested_price_bdt) : "-"}
+                  </span>
+                </TableCell>
+              )}
               <TableCell className="text-right">
                 <span className="font-semibold">{formatBDT(card.price_bdt)}</span>
               </TableCell>
@@ -75,6 +80,20 @@ export function RateCardTable({ rateCards }: RateCardTableProps) {
                   </Badge>
                 )}
               </TableCell>
+              {showActions && (
+                <TableCell className="text-right space-x-2">
+                  {onEdit && (
+                    <Button size="icon-sm" variant="outline" onClick={() => onEdit(card)}>
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                  {onDelete && (
+                    <Button size="icon-sm" variant="outline" onClick={() => onDelete(card)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>

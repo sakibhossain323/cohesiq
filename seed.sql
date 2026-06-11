@@ -1,0 +1,2790 @@
+--
+-- PostgreSQL database dump
+--
+
+\restrict KoAohlDhaOLs9ydBVB2fIif0LFnLY2ByHgb8MFQKPEexkefWAupV9rhJP5Nefyo
+
+-- Dumped from database version 16.14 (Debian 16.14-1.pgdg13+1)
+-- Dumped by pg_dump version 16.14 (Debian 16.14-1.pgdg13+1)
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: application_status; Type: TYPE; Schema: public; Owner: cohesiq
+--
+
+CREATE TYPE public.application_status AS ENUM (
+    'pending',
+    'shortlisted',
+    'accepted',
+    'rejected',
+    'withdrawn',
+    'completed',
+    'invited',
+    'declined'
+);
+
+
+ALTER TYPE public.application_status OWNER TO cohesiq;
+
+--
+-- Name: campaign_status; Type: TYPE; Schema: public; Owner: cohesiq
+--
+
+CREATE TYPE public.campaign_status AS ENUM (
+    'draft',
+    'active',
+    'in_progress',
+    'completed',
+    'cancelled',
+    'archived'
+);
+
+
+ALTER TYPE public.campaign_status OWNER TO cohesiq;
+
+--
+-- Name: campaign_type; Type: TYPE; Schema: public; Owner: cohesiq
+--
+
+CREATE TYPE public.campaign_type AS ENUM (
+    'paid_content',
+    'product_gifting',
+    'affiliate',
+    'brand_ambassador',
+    'talent_booking',
+    'ugc_only'
+);
+
+
+ALTER TYPE public.campaign_type OWNER TO cohesiq;
+
+--
+-- Name: campaign_visibility; Type: TYPE; Schema: public; Owner: cohesiq
+--
+
+CREATE TYPE public.campaign_visibility AS ENUM (
+    'public',
+    'private'
+);
+
+
+ALTER TYPE public.campaign_visibility OWNER TO cohesiq;
+
+--
+-- Name: collaboration_type; Type: TYPE; Schema: public; Owner: cohesiq
+--
+
+CREATE TYPE public.collaboration_type AS ENUM (
+    'sponsored_post',
+    'product_review',
+    'brand_ambassador',
+    'affiliate',
+    'gifted_product',
+    'event_coverage',
+    'other'
+);
+
+
+ALTER TYPE public.collaboration_type OWNER TO cohesiq;
+
+--
+-- Name: contract_status; Type: TYPE; Schema: public; Owner: cohesiq
+--
+
+CREATE TYPE public.contract_status AS ENUM (
+    'drafted',
+    'active',
+    'in_production',
+    'content_submitted',
+    'content_approved',
+    'published',
+    'closed',
+    'disputed'
+);
+
+
+ALTER TYPE public.contract_status OWNER TO cohesiq;
+
+--
+-- Name: contract_type; Type: TYPE; Schema: public; Owner: cohesiq
+--
+
+CREATE TYPE public.contract_type AS ENUM (
+    'content_collaboration',
+    'product_seeding',
+    'talent_engagement'
+);
+
+
+ALTER TYPE public.contract_type OWNER TO cohesiq;
+
+--
+-- Name: deliverable_type; Type: TYPE; Schema: public; Owner: cohesiq
+--
+
+CREATE TYPE public.deliverable_type AS ENUM (
+    'dedicated_video',
+    'integrated_mention',
+    'short_video',
+    'photo_post',
+    'story',
+    'live_stream',
+    'blog_post',
+    'other'
+);
+
+
+ALTER TYPE public.deliverable_type OWNER TO cohesiq;
+
+--
+-- Name: gender_type; Type: TYPE; Schema: public; Owner: cohesiq
+--
+
+CREATE TYPE public.gender_type AS ENUM (
+    'male',
+    'female',
+    'non_binary',
+    'prefer_not_to_say'
+);
+
+
+ALTER TYPE public.gender_type OWNER TO cohesiq;
+
+--
+-- Name: payment_schedule_type; Type: TYPE; Schema: public; Owner: cohesiq
+--
+
+CREATE TYPE public.payment_schedule_type AS ENUM (
+    'upfront',
+    'on_delivery',
+    'milestone'
+);
+
+
+ALTER TYPE public.payment_schedule_type OWNER TO cohesiq;
+
+--
+-- Name: platform_type; Type: TYPE; Schema: public; Owner: cohesiq
+--
+
+CREATE TYPE public.platform_type AS ENUM (
+    'youtube',
+    'instagram',
+    'facebook',
+    'tiktok',
+    'twitter_x',
+    'linkedin',
+    'snapchat',
+    'other'
+);
+
+
+ALTER TYPE public.platform_type OWNER TO cohesiq;
+
+--
+-- Name: product_disposition_type; Type: TYPE; Schema: public; Owner: cohesiq
+--
+
+CREATE TYPE public.product_disposition_type AS ENUM (
+    'keep',
+    'return'
+);
+
+
+ALTER TYPE public.product_disposition_type OWNER TO cohesiq;
+
+--
+-- Name: user_role; Type: TYPE; Schema: public; Owner: cohesiq
+--
+
+CREATE TYPE public.user_role AS ENUM (
+    'creator',
+    'brand',
+    'admin'
+);
+
+
+ALTER TYPE public.user_role OWNER TO cohesiq;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: ai_match_scores; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.ai_match_scores (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    campaign_id uuid NOT NULL,
+    creator_id uuid NOT NULL,
+    score_niche double precision,
+    score_engagement double precision,
+    score_budget double precision,
+    score_language double precision,
+    score_total double precision,
+    rationale text,
+    generated_at timestamp with time zone DEFAULT now() NOT NULL,
+    score_platform double precision,
+    score_recency double precision,
+    score_semantic double precision
+);
+
+
+ALTER TABLE public.ai_match_scores OWNER TO cohesiq;
+
+--
+-- Name: alembic_version; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.alembic_version (
+    version_num character varying(32) NOT NULL
+);
+
+
+ALTER TABLE public.alembic_version OWNER TO cohesiq;
+
+--
+-- Name: brand_profiles; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.brand_profiles (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid NOT NULL,
+    brand_name character varying(120) NOT NULL,
+    legal_name character varying(180),
+    logo_url text,
+    description text,
+    tagline character varying(160),
+    website text,
+    facebook_page_url text,
+    instagram_url text,
+    niche_id integer,
+    company_size character varying(20),
+    country_code character varying(2) DEFAULT 'BD'::bpchar NOT NULL,
+    city character varying(100),
+    contact_name character varying(120),
+    contact_phone character varying(20),
+    contact_whatsapp character varying(20),
+    is_verified boolean DEFAULT false NOT NULL,
+    verified_at timestamp with time zone,
+    total_campaigns integer DEFAULT 0 NOT NULL,
+    average_rating numeric(3,2),
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    brand_category character varying(50),
+    CONSTRAINT chk_brand_company_size CHECK (((company_size)::text = ANY ((ARRAY['individual'::character varying, 'small'::character varying, 'medium'::character varying, 'large'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.brand_profiles OWNER TO cohesiq;
+
+--
+-- Name: campaign_applications; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.campaign_applications (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    campaign_id uuid NOT NULL,
+    creator_id uuid NOT NULL,
+    initiated_by character varying(10) DEFAULT 'creator'::character varying NOT NULL,
+    proposal_text text,
+    proposed_rate integer,
+    status public.application_status DEFAULT 'pending'::public.application_status NOT NULL,
+    brand_notes text,
+    rejection_reason text,
+    agreed_rate integer,
+    agreed_deliverables text,
+    applied_at timestamp with time zone DEFAULT now() NOT NULL,
+    responded_at timestamp with time zone,
+    accepted_at timestamp with time zone,
+    completed_at timestamp with time zone,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT chk_application_initiated_by CHECK (((initiated_by)::text = ANY ((ARRAY['creator'::character varying, 'brand'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.campaign_applications OWNER TO cohesiq;
+
+--
+-- Name: campaign_deliverable_requirements; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.campaign_deliverable_requirements (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    campaign_id uuid NOT NULL,
+    platform public.platform_type NOT NULL,
+    deliverable_type public.deliverable_type NOT NULL,
+    quantity smallint DEFAULT '1'::smallint NOT NULL,
+    notes text,
+    deliverable_code character varying(50)
+);
+
+
+ALTER TABLE public.campaign_deliverable_requirements OWNER TO cohesiq;
+
+--
+-- Name: campaign_language_targets; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.campaign_language_targets (
+    campaign_id uuid NOT NULL,
+    language_code character varying(2) NOT NULL,
+    is_required boolean DEFAULT true NOT NULL
+);
+
+
+ALTER TABLE public.campaign_language_targets OWNER TO cohesiq;
+
+--
+-- Name: campaign_niche_targets; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.campaign_niche_targets (
+    campaign_id uuid NOT NULL,
+    niche_id integer NOT NULL
+);
+
+
+ALTER TABLE public.campaign_niche_targets OWNER TO cohesiq;
+
+--
+-- Name: campaigns; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.campaigns (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    brand_id uuid NOT NULL,
+    title character varying(200) NOT NULL,
+    description text NOT NULL,
+    objectives text,
+    primary_niche_id integer,
+    required_platforms public.platform_type[] DEFAULT '{youtube}'::public.platform_type[] NOT NULL,
+    budget_per_creator_min integer,
+    budget_per_creator_max integer NOT NULL,
+    creator_min_followers integer DEFAULT 1000 NOT NULL,
+    creator_max_followers integer,
+    target_countries character varying(2)[] DEFAULT '{BD}'::bpchar[] NOT NULL,
+    target_cities text[] DEFAULT '{}'::text[] NOT NULL,
+    target_age_min smallint,
+    target_age_max smallint,
+    target_gender public.gender_type,
+    deliverables_description text,
+    number_of_creators integer DEFAULT 1 NOT NULL,
+    application_deadline date,
+    content_deadline date,
+    status public.campaign_status DEFAULT 'draft'::public.campaign_status NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    visibility public.campaign_visibility DEFAULT 'public'::public.campaign_visibility NOT NULL,
+    campaign_type public.campaign_type,
+    kpi_targets jsonb,
+    hashtags text[] DEFAULT '{}'::text[] NOT NULL,
+    tracking_notes text,
+    brand_category character varying(50)
+);
+
+
+ALTER TABLE public.campaigns OWNER TO cohesiq;
+
+--
+-- Name: contracts; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.contracts (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    application_id uuid NOT NULL,
+    brand_id uuid NOT NULL,
+    creator_id uuid NOT NULL,
+    contract_type public.contract_type NOT NULL,
+    status public.contract_status DEFAULT 'active'::public.contract_status NOT NULL,
+    payment_structure character varying(20) DEFAULT 'none'::character varying NOT NULL,
+    payment_amount_bdt integer,
+    payment_schedule public.payment_schedule_type,
+    has_product_transfer boolean DEFAULT false NOT NULL,
+    product_disposition public.product_disposition_type,
+    deliverable_notes text,
+    exclusivity_days smallint,
+    usage_rights_days smallint,
+    max_revision_rounds smallint DEFAULT '2'::smallint NOT NULL,
+    revisions_used smallint DEFAULT '0'::smallint NOT NULL,
+    kill_fee_percentage smallint,
+    draft_content_url text,
+    live_post_url text,
+    platform_fee_percentage smallint,
+    contracted_at timestamp with time zone DEFAULT now() NOT NULL,
+    in_production_at timestamp with time zone,
+    submitted_at timestamp with time zone,
+    approved_at timestamp with time zone,
+    published_at timestamp with time zone,
+    closed_at timestamp with time zone,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.contracts OWNER TO cohesiq;
+
+--
+-- Name: creator_collaboration_history; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.creator_collaboration_history (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    creator_id uuid NOT NULL,
+    brand_id uuid,
+    brand_name character varying(120) NOT NULL,
+    brand_website text,
+    niche_id integer,
+    platform public.platform_type,
+    collaboration_type public.collaboration_type,
+    collaborated_on date,
+    deliverable_description text,
+    content_url text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.creator_collaboration_history OWNER TO cohesiq;
+
+--
+-- Name: creator_languages; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.creator_languages (
+    creator_id uuid NOT NULL,
+    language_code character varying(2) NOT NULL,
+    is_primary boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE public.creator_languages OWNER TO cohesiq;
+
+--
+-- Name: creator_niches; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.creator_niches (
+    creator_id uuid NOT NULL,
+    niche_id integer NOT NULL,
+    is_primary boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE public.creator_niches OWNER TO cohesiq;
+
+--
+-- Name: creator_portfolio_items; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.creator_portfolio_items (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    creator_id uuid NOT NULL,
+    platform public.platform_type NOT NULL,
+    content_url text NOT NULL,
+    title character varying(255),
+    thumbnail_url text,
+    niche_id integer,
+    views integer,
+    likes integer,
+    comments integer,
+    published_at date,
+    is_featured boolean DEFAULT false NOT NULL,
+    sort_order integer DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.creator_portfolio_items OWNER TO cohesiq;
+
+--
+-- Name: creator_profiles; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.creator_profiles (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid NOT NULL,
+    display_name character varying(120) NOT NULL,
+    full_name character varying(120),
+    profile_photo_url text,
+    bio text,
+    tagline character varying(160),
+    country_code character varying(2) DEFAULT 'BD'::bpchar NOT NULL,
+    city character varying(100),
+    timezone character varying(60) DEFAULT 'Asia/Dhaka'::character varying NOT NULL,
+    gender public.gender_type,
+    date_of_birth date,
+    is_available boolean DEFAULT true NOT NULL,
+    min_budget integer,
+    response_time_hours integer DEFAULT 48 NOT NULL,
+    preferred_collaboration_types public.collaboration_type[] DEFAULT '{}'::public.collaboration_type[] NOT NULL,
+    contact_whatsapp character varying(20),
+    contact_email character varying(255),
+    is_identity_verified boolean DEFAULT false NOT NULL,
+    verified_at timestamp with time zone,
+    total_collaborations integer DEFAULT 0 NOT NULL,
+    average_rating numeric(3,2),
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone
+);
+
+
+ALTER TABLE public.creator_profiles OWNER TO cohesiq;
+
+--
+-- Name: creator_rate_cards; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.creator_rate_cards (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    creator_id uuid NOT NULL,
+    platform public.platform_type NOT NULL,
+    deliverable_type public.deliverable_type NOT NULL,
+    price_bdt integer NOT NULL,
+    price_usd integer,
+    includes text,
+    excludes text,
+    turnaround_days smallint,
+    is_negotiable boolean DEFAULT true NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deliverable_code character varying(50),
+    suggested_price_bdt integer
+);
+
+
+ALTER TABLE public.creator_rate_cards OWNER TO cohesiq;
+
+--
+-- Name: creator_social_profiles; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.creator_social_profiles (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    creator_id uuid NOT NULL,
+    platform public.platform_type NOT NULL,
+    handle character varying(255) NOT NULL,
+    profile_url text NOT NULL,
+    platform_user_id character varying(255),
+    display_name_on_platform character varying(120),
+    follower_count integer,
+    following_count integer,
+    avg_views_per_post integer,
+    avg_likes_per_post integer,
+    avg_comments_per_post integer,
+    avg_shares_per_post integer,
+    engagement_rate numeric(5,4),
+    posts_per_month numeric(5,1),
+    is_primary_platform boolean DEFAULT false NOT NULL,
+    account_created_year smallint,
+    is_monetized boolean DEFAULT false NOT NULL,
+    has_verified_badge boolean DEFAULT false NOT NULL,
+    audience_country_primary character varying(2) DEFAULT 'BD'::bpchar,
+    audience_city_primary character varying(100),
+    audience_age_range_min smallint,
+    audience_age_range_max smallint,
+    audience_gender_majority public.gender_type,
+    audience_gender_pct smallint,
+    content_languages character varying(2)[] DEFAULT '{bn}'::bpchar[] NOT NULL,
+    notes text,
+    stats_reported_at timestamp with time zone DEFAULT now(),
+    stats_reported_for_period character varying(30),
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    is_api_verified boolean DEFAULT false NOT NULL,
+    api_verified_at timestamp with time zone,
+    api_channel_id character varying(255),
+    data_source character varying(30) DEFAULT 'self_reported'::character varying NOT NULL
+);
+
+
+ALTER TABLE public.creator_social_profiles OWNER TO cohesiq;
+
+--
+-- Name: languages; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.languages (
+    code character varying NOT NULL,
+    name character varying(60) NOT NULL,
+    native_name character varying(60),
+    is_active boolean DEFAULT true NOT NULL
+);
+
+
+ALTER TABLE public.languages OWNER TO cohesiq;
+
+--
+-- Name: niches; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.niches (
+    id integer NOT NULL,
+    name character varying(80) NOT NULL,
+    slug character varying(80) NOT NULL,
+    description character varying,
+    parent_id integer,
+    sort_order integer DEFAULT 0 NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.niches OWNER TO cohesiq;
+
+--
+-- Name: niches_id_seq; Type: SEQUENCE; Schema: public; Owner: cohesiq
+--
+
+CREATE SEQUENCE public.niches_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.niches_id_seq OWNER TO cohesiq;
+
+--
+-- Name: niches_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: cohesiq
+--
+
+ALTER SEQUENCE public.niches_id_seq OWNED BY public.niches.id;
+
+
+--
+-- Name: reviews; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.reviews (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    application_id uuid NOT NULL,
+    reviewer_brand_id uuid,
+    reviewer_creator_id uuid,
+    reviewee_brand_id uuid,
+    reviewee_creator_id uuid,
+    rating smallint NOT NULL,
+    review_text text,
+    is_public boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT chk_no_self_review CHECK (((reviewer_brand_id IS DISTINCT FROM reviewee_brand_id) OR (reviewer_creator_id IS DISTINCT FROM reviewee_creator_id))),
+    CONSTRAINT chk_one_reviewee CHECK ((((reviewee_brand_id IS NOT NULL) AND (reviewee_creator_id IS NULL)) OR ((reviewee_brand_id IS NULL) AND (reviewee_creator_id IS NOT NULL)))),
+    CONSTRAINT chk_one_reviewer CHECK ((((reviewer_brand_id IS NOT NULL) AND (reviewer_creator_id IS NULL)) OR ((reviewer_brand_id IS NULL) AND (reviewer_creator_id IS NOT NULL)))),
+    CONSTRAINT chk_review_rating CHECK (((rating >= 1) AND (rating <= 5)))
+);
+
+
+ALTER TABLE public.reviews OWNER TO cohesiq;
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: cohesiq
+--
+
+CREATE TABLE public.users (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    email character varying(255) NOT NULL,
+    password_hash character varying(255),
+    role public.user_role NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    is_email_verified boolean DEFAULT false NOT NULL,
+    last_login_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone,
+    clerk_id character varying(255)
+);
+
+
+ALTER TABLE public.users OWNER TO cohesiq;
+
+--
+-- Name: niches id; Type: DEFAULT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.niches ALTER COLUMN id SET DEFAULT nextval('public.niches_id_seq'::regclass);
+
+
+--
+-- Data for Name: ai_match_scores; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.ai_match_scores (id, campaign_id, creator_id, score_niche, score_engagement, score_budget, score_language, score_total, rationale, generated_at, score_platform, score_recency, score_semantic) FROM stdin;
+7db0445c-7884-4fc2-a876-88cec81a7c3d	a2e738ff-fb4c-4fa3-9b92-f6ea835d0685	b1d9dc23-3cc2-435d-bfa4-f896f0557f66	1	1	0.4722	1	0.8417	I recommend Oishrat Jahan Eity for the Clothing Brand Promotion campaign due to her strong niche fit as a fashion model and influencer, which aligns perfectly with the target audience of fashion-conscious individuals. Her recent content showcases her family's Eid celebrations, highlighting her ability to create engaging content around fashion and lifestyle, making her a suitable match for promoting clothing items to her followers.	2026-06-07 20:23:17.187565+00	1	1	0
+95a25916-25d9-46a7-a501-c7a6c47d933a	a2e738ff-fb4c-4fa3-9b92-f6ea835d0685	673d48a6-bf94-4d7a-a1f2-851357978fb0	1	0.5833	0.4167	0	0.7033	I recommend Selai Tutorial for the Clothing Brand Promotion campaign due to their strong niche fit in the fashion space, particularly in sewing and clothing tutorials. Their recent content aligns with the campaign objectives, showcasing clothing items and design ideas that resonate with the target audience of fashion-conscious individuals.	2026-06-07 20:23:17.187565+00	1	1	0
+\.
+
+
+--
+-- Data for Name: alembic_version; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.alembic_version (version_num) FROM stdin;
+0019
+\.
+
+
+--
+-- Data for Name: brand_profiles; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.brand_profiles (id, user_id, brand_name, legal_name, logo_url, description, tagline, website, facebook_page_url, instagram_url, niche_id, company_size, country_code, city, contact_name, contact_phone, contact_whatsapp, is_verified, verified_at, total_campaigns, average_rating, created_at, updated_at, deleted_at, brand_category) FROM stdin;
+767b6e0d-5e2f-4f93-a783-8bcde6f08652	ce4b6bc7-032c-4ea0-80aa-95f057712e7e	Arong	\N	\N		\N		\N	\N	\N	\N	BD		\N	\N	\N	f	\N	0	\N	2026-06-07 20:10:51.07799+00	2026-06-07 20:10:51.07799+00	\N	\N
+\.
+
+
+--
+-- Data for Name: campaign_applications; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.campaign_applications (id, campaign_id, creator_id, initiated_by, proposal_text, proposed_rate, status, brand_notes, rejection_reason, agreed_rate, agreed_deliverables, applied_at, responded_at, accepted_at, completed_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: campaign_deliverable_requirements; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.campaign_deliverable_requirements (id, campaign_id, platform, deliverable_type, quantity, notes, deliverable_code) FROM stdin;
+c6a3914f-07c6-4d39-ab92-447dc744b2ee	a2e738ff-fb4c-4fa3-9b92-f6ea835d0685	youtube	dedicated_video	1	\N	youtube_video
+a5cb22bd-5419-47d9-8e40-408e84acd030	a2e738ff-fb4c-4fa3-9b92-f6ea835d0685	youtube	short_video	1	\N	youtube_short
+7ea1cf76-310c-4526-98b3-b804066f2f17	a2e738ff-fb4c-4fa3-9b92-f6ea835d0685	youtube	live_stream	1	\N	youtube_live
+\.
+
+
+--
+-- Data for Name: campaign_language_targets; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.campaign_language_targets (campaign_id, language_code, is_required) FROM stdin;
+\.
+
+
+--
+-- Data for Name: campaign_niche_targets; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.campaign_niche_targets (campaign_id, niche_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: campaigns; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.campaigns (id, brand_id, title, description, objectives, primary_niche_id, required_platforms, budget_per_creator_min, budget_per_creator_max, creator_min_followers, creator_max_followers, target_countries, target_cities, target_age_min, target_age_max, target_gender, deliverables_description, number_of_creators, application_deadline, content_deadline, status, created_at, updated_at, visibility, campaign_type, kpi_targets, hashtags, tracking_notes, brand_category) FROM stdin;
+a2e738ff-fb4c-4fa3-9b92-f6ea835d0685	767b6e0d-5e2f-4f93-a783-8bcde6f08652	Clothing Brand Promotion	We are a big clothing brand looking for influencers to promote our products to their followers. The target audience is fashion-conscious individuals, and we expect the creators to showcase our clothing items in their content.	\N	3	{youtube}	\N	60000	10000	\N	{BD}	{}	\N	\N	\N	\N	3	\N	\N	draft	2026-06-07 20:11:41.989292+00	2026-06-07 20:23:13.063206+00	public	\N	{"reach": 45000, "engagement_rate": 5.0}	{fashion,clothing,style}	UTM tracking	\N
+\.
+
+
+--
+-- Data for Name: contracts; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.contracts (id, application_id, brand_id, creator_id, contract_type, status, payment_structure, payment_amount_bdt, payment_schedule, has_product_transfer, product_disposition, deliverable_notes, exclusivity_days, usage_rights_days, max_revision_rounds, revisions_used, kill_fee_percentage, draft_content_url, live_post_url, platform_fee_percentage, contracted_at, in_production_at, submitted_at, approved_at, published_at, closed_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: creator_collaboration_history; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.creator_collaboration_history (id, creator_id, brand_id, brand_name, brand_website, niche_id, platform, collaboration_type, collaborated_on, deliverable_description, content_url, created_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: creator_languages; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.creator_languages (creator_id, language_code, is_primary) FROM stdin;
+5dafde33-3117-4f0b-9ecd-b958462aa368	en	t
+07091792-bad6-4f26-bd94-7e0a2e3ea351	en	t
+9c00c3ef-3454-4fbc-8cf0-f578cf0ea468	bn	t
+9c00c3ef-3454-4fbc-8cf0-f578cf0ea468	en	f
+72b690f1-2102-4740-8ca6-ee710cfd89bf	bn	t
+72b690f1-2102-4740-8ca6-ee710cfd89bf	en	f
+fdbdf485-e255-4085-9277-8190e0022811	bn	t
+fdbdf485-e255-4085-9277-8190e0022811	en	f
+42e12f8f-04fd-42cd-86e5-5ffbbe47c281	bn	t
+42e12f8f-04fd-42cd-86e5-5ffbbe47c281	en	f
+51cdbea5-c7d2-49fe-87ba-db598d4ecac5	bn	t
+51cdbea5-c7d2-49fe-87ba-db598d4ecac5	en	f
+70be3112-3530-4fbd-8ee3-a88acd20ccb9	en	t
+8127f14d-7fc7-4e47-a3ce-195d54f2f41f	en	t
+ae9568ff-7a6a-47a8-ac4f-91ec762ef9a3	en	t
+440f955d-039d-4db5-8590-35e0a837918c	en	t
+673d48a6-bf94-4d7a-a1f2-851357978fb0	en	t
+0e8a07c1-ff6d-4394-859f-151f39779107	en	t
+6ab37117-0165-49c7-b569-9f2d5b16d0be	bn	t
+6ab37117-0165-49c7-b569-9f2d5b16d0be	en	f
+20ac3692-ee06-4bf2-9c60-554a5b131486	bn	t
+20ac3692-ee06-4bf2-9c60-554a5b131486	en	f
+7db49e06-546f-47e2-90bb-040f77ae36c2	bn	t
+7db49e06-546f-47e2-90bb-040f77ae36c2	en	f
+88339740-4c5a-4866-8617-b810ddb7b89a	en	t
+2b69a960-320d-447f-b598-ee9e8a28185c	en	t
+c1b988f2-9e42-4b77-9ed8-247ce8789369	en	t
+5519f9b5-8d0a-4854-a590-170882420cf0	en	t
+992ac30b-3d68-4c9f-8ac2-f48173323732	en	t
+2beeb4ae-b74a-4153-a16b-42be716fa93e	en	t
+a4e9230c-d1bf-494e-ba4c-13ded0b417ca	bn	t
+a4e9230c-d1bf-494e-ba4c-13ded0b417ca	en	f
+f1a4d39f-eb69-427c-98f7-4229eb1957fb	bn	t
+f1a4d39f-eb69-427c-98f7-4229eb1957fb	en	f
+70d4faed-1c19-4481-bc93-41c68f619f52	bn	t
+70d4faed-1c19-4481-bc93-41c68f619f52	en	f
+d401eb80-d2b4-49ed-8fa1-3db159d000eb	en	t
+ee47630d-81c0-4921-a625-c5e461f2080a	bn	t
+ee47630d-81c0-4921-a625-c5e461f2080a	en	f
+124a6af3-80b6-4d3e-813f-2feb41ae5139	en	t
+06ebd671-f79b-41e2-9f49-eb7a6430347e	en	t
+a55751a8-7f75-472a-b660-fc89d4158622	bn	t
+a55751a8-7f75-472a-b660-fc89d4158622	en	f
+8d823b4f-81a4-4215-a245-68d4ce84dbc2	bn	t
+8d823b4f-81a4-4215-a245-68d4ce84dbc2	en	f
+7bd7f363-5ead-45f6-9a82-0c9e5e6f0663	en	t
+402e84bc-ea89-4151-bd85-c3705aa44c62	bn	t
+402e84bc-ea89-4151-bd85-c3705aa44c62	en	f
+e81ece61-8eef-4679-9f4c-3df3f93c9397	bn	t
+e81ece61-8eef-4679-9f4c-3df3f93c9397	en	f
+dfe87fc4-207a-4ddf-8252-9885cc4eae50	bn	t
+cdcaf960-a659-45b9-a53f-4255717ab2e8	bn	t
+cdcaf960-a659-45b9-a53f-4255717ab2e8	en	f
+8696151a-53f5-4734-9085-ecb8f8246f01	bn	t
+e80894b5-faba-4bc3-8c4a-f047cea47924	en	t
+0ee9f78b-8c67-4fb4-a977-1e0c571a617e	bn	t
+0ee9f78b-8c67-4fb4-a977-1e0c571a617e	en	f
+65b00a73-b334-4571-8dbf-ace2a42a581f	bn	t
+65b00a73-b334-4571-8dbf-ace2a42a581f	en	f
+1c494a0b-d1c1-4492-968a-b67391d7f271	bn	t
+1c494a0b-d1c1-4492-968a-b67391d7f271	en	f
+256108ed-3a83-4dfa-8e94-075938f15d08	bn	t
+256108ed-3a83-4dfa-8e94-075938f15d08	en	f
+04de1faa-1765-4a12-99f8-caf903567f21	bn	t
+04de1faa-1765-4a12-99f8-caf903567f21	en	f
+f3721816-01b6-4194-bf8c-c20e10a31fa4	en	t
+3554653a-9f16-4cd3-92fa-1720b5d9f82e	bn	t
+dfd20482-0e61-44f1-bd68-d501e4f20a31	bn	t
+dfd20482-0e61-44f1-bd68-d501e4f20a31	en	f
+5d29465d-d338-4193-948d-429d7e88fdbc	bn	t
+5d29465d-d338-4193-948d-429d7e88fdbc	en	f
+00d0bcc7-6a1c-4812-aa5f-1b9809a0c0bb	bn	t
+00d0bcc7-6a1c-4812-aa5f-1b9809a0c0bb	en	f
+b1d9dc23-3cc2-435d-bfa4-f896f0557f66	bn	t
+b1d9dc23-3cc2-435d-bfa4-f896f0557f66	en	f
+f63dc656-0ef8-4c08-baba-436df84a617f	bn	t
+f63dc656-0ef8-4c08-baba-436df84a617f	en	f
+9b048e95-66d5-4413-a571-28874e9cd3a8	en	t
+cbfd8491-a181-4af1-ab9c-fd84549d38f5	en	t
+bf84b6e3-379c-4631-b65f-a94c1171b30f	en	t
+b5bb4312-fb62-49ff-8598-991329403d99	en	t
+bb4e9bb0-aac2-4a68-ac59-0633df03fc3e	bn	t
+bb4e9bb0-aac2-4a68-ac59-0633df03fc3e	en	f
+7e228acf-acea-45e0-935f-90473226a8ad	bn	t
+7e228acf-acea-45e0-935f-90473226a8ad	en	f
+9a5569db-64a0-4a1a-a58d-cc5a1a5abd67	bn	t
+9a5569db-64a0-4a1a-a58d-cc5a1a5abd67	en	f
+a6e4763a-cb89-4031-b637-e93bd82863da	bn	t
+a6e4763a-cb89-4031-b637-e93bd82863da	en	f
+a1a9f6c2-63ae-4b1c-a4c1-8ccd98e8e7a0	en	t
+e1b07220-c97e-4673-8939-77921b506fd8	bn	t
+e1b07220-c97e-4673-8939-77921b506fd8	en	f
+54be4fe8-2a6a-4ee3-b50a-73984b4c4107	bn	t
+54be4fe8-2a6a-4ee3-b50a-73984b4c4107	en	f
+febc4b03-1599-4de7-baa4-2302d25588f5	bn	t
+febc4b03-1599-4de7-baa4-2302d25588f5	en	f
+6c8ba08c-b3b9-4d66-adfe-83ceeeb0c8ed	bn	t
+6c8ba08c-b3b9-4d66-adfe-83ceeeb0c8ed	en	f
+fbc0dd5f-da85-49b0-a8c8-4a1b7d4c37f9	en	t
+96bf2ef8-0a71-4358-88fb-db2e2f5639ba	bn	t
+96bf2ef8-0a71-4358-88fb-db2e2f5639ba	en	f
+361df2c2-5c4b-4bcb-bc9f-343dc90a040e	bn	t
+dcffd160-6941-45de-9b90-a93c869dc616	bn	t
+4068df14-4f1a-40a8-83a1-2ac0a433b907	bn	t
+58844295-1d58-4cfe-a1da-1f9cdb66611d	bn	t
+5b495b03-38e5-47c6-99cd-9f0c21158fd4	en	t
+dfd6c24b-b5b4-4f41-a90d-85ade89f3443	bn	t
+18b79944-fd4c-4aae-a716-ce799c8dd8a2	bn	t
+9dc3097f-caba-4e35-afa2-f473d9ac0337	en	t
+1e11af50-b4c1-46aa-942d-88bc0581ee8e	en	t
+766ada28-1457-4625-8437-9a96fa614d65	bn	t
+668d8f17-a74e-4200-80a2-668ad6ae2817	bn	t
+69328474-b706-4cb0-b7c3-6996d4a95946	en	t
+2ffc3a98-89a2-40a2-ad1e-26f5ae391c1a	bn	t
+9adfcea6-cb9a-4c50-af83-656afe19e890	en	t
+361323ff-e0a5-4bf7-a0e1-eeeb381b1b14	bn	t
+8724cd98-6837-4fb0-85f8-ad0adff0ae6a	bn	t
+c3708c3c-41d5-4e93-a297-8112133b2cda	bn	t
+5e41b0f3-ce73-4601-9508-34aafcd45039	bn	t
+85bb9525-c119-40ad-a32c-33efab808e63	en	t
+a3d360a0-922f-4c06-8104-6c1af88ef38d	en	t
+\.
+
+
+--
+-- Data for Name: creator_niches; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.creator_niches (creator_id, niche_id, is_primary) FROM stdin;
+5dafde33-3117-4f0b-9ecd-b958462aa368	12	t
+07091792-bad6-4f26-bd94-7e0a2e3ea351	2	t
+9c00c3ef-3454-4fbc-8cf0-f578cf0ea468	19	t
+72b690f1-2102-4740-8ca6-ee710cfd89bf	7	t
+fdbdf485-e255-4085-9277-8190e0022811	5	t
+42e12f8f-04fd-42cd-86e5-5ffbbe47c281	5	t
+51cdbea5-c7d2-49fe-87ba-db598d4ecac5	6	t
+70be3112-3530-4fbd-8ee3-a88acd20ccb9	3	t
+8127f14d-7fc7-4e47-a3ce-195d54f2f41f	7	t
+ae9568ff-7a6a-47a8-ac4f-91ec762ef9a3	7	t
+440f955d-039d-4db5-8590-35e0a837918c	7	t
+673d48a6-bf94-4d7a-a1f2-851357978fb0	3	t
+0e8a07c1-ff6d-4394-859f-151f39779107	7	t
+6ab37117-0165-49c7-b569-9f2d5b16d0be	4	t
+20ac3692-ee06-4bf2-9c60-554a5b131486	1	t
+7db49e06-546f-47e2-90bb-040f77ae36c2	1	t
+88339740-4c5a-4866-8617-b810ddb7b89a	1	t
+2b69a960-320d-447f-b598-ee9e8a28185c	2	t
+c1b988f2-9e42-4b77-9ed8-247ce8789369	2	t
+5519f9b5-8d0a-4854-a590-170882420cf0	2	t
+992ac30b-3d68-4c9f-8ac2-f48173323732	2	t
+2beeb4ae-b74a-4153-a16b-42be716fa93e	2	t
+a4e9230c-d1bf-494e-ba4c-13ded0b417ca	8	t
+f1a4d39f-eb69-427c-98f7-4229eb1957fb	12	t
+70d4faed-1c19-4481-bc93-41c68f619f52	12	t
+d401eb80-d2b4-49ed-8fa1-3db159d000eb	1	t
+ee47630d-81c0-4921-a625-c5e461f2080a	19	t
+124a6af3-80b6-4d3e-813f-2feb41ae5139	19	t
+06ebd671-f79b-41e2-9f49-eb7a6430347e	8	t
+a55751a8-7f75-472a-b660-fc89d4158622	19	t
+8d823b4f-81a4-4215-a245-68d4ce84dbc2	2	t
+7bd7f363-5ead-45f6-9a82-0c9e5e6f0663	19	t
+402e84bc-ea89-4151-bd85-c3705aa44c62	8	t
+e81ece61-8eef-4679-9f4c-3df3f93c9397	7	t
+dfe87fc4-207a-4ddf-8252-9885cc4eae50	12	t
+cdcaf960-a659-45b9-a53f-4255717ab2e8	7	t
+8696151a-53f5-4734-9085-ecb8f8246f01	8	t
+e80894b5-faba-4bc3-8c4a-f047cea47924	7	t
+0ee9f78b-8c67-4fb4-a977-1e0c571a617e	8	t
+65b00a73-b334-4571-8dbf-ace2a42a581f	8	t
+f3721816-01b6-4194-bf8c-c20e10a31fa4	12	t
+dfd20482-0e61-44f1-bd68-d501e4f20a31	6	t
+5d29465d-d338-4193-948d-429d7e88fdbc	4	t
+00d0bcc7-6a1c-4812-aa5f-1b9809a0c0bb	7	t
+b1d9dc23-3cc2-435d-bfa4-f896f0557f66	3	t
+f63dc656-0ef8-4c08-baba-436df84a617f	12	t
+9b048e95-66d5-4413-a571-28874e9cd3a8	12	t
+cbfd8491-a181-4af1-ab9c-fd84549d38f5	1	t
+bf84b6e3-379c-4631-b65f-a94c1171b30f	12	t
+b5bb4312-fb62-49ff-8598-991329403d99	12	t
+bb4e9bb0-aac2-4a68-ac59-0633df03fc3e	12	t
+7e228acf-acea-45e0-935f-90473226a8ad	12	t
+9a5569db-64a0-4a1a-a58d-cc5a1a5abd67	12	t
+a6e4763a-cb89-4031-b637-e93bd82863da	12	t
+a1a9f6c2-63ae-4b1c-a4c1-8ccd98e8e7a0	6	t
+febc4b03-1599-4de7-baa4-2302d25588f5	5	t
+6c8ba08c-b3b9-4d66-adfe-83ceeeb0c8ed	12	t
+fbc0dd5f-da85-49b0-a8c8-4a1b7d4c37f9	12	t
+96bf2ef8-0a71-4358-88fb-db2e2f5639ba	12	t
+361df2c2-5c4b-4bcb-bc9f-343dc90a040e	3	t
+dcffd160-6941-45de-9b90-a93c869dc616	12	t
+4068df14-4f1a-40a8-83a1-2ac0a433b907	12	t
+58844295-1d58-4cfe-a1da-1f9cdb66611d	6	t
+5b495b03-38e5-47c6-99cd-9f0c21158fd4	10	t
+dfd6c24b-b5b4-4f41-a90d-85ade89f3443	8	t
+18b79944-fd4c-4aae-a716-ce799c8dd8a2	10	t
+9dc3097f-caba-4e35-afa2-f473d9ac0337	10	t
+1e11af50-b4c1-46aa-942d-88bc0581ee8e	19	t
+766ada28-1457-4625-8437-9a96fa614d65	10	t
+668d8f17-a74e-4200-80a2-668ad6ae2817	12	t
+2ffc3a98-89a2-40a2-ad1e-26f5ae391c1a	7	t
+9adfcea6-cb9a-4c50-af83-656afe19e890	19	t
+361323ff-e0a5-4bf7-a0e1-eeeb381b1b14	19	t
+8724cd98-6837-4fb0-85f8-ad0adff0ae6a	7	t
+c3708c3c-41d5-4e93-a297-8112133b2cda	6	t
+5e41b0f3-ce73-4601-9508-34aafcd45039	6	t
+85bb9525-c119-40ad-a32c-33efab808e63	1	t
+a3d360a0-922f-4c06-8104-6c1af88ef38d	19	t
+\.
+
+
+--
+-- Data for Name: creator_portfolio_items; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.creator_portfolio_items (id, creator_id, platform, content_url, title, thumbnail_url, niche_id, views, likes, comments, published_at, is_featured, sort_order, created_at) FROM stdin;
+6ea31972-fefb-464c-a18d-f6ed7093e076	402e84bc-ea89-4151-bd85-c3705aa44c62	youtube	https://www.youtube.com/watch?v=llopFi5XDYw	আপনার Password কতটা নিরাপদ? জেনে নিন শক্তিশালী Password তৈরির ৩টি নিয়ম! 🛡️	https://i.ytimg.com/vi/llopFi5XDYw/maxresdefault.jpg	8	962	15	1	2026-06-01	t	0	2026-06-07 19:37:16.193851+00
+c86f650e-ea82-40ab-a78f-5d9c1c0dac8d	402e84bc-ea89-4151-bd85-c3705aa44c62	youtube	https://www.youtube.com/watch?v=p1RgOUyL9oY	মগবাজার নাকি পান্থপথ? ইংরেজির এই লড়াইয়ে জিতলো কে? ⚔️	https://i.ytimg.com/vi/p1RgOUyL9oY/maxresdefault.jpg	8	1848	45	4	2026-05-24	f	1	2026-06-07 19:37:16.193851+00
+d15e04fb-6a32-4b51-9878-c9fe8dfc5a4b	402e84bc-ea89-4151-bd85-c3705aa44c62	youtube	https://www.youtube.com/watch?v=O8VLVO51iPg	ডেবিট আর ক্রেডিট কার্ড নিয়ে এখনও confused? সেই confusion আজই শেষ। 💳	https://i.ytimg.com/vi/O8VLVO51iPg/maxresdefault.jpg	8	1835	26	1	2026-05-24	f	2	2026-06-07 19:37:16.193851+00
+d859995d-28bb-4e98-b8c1-b57b961c53dd	5dafde33-3117-4f0b-9ecd-b958462aa368	youtube	https://www.youtube.com/watch?v=qwSj8V_iUDc	when the muscles tire, the mind takes over	https://i.ytimg.com/vi/qwSj8V_iUDc/maxresdefault.jpg	12	156534	2286	3	2026-06-07	t	0	2026-06-07 19:38:54.551262+00
+addc60e1-961f-4756-a9e1-de241e44cbe5	5dafde33-3117-4f0b-9ecd-b958462aa368	youtube	https://www.youtube.com/watch?v=x9JUwfC-L_k	The Ultimate Showdown: Which duo actually crushed this challenge?	https://i.ytimg.com/vi/x9JUwfC-L_k/maxresdefault.jpg	12	8347	98	1	2026-06-07	f	1	2026-06-07 19:38:54.551262+00
+d4cdbd37-dce6-4146-bebd-d37ceb1868f8	5dafde33-3117-4f0b-9ecd-b958462aa368	youtube	https://www.youtube.com/watch?v=5VK6qUtkeNk	who wins the intense head to head battle?	https://i.ytimg.com/vi/5VK6qUtkeNk/maxresdefault.jpg	12	434750	5726	16	2026-06-06	f	2	2026-06-07 19:38:54.551262+00
+a4a28576-38da-420b-8384-e6cc9c984e2d	5dafde33-3117-4f0b-9ecd-b958462aa368	youtube	https://www.youtube.com/watch?v=AR5bMPTU13U	#funny_local_game	https://i.ytimg.com/vi/AR5bMPTU13U/maxresdefault.jpg	12	31877	410	6	2026-06-06	f	3	2026-06-07 19:38:54.551262+00
+e9cc88aa-46f5-4fab-aaad-680ad5950f94	5dafde33-3117-4f0b-9ecd-b958462aa368	youtube	https://www.youtube.com/watch?v=6cSZnVz6bcA	6 balloons vs. 1 frisbee. Let’s go! 🥏	https://i.ytimg.com/vi/6cSZnVz6bcA/maxresdefault.jpg	12	94692	649	1	2026-06-05	f	4	2026-06-07 19:38:54.551262+00
+84f9a6b6-b759-428e-a82b-3d4075d592b3	5dafde33-3117-4f0b-9ecd-b958462aa368	youtube	https://www.youtube.com/watch?v=7FWefC7ZNHk	staying ahead is easy, finishing is the hard part	https://i.ytimg.com/vi/7FWefC7ZNHk/maxresdefault.jpg	12	237701	4360	13	2026-06-05	f	5	2026-06-07 19:38:54.551262+00
+7970217a-4fde-4f44-908a-03be9fac3c1a	07091792-bad6-4f26-bd94-7e0a2e3ea351	youtube	https://www.youtube.com/watch?v=zLm7dQb63WE	Challenge video	https://i.ytimg.com/vi/zLm7dQb63WE/maxresdefault.jpg	2	38	0	0	2024-09-04	t	0	2026-06-07 19:38:58.045159+00
+cc5e70ad-f7d1-48fa-885d-8f9eb3f1d638	07091792-bad6-4f26-bd94-7e0a2e3ea351	youtube	https://www.youtube.com/watch?v=kAd1YRxqA5A	Challenge games for kids	https://i.ytimg.com/vi/kAd1YRxqA5A/maxresdefault.jpg	2	28	0	0	2024-09-04	f	1	2026-06-07 19:38:58.045159+00
+722befc3-048f-4a89-be10-db49fc1bf06c	07091792-bad6-4f26-bd94-7e0a2e3ea351	youtube	https://www.youtube.com/watch?v=rmYe5cJrBgA	Challenge Game	https://i.ytimg.com/vi/rmYe5cJrBgA/maxresdefault.jpg	2	32	1	0	2024-09-03	f	2	2026-06-07 19:38:58.045159+00
+363140e2-eb6c-454c-ab5e-9d6231e8812a	07091792-bad6-4f26-bd94-7e0a2e3ea351	youtube	https://www.youtube.com/watch?v=MdJCuUWAm7g	Fun videos for kids	https://i.ytimg.com/vi/MdJCuUWAm7g/maxresdefault.jpg	2	27	1	0	2024-09-02	f	3	2026-06-07 19:38:58.045159+00
+618f7136-bd50-41de-a6c6-1426bd809fd3	07091792-bad6-4f26-bd94-7e0a2e3ea351	youtube	https://www.youtube.com/watch?v=cdZCFDeUeEc	Fun games for kids	https://i.ytimg.com/vi/cdZCFDeUeEc/maxresdefault.jpg	2	36	0	0	2024-09-01	f	4	2026-06-07 19:38:58.045159+00
+9f702f27-25ad-4fc6-b6e4-9a304cc238a8	07091792-bad6-4f26-bd94-7e0a2e3ea351	youtube	https://www.youtube.com/watch?v=7YKGFs5uc9M	August 31, 2024	https://i.ytimg.com/vi/7YKGFs5uc9M/maxresdefault.jpg	2	43	0	0	2024-08-31	f	5	2026-06-07 19:38:58.045159+00
+2dd7d887-93cc-41dc-a61f-6debfdf9ef32	9c00c3ef-3454-4fbc-8cf0-f578cf0ea468	youtube	https://www.youtube.com/watch?v=s5Da9zc3IOs	কারা কারা ওয়াজিহা কে ভালোবাসো❤️	https://i.ytimg.com/vi/s5Da9zc3IOs/sddefault.jpg	19	17	2	1	2024-08-01	t	0	2026-06-07 19:38:59.888318+00
+eb11a7bd-5015-4112-82c4-e4236210a805	72b690f1-2102-4740-8ca6-ee710cfd89bf	youtube	https://www.youtube.com/watch?v=zWHMrSqFcNY	ওয়াজিহার ভালো না লাগলে চিপস খাইতে হবে#wazihavlog	https://i.ytimg.com/vi/zWHMrSqFcNY/maxresdefault.jpg	7	15	\N	\N	2024-04-29	t	0	2026-06-07 19:39:01.221656+00
+06a4fd0e-9564-4a7c-b712-f2d87a5e5575	fdbdf485-e255-4085-9277-8190e0022811	youtube	https://www.youtube.com/watch?v=7hBRRcSOFUk	লাখ টাকার দামি মশলা খুজে পেলাম আমাদের বাগানে | Doyel Agro	https://i.ytimg.com/vi/7hBRRcSOFUk/maxresdefault.jpg	5	156502	4634	162	2026-06-07	t	0	2026-06-07 19:39:02.695081+00
+390cbdaf-862d-4c90-ba43-e814d5d00e29	fdbdf485-e255-4085-9277-8190e0022811	youtube	https://www.youtube.com/watch?v=rNaSHHa638M	আলহামদুলিল্লাহ বড় একটা দুর্ঘটনার হাত থেকে বেচে গেলাম | Doyel Agro	https://i.ytimg.com/vi/rNaSHHa638M/maxresdefault.jpg	5	229181	6382	237	2026-06-06	f	1	2026-06-07 19:39:02.695081+00
+cc83e971-ce2d-4e86-ae4c-fc214de40a7f	fdbdf485-e255-4085-9277-8190e0022811	youtube	https://www.youtube.com/watch?v=cRmhAjzc7nU	আমাদের মাফ করে দিয়েন | Doyel Agro	https://i.ytimg.com/vi/cRmhAjzc7nU/maxresdefault.jpg	5	227645	6461	214	2026-06-05	f	2	2026-06-07 19:39:02.695081+00
+c8947cca-50d8-4566-af04-e0898146fbd6	fdbdf485-e255-4085-9277-8190e0022811	youtube	https://www.youtube.com/watch?v=-IA-6QA39bY	সবাই মিলে যমুনার দুর্গম চরে বেড়াতে গেলাম | Doyel Agro	https://i.ytimg.com/vi/-IA-6QA39bY/maxresdefault.jpg	5	312362	7773	217	2026-06-04	f	3	2026-06-07 19:39:02.695081+00
+b6a64b65-4895-4e9a-b54f-b9e2d6a62266	fdbdf485-e255-4085-9277-8190e0022811	youtube	https://www.youtube.com/watch?v=vQDtXuCNF6s	দিন দুপুরে এরা আমার বাড়ির জিনিসপত্র নিয়ে যাচ্ছে কেন | Doyel Agro	https://i.ytimg.com/vi/vQDtXuCNF6s/maxresdefault.jpg	5	321430	7572	214	2026-06-03	f	4	2026-06-07 19:39:02.695081+00
+549a09fa-3f8b-4a2c-b86e-f4936ad44122	fdbdf485-e255-4085-9277-8190e0022811	youtube	https://www.youtube.com/watch?v=rHy1-S2bUuI	আগে থেকে না জানিয়ে শ্বশুর বাড়িতে মিলাদের দাওয়াত খেতে গেলাম | Doyel Agro	https://i.ytimg.com/vi/rHy1-S2bUuI/maxresdefault.jpg	5	342909	9786	341	2026-06-02	f	5	2026-06-07 19:39:02.695081+00
+0e3880cf-8cfb-4055-9fa8-91d02037a60f	42e12f8f-04fd-42cd-86e5-5ffbbe47c281	youtube	https://www.youtube.com/watch?v=RPjAUjTkz9s	40KG Mua Fish Chorchori & Rice Feast | ছোট মাছের চচ্চড়ি রান্না, 400+ গ্রামবাসীর ভোজ | Bengali Vlog	https://i.ytimg.com/vi/RPjAUjTkz9s/maxresdefault.jpg	5	2165	105	0	2026-06-07	t	0	2026-06-07 19:39:06.107089+00
+86f1d4e3-d009-4f9a-bf10-d5cd9f7c2c10	42e12f8f-04fd-42cd-86e5-5ffbbe47c281	youtube	https://www.youtube.com/watch?v=vO9kYNpQvPU	Full Village People Eating Together #aroundmebd #food #bengalivlog #youtubevillage #fish #eating	https://i.ytimg.com/vi/vO9kYNpQvPU/maxresdefault.jpg	5	2605	27	0	2026-06-07	f	1	2026-06-07 19:39:06.107089+00
+23c35cef-f163-4437-8661-88ed5e4829ae	42e12f8f-04fd-42cd-86e5-5ffbbe47c281	youtube	https://www.youtube.com/watch?v=kF4eUIQ1ats	Traditional Harvest Feast – Sweet Pumpkin, Potato & Egg Gravy with Chicken Kohlrabi!	https://i.ytimg.com/vi/kF4eUIQ1ats/maxresdefault.jpg	5	6307	84	1	2026-06-07	f	2	2026-06-07 19:39:06.107089+00
+5def4a19-a599-4a2b-bf34-0c5842d56e72	42e12f8f-04fd-42cd-86e5-5ffbbe47c281	youtube	https://www.youtube.com/watch?v=xNUizjvgoZ4	Wax Gourd, Pulse & Hilsa Fish Gravy Mashed Serving to Village People #aroundmebd #food #cooking	https://i.ytimg.com/vi/xNUizjvgoZ4/maxresdefault.jpg	5	29138	195	1	2026-06-06	f	3	2026-06-07 19:39:06.107089+00
+8e875b1f-3cfb-4fb8-b576-0b58913edf88	42e12f8f-04fd-42cd-86e5-5ffbbe47c281	youtube	https://www.youtube.com/watch?v=4rEkHfSBrH0	Wax Gourd, Pulse & Hilsa Fish Gravy Mashed Curry #aroundmebd #food #cooking #bengalivlog	https://i.ytimg.com/vi/4rEkHfSBrH0/maxresdefault.jpg	5	5824	77	0	2026-06-05	f	4	2026-06-07 19:39:06.107089+00
+8cf86212-99fa-4bab-ae1d-3d7ce41e57a9	42e12f8f-04fd-42cd-86e5-5ffbbe47c281	youtube	https://www.youtube.com/watch?v=rigr-XGyE4g	পুরো গ্রামের জন্য বিশাল আয়োজন | Giant Village Pangasius Fish Curry Cooking	https://i.ytimg.com/vi/rigr-XGyE4g/maxresdefault.jpg	5	19439	407	11	2026-06-04	f	5	2026-06-07 19:39:06.107089+00
+fb1e9f96-ffda-4482-91d0-216e47dbf6f8	51cdbea5-c7d2-49fe-87ba-db598d4ecac5	youtube	https://www.youtube.com/watch?v=19MWT8MWK7I	ঈদ যাত্রী নিয়ে সুরভী-৭ এবং শ্রীনগর-৮ লঞ্চ একত্রে ঢাকা আসছে	https://i.ytimg.com/vi/19MWT8MWK7I/maxresdefault.jpg	6	11508	385	5	2026-06-06	t	0	2026-06-07 19:39:13.604253+00
+dd08a18f-6d78-4130-a3ef-20a2acc47683	51cdbea5-c7d2-49fe-87ba-db598d4ecac5	youtube	https://www.youtube.com/watch?v=kjUg4PjpjKs	হারিয়ে না যাক এম ভি সুরভী-৭❤️	https://i.ytimg.com/vi/kjUg4PjpjKs/maxresdefault.jpg	6	7266	361	6	2026-06-06	f	1	2026-06-07 19:39:13.604253+00
+c6661e91-1633-4b08-b944-13e4bed29268	51cdbea5-c7d2-49fe-87ba-db598d4ecac5	youtube	https://www.youtube.com/watch?v=sabZYOlFH-k	ঈদ যাত্রী নিয়ে পারাবতের ২ টি লঞ্চ একত্রে ঢাকা পৌছেছে	https://i.ytimg.com/vi/sabZYOlFH-k/maxresdefault.jpg	6	16022	322	2	2026-06-05	f	2	2026-06-07 19:39:13.604253+00
+4e5c29f5-1846-4200-835e-d59f27442d15	51cdbea5-c7d2-49fe-87ba-db598d4ecac5	youtube	https://www.youtube.com/watch?v=I37B9Dpxh_o	😮দ্রুত গতিতে চলতে থাকা সম্পদ লঞ্চে উঠে গেলো হকার	https://i.ytimg.com/vi/I37B9Dpxh_o/maxresdefault.jpg	6	13964	309	0	2026-06-05	f	3	2026-06-07 19:39:13.604253+00
+e0c3ac83-1b24-4a41-a6af-8085bcac08da	51cdbea5-c7d2-49fe-87ba-db598d4ecac5	youtube	https://www.youtube.com/watch?v=w7EG5NkirFk	ঈদের যাত্রীদের নিয়ে ঢাকা ফিরছে এম ভি সুন্দরবন-১৬	https://i.ytimg.com/vi/w7EG5NkirFk/maxresdefault.jpg	6	14791	537	10	2026-06-04	f	4	2026-06-07 19:39:13.604253+00
+1439127a-c707-47b5-9cdf-2401983e77b3	51cdbea5-c7d2-49fe-87ba-db598d4ecac5	youtube	https://www.youtube.com/watch?v=ZR8xOzdZ4XM	ঈদ যাত্রী নিয়ে ঢাকা ফিরছে এডভেঞ্চার-৯ লঞ্চ	https://i.ytimg.com/vi/ZR8xOzdZ4XM/maxresdefault.jpg	6	13339	513	1	2026-06-04	f	5	2026-06-07 19:39:13.604253+00
+f775d40c-273f-46cb-ad40-3b777ec1c221	70be3112-3530-4fbd-8ee3-a88acd20ccb9	youtube	https://www.youtube.com/watch?v=koSZrx4wdLU	butterfly keyboard 🦋🦋	https://i.ytimg.com/vi/koSZrx4wdLU/maxresdefault.jpg	3	56	4	2	2023-05-24	t	0	2026-06-07 19:39:18.892221+00
+5ab98bd7-f095-44b2-b8b4-642e2ae8b036	70be3112-3530-4fbd-8ee3-a88acd20ccb9	youtube	https://www.youtube.com/watch?v=r7qNB9ojWEo	#tonniartandcraft || kawaii squishy sticker's 🤍	https://i.ytimg.com/vi/r7qNB9ojWEo/maxresdefault.jpg	3	29	4	2	2023-05-24	f	1	2026-06-07 19:39:18.892221+00
+af8b655c-45dc-4d07-bc9b-a5121485f835	8127f14d-7fc7-4e47-a3ce-195d54f2f41f	youtube	https://www.youtube.com/watch?v=T0KP3cji_Fs	#art #flowers #satisfying	https://i.ytimg.com/vi/T0KP3cji_Fs/maxresdefault.jpg	7	18869	438	28	2026-06-07	t	0	2026-06-07 19:39:21.162682+00
+d766cb47-fc72-4b53-a8e0-7d5c0b3bf617	8127f14d-7fc7-4e47-a3ce-195d54f2f41f	youtube	https://www.youtube.com/watch?v=6CThVWc28l4	12 Easy Creative Art Hacks When You’re Bored || Art Ideas || painting for Beginners	https://i.ytimg.com/vi/6CThVWc28l4/maxresdefault.jpg	7	48493	509	42	2026-06-06	f	1	2026-06-07 19:39:21.162682+00
+1b99506d-8d11-472e-8eb0-c0f4bd4ce526	8127f14d-7fc7-4e47-a3ce-195d54f2f41f	youtube	https://www.youtube.com/watch?v=Qw26GcZWgYk	Gouache paint Glow in the dark #art #painting #review #shorts	https://i.ytimg.com/vi/Qw26GcZWgYk/maxresdefault.jpg	7	46188	1139	56	2026-06-05	f	2	2026-06-07 19:39:21.162682+00
+a34bad5f-5246-416e-b175-6e3083e396ef	8127f14d-7fc7-4e47-a3ce-195d54f2f41f	youtube	https://www.youtube.com/watch?v=X938VIWnDcc	Painting hacks #art #painting #shorts	https://i.ytimg.com/vi/X938VIWnDcc/maxresdefault.jpg	7	58574	1093	57	2026-06-03	f	3	2026-06-07 19:39:21.162682+00
+ab811b33-e407-4ce5-9c80-9e113643eb72	8127f14d-7fc7-4e47-a3ce-195d54f2f41f	youtube	https://www.youtube.com/watch?v=JgO-oyd0YHI	#art #satisfying #shorts	https://i.ytimg.com/vi/JgO-oyd0YHI/maxresdefault.jpg	7	88916	1428	45	2026-06-02	f	4	2026-06-07 19:39:21.162682+00
+9ee53e45-f997-44ca-aeea-50c6cb73a01e	8127f14d-7fc7-4e47-a3ce-195d54f2f41f	youtube	https://www.youtube.com/watch?v=OVVjozcl_-s	10 Cool art ideas || Easy Painting hacks & Art Ideas for beginners	https://i.ytimg.com/vi/OVVjozcl_-s/maxresdefault.jpg	7	43315	446	45	2026-06-01	f	5	2026-06-07 19:39:21.162682+00
+2469a798-53e5-495e-9068-fbbeb965ef16	ae9568ff-7a6a-47a8-ac4f-91ec762ef9a3	youtube	https://www.youtube.com/watch?v=mJqzUBYe_Ts	"Exploring Paper cutting Techniques: A Comprehensive Guide", #shorts #diy #art #craft #gift	https://i.ytimg.com/vi/mJqzUBYe_Ts/maxresdefault.jpg	7	31	1	0	2024-02-12	t	0	2026-06-07 19:39:28.529631+00
+38fe8fc3-28f9-4f4c-8422-1e426a4c390f	ae9568ff-7a6a-47a8-ac4f-91ec762ef9a3	youtube	https://www.youtube.com/watch?v=gMKXsjjmnCw	“The Evolution of Paper Sculpture: From Tradition to Modernity" #shorts #diy #art #craft #gift	https://i.ytimg.com/vi/gMKXsjjmnCw/maxresdefault.jpg	7	21	0	0	2024-02-12	f	1	2026-06-07 19:39:28.529631+00
+1467e8a7-2179-478d-b114-29ecc26a4a8e	ae9568ff-7a6a-47a8-ac4f-91ec762ef9a3	youtube	https://www.youtube.com/watch?v=dy8WEoNtb3s	8 Ideas DIY Paper Flower Gift | Handmade Art & Craft  @artandcraft252 #shorts #diy #art #craft #gift	https://i.ytimg.com/vi/dy8WEoNtb3s/maxresdefault.jpg	7	5	1	0	2024-02-10	f	2	2026-06-07 19:39:28.529631+00
+bde259b6-047d-44b6-9707-f377147dfb65	ae9568ff-7a6a-47a8-ac4f-91ec762ef9a3	youtube	https://www.youtube.com/watch?v=gdjkm8d-YEY	DIY Paper Heart Gift Tutorial | Handmade Art & Craft Ideas | @art&craft252, #short, art, diy, craft,	https://i.ytimg.com/vi/gdjkm8d-YEY/maxresdefault.jpg	7	8	0	1	2024-02-08	f	3	2026-06-07 19:39:28.529631+00
+a936e632-dc91-4f75-ba11-5d8d45441c5c	ae9568ff-7a6a-47a8-ac4f-91ec762ef9a3	youtube	https://www.youtube.com/watch?v=pCjh9W0Gc5w	DIY Paper Ship Tutorial | Handmade Art & Craft Ideas | @art&craft252, #short, art, diy, craft,	https://i.ytimg.com/vi/pCjh9W0Gc5w/maxresdefault.jpg	7	4	0	0	2024-02-08	f	4	2026-06-07 19:39:28.529631+00
+1cc983bf-b4dc-45b7-bb1a-47384e21f8ac	ae9568ff-7a6a-47a8-ac4f-91ec762ef9a3	youtube	https://www.youtube.com/watch?v=0BnEo0BY3BI	DIY Paper Sunflower Tutorial | Handmade Art & Craft Ideas#art252, @Tonniartandcraft	https://i.ytimg.com/vi/0BnEo0BY3BI/maxresdefault.jpg	7	3	1	0	2024-02-07	f	5	2026-06-07 19:39:28.529631+00
+cae7502e-78de-4408-bc63-f482dfab397f	440f955d-039d-4db5-8590-35e0a837918c	youtube	https://www.youtube.com/watch?v=oa6-MoY-Odo	🤢😈👹😡🤩💡Fun Satisfying Colouring  @ArasEasyArt #satisfying #art #colouring	https://i.ytimg.com/vi/oa6-MoY-Odo/maxresdefault.jpg	7	52576	\N	\N	2026-05-13	t	0	2026-06-07 19:39:43.215011+00
+6344ca45-7b6b-4ff8-994e-80d0be965c76	440f955d-039d-4db5-8590-35e0a837918c	youtube	https://www.youtube.com/watch?v=EkgFa_8E_q8	⁠DIY Cute Handmade Paper Fan Craft👌 @ArasEasyArt #diy #fan #cute #viral #ytshorts	https://i.ytimg.com/vi/EkgFa_8E_q8/maxresdefault.jpg	7	282182	\N	\N	2026-05-12	f	1	2026-06-07 19:39:43.215011+00
+5e228389-e53d-4a96-aa49-3adb4c8454b1	440f955d-039d-4db5-8590-35e0a837918c	youtube	https://www.youtube.com/watch?v=fCggqZTUu0M	Easy Surprise Card Making idea | Paper card | How to make a card | Mother's Day | Aras Easy Art	https://i.ytimg.com/vi/fCggqZTUu0M/maxresdefault.jpg	7	1694	\N	\N	2026-05-10	f	2	2026-06-07 19:39:43.215011+00
+1f498c25-305d-477e-8b11-a41ddfa3ea0b	440f955d-039d-4db5-8590-35e0a837918c	youtube	https://www.youtube.com/watch?v=Yb6SyGgKPEY	📚😍DIY mini notebook Easy Craft @ArasEasyArt #viral #diy #miniature #notebook #ytshorts	https://i.ytimg.com/vi/Yb6SyGgKPEY/maxresdefault.jpg	7	108248	\N	\N	2026-05-09	f	3	2026-06-07 19:39:43.215011+00
+fd38f1af-4c53-48f7-9377-8bb477dceb87	440f955d-039d-4db5-8590-35e0a837918c	youtube	https://www.youtube.com/watch?v=pSt0F_y3lNw	DIY 4 Creative Ideas in 1 shorts👯‍♀️💫✒️🏎️ @ArasEasyArt #diy #viral #creative #crafts	https://i.ytimg.com/vi/pSt0F_y3lNw/maxresdefault.jpg	7	490921	\N	\N	2026-05-07	f	4	2026-06-07 19:39:43.215011+00
+d1ccb082-106b-4b77-a1be-d2282822716a	440f955d-039d-4db5-8590-35e0a837918c	youtube	https://www.youtube.com/watch?v=3lTTkEv8Y0M	📙📗📘📕📚 Satisfying Art Colouring @ArasEasyArt #art #satisfying #ytshorts #viral	https://i.ytimg.com/vi/3lTTkEv8Y0M/maxresdefault.jpg	7	95378	\N	\N	2026-05-06	f	5	2026-06-07 19:39:43.215011+00
+56cc3eb3-4a4c-466a-a695-87c5d7cac0db	673d48a6-bf94-4d7a-a1f2-851357978fb0	youtube	https://www.youtube.com/watch?v=8P5gh39JDwQ	Quick and Beautiful Neck Design Idea #neck #design	https://i.ytimg.com/vi/8P5gh39JDwQ/maxresdefault.jpg	3	8302	136	1	2026-06-07	t	0	2026-06-07 19:39:56.968481+00
+3a593c9d-da1b-4152-a5a4-9b1aca65b858	673d48a6-bf94-4d7a-a1f2-851357978fb0	youtube	https://www.youtube.com/watch?v=dwTuWoXm9vs	Sewing techniques for beginners #sewing #tips	https://i.ytimg.com/vi/dwTuWoXm9vs/maxresdefault.jpg	3	24895	174	1	2026-06-07	f	1	2026-06-07 19:39:56.968481+00
+14a51706-47d0-4a93-8e47-a783a129c0bb	673d48a6-bf94-4d7a-a1f2-851357978fb0	youtube	https://www.youtube.com/watch?v=mTyTNvbTrwI	Helpful and informative sewing method #sewing #tips	https://i.ytimg.com/vi/mTyTNvbTrwI/maxresdefault.jpg	3	11344	142	1	2026-06-07	f	2	2026-06-07 19:39:56.968481+00
+56ed2e3f-0b06-4fd0-b1dc-2b8b65a07742	673d48a6-bf94-4d7a-a1f2-851357978fb0	youtube	https://www.youtube.com/watch?v=VMFxqilxeDc	New Stylish Trouser Design You’ll Love #trousers #design	https://i.ytimg.com/vi/VMFxqilxeDc/maxresdefault.jpg	3	15530	206	3	2026-06-07	f	3	2026-06-07 19:39:56.968481+00
+ef111d14-f90d-4ede-9886-4a119b15a073	673d48a6-bf94-4d7a-a1f2-851357978fb0	youtube	https://www.youtube.com/watch?v=9pixClRqRoA	V-neck sewing method  #neck  #sewing	https://i.ytimg.com/vi/9pixClRqRoA/maxresdefault.jpg	3	23418	307	1	2026-06-07	f	4	2026-06-07 19:39:56.968481+00
+2f0284d5-2d94-4dd8-854d-75e8fb14f4cb	673d48a6-bf94-4d7a-a1f2-851357978fb0	youtube	https://www.youtube.com/watch?v=jfeWNi0Nn98	Beautiful sewing techniques #sewing #tips	https://i.ytimg.com/vi/jfeWNi0Nn98/maxresdefault.jpg	3	48921	413	0	2026-06-07	f	5	2026-06-07 19:39:56.968481+00
+cad1947c-9604-43f7-aecf-7fa56669d1df	0e8a07c1-ff6d-4394-859f-151f39779107	youtube	https://www.youtube.com/watch?v=3RQJX_bPuEs	Creative wooden Craft with Iron Nail #craft #shorts	https://i.ytimg.com/vi/3RQJX_bPuEs/maxresdefault.jpg	7	16631	172	1	2026-06-06	t	0	2026-06-07 19:40:01.378559+00
+70c6a077-f2f1-46f3-a454-45b3e27e3d80	0e8a07c1-ff6d-4394-859f-151f39779107	youtube	https://www.youtube.com/watch?v=mfiEjsA4ziw	Creative Bamboo Key Holder Craft	https://i.ytimg.com/vi/mfiEjsA4ziw/maxresdefault.jpg	7	21266	177	0	2026-05-30	f	1	2026-06-07 19:40:01.378559+00
+d23d20c3-bd5f-4a52-b07f-e72974d96293	0e8a07c1-ff6d-4394-859f-151f39779107	youtube	https://www.youtube.com/watch?v=st-ob2csESI	Wooden DIY Slingshots #diy #shorts	https://i.ytimg.com/vi/st-ob2csESI/maxresdefault.jpg	7	11650	141	1	2026-05-23	f	2	2026-06-07 19:40:01.378559+00
+f3ada07d-fea9-4dbb-bb18-a7c35d1736d5	0e8a07c1-ff6d-4394-859f-151f39779107	youtube	https://www.youtube.com/watch?v=3OkdXITFpEg	Bamboo craft	https://i.ytimg.com/vi/3OkdXITFpEg/maxresdefault.jpg	7	40931	344	6	2026-05-20	f	3	2026-06-07 19:40:01.378559+00
+7cdee652-c4e9-4758-bc90-1e3d9a07c6dd	0e8a07c1-ff6d-4394-859f-151f39779107	youtube	https://www.youtube.com/watch?v=ujsfRlWJXcE	Bamboo Creation with Slingshots	https://i.ytimg.com/vi/ujsfRlWJXcE/maxresdefault.jpg	7	28011	228	1	2026-05-17	f	4	2026-06-07 19:40:01.378559+00
+1f525928-1696-4637-b75b-85e73eeeab9e	0e8a07c1-ff6d-4394-859f-151f39779107	youtube	https://www.youtube.com/watch?v=gpaC--wHlqw	DIY Creative Bamboo Craft with Spoon	https://i.ytimg.com/vi/gpaC--wHlqw/maxresdefault.jpg	7	22782	178	3	2026-05-13	f	5	2026-06-07 19:40:01.378559+00
+e0d39866-38f3-4dd6-956f-97d84fd1ed53	6ab37117-0165-49c7-b569-9f2d5b16d0be	youtube	https://www.youtube.com/watch?v=DXh2RGMFfRs	ব্যবহার করবেন ১ বার উপকার পাবেন সারা জীবন। Hair growth remedy	https://i.ytimg.com/vi/DXh2RGMFfRs/sddefault.jpg	4	28149	210	11	2025-05-12	t	0	2026-06-07 19:40:05.909454+00
+886ca82a-29e1-43d8-a8d7-a7b9fa28bff6	6ab37117-0165-49c7-b569-9f2d5b16d0be	youtube	https://www.youtube.com/watch?v=h1cwOUfYnbc	Kalojirate 2nd Opadan Mesalei Chul Hatu Obdi Lomba Hobe | Sarajibone Kono Chul Lomba hobe Na	https://i.ytimg.com/vi/h1cwOUfYnbc/maxresdefault.jpg	4	134160	2047	67	2021-04-24	f	1	2026-06-07 19:40:05.909454+00
+e45942d6-9110-4c85-8d1c-fcc9dffdd337	6ab37117-0165-49c7-b569-9f2d5b16d0be	youtube	https://www.youtube.com/watch?v=TGyifN6FD_c	রসুনের সাথে ২ টি উপাদান মিশিয়ে চুলকানিতে লাগালেই ১০ মিনিটে দূর।ঘা,পাঁচড়া ও চুলকানি দূরের উপায়	https://i.ytimg.com/vi/TGyifN6FD_c/maxresdefault.jpg	4	162383	1468	37	2021-04-16	f	2	2026-06-07 19:40:05.909454+00
+c3f2492a-da84-4605-afb6-11a54be25e67	6ab37117-0165-49c7-b569-9f2d5b16d0be	youtube	https://www.youtube.com/watch?v=Z7alrgGQc-4	দাঁতের ডাক্তারও অবাক।হলদির মতো হলুদ দাঁতকেও মতির মতো ঝকঝকে বানায় এটি।দাঁত সাদা করার উপায়	https://i.ytimg.com/vi/Z7alrgGQc-4/maxresdefault.jpg	4	96334	1631	41	2021-04-04	f	3	2026-06-07 19:40:05.909454+00
+c9e105ec-4701-4aae-ba3b-bd5f0f830d47	6ab37117-0165-49c7-b569-9f2d5b16d0be	youtube	https://www.youtube.com/watch?v=BJ1NDpRbu2M	বিশ্বাস করুন সরিষার তেলে ২ টি উপাদান মিশিয়ে টাক মাথায় দিলেও ঘন চুলে মাথা ভরে যাবে।এমন তেল কোথাও নেই	https://i.ytimg.com/vi/BJ1NDpRbu2M/maxresdefault.jpg	4	74866	1672	73	2021-03-31	f	4	2026-06-07 19:40:05.909454+00
+56bda816-44a6-4ad4-8ab6-b26be9332394	6ab37117-0165-49c7-b569-9f2d5b16d0be	youtube	https://www.youtube.com/watch?v=VZfjWwQTQB0	শ্যাম্পুতে  একবার মেশালেই চুল লম্বা,ঘন ও কালো হওয়া বন্ধ হবে না।চুল পাগলা গতিতে লম্বা করার উপায়	https://i.ytimg.com/vi/VZfjWwQTQB0/maxresdefault.jpg	4	544798	5793	238	2021-03-27	f	5	2026-06-07 19:40:05.909454+00
+69377a5c-f749-4078-b323-3b52ab421151	20ac3692-ee06-4bf2-9c60-554a5b131486	youtube	https://www.youtube.com/watch?v=02miXmDYxjk	গরিবের বন্ধু বড়লোকের দুশমন Valuetop Journey | DDI Expo 2026	https://i.ytimg.com/vi/02miXmDYxjk/maxresdefault.jpg	1	60326	2003	394	2026-02-18	t	0	2026-06-07 19:40:30.101002+00
+3abb63a0-f8a9-42c4-b963-e36a2457a193	20ac3692-ee06-4bf2-9c60-554a5b131486	youtube	https://www.youtube.com/watch?v=NPtkAInMqJE	Why TSMC is the most powerful company of the world?	https://i.ytimg.com/vi/NPtkAInMqJE/maxresdefault.jpg	1	45012	1196	94	2026-02-18	f	1	2026-06-07 19:40:30.101002+00
+d5089a8e-7d6f-41e8-869d-b43e738b417e	20ac3692-ee06-4bf2-9c60-554a5b131486	youtube	https://www.youtube.com/watch?v=mi7YEmzqftA	Lie detector machine ft. OSRTT	https://i.ytimg.com/vi/mi7YEmzqftA/maxresdefault.jpg	1	35238	626	18	2026-02-18	f	2	2026-06-07 19:40:30.101002+00
+6f302483-b79c-491a-bb05-2b251b898e0e	20ac3692-ee06-4bf2-9c60-554a5b131486	youtube	https://www.youtube.com/watch?v=Gs6Uwk-Cbgw	একটি PC সারাজীবনের কান্না | Troubleshooting CPU Overheating Issue!	https://i.ytimg.com/vi/Gs6Uwk-Cbgw/maxresdefault.jpg	1	27792	707	80	2026-02-17	f	3	2026-06-07 19:40:30.101002+00
+18e94d06-cea1-4fe9-b4b7-9dde407d6307	20ac3692-ee06-4bf2-9c60-554a5b131486	youtube	https://www.youtube.com/watch?v=s7mGa5GSbqA	আবারও ফেঁসে যাচ্ছে ফেসবুক?	https://i.ytimg.com/vi/s7mGa5GSbqA/maxresdefault.jpg	1	21247	896	35	2026-02-17	f	4	2026-06-07 19:40:30.101002+00
+d0aeec6b-5c6f-4337-a3fe-5b248b9e91e5	20ac3692-ee06-4bf2-9c60-554a5b131486	youtube	https://www.youtube.com/watch?v=Lo50siI0gnQ	AITC Kingsman বাংলাদেশে এলো কীভাবে? DDI Expo 2026	https://i.ytimg.com/vi/Lo50siI0gnQ/maxresdefault.jpg	1	10802	374	44	2026-02-16	f	5	2026-06-07 19:40:30.101002+00
+3a2c9cad-d586-4f9b-8c78-09af50ee6f1d	7db49e06-546f-47e2-90bb-040f77ae36c2	youtube	https://www.youtube.com/watch?v=OnQNoNLgYPs	অবশেষে ফিরলো Huawei! বাংলাদেশে অফিসিয়াল কামব্যাক	https://i.ytimg.com/vi/OnQNoNLgYPs/maxresdefault.jpg	1	18778	2142	237	2026-06-07	t	0	2026-06-07 19:40:37.620958+00
+b6ddc25f-a889-4c7b-b278-f0cf6d711bea	7db49e06-546f-47e2-90bb-040f77ae36c2	youtube	https://www.youtube.com/watch?v=zRho77nNXuk	Monitor ছাড়াই Camera Control!	https://i.ytimg.com/vi/zRho77nNXuk/maxresdefault.jpg	1	19006	1075	32	2026-06-06	f	1	2026-06-07 19:40:37.620958+00
+3855c060-731d-4d64-8fe7-69b0eedd3c73	7db49e06-546f-47e2-90bb-040f77ae36c2	youtube	https://www.youtube.com/watch?v=iJRd2t2MhAM	Realme Neo 8: জিনিসটা যতটা ভাবছিলাম...	https://i.ytimg.com/vi/iJRd2t2MhAM/maxresdefault.jpg	1	50010	2011	267	2026-06-05	f	2	2026-06-07 19:40:37.620958+00
+e4cdd935-318e-49b6-81d5-6640145ae735	7db49e06-546f-47e2-90bb-040f77ae36c2	youtube	https://www.youtube.com/watch?v=Q73OooGqS4s	Gamer-দের নতুন weapon! 🎧	https://i.ytimg.com/vi/Q73OooGqS4s/maxresdefault.jpg	1	6834	465	12	2026-06-05	f	3	2026-06-07 19:40:37.620958+00
+b3f72beb-a5de-4888-be94-baa461c6b7ee	7db49e06-546f-47e2-90bb-040f77ae36c2	youtube	https://www.youtube.com/watch?v=5bSKhgqx1y4	৫০ হাজারে বেস্ট ডিল?	https://i.ytimg.com/vi/5bSKhgqx1y4/maxresdefault.jpg	1	53243	1696	94	2026-06-04	f	4	2026-06-07 19:40:37.620958+00
+2b12b9b3-bc27-4fdd-952d-ebac70f895a2	7db49e06-546f-47e2-90bb-040f77ae36c2	youtube	https://www.youtube.com/watch?v=caWiX_PfjEY	Low Light Boss Fight! Vivo X300 Ultra VS Oppo Find X9 Ultra 😎	https://i.ytimg.com/vi/caWiX_PfjEY/maxresdefault.jpg	1	65166	2571	280	2026-06-02	f	5	2026-06-07 19:40:37.620958+00
+edcd6625-c92e-4e4e-8b1b-9ab6b73517f5	88339740-4c5a-4866-8617-b810ddb7b89a	youtube	https://www.youtube.com/watch?v=AQB19ixsF9I	Hasselblad King vs Zeiss King, which one would you choose? #oppofindx9ultra #vivox300ultra	https://i.ytimg.com/vi/AQB19ixsF9I/maxresdefault.jpg	1	379	6	0	2026-06-07	t	0	2026-06-07 19:40:52.437767+00
+6d7f0a87-8d9f-403d-bbbe-15d7f5475c5e	88339740-4c5a-4866-8617-b810ddb7b89a	youtube	https://www.youtube.com/watch?v=_zwi-GHbTuc	I just wanted to film the plane, but the 600mm focal length actually "saw through" the porthole.	https://i.ytimg.com/vi/_zwi-GHbTuc/maxresdefault.jpg	1	601	10	0	2026-06-07	f	1	2026-06-07 19:40:52.437767+00
+8a2f0951-0fd5-42ea-917a-ce7cc252d8ae	88339740-4c5a-4866-8617-b810ddb7b89a	youtube	https://www.youtube.com/watch?v=-rMb_kfZwRw	Have you ever seen a phone case for the iQOO 15T? It boasts a minimalist yet sophisticated design!	https://i.ytimg.com/vi/-rMb_kfZwRw/maxresdefault.jpg	1	994	15	0	2026-06-07	f	2	2026-06-07 19:40:52.437767+00
+64210694-e2e8-4a6e-8500-221512cdebc7	88339740-4c5a-4866-8617-b810ddb7b89a	youtube	https://www.youtube.com/watch?v=7JCicDyMVsw	A 600mm telephoto lens captured people by the cabin window while shooting an airplane!	https://i.ytimg.com/vi/7JCicDyMVsw/maxresdefault.jpg	1	771	6	0	2026-06-07	f	3	2026-06-07 19:40:52.437767+00
+2afe4384-d03b-4f7d-9a1f-efa87ec26579	88339740-4c5a-4866-8617-b810ddb7b89a	youtube	https://www.youtube.com/watch?v=npUQ8wbMUlk	iPhone 17 Pro Ice Crack Technology Marble Pattern with High-Grade Reflective Aluminum Alloy Material	https://i.ytimg.com/vi/npUQ8wbMUlk/maxresdefault.jpg	1	1230	12	0	2026-06-07	f	4	2026-06-07 19:40:52.437767+00
+2c4b0032-aa86-4dbf-b5ea-53b4a4075841	88339740-4c5a-4866-8617-b810ddb7b89a	youtube	https://www.youtube.com/watch?v=Z3jRSxZ2H74	A new king is about to rise? Nova 16 Ultra vs  Mate 80 Standard Edition: 50MP telephoto lens vs 12MP	https://i.ytimg.com/vi/Z3jRSxZ2H74/maxresdefault.jpg	1	1239	26	0	2026-06-07	f	5	2026-06-07 19:40:52.437767+00
+90165092-af57-48d1-9b36-3297d0e990cd	2b69a960-320d-447f-b598-ee9e8a28185c	youtube	https://www.youtube.com/watch?v=JgVAs27Z6PU	THIS IS BEAUTIFUL | Genshin Impact Let's play #1	https://i.ytimg.com/vi/JgVAs27Z6PU/maxresdefault.jpg	2	1042	2	1	2020-10-28	t	0	2026-06-07 19:40:54.53377+00
+6982260f-ca61-4371-9fcd-6d1a083796cb	2b69a960-320d-447f-b598-ee9e8a28185c	youtube	https://www.youtube.com/watch?v=kcrdlB5ckkk	Channel Update | allgaming trove	https://i.ytimg.com/vi/kcrdlB5ckkk/maxresdefault.jpg	2	54	3	0	2020-10-28	f	1	2026-06-07 19:40:54.53377+00
+4815f710-b3b5-4be4-a503-6d1e4b5f4161	2b69a960-320d-447f-b598-ee9e8a28185c	youtube	https://www.youtube.com/watch?v=Zo8-GVGWGPY	THE SHADOW TAMER!! | 1X STREAMER DREAM GIVEAWAY!!	https://i.ytimg.com/vi/Zo8-GVGWGPY/maxresdefault.jpg	2	61	3	8	2018-03-13	f	2	2026-06-07 19:40:54.53377+00
+b2d6f022-ec4f-408b-8bea-5b19d7037777	2b69a960-320d-447f-b598-ee9e8a28185c	youtube	https://www.youtube.com/watch?v=8dclqO1gR7c	MY 2ND PRIMORDIAL DRAGON!! + 1X STREAMER DREAM GIVEAWAY!!	https://i.ytimg.com/vi/8dclqO1gR7c/maxresdefault.jpg	2	38	9	9	2018-03-12	f	3	2026-06-07 19:40:54.53377+00
+e61c226d-6d45-4304-ba8a-45658accd727	2b69a960-320d-447f-b598-ee9e8a28185c	youtube	https://www.youtube.com/watch?v=TBf3LzyNt1k	2ND DIAMOND EGG!! | 1 STREAMER DREAM GIVEAWAY!!	https://i.ytimg.com/vi/TBf3LzyNt1k/maxresdefault.jpg	2	25	7	5	2018-01-08	f	4	2026-06-07 19:40:54.53377+00
+2f1fa4c3-fa48-4049-946e-924bbc888882	2b69a960-320d-447f-b598-ee9e8a28185c	youtube	https://www.youtube.com/watch?v=WGsTFE59l1c	OPENING SHADOW CHACHES!! + STREAMER DREAM GIVEAWAY!!	https://i.ytimg.com/vi/WGsTFE59l1c/maxresdefault.jpg	2	46	12	6	2017-08-04	f	5	2026-06-07 19:40:54.53377+00
+d0585af6-355d-4a5a-89c7-5bfaf00ad4af	c1b988f2-9e42-4b77-9ed8-247ce8789369	youtube	https://www.youtube.com/watch?v=_uUMx1BiTfk	When they felt the presence of the curse	https://i.ytimg.com/vi/_uUMx1BiTfk/maxresdefault.jpg	2	279062	7913	28	2026-06-06	t	0	2026-06-07 19:41:01.906437+00
+445e342f-59b1-496d-a43e-3d83540cd327	c1b988f2-9e42-4b77-9ed8-247ce8789369	youtube	https://www.youtube.com/watch?v=ByKKMpKd8m0	Only Steve remained	https://i.ytimg.com/vi/ByKKMpKd8m0/maxresdefault.jpg	2	595724	16319	39	2026-06-04	f	1	2026-06-07 19:41:01.906437+00
+a20911fc-db78-458b-bce0-17e3f2cdfaa3	c1b988f2-9e42-4b77-9ed8-247ce8789369	youtube	https://www.youtube.com/watch?v=EowdUs6iFcE	Gang got cooked💀	https://i.ytimg.com/vi/EowdUs6iFcE/maxresdefault.jpg	2	345690	\N	47	2026-06-03	f	2	2026-06-07 19:41:01.906437+00
+c4d89b1c-d377-4880-ae48-d807a42877d3	c1b988f2-9e42-4b77-9ed8-247ce8789369	youtube	https://www.youtube.com/watch?v=bFlhBiScfF0	They messed with the wrong person	https://i.ytimg.com/vi/bFlhBiScfF0/maxresdefault.jpg	2	632787	14603	51	2026-06-02	f	3	2026-06-07 19:41:01.906437+00
+a6bb53ef-6e99-4d35-a671-6a990db6e30f	c1b988f2-9e42-4b77-9ed8-247ce8789369	youtube	https://www.youtube.com/watch?v=uPQt0U2xkTY	Courage fades before fear	https://i.ytimg.com/vi/uPQt0U2xkTY/maxresdefault.jpg	2	823769	11179	47	2026-06-01	f	4	2026-06-07 19:41:01.906437+00
+752b9a78-4a4e-4e01-8db8-45292dec3c14	c1b988f2-9e42-4b77-9ed8-247ce8789369	youtube	https://www.youtube.com/watch?v=r2YSiYwZqow	Even their souls left their bodies💀	https://i.ytimg.com/vi/r2YSiYwZqow/maxresdefault.jpg	2	170192	\N	58	2026-05-26	f	5	2026-06-07 19:41:01.906437+00
+bebe83cc-4d90-4e30-875d-633b4b6e94a6	5519f9b5-8d0a-4854-a590-170882420cf0	youtube	https://www.youtube.com/watch?v=z38IUF-_VxU	24 May 2021	https://i.ytimg.com/vi/z38IUF-_VxU/sddefault.jpg	2	18	2	0	2021-05-24	t	0	2026-06-07 19:41:05.507162+00
+4021b216-3d2a-4a76-bee2-9a2528b938e6	5519f9b5-8d0a-4854-a590-170882420cf0	youtube	https://www.youtube.com/watch?v=2N5JvFqOXOA	27 April 2021	https://i.ytimg.com/vi/2N5JvFqOXOA/maxresdefault.jpg	2	7	4	1	2021-04-27	f	1	2026-06-07 19:41:05.507162+00
+ffc3c3ba-386f-4056-ad70-356a00cc0ba6	5519f9b5-8d0a-4854-a590-170882420cf0	youtube	https://www.youtube.com/watch?v=GjdzYyfBD6c	14 April 2021	https://i.ytimg.com/vi/GjdzYyfBD6c/maxresdefault.jpg	2	11	5	3	2021-04-14	f	2	2026-06-07 19:41:05.507162+00
+6dbc2a77-6a0a-4d7f-8858-09be44e4c0a2	5519f9b5-8d0a-4854-a590-170882420cf0	youtube	https://www.youtube.com/watch?v=uXZtvERAFMI	11 April 2021	https://i.ytimg.com/vi/uXZtvERAFMI/maxresdefault.jpg	2	2	4	0	2021-04-11	f	3	2026-06-07 19:41:05.507162+00
+46b2a9b3-7d4a-41af-860f-3484aee06920	5519f9b5-8d0a-4854-a590-170882420cf0	youtube	https://www.youtube.com/watch?v=yrZiBPdgZtE	8 April 2021	https://i.ytimg.com/vi/yrZiBPdgZtE/maxresdefault.jpg	2	5	4	1	2021-04-08	f	4	2026-06-07 19:41:05.507162+00
+7a9e44c9-d81d-463c-9059-b9583c9c9f3f	5519f9b5-8d0a-4854-a590-170882420cf0	youtube	https://www.youtube.com/watch?v=8xnULTg66Rw	2 March 2021	https://i.ytimg.com/vi/8xnULTg66Rw/maxresdefault.jpg	2	3	5	0	2021-03-02	f	5	2026-06-07 19:41:05.507162+00
+c0f4f50c-1063-407a-9ac3-fbbccf39d8b1	992ac30b-3d68-4c9f-8ac2-f48173323732	youtube	https://www.youtube.com/watch?v=uRm60jzL9WU	REVENGE 9T4 Is Live🔥	https://i.ytimg.com/vi/uRm60jzL9WU/maxresdefault_live.jpg	2	0	\N	0	2026-05-31	t	0	2026-06-07 19:41:08.957113+00
+c28a096c-78b6-4100-a5c4-129203ecf208	992ac30b-3d68-4c9f-8ac2-f48173323732	youtube	https://www.youtube.com/watch?v=ozeAKLJGO-4	REVENGE 9T4 Is Live🔥	https://i.ytimg.com/vi/ozeAKLJGO-4/maxresdefault.jpg	2	1129901	8210	15	2026-05-31	f	1	2026-06-07 19:41:08.957113+00
+5c73c72d-1944-40cb-a37d-1e08bf3e3c18	992ac30b-3d68-4c9f-8ac2-f48173323732	youtube	https://www.youtube.com/watch?v=HUnCKBW_UM8	REVENGE 9T4 Is Live🔥	https://i.ytimg.com/vi/HUnCKBW_UM8/maxresdefault.jpg	2	111359	792	7	2026-05-28	f	2	2026-06-07 19:41:08.957113+00
+b7adb34e-e380-41b9-a320-6f2d5bc07a4c	992ac30b-3d68-4c9f-8ac2-f48173323732	youtube	https://www.youtube.com/watch?v=HOJ5dl-5PpE	REVENGE 9T4 Is Live🔥 Play With Subscriber😍 #freefire	https://i.ytimg.com/vi/HOJ5dl-5PpE/maxresdefault.jpg	2	214886	1093	11	2026-05-14	f	3	2026-06-07 19:41:08.957113+00
+2a865609-4a03-4eb4-82dd-b310e7331680	992ac30b-3d68-4c9f-8ac2-f48173323732	youtube	https://www.youtube.com/watch?v=IG8CoysyHnU	1vs4 In CS Rank🔥Can I Clutch🤔Watch Till End #shorts #shortsfeed #trending #b2k #tondegamer #freefire	https://i.ytimg.com/vi/IG8CoysyHnU/maxresdefault.jpg	2	5251251	96735	258	2026-05-03	f	4	2026-06-07 19:41:08.957113+00
+7d878da4-5673-4b0b-99f0-c33e395a9520	992ac30b-3d68-4c9f-8ac2-f48173323732	youtube	https://www.youtube.com/watch?v=vhw4WO8sf38	1vs4 In CS Rank🔥Can I Clutch🤔Watch Till End #shorts #shortsfeed #trending #b2k #tondegamer #freefire	https://i.ytimg.com/vi/vhw4WO8sf38/maxresdefault.jpg	2	197331	6295	75	2026-05-01	f	5	2026-06-07 19:41:08.957113+00
+063c8b09-0116-41be-8aef-cf0038e773d0	2beeb4ae-b74a-4153-a16b-42be716fa93e	youtube	https://www.youtube.com/watch?v=LO1Om6CMUY8	Granny Live Streaming Horror Gameplay Walkthrough #grannyrevamp #horrorgaming #shorts	https://i.ytimg.com/vi/LO1Om6CMUY8/sddefault.jpg	2	1963	9	0	2025-10-22	t	0	2026-06-07 19:41:16.246633+00
+8491dfdc-8ad1-4ae6-864b-374115c87888	2beeb4ae-b74a-4153-a16b-42be716fa93e	youtube	https://www.youtube.com/watch?v=Q1oVnijALM8	Batman vs City Joker Escape Battle Mission Best Android Gameplay Walkthrough	https://i.ytimg.com/vi/Q1oVnijALM8/maxresdefault.jpg	2	4583	25	2	2025-08-29	f	1	2026-06-07 19:41:16.246633+00
+d8ea306a-fa84-4804-85c4-630331ff01b7	2beeb4ae-b74a-4153-a16b-42be716fa93e	youtube	https://www.youtube.com/watch?v=gOfkm1y5N34	Real Tractor Farming Simulator 2025 Harvester Tractor Driving Android Gameplay Walkthrough Part 2	https://i.ytimg.com/vi/gOfkm1y5N34/maxresdefault.jpg	2	635	9	2	2025-08-28	f	2	2026-06-07 19:41:16.246633+00
+70652439-2ab9-419b-91e4-73de88641797	2beeb4ae-b74a-4153-a16b-42be716fa93e	youtube	https://www.youtube.com/watch?v=A7rI3xpBCLg	Venom is Here - Venom vs Hulk,Captain America And More Spider fighter 3 Android Gameplay Walkthrough	https://i.ytimg.com/vi/A7rI3xpBCLg/maxresdefault.jpg	2	3182	12	3	2025-08-25	f	3	2026-06-07 19:41:16.246633+00
+a497ed8e-54e5-440f-ad07-237f9c6a7510	2beeb4ae-b74a-4153-a16b-42be716fa93e	youtube	https://www.youtube.com/watch?v=QN4wD2kyWPY	Sniper 3D Gun Shooting Game Live Streaming Part 3	https://i.ytimg.com/vi/QN4wD2kyWPY/maxresdefault.jpg	2	365	4	0	2025-08-05	f	4	2026-06-07 19:41:16.246633+00
+208e21f2-e97a-4133-b8c4-fcb9e1b7f926	2beeb4ae-b74a-4153-a16b-42be716fa93e	youtube	https://www.youtube.com/watch?v=RjeD2U4j1Yw	incredible Hulk superhero Transformed battle #ytshorts #avengers #hulksmash	https://i.ytimg.com/vi/RjeD2U4j1Yw/maxresdefault.jpg	2	25131	278	2	2025-08-04	f	5	2026-06-07 19:41:16.246633+00
+28d8605d-f27b-4214-bb13-a36558498d6f	a4e9230c-d1bf-494e-ba4c-13ded0b417ca	youtube	https://www.youtube.com/watch?v=vTSeEddqiVg	29/11/2016 - 1	https://i.ytimg.com/vi/vTSeEddqiVg/sddefault.jpg	8	22	2	2	2018-03-11	t	0	2026-06-07 19:41:34.790408+00
+013a1a16-6d0a-45f8-b72b-8fcee628aec5	f1a4d39f-eb69-427c-98f7-4229eb1957fb	youtube	https://www.youtube.com/watch?v=iT62uQmMO1U	পৃথিবী বদলে গেছে | Full Natok | Youtube Film | Prottoy Heron | Mahima | Eid Natok 2026 |Bangla Natok	https://i.ytimg.com/vi/iT62uQmMO1U/maxresdefault.jpg	12	1602759	45938	2871	2026-05-29	t	0	2026-06-07 19:41:35.932772+00
+53c7528f-e64b-454c-b535-3ab238071457	f1a4d39f-eb69-427c-98f7-4229eb1957fb	youtube	https://www.youtube.com/watch?v=_qFyoyTOJTE	শেষ পর্যন্ত কে জিতলো? | The Ajaira Game Show | Prottoy Heron | Mahima | Bangla Funny Video 2026	https://i.ytimg.com/vi/_qFyoyTOJTE/maxresdefault.jpg	12	107919	4510	124	2026-05-25	f	1	2026-06-07 19:41:35.932772+00
+33b46d24-7c2b-4268-a500-b41f22efd923	f1a4d39f-eb69-427c-98f7-4229eb1957fb	youtube	https://www.youtube.com/watch?v=vGSTahho4Zk	বোঝনা কতটা চেয়েছি | Mahtim Shakib | Prottoy Heron | Mahima | Bangla New Song 2026	https://i.ytimg.com/vi/vGSTahho4Zk/maxresdefault.jpg	12	188520	5212	195	2026-05-22	f	2	2026-06-07 19:41:35.932772+00
+8d8c3f31-b37d-45c7-b510-44d422081ffa	f1a4d39f-eb69-427c-98f7-4229eb1957fb	youtube	https://www.youtube.com/watch?v=IAwKe6pGunE	Bondhu Chara Keu | বন্ধু ছাড়া কেউ | Prottoy Heron | Mahima | Shovon Roy | Official Music Video	https://i.ytimg.com/vi/IAwKe6pGunE/maxresdefault.jpg	12	241057	7838	344	2026-05-14	f	3	2026-06-07 19:41:35.932772+00
+eebc9a61-4a34-4687-a7a9-e52ef64a33d9	f1a4d39f-eb69-427c-98f7-4229eb1957fb	youtube	https://www.youtube.com/watch?v=EEd5tMgBkQA	Trailer | Prithibi Bodle Geche | Prottoy Heron | Mahima | Ajaira LTD | Bangla Natok 2026	https://i.ytimg.com/vi/EEd5tMgBkQA/maxresdefault.jpg	12	229235	13076	926	2026-05-07	f	4	2026-06-07 19:41:35.932772+00
+2c91c141-bb73-4d3c-b654-7967d51b4103	f1a4d39f-eb69-427c-98f7-4229eb1957fb	youtube	https://www.youtube.com/watch?v=NXXdBBpYSkY	ডেঞ্জেরাস দেশী ছিনতাইকারী | Bangla Funny Video | The Ajaira LTD | Prottoy Heron | New Natok	https://i.ytimg.com/vi/NXXdBBpYSkY/maxresdefault.jpg	12	926813	49845	4065	2025-03-13	f	5	2026-06-07 19:41:35.932772+00
+dfff5fe1-6800-4e6f-94ee-486759538822	70d4faed-1c19-4481-bc93-41c68f619f52	youtube	https://www.youtube.com/watch?v=pPW_jX2Oqos	ছোট মরিচের এত ঝাল !! #bachelorsfootball #kabila #shimulsharma #marzukrussell	https://i.ytimg.com/vi/pPW_jX2Oqos/maxresdefault.jpg	12	11275	176	2	2026-06-07	t	0	2026-06-07 19:41:55.128296+00
+552229a8-b908-41bb-9fe4-ee1b1dd2ac31	70d4faed-1c19-4481-bc93-41c68f619f52	youtube	https://www.youtube.com/watch?v=X06x9NIFeeA	নোয়াখালীর নেইমার এখন ঢকায় !! #bachelorsfootball #kabila #shimulsharma #marzukrussell	https://i.ytimg.com/vi/X06x9NIFeeA/maxresdefault.jpg	12	28918	694	2	2026-06-07	f	1	2026-06-07 19:41:55.128296+00
+e5c34c86-824f-459a-a3ec-d44eb217b6f2	70d4faed-1c19-4481-bc93-41c68f619f52	youtube	https://www.youtube.com/watch?v=3_NBPw4MWZY	Bachelor’s Football | Brazil vs Argentina 😆 | Episode 01	https://i.ytimg.com/vi/3_NBPw4MWZY/maxresdefault.jpg	12	233520	4580	137	2026-06-06	f	2	2026-06-07 19:41:55.128296+00
+61032561-a4f0-4fb6-ac98-657d91b247c9	70d4faed-1c19-4481-bc93-41c68f619f52	youtube	https://www.youtube.com/watch?v=wd4IDdm7cw4	খাটে এবং মাঠে দুই জায়গাই চ্যাম্পিয়ন !! #bachelorsfootball #kabila #shimulsharma #marzukrussell	https://i.ytimg.com/vi/wd4IDdm7cw4/maxresdefault.jpg	12	64716	1156	5	2026-06-06	f	3	2026-06-07 19:41:55.128296+00
+d7962535-236a-461e-bda5-146c1e463d5a	70d4faed-1c19-4481-bc93-41c68f619f52	youtube	https://www.youtube.com/watch?v=Bok6aSgDVPk	মুরব্বী থাকতে ছোটরা কেন ?? #bachelorsfootball #kabila #shimulsharma #marzukrussell	https://i.ytimg.com/vi/Bok6aSgDVPk/maxresdefault.jpg	12	40444	847	7	2026-06-06	f	4	2026-06-07 19:41:55.128296+00
+13daf597-e4c2-4de4-a9dd-aa5b7f8a73d7	70d4faed-1c19-4481-bc93-41c68f619f52	youtube	https://www.youtube.com/watch?v=2Zmkx_tw-C8	এ কেমন বেয়াদব !! #bachelorsfootball #kabila #shimulsharma #marzukrussell	https://i.ytimg.com/vi/2Zmkx_tw-C8/maxresdefault.jpg	12	46140	644	1	2026-06-05	f	5	2026-06-07 19:41:55.128296+00
+ba176723-4a3e-4fc4-84a2-4b623c0a32bf	d401eb80-d2b4-49ed-8fa1-3db159d000eb	youtube	https://www.youtube.com/watch?v=WUVIyASOsX8	May 13, 2025	https://i.ytimg.com/vi/WUVIyASOsX8/maxresdefault.jpg	1	4	1	0	2025-05-13	t	0	2026-06-07 19:42:01.774507+00
+52badf15-81ec-4728-a01e-2752c86f331a	ee47630d-81c0-4921-a625-c5e461f2080a	youtube	https://www.youtube.com/watch?v=EYm5tUFofhQ	এই ভিডিওটা দেখলে চোখের পানি চলে আসবে #sad #emotional #tawhidafridi	https://i.ytimg.com/vi/EYm5tUFofhQ/maxresdefault.jpg	19	1719087	93218	1460	2024-06-15	t	0	2026-06-07 19:42:03.121323+00
+c6dca304-1fd1-435c-98fa-d3784ed26f50	ee47630d-81c0-4921-a625-c5e461f2080a	youtube	https://www.youtube.com/watch?v=Kgau-bf4T4c	পাশের বাড়ির মাইয়া | Pasher Barir Maiya | Bangla Song | Tawhid Afridi | Cfu36 | Music Video	https://i.ytimg.com/vi/Kgau-bf4T4c/maxresdefault.jpg	19	9801750	205241	9114	2024-05-20	f	1	2026-06-07 19:42:03.121323+00
+b5034c03-9999-4c42-a4a7-6b633c558a36	ee47630d-81c0-4921-a625-c5e461f2080a	youtube	https://www.youtube.com/watch?v=iUjd0LlDS5w	দুলা ভাই ও আম্মুকে সারপ্রাইস দিলাম | Family Trip | Tawhid Afridi | Rahi | Cox's Bazar  | Vlog 115	https://i.ytimg.com/vi/iUjd0LlDS5w/maxresdefault.jpg	19	3899320	172853	12730	2024-05-09	f	2	2026-06-07 19:42:03.121323+00
+aabea9d3-7589-42bf-b62d-30b1b6313185	ee47630d-81c0-4921-a625-c5e461f2080a	youtube	https://www.youtube.com/watch?v=KkTXafUV75g	মায়ের কাছ থেকে চুরি করে ধরা খেলাম এবং জুতার মার খেলাম #comedy #tawhidafrid  #fun #family #funny	https://i.ytimg.com/vi/KkTXafUV75g/maxresdefault.jpg	19	3920524	104927	721	2024-05-01	f	3	2026-06-07 19:42:03.121323+00
+7bd622a4-9b60-422a-8b90-58d10c4cad07	ee47630d-81c0-4921-a625-c5e461f2080a	youtube	https://www.youtube.com/watch?v=8lMWjId_VlA	প্যারাসুটে আর জীবনেও উঠবো না 😰😨	https://i.ytimg.com/vi/8lMWjId_VlA/maxresdefault.jpg	19	232642	\N	240	2024-02-27	f	4	2026-06-07 19:42:03.121323+00
+00dccc72-02aa-4c15-830a-a7df96265f73	ee47630d-81c0-4921-a625-c5e461f2080a	youtube	https://www.youtube.com/watch?v=ipYZSOHmQdM	নেপালে প্যারাসুটে উঠে দুর্ঘটনা 😱 | Dhaka To Nepal | Tawhid Afridi | Kathmandu | Pokhara | Vlog 114	https://i.ytimg.com/vi/ipYZSOHmQdM/maxresdefault.jpg	19	1974157	110482	4319	2024-02-25	f	5	2026-06-07 19:42:03.121323+00
+663a104a-6fc4-4b5b-a062-7d1825ca729d	124a6af3-80b6-4d3e-813f-2feb41ae5139	youtube	https://www.youtube.com/watch?v=xlabHVVg1CQ	game play 🥵 short vaido	https://i.ytimg.com/vi/xlabHVVg1CQ/sddefault.jpg	19	3	2	0	2022-05-11	t	0	2026-06-07 19:42:25.173318+00
+4d3ae540-fa07-4f17-9247-4c50bcc4a984	124a6af3-80b6-4d3e-813f-2feb41ae5139	youtube	https://www.youtube.com/watch?v=MJnXXnYXt04	game play 🥵 short vaido	https://i.ytimg.com/vi/MJnXXnYXt04/maxresdefault.jpg	19	4	1	0	2022-05-10	f	1	2026-06-07 19:42:25.173318+00
+7baf2bbd-f51b-41a0-95d6-959ea0199633	124a6af3-80b6-4d3e-813f-2feb41ae5139	youtube	https://www.youtube.com/watch?v=ELoJsoq8VJQ	Tik tok top 10 amazing video comedy time😀😁😂😂😂🤣	https://i.ytimg.com/vi/ELoJsoq8VJQ/maxresdefault_live.jpg	19	0	0	0	2021-12-08	f	2	2026-06-07 19:42:25.173318+00
+c6b49471-ed42-4569-b339-1eb112cde0ca	124a6af3-80b6-4d3e-813f-2feb41ae5139	youtube	https://www.youtube.com/watch?v=WLHlRqX_UQQ	Tik tok top 10 amazing video comedy time😀😁😂😂😂🤣	https://i.ytimg.com/vi/WLHlRqX_UQQ/maxresdefault_live.jpg	19	0	0	0	2021-12-08	f	3	2026-06-07 19:42:25.173318+00
+5d8b2912-29a7-4776-a57c-e2d99fa22bb7	124a6af3-80b6-4d3e-813f-2feb41ae5139	youtube	https://www.youtube.com/watch?v=3BCqeHR2slU	pubg video	https://i.ytimg.com/vi/3BCqeHR2slU/maxresdefault.jpg	19	11	0	0	2021-01-01	f	4	2026-06-07 19:42:25.173318+00
+364f184b-a565-474d-a041-184579d94c37	124a6af3-80b6-4d3e-813f-2feb41ae5139	youtube	https://www.youtube.com/watch?v=x4Ml8XYi9Ds	Tik tok top 10 amazing video comedy time😀😁😂😂😂🤣	https://i.ytimg.com/vi/x4Ml8XYi9Ds/sddefault.jpg	19	73	30	5	2019-04-03	f	5	2026-06-07 19:42:25.173318+00
+cb8d91a1-ab9f-42fe-a5a7-e414a546f448	06ebd671-f79b-41e2-9f49-eb7a6430347e	youtube	https://www.youtube.com/watch?v=pv_4I97riMc	Sharing is caring Baby ❤️#love #father #baby	https://i.ytimg.com/vi/pv_4I97riMc/maxresdefault.jpg	8	274004	1962	0	2026-06-05	t	0	2026-06-07 19:42:26.690348+00
+2bdbce0c-245b-469b-a700-1912975618b4	06ebd671-f79b-41e2-9f49-eb7a6430347e	youtube	https://www.youtube.com/watch?v=DvVV-rz5Vdo	Little Baby Kindness ❤️ #care #love #baby	https://i.ytimg.com/vi/DvVV-rz5Vdo/maxresdefault.jpg	8	736275	4974	1	2026-06-03	f	1	2026-06-07 19:42:26.690348+00
+c1e51551-ee70-4146-b1a0-1dab72ecfe0e	06ebd671-f79b-41e2-9f49-eb7a6430347e	youtube	https://www.youtube.com/watch?v=zBbwwRj8rHA	Sharing is Caring ❤️	https://i.ytimg.com/vi/zBbwwRj8rHA/maxresdefault.jpg	8	336937	2938	3	2026-06-01	f	2	2026-06-07 19:42:26.690348+00
+8d3cc939-599b-4444-a7db-e98f320da429	06ebd671-f79b-41e2-9f49-eb7a6430347e	youtube	https://www.youtube.com/watch?v=FApqJEcWrsw	Back my Brother ❤️	https://i.ytimg.com/vi/FApqJEcWrsw/maxresdefault.jpg	8	523967	3418	0	2026-05-31	f	3	2026-06-07 19:42:26.690348+00
+adf7c787-d72b-48a7-899f-47d1d5e7d93f	06ebd671-f79b-41e2-9f49-eb7a6430347e	youtube	https://www.youtube.com/watch?v=5FxKltKNayI	Le Mosquito ‼️😳	https://i.ytimg.com/vi/5FxKltKNayI/maxresdefault.jpg	8	208400	2081	0	2026-05-30	f	4	2026-06-07 19:42:26.690348+00
+d2d91e9f-9636-4c27-b345-96facd4e8b56	06ebd671-f79b-41e2-9f49-eb7a6430347e	youtube	https://www.youtube.com/watch?v=uaRKwTKgf9A	Big Brother Confused 🤣‼️	https://i.ytimg.com/vi/uaRKwTKgf9A/maxresdefault.jpg	8	899223	6258	1	2026-05-28	f	5	2026-06-07 19:42:26.690348+00
+d37947af-07b8-49bd-bfbf-5755b7e0b668	a55751a8-7f75-472a-b660-fc89d4158622	youtube	https://www.youtube.com/watch?v=3S2-wdyBqdk	দেশী লেবুর শরবত 2 || Desi Lubur Sorbot 2 || Zan Zamin || Bangla Funny Video 2026	https://i.ytimg.com/vi/3S2-wdyBqdk/maxresdefault.jpg	19	587650	5063	411	2026-06-04	t	0	2026-06-07 19:42:30.333828+00
+e9244e13-6d07-4008-80e8-1d60ba3312ab	a55751a8-7f75-472a-b660-fc89d4158622	youtube	https://www.youtube.com/watch?v=D1zTCj3EyzU	বাঙালির কোরবানি ঈদ || Bangalir Qurbani Eid || Zan Zamin || Bangla Funny Video 2026	https://i.ytimg.com/vi/D1zTCj3EyzU/maxresdefault.jpg	19	1888674	11679	966	2026-05-27	f	1	2026-06-07 19:42:30.333828+00
+76184866-9985-4d0c-afb0-00ec20c19939	a55751a8-7f75-472a-b660-fc89d4158622	youtube	https://www.youtube.com/watch?v=6Is1RMFoIBw	দেশী গরুর দালাল || Desi Gorur Dalal || Zan Zamin || Bangla Funny Video 2026	https://i.ytimg.com/vi/6Is1RMFoIBw/maxresdefault.jpg	19	1268219	9288	621	2026-05-21	f	2	2026-06-07 19:42:30.333828+00
+f11a653d-786b-445b-9bd0-88cd3e7968dc	a55751a8-7f75-472a-b660-fc89d4158622	youtube	https://www.youtube.com/watch?v=itQQgS2kMoY	ফকিরের বংশ || Bangla Funny Video 2026 || Zan Zamin || Bangla Comedy Video	https://i.ytimg.com/vi/itQQgS2kMoY/maxresdefault.jpg	19	716806	4862	429	2026-05-14	f	3	2026-06-07 19:42:30.333828+00
+705a7bab-5a7a-4d31-976a-a2cf5c439a88	a55751a8-7f75-472a-b660-fc89d4158622	youtube	https://www.youtube.com/watch?v=oNFd8u16F60	কারেন্টের অত্যাচার || Bangla Funny Video 2026 || Zan Zamin || Bangla Comedy Video	https://i.ytimg.com/vi/oNFd8u16F60/maxresdefault.jpg	19	1528444	8770	490	2026-05-07	f	4	2026-06-07 19:42:30.333828+00
+2c3781ec-0c17-4f1f-b1b2-2c1227edd0f1	a55751a8-7f75-472a-b660-fc89d4158622	youtube	https://www.youtube.com/watch?v=Gd-CPrNl378	DJ তরমুজ বিক্রেতা || Bangla Funny Video 2026 || Zan Zamin || Bangla Comedy Video	https://i.ytimg.com/vi/Gd-CPrNl378/maxresdefault.jpg	19	1104990	5415	369	2026-04-30	f	5	2026-06-07 19:42:30.333828+00
+a00bb1bc-5b40-499a-b0d6-9c1a32b10eda	8d823b4f-81a4-4215-a245-68d4ce84dbc2	youtube	https://www.youtube.com/watch?v=BRmY0lJyWfg	BIMASAKTI চিমনি  থেকে লুট নিয়ে পুরো ম্যাচ খেলার চ্যালেঞ্জ 🤯 FREE FIRE CHIMNI LOOT CHALLENGE 😱	https://i.ytimg.com/vi/BRmY0lJyWfg/maxresdefault.jpg	2	20958	3341	490	2026-06-07	t	0	2026-06-07 19:42:47.257116+00
+8417decd-f7df-4a89-a39e-3fdc170f2074	8d823b4f-81a4-4215-a245-68d4ce84dbc2	youtube	https://www.youtube.com/watch?v=qr3pIdWb3nA	3 LAKH+ DIAMOND এক ভিডিওতে খরচ করার চ্যালেঞ্জ তাও এক GUN SKIN এ 🤯 BUYING BOOYAH PASS BADGES 😱	https://i.ytimg.com/vi/qr3pIdWb3nA/maxresdefault.jpg	2	181403	11342	873	2026-06-06	f	1	2026-06-07 19:42:47.257116+00
+ae030aba-cd7d-4202-9461-99de61ac1e30	8d823b4f-81a4-4215-a245-68d4ce84dbc2	youtube	https://www.youtube.com/watch?v=XA6SAnPjcJU	খরগোশ এর মাথা রেখে ভেড়ার মাথা নিলো TRIPLE R ? 🤯 RABBIT ❌ SHEEP ✅	https://i.ytimg.com/vi/XA6SAnPjcJU/maxresdefault.jpg	2	218725	10339	677	2026-06-05	f	2	2026-06-07 19:42:47.257116+00
+1aa21b35-6151-414f-8cc3-b271792e3634	8d823b4f-81a4-4215-a245-68d4ce84dbc2	youtube	https://www.youtube.com/watch?v=AgIshoSm6f4	NEW ADVANCE SERVER এর খুটি নাটি সকল কিছু এক ভিডিওতে 😍 FIFA WORLD CUP AND 9TH ANNIVERSARY SPECIAL 🤯	https://i.ytimg.com/vi/AgIshoSm6f4/maxresdefault.jpg	2	303248	13296	1016	2026-06-04	f	3	2026-06-07 19:42:47.257116+00
+e721c802-cb64-411c-a50f-f5c0c30f1311	8d823b4f-81a4-4215-a245-68d4ce84dbc2	youtube	https://www.youtube.com/watch?v=0o69F2IYDHk	FIFA WORLD CUP 2026 এর বান্ডিল দিয়ে দিয়েছে ফ্রি ফায়ারে 🤯 6M TOURNAMENT GRAND FINAL ANNOUNCEMENT 😱	https://i.ytimg.com/vi/0o69F2IYDHk/maxresdefault.jpg	2	388247	19687	2459	2026-06-03	f	4	2026-06-07 19:42:47.257116+00
+3e740dbb-b823-47ca-8046-e960f8ef949a	8d823b4f-81a4-4215-a245-68d4ce84dbc2	youtube	https://www.youtube.com/watch?v=rwctl9G9NPk	DEFAULT বাদ দিয়ে FULL CONTROL এ পুরো র‍্যাংক ম্যাচ খেলার ভয়ানক চ্যালেঞ্জ 🤯	https://i.ytimg.com/vi/rwctl9G9NPk/maxresdefault.jpg	2	250368	12355	1035	2026-06-02	f	5	2026-06-07 19:42:47.257116+00
+0fc911d4-51fb-4f55-97a5-81af567e1c6d	7bd7f363-5ead-45f6-9a82-0c9e5e6f0663	youtube	https://www.youtube.com/watch?v=SL_zLZ-Y0BM	Epic Fake Tiger Sighting Prank Goes Too Far! 😱🐯 Hilarious Reactions	https://i.ytimg.com/vi/SL_zLZ-Y0BM/maxresdefault.jpg	19	42247	450	2	2026-06-07	t	0	2026-06-07 19:43:04.838779+00
+967f0e22-0a46-4707-8876-da9321f18c8b	7bd7f363-5ead-45f6-9a82-0c9e5e6f0663	youtube	https://www.youtube.com/watch?v=2NxtrnG3bUg	Best King Cobra Prank Ever on Grandpa! Hilarious Reaction! 🤣🐍	https://i.ytimg.com/vi/2NxtrnG3bUg/maxresdefault.jpg	19	368810	2320	4	2026-06-05	f	1	2026-06-07 19:43:04.838779+00
+3b499dd2-bed8-4373-b984-7caf953a0797	7bd7f363-5ead-45f6-9a82-0c9e5e6f0663	youtube	https://www.youtube.com/watch?v=5DlAjR8Euo0	🐯😂 Funniest Fake Tiger Sighting in Water Prank on Grandpa! Epic Reaction! 😱	https://i.ytimg.com/vi/5DlAjR8Euo0/maxresdefault.jpg	19	36377	285	5	2026-06-04	f	2	2026-06-07 19:43:04.838779+00
+4e2d77b9-4610-4bf4-ab65-c464ace08eb0	7bd7f363-5ead-45f6-9a82-0c9e5e6f0663	youtube	https://www.youtube.com/watch?v=ZhKP7iHj-5E	Ultimate Fake Tiger Sighting Prank on Resting Grandpa! 🐯😱 Hilarious Reaction! 😂	https://i.ytimg.com/vi/ZhKP7iHj-5E/maxresdefault.jpg	19	37858	319	4	2026-06-03	f	3	2026-06-07 19:43:04.838779+00
+62be1d9f-12a6-4271-a7b3-46c27310c0f4	7bd7f363-5ead-45f6-9a82-0c9e5e6f0663	youtube	https://www.youtube.com/watch?v=CcDZUkNJG3E	King Cobra Water Prank on Soap Grandpa! 🐍😂 Funniest Reaction Ever!	https://i.ytimg.com/vi/CcDZUkNJG3E/maxresdefault.jpg	19	3936302	16459	14	2026-06-02	f	4	2026-06-07 19:43:04.838779+00
+6ec3d942-2362-4744-b7ad-88b8ca0afa28	7bd7f363-5ead-45f6-9a82-0c9e5e6f0663	youtube	https://www.youtube.com/watch?v=ONXnAp70mPQ	🐯😂 Ultimate Fake Tiger Sighting Prank on Sleeping Grandpa! Funniest Reaction Ever!	https://i.ytimg.com/vi/ONXnAp70mPQ/maxresdefault.jpg	19	70488	648	0	2026-06-01	f	5	2026-06-07 19:43:04.838779+00
+96d4b30a-e3a5-4455-bbbd-d494fcad6393	402e84bc-ea89-4151-bd85-c3705aa44c62	youtube	https://www.youtube.com/watch?v=o-nfJVMLztM	টাকা আয় করো, কিন্তু শেষে কিছুই থাকে না কেন? 👀	https://i.ytimg.com/vi/o-nfJVMLztM/maxresdefault.jpg	8	3002	119	25	2026-05-19	f	3	2026-06-07 19:43:18.008659+00
+9dcea323-d360-4da0-9bde-b5f9d4533d1a	402e84bc-ea89-4151-bd85-c3705aa44c62	youtube	https://www.youtube.com/watch?v=hSQV_949Exw	কোন team এর mannequin challenge সবচেয়ে best ছিল, 10 Minute School English Centre-এ? 🧊🔥	https://i.ytimg.com/vi/hSQV_949Exw/maxresdefault.jpg	8	4134	47	1	2026-05-17	f	4	2026-06-07 19:43:18.008659+00
+5bf4e888-4122-4430-a067-e228f4e30546	402e84bc-ea89-4151-bd85-c3705aa44c62	youtube	https://www.youtube.com/watch?v=-h9zma-0PpE	ক্লাস ৭-এ পড়া প্রিয়ন্তরা এই fire brigade বানিয়ে ফেলল, এটা কি সত্যিই বাংলাদেশের সব বাসায় কাজ করবে?	https://i.ytimg.com/vi/-h9zma-0PpE/maxresdefault.jpg	8	4268	45	0	2026-05-14	f	5	2026-06-07 19:43:18.008659+00
+b433c6c6-67c5-475f-bfa4-e58570344c96	e81ece61-8eef-4679-9f4c-3df3f93c9397	youtube	https://www.youtube.com/watch?v=AQieU7UZvMg	কৃষকের ঈদ আনন্দ ২০২৬ | Krishoker Eid Ananda | Shykh Seraj | Channel i | Eid ul Adha | ঈদুল আজহা |	https://i.ytimg.com/vi/AQieU7UZvMg/maxresdefault.jpg	7	789232	9082	383	2026-05-29	t	0	2026-06-07 19:43:53.68621+00
+f198d436-7147-4abe-9762-cbe21df6fee6	e81ece61-8eef-4679-9f4c-3df3f93c9397	youtube	https://www.youtube.com/watch?v=-DWscuc4e5I	বিশ্বে কোরবানির সবচেয়ে বড় অর্থনীতি বাংলাদেশে! |কৃষকের ভাগ্য বদলাচ্ছে কি? Shykh Seraj | Channel i |	https://i.ytimg.com/vi/-DWscuc4e5I/maxresdefault.jpg	7	11838	383	25	2026-05-23	f	1	2026-06-07 19:43:53.68621+00
+a9a735cb-2518-4c7d-acd0-cfb5bc155a1f	e81ece61-8eef-4679-9f4c-3df3f93c9397	youtube	https://www.youtube.com/watch?v=FaO5Ppfj-rk	আব্দুন নূর তুষারের বাবার হাতে গড়া ছাদকৃষি! মিরপুরের 'গাছবাড়ি' | ছাদকৃষি পর্ব: ৩৭৪ | Shykh Seraj |	https://i.ytimg.com/vi/FaO5Ppfj-rk/maxresdefault.jpg	7	224296	2906	226	2026-05-21	f	2	2026-06-07 19:43:53.68621+00
+d71c61b2-0bdd-4d60-ac93-e26ea4bd7979	e81ece61-8eef-4679-9f4c-3df3f93c9397	youtube	https://www.youtube.com/watch?v=qp_ibEF0Pmw	বাংলাদেশে রঙিন মাছে বিলিয়ন ডলারের সম্ভাবনা! হাবিব রেজার ৩২ বছরের সাফল্যের গল্প | Shykh Seraj |	https://i.ytimg.com/vi/qp_ibEF0Pmw/maxresdefault.jpg	7	58729	1193	54	2026-05-17	f	3	2026-06-07 19:43:53.68621+00
+49abcd93-bc8f-4a32-b20b-d8076d2fb09c	e81ece61-8eef-4679-9f4c-3df3f93c9397	youtube	https://www.youtube.com/watch?v=uTff70XODlA	মিরপুরে ৪ পরিবারের সমন্বিত ছাদকৃষির অসাধারণ গল্প | ছাদকৃষি পর্ব: ৩৭৪ | Shykh Seraj | Channel i |	https://i.ytimg.com/vi/uTff70XODlA/maxresdefault.jpg	7	20851	224	14	2026-05-17	f	4	2026-06-07 19:43:53.68621+00
+94958c03-3343-40c9-a88b-e82251620214	e81ece61-8eef-4679-9f4c-3df3f93c9397	youtube	https://www.youtube.com/watch?v=6Y95N_k7QIA	মিরপুরে ছাদে কবুতর, বিদেশি মুরগি, রঙিন মাছ,  ও খরগোশের খামার | Shykh Seraj | Channel i |	https://i.ytimg.com/vi/6Y95N_k7QIA/maxresdefault.jpg	7	57581	1218	39	2026-05-09	f	5	2026-06-07 19:43:53.68621+00
+458ff82a-e7a3-4369-a0bd-3bf2955dfc87	dfe87fc4-207a-4ddf-8252-9885cc4eae50	youtube	https://www.youtube.com/watch?v=HdMYGc54OfI	প্রতিবেশীরা তাকে নিয়ে হাসাহাসি করতো ! কিন্তু কে জানত, শেষমেষ পাগলামিটাই...	https://i.ytimg.com/vi/HdMYGc54OfI/maxresdefault.jpg	12	292639	5076	106	2026-05-22	t	0	2026-06-07 19:44:41.420051+00
+77fda0b1-1c1f-4563-84f7-59d31de46221	dfe87fc4-207a-4ddf-8252-9885cc4eae50	youtube	https://www.youtube.com/watch?v=Y2u07p4pLQM	এত নিচে মানুষ কিভাবে নামে ? স্বয়ং শয়তান ও এদের দেখে লজ্জা পাবে !	https://i.ytimg.com/vi/Y2u07p4pLQM/maxresdefault.jpg	12	152148	3926	122	2026-05-19	f	1	2026-06-07 19:44:41.420051+00
+1720bfc5-01f3-453f-8b72-96a4613fcf9d	dfe87fc4-207a-4ddf-8252-9885cc4eae50	youtube	https://www.youtube.com/watch?v=ZqLAyozuMPI	সুপারহিরো সম্ভবত এদেরকেই বলে ! আজও পৃথিবীতে ভালো মানুষ আছে !	https://i.ytimg.com/vi/ZqLAyozuMPI/maxresdefault.jpg	12	82326	2725	65	2026-05-16	f	2	2026-06-07 19:44:41.420051+00
+ea7a8005-d577-4b56-835c-1788d0112cd7	dfe87fc4-207a-4ddf-8252-9885cc4eae50	youtube	https://www.youtube.com/watch?v=NrlZdFlqeuo	লোকটা আস্ত একটা পাহাড়ই কিনে ফেলে ভেতরে বাড়ী বানানোর জন্য !	https://i.ytimg.com/vi/NrlZdFlqeuo/maxresdefault.jpg	12	272182	4614	117	2026-05-12	f	3	2026-06-07 19:44:41.420051+00
+6ec9b438-8eca-4e43-a73c-f674d3b2364d	dfe87fc4-207a-4ddf-8252-9885cc4eae50	youtube	https://www.youtube.com/watch?v=N4Io48482is	বিজ্ঞান ও এদের ব্যাখ্যা ঠিকমতো দিতে পারে না! এলিয়েন ও স্বাভাবিক মনে হবে এদের দেখলে ! 	https://i.ytimg.com/vi/N4Io48482is/maxresdefault.jpg	12	109270	3310	86	2026-04-28	f	4	2026-06-07 19:44:41.420051+00
+adc3f5bc-a7bb-4ee2-a2d8-676b00d1649a	dfe87fc4-207a-4ddf-8252-9885cc4eae50	youtube	https://www.youtube.com/watch?v=42lLugNhpcc	মিডিয়াতে আসতে দেয়া হয়না ইরানের যে রুপ ! এশিয়ার লুকানো রত্ন!	https://i.ytimg.com/vi/42lLugNhpcc/maxresdefault.jpg	12	492336	8311	268	2026-04-26	f	5	2026-06-07 19:44:41.420051+00
+b7318851-5830-4238-b1ef-3f6db1405e07	cdcaf960-a659-45b9-a53f-4255717ab2e8	youtube	https://www.youtube.com/watch?v=QPMtcMG8Pls	Best wall decoration 👌 || Paper board wall hanging || Clay art	https://i.ytimg.com/vi/QPMtcMG8Pls/maxresdefault.jpg	7	17279	851	37	2026-05-30	t	0	2026-06-07 19:44:57.277696+00
+630ae553-22f6-48e1-a71c-8bb54c9a3262	cdcaf960-a659-45b9-a53f-4255717ab2e8	youtube	https://www.youtube.com/watch?v=GCvc3MJ9Xro	How to make Fruit bowl || Gypsum (POP) Fruit plate making	https://i.ytimg.com/vi/GCvc3MJ9Xro/maxresdefault.jpg	7	6183	319	37	2026-05-24	f	1	2026-06-07 19:44:57.277696+00
+36a7f431-7e18-40cf-b931-8dd37378f80e	cdcaf960-a659-45b9-a53f-4255717ab2e8	youtube	https://www.youtube.com/watch?v=atHysRjgOQ0	রেজিনের তৈরি ওয়াল হ্যাংগিং হেবি টেকসই কালার গ্যারান্টি । প্রাইজ ৪৮০ টাকা	https://i.ytimg.com/vi/atHysRjgOQ0/maxresdefault.jpg	7	3696	76	7	2026-05-23	f	2	2026-06-07 19:44:57.277696+00
+6fe5e179-9c66-48a4-bc45-f49cdb6d8914	cdcaf960-a659-45b9-a53f-4255717ab2e8	youtube	https://www.youtube.com/watch?v=MNtgliYw1gg	Big Size Corner Flower vase making || Cement flower vase || Paper flower vase making	https://i.ytimg.com/vi/MNtgliYw1gg/maxresdefault.jpg	7	11674	441	32	2026-05-20	f	3	2026-06-07 19:44:57.277696+00
+ab58bc55-94bb-4db4-a2f4-38806a0c0e54	cdcaf960-a659-45b9-a53f-4255717ab2e8	youtube	https://www.youtube.com/watch?v=XMty7EdnGxs	How to make DIY Fruit bowl || Gypsum (POP) Fruit plate making	https://i.ytimg.com/vi/XMty7EdnGxs/maxresdefault.jpg	7	8278	263	25	2026-05-13	f	4	2026-06-07 19:44:57.277696+00
+284ea745-59c0-4deb-a732-6a37a94e8b61	cdcaf960-a659-45b9-a53f-4255717ab2e8	youtube	https://www.youtube.com/watch?v=NpOIliR-dQ0	Make beautiful watermelon fruit plates || Gypsum craft at home	https://i.ytimg.com/vi/NpOIliR-dQ0/maxresdefault.jpg	7	5264	249	32	2026-05-09	f	5	2026-06-07 19:44:57.277696+00
+8634ef63-a241-4490-8e1e-3c93d37f6637	8696151a-53f5-4734-9085-ecb8f8246f01	youtube	https://www.youtube.com/watch?v=_dnZBHuaWf8	ড. মুজাফফর বিন মহসিন এর মাদ্রাসা | ডঃ লোকমান হোসেন |  আব্দুন নূর মাদানী | Dr Mujaffor bin Mohsin	https://i.ytimg.com/vi/_dnZBHuaWf8/maxresdefault_live.jpg	8	0	0	0	2026-06-07	t	0	2026-06-07 19:45:22.740134+00
+45975f06-7d23-4a92-a58d-8cc618a0a25b	f3721816-01b6-4194-bf8c-c20e10a31fa4	youtube	https://www.youtube.com/watch?v=eOwt9F3xHvc	100% incredible saves 🤯	https://i.ytimg.com/vi/eOwt9F3xHvc/maxresdefault.jpg	12	35122	664	6	2026-04-24	f	5	2026-06-07 19:47:58.276914+00
+d3ad6015-dac3-4312-92b9-9f0e824f6e8f	8696151a-53f5-4734-9085-ecb8f8246f01	youtube	https://www.youtube.com/watch?v=eqq-7rqTGe8	ড. মুজাফফর বিন মহসিন এর মাদ্রাসা | ডঃ লোকমান হোসেন |  আব্দুন নূর মাদানী | Dr Mujaffor bin Mohsin	https://i.ytimg.com/vi/eqq-7rqTGe8/maxresdefault_live.jpg	8	951	18	0	2026-06-06	f	1	2026-06-07 19:45:22.740134+00
+cd9d6218-631c-4472-9895-e1bf8da55672	8696151a-53f5-4734-9085-ecb8f8246f01	youtube	https://www.youtube.com/watch?v=Xdiyi5T79UA	কাজের মেয়েকে । আব্দুর রাজ্জাক বিন ইউসুফ । Abdur Razzak Bin Yousuf	https://i.ytimg.com/vi/Xdiyi5T79UA/maxresdefault.jpg	8	1532	67	1	2026-06-07	f	2	2026-06-07 19:45:22.740134+00
+1acd887d-4085-4eb0-b52d-aa908d442031	8696151a-53f5-4734-9085-ecb8f8246f01	youtube	https://www.youtube.com/watch?v=fLNWSIs-63o	হামদান কাসিরান ত্বয়্যিবান মুবারাকান ফি । আব্দুর রাজ্জাক বিন ইউসুফ । Abdur Razzak Bin Yousuf	https://i.ytimg.com/vi/fLNWSIs-63o/maxresdefault.jpg	8	364	10	0	2026-06-07	f	3	2026-06-07 19:45:22.740134+00
+cb750838-8fb4-4280-ae89-8757d4b5de62	8696151a-53f5-4734-9085-ecb8f8246f01	youtube	https://www.youtube.com/watch?v=BpEH6mJutBc	বাশার বিন হায়াত আলী | আব্দুস সামাদ মাদানী | আব্দুস সামাদ মাদানী | আব্দুল মালেক আহমাদ মাদানী	https://i.ytimg.com/vi/BpEH6mJutBc/maxresdefault.jpg	8	10547	61	0	2026-06-07	f	4	2026-06-07 19:45:22.740134+00
+748e4dcc-e122-4cf9-965c-e5c846e8b9e9	8696151a-53f5-4734-9085-ecb8f8246f01	youtube	https://www.youtube.com/watch?v=s7hacsQgmQA	আলহামদুলিল্লাহ আলা কুল্লি হাল কখন বলতে হয় ? ড. আবু বকর জাকারিয়া | Dr Abu Bakar Muhammad Zakaria	https://i.ytimg.com/vi/s7hacsQgmQA/maxresdefault.jpg	8	278	16	0	2026-06-07	f	5	2026-06-07 19:45:22.740134+00
+68abb6ef-fa8d-4359-a4ba-4defad35469c	e80894b5-faba-4bc3-8c4a-f047cea47924	youtube	https://www.youtube.com/watch?v=LFkNbZcv1Ag	how to draw beer step by step	https://i.ytimg.com/vi/LFkNbZcv1Ag/maxresdefault.jpg	7	26189	402	16	2026-03-10	t	0	2026-06-07 19:45:47.802522+00
+851e8d23-1713-46d9-917a-869caf3e5015	e80894b5-faba-4bc3-8c4a-f047cea47924	youtube	https://www.youtube.com/watch?v=ZiYQo3hZCU0	how to draw dog	https://i.ytimg.com/vi/ZiYQo3hZCU0/maxresdefault.jpg	7	22130	181	4	2026-03-10	f	1	2026-06-07 19:45:47.802522+00
+104ac88e-a391-4435-ba06-a07fd867d4a2	e80894b5-faba-4bc3-8c4a-f047cea47924	youtube	https://www.youtube.com/watch?v=9_ngb_XRfEE	how to draw dinosaur step by step for beginners	https://i.ytimg.com/vi/9_ngb_XRfEE/maxresdefault.jpg	7	23122	191	7	2026-03-09	f	2	2026-06-07 19:45:47.802522+00
+0dd921dd-ffcd-4ee0-8a03-8ac466d9481f	e80894b5-faba-4bc3-8c4a-f047cea47924	youtube	https://www.youtube.com/watch?v=lsi1sM_cZ3Q	how to draw elephant with pencil	https://i.ytimg.com/vi/lsi1sM_cZ3Q/maxresdefault.jpg	7	15895	231	3	2026-03-09	f	3	2026-06-07 19:45:47.802522+00
+3734a82f-9f98-4223-b722-e6ee433df2e2	e80894b5-faba-4bc3-8c4a-f047cea47924	youtube	https://www.youtube.com/watch?v=RDibXhXMzLE	how to draw boy with cap	https://i.ytimg.com/vi/RDibXhXMzLE/maxresdefault.jpg	7	13644	180	\N	2026-03-08	f	4	2026-06-07 19:45:47.802522+00
+fc70996e-2a1b-495f-94fb-c3ea643241ee	e80894b5-faba-4bc3-8c4a-f047cea47924	youtube	https://www.youtube.com/watch?v=faJ7YLt-WDE	how to draw cute Princess step by step	https://i.ytimg.com/vi/faJ7YLt-WDE/maxresdefault.jpg	7	16191	192	13	2026-03-07	f	5	2026-06-07 19:45:47.802522+00
+672fb56c-5e3c-40ae-aaf9-2cfc6fcf393b	0ee9f78b-8c67-4fb4-a977-1e0c571a617e	youtube	https://www.youtube.com/watch?v=4IZ_JK4pF20	আইনজীবীর মুখে কোরআনের আলোচনা অবাক এনসিপির নেতারা ব্যারিস্টার নাজিবুর রহমান মোমেন	https://i.ytimg.com/vi/4IZ_JK4pF20/maxresdefault.jpg	8	2783	128	12	2026-06-07	t	0	2026-06-07 19:45:52.697652+00
+5f489e5e-1268-4bef-903a-3bad9efebacc	0ee9f78b-8c67-4fb4-a977-1e0c571a617e	youtube	https://www.youtube.com/watch?v=hi0JRiyDo1o	পাশের ঘরেই মায়ের মৃত্যু ৭দিনেও জানলো না সন্তান সাদিকুর রহমান আজহারী Sadikur Rahman Azhari New Waz	https://i.ytimg.com/vi/hi0JRiyDo1o/maxresdefault.jpg	8	1482	46	1	2026-06-07	f	1	2026-06-07 19:45:52.697652+00
+887378e8-85f2-4c88-bbd0-faca3be40aa3	0ee9f78b-8c67-4fb4-a977-1e0c571a617e	youtube	https://www.youtube.com/watch?v=iVzSbUa40eg	সূরা ফুরকান এর তেলাওয়াত ক্বারী আবু রায়হান Surah Furqan Abu Rayhan	https://i.ytimg.com/vi/iVzSbUa40eg/maxresdefault.jpg	8	1102	37	1	2026-06-06	f	2	2026-06-07 19:45:52.697652+00
+8bd1a502-2fe1-473f-ab1e-e6e20deea08e	0ee9f78b-8c67-4fb4-a977-1e0c571a617e	youtube	https://www.youtube.com/watch?v=ygnMiT7av84	আদম আঃ এর আগে পৃথিবীতে কি ছিলো আবুল কালাম আজাদ বাশার Mufti Abul Kalam Azad	https://i.ytimg.com/vi/ygnMiT7av84/maxresdefault.jpg	8	943	20	1	2026-06-06	f	3	2026-06-07 19:45:52.697652+00
+b4be7729-c3af-4122-aa78-cb87661cd77d	0ee9f78b-8c67-4fb4-a977-1e0c571a617e	youtube	https://www.youtube.com/watch?v=D9hcdHDJnq4	বিএনপি সরকার দেশ নিয়ে ভয়ংকর ষড়যন্ত্র করছে ব্যারিস্টার ফুয়াদ Barrister Fuaad	https://i.ytimg.com/vi/D9hcdHDJnq4/maxresdefault.jpg	8	16434	643	83	2026-06-06	f	4	2026-06-07 19:45:52.697652+00
+c72ab97a-1218-40c7-85a4-e2e00da2fd77	0ee9f78b-8c67-4fb4-a977-1e0c571a617e	youtube	https://www.youtube.com/watch?v=ZsgY-k8_-JM	অর্থমন্ত্রীর বক্তব্যের ১৮০ডিগ্রি বিপরীতমুখী জবাব দিলেন সারোয়ার তুষার Sarwar Tusher NCP	https://i.ytimg.com/vi/ZsgY-k8_-JM/maxresdefault.jpg	8	10838	344	47	2026-06-06	f	5	2026-06-07 19:45:52.697652+00
+bb024ef6-fdeb-4d24-bf30-44af0faf6dfe	65b00a73-b334-4571-8dbf-ace2a42a581f	youtube	https://www.youtube.com/watch?v=1QOtIHrCCA0	কেউ একজন থাকুক। সালমান হাবীব।রফিকুল ইসলাম। কবিতা আবৃত্তি	https://i.ytimg.com/vi/1QOtIHrCCA0/maxresdefault.jpg	8	83	\N	3	2024-05-13	t	0	2026-06-07 19:46:30.831568+00
+653bb9e6-e58e-4447-a860-2ff5ba1f6b7b	65b00a73-b334-4571-8dbf-ace2a42a581f	youtube	https://www.youtube.com/watch?v=5SWzv_m6hyI	কোরআন তেলাওয়াত, মোঃ আমির হামজাহ,,পশ্চিম শহিদ নগর নূরাণী মাদ্রাসা লালবাগ ঢাকা।	https://i.ytimg.com/vi/5SWzv_m6hyI/maxresdefault.jpg	8	88	\N	\N	2024-03-14	f	1	2026-06-07 19:46:30.831568+00
+43c4e477-e627-41a9-ba58-f4eb8f1327b3	65b00a73-b334-4571-8dbf-ace2a42a581f	youtube	https://www.youtube.com/watch?v=RmxxJx8Z6Gw	ইংরেজীতে স্পোকিং।পশ্চিম শহিদ নগর নূরাণী মাদ্রাসা লালবাগ,ঢাকা এর ছাত্র।মোঃ ইব্রাহীম ও মোঃ জুবায়ের	https://i.ytimg.com/vi/RmxxJx8Z6Gw/maxresdefault.jpg	8	251	11	0	2023-04-02	f	2	2026-06-07 19:46:30.831568+00
+d622c88b-b07b-4b19-93c4-3151ef949934	65b00a73-b334-4571-8dbf-ace2a42a581f	youtube	https://www.youtube.com/watch?v=GOOSewWceSQ	হাফেজ মোঃ সানিম আহমাদ এর কন্ঠে কোরআন তেলাওয়াত। পশ্চিম শহীদ নগর নূরাণী মাদ্রাসা লালবাগ ঢাকা।	https://i.ytimg.com/vi/GOOSewWceSQ/maxresdefault.jpg	8	62	1	2	2023-03-30	f	3	2026-06-07 19:46:30.831568+00
+dcb07644-a51d-4a3a-a728-53062fd5ce74	65b00a73-b334-4571-8dbf-ace2a42a581f	youtube	https://www.youtube.com/watch?v=LQ8EuRI82aY	বাংলাদেশ বেতারের সুরে কোরআন তেলাওয়াত। মুফতী ফেরদাউস আল আজাদ। তেলাওয়াত২৩	https://i.ytimg.com/vi/LQ8EuRI82aY/maxresdefault.jpg	8	73	1	0	2023-03-29	f	4	2026-06-07 19:46:30.831568+00
+87e0f5d4-5576-422e-af48-dfd7b472e3b6	9a5569db-64a0-4a1a-a58d-cc5a1a5abd67	youtube	https://www.youtube.com/watch?v=1_wYOtPOLGc	ট্রাক চালানো অনেক কষ্ট	https://i.ytimg.com/vi/1_wYOtPOLGc/maxresdefault.jpg	12	62494	927	15	2026-05-02	f	1	2026-06-07 19:50:01.344918+00
+0ec120b2-a719-4245-b62d-c3b3bc56e7c8	65b00a73-b334-4571-8dbf-ace2a42a581f	youtube	https://www.youtube.com/watch?v=WN6rvnzFK00	দুবাই আন্তর্জাতিক হিফজুল কুরআন প্রতিযোগিতা২০২৩ইং তেলাওয়াত করছেন সালেহ আহমাদ তাকরীম।	https://i.ytimg.com/vi/WN6rvnzFK00/maxresdefault.jpg	8	31	1	0	2023-03-28	f	5	2026-06-07 19:46:30.831568+00
+918004b2-f3bf-43d7-bba2-eade1650ec60	1c494a0b-d1c1-4492-968a-b67391d7f271	youtube	https://www.youtube.com/watch?v=5Iug3h-xjuA	READY TO ROAR! 🔥 Just One Day to Go | Bangladesh vs Australia ODI Series Begins 9 June	https://i.ytimg.com/vi/5Iug3h-xjuA/maxresdefault.jpg	\N	628	43	1	2026-06-07	t	0	2026-06-07 19:47:10.819466+00
+1eaec0b3-5745-4f73-8704-a8421cd26f41	1c494a0b-d1c1-4492-968a-b67391d7f271	youtube	https://www.youtube.com/watch?v=s1Aaux1M_6A	New Journey, New Jersey | Bangladesh Women’s #T20WorldCup 2026 Kit Reveal.	https://i.ytimg.com/vi/s1Aaux1M_6A/maxresdefault.jpg	\N	1410	54	3	2026-06-07	f	1	2026-06-07 19:47:10.819466+00
+ee6ac593-75c2-441f-b222-3d99195a4caf	1c494a0b-d1c1-4492-968a-b67391d7f271	youtube	https://www.youtube.com/watch?v=Hd3fS0JI7DM	The Reason Why Sayeed Ibrahim Prefers Teaching 🎓🏏	https://i.ytimg.com/vi/Hd3fS0JI7DM/maxresdefault.jpg	\N	973	18	2	2026-06-07	f	2	2026-06-07 19:47:10.819466+00
+dce4ae32-3cf7-43ad-9aee-af8f111ea329	1c494a0b-d1c1-4492-968a-b67391d7f271	youtube	https://www.youtube.com/watch?v=TdIVx1eAEDs	Locked in. 🎯 The Fizz in action. 🏏 #BCB #Bangladesh #Cricket #MustafizurRahman #Tigers #Fizz	https://i.ytimg.com/vi/TdIVx1eAEDs/maxresdefault.jpg	\N	1715	95	3	2026-06-07	f	3	2026-06-07 19:47:10.819466+00
+dd7d8665-bcd9-441d-8d26-d7f1ac992386	1c494a0b-d1c1-4492-968a-b67391d7f271	youtube	https://www.youtube.com/watch?v=8N4KhOzgNts	Tigers Gear Up for Australia ODI Series | Bangladesh Team Practice	https://i.ytimg.com/vi/8N4KhOzgNts/maxresdefault.jpg	\N	3164	293	16	2026-06-07	f	4	2026-06-07 19:47:10.819466+00
+989d631c-99a8-4d5c-86f0-84979a85c3ed	1c494a0b-d1c1-4492-968a-b67391d7f271	youtube	https://www.youtube.com/watch?v=xkr-5tT0dD4	1st One-Day | Bangladesh Emerging VS Zimbabwe A | 8 June 2026, SCS, Bogura | LIVE	https://i.ytimg.com/vi/xkr-5tT0dD4/maxresdefault_live.jpg	\N	0	33	0	2026-06-07	f	5	2026-06-07 19:47:10.819466+00
+c73e9f08-483e-4ad3-bcd2-5df331358fab	256108ed-3a83-4dfa-8e94-075938f15d08	youtube	https://www.youtube.com/watch?v=E_p1FWMaaoc	মার্কিন-ইসরাইল হামলায় বিপর্যস্ত ইরানের পর্যটন খাত | Somoy Sports	https://i.ytimg.com/vi/E_p1FWMaaoc/maxresdefault.jpg	\N	16	1	0	2026-06-07	t	0	2026-06-07 19:47:26.551686+00
+ef69e613-1b0f-47e6-ad91-4f530eda6645	256108ed-3a83-4dfa-8e94-075938f15d08	youtube	https://www.youtube.com/watch?v=NPKwdvCZzI0	বিশ্বকাপে চ্যাম্পিয়ন হবে কারা? প্রেডিকশন কী বলে? #fifaworldcup2026 #fifaworldcup #worldcup2026	https://i.ytimg.com/vi/NPKwdvCZzI0/maxresdefault.jpg	\N	145	0	0	2026-06-07	f	1	2026-06-07 19:47:26.551686+00
+7a6f353f-280d-4aa4-8c80-0ae4f5a2bda1	256108ed-3a83-4dfa-8e94-075938f15d08	youtube	https://www.youtube.com/watch?v=AHVUl6fFgiY	বিশ্বকাপে আর্জেন্টিনা ও ব্রাজিলের ম্যাচ কবে, কখন? #argentina #brazil #fifaworldcup #fifaworldcup2026	https://i.ytimg.com/vi/AHVUl6fFgiY/maxresdefault.jpg	\N	117	1	0	2026-06-07	f	2	2026-06-07 19:47:26.551686+00
+e82483c1-d341-4b92-baa8-485382e75d0a	256108ed-3a83-4dfa-8e94-075938f15d08	youtube	https://www.youtube.com/watch?v=JgjpojmSovw	ঐতিহাসিক এক ফুটবল মহাযুদ্ধের সাক্ষী হতে যাচ্ছে বিশ্ব | Fifa World Cup | Somoy Sports	https://i.ytimg.com/vi/JgjpojmSovw/maxresdefault.jpg	\N	220	18	2	2026-06-07	f	3	2026-06-07 19:47:26.551686+00
+08f690d2-aa39-4788-8f8f-db68790bb4fc	256108ed-3a83-4dfa-8e94-075938f15d08	youtube	https://www.youtube.com/watch?v=WHd6FnJfAmg	পবিত্র কোরআন ছুঁয়ে ওয়ার্ল্ড কাপ মিশনে ইরান ফুটবল দল | Iran Football Team | World Cup | Holy Quran	https://i.ytimg.com/vi/WHd6FnJfAmg/maxresdefault.jpg	\N	244	43	6	2026-06-07	f	4	2026-06-07 19:47:26.551686+00
+58495a79-0f83-488a-8107-5e4b42f497fe	256108ed-3a83-4dfa-8e94-075938f15d08	youtube	https://www.youtube.com/watch?v=cGyq6H6Gro0	বিশ্বকাপের শেষ প্রস্তুতিতে স্লোভেনিয়ার মুখোমুখি ক্রোয়েশিয়া | FIFA | Croatia vs Slovenia | Italy	https://i.ytimg.com/vi/cGyq6H6Gro0/maxresdefault.jpg	\N	1174	66	1	2026-06-07	f	5	2026-06-07 19:47:26.551686+00
+3175b403-a9c4-4434-a723-ef6fa5ce1184	04de1faa-1765-4a12-99f8-caf903567f21	youtube	https://www.youtube.com/watch?v=K6q6i0h0IHA	ট্রাভিস হেডকে যে কৌশলে আউট করে প্রতিপক্ষ৷ যদিও হেড খেলবেন না বলেই শোনা যাচ্ছে  || On Field 2026	https://i.ytimg.com/vi/K6q6i0h0IHA/maxresdefault.jpg	\N	8854	858	60	2026-06-07	t	0	2026-06-07 19:47:57.15661+00
+47132fe2-6295-46d6-8428-a9c83d0389f1	04de1faa-1765-4a12-99f8-caf903567f21	youtube	https://www.youtube.com/watch?v=WmH8c8MO9QI	ভালো পিচ হলে নাহিদ রানাই সিরিজ জেতাবেন বাংলাদেশকে। স্পিন কন্ডিশন বানানোর ভুল করা যাবে না || On Field	https://i.ytimg.com/vi/WmH8c8MO9QI/maxresdefault.jpg	\N	37179	1588	93	2026-06-07	f	1	2026-06-07 19:47:57.15661+00
+3f2a2589-180d-4466-841e-f53407dd9ded	04de1faa-1765-4a12-99f8-caf903567f21	youtube	https://www.youtube.com/watch?v=kTmDKl87ZGk	এক গোল, এক অ্যাসিস্টে বিশ্বকাপের আগে কাঁপালেন লাওতারো; জিতলো আর্জেন্টিনা  || On Field 2026	https://i.ytimg.com/vi/kTmDKl87ZGk/maxresdefault.jpg	\N	400	17	1	2026-06-07	f	2	2026-06-07 19:47:57.15661+00
+a56dc631-be66-4fe2-9836-0b1a3ce5f38e	04de1faa-1765-4a12-99f8-caf903567f21	youtube	https://www.youtube.com/watch?v=VOQdfAlAdfk	অক্টোপাস পলের স্মৃতি ফিরিয়ে, ২০২৬ বিশ্বকাপের ভবিষ্যদ্বাণীতে হাতি-গরিলারা  || On Field 2026	https://i.ytimg.com/vi/VOQdfAlAdfk/maxresdefault.jpg	\N	357	19	5	2026-06-07	f	3	2026-06-07 19:47:57.15661+00
+6e9c45aa-eca3-4f42-9e37-43290548b0cb	04de1faa-1765-4a12-99f8-caf903567f21	youtube	https://www.youtube.com/watch?v=MiSP2tZq9B4	ব্রাজিল ফুটবলের ইতিহাসে তার নাম আগেই খোদাই হয়ে গেছে, মনে করেন নেইমার || On Field 2026	https://i.ytimg.com/vi/MiSP2tZq9B4/maxresdefault.jpg	\N	1885	94	5	2026-06-07	f	4	2026-06-07 19:47:57.15661+00
+fa32fea6-744c-436a-bea3-80df196204ca	04de1faa-1765-4a12-99f8-caf903567f21	youtube	https://www.youtube.com/watch?v=VKyweiLtTpM	এন্ড্রিকের ঝলকে জয়, বিশ্বকাপের আগে আত্মবিশ্বাসে উড়ছে ব্রাজিল || On Field 2026	https://i.ytimg.com/vi/VKyweiLtTpM/maxresdefault.jpg	\N	883	54	2	2026-06-07	f	5	2026-06-07 19:47:57.15661+00
+81d5b96a-06a3-480a-b310-2774193075d7	f3721816-01b6-4194-bf8c-c20e10a31fa4	youtube	https://www.youtube.com/watch?v=1zIHMmIaK-Y	Incredible Saves 🥶	https://i.ytimg.com/vi/1zIHMmIaK-Y/maxresdefault.jpg	12	37954	937	3	2026-05-16	t	0	2026-06-07 19:47:58.276914+00
+3694840f-fee4-4b2c-8ef8-b4ae145a5182	f3721816-01b6-4194-bf8c-c20e10a31fa4	youtube	https://www.youtube.com/watch?v=b-47sWIMoZ0	Heartwarming Kids moments 🥹	https://i.ytimg.com/vi/b-47sWIMoZ0/maxresdefault.jpg	12	454003	5347	27	2026-05-11	f	1	2026-06-07 19:47:58.276914+00
+6154e052-f7bc-4607-bc94-0fd4bfe64c84	f3721816-01b6-4194-bf8c-c20e10a31fa4	youtube	https://www.youtube.com/watch?v=BjHqGjvM_Ms	Sad moments 💔🥲	https://i.ytimg.com/vi/BjHqGjvM_Ms/maxresdefault.jpg	12	41078	738	11	2026-05-06	f	2	2026-06-07 19:47:58.276914+00
+7525f7eb-f6ec-4f5d-8d7c-55f3e9406fa7	f3721816-01b6-4194-bf8c-c20e10a31fa4	youtube	https://www.youtube.com/watch?v=TY_U-PiB4u4	When Players Dive 😂	https://i.ytimg.com/vi/TY_U-PiB4u4/maxresdefault.jpg	12	52853	1110	9	2026-05-02	f	3	2026-06-07 19:47:58.276914+00
+15a6d07f-8449-47cd-9a50-2ab983eef18b	f3721816-01b6-4194-bf8c-c20e10a31fa4	youtube	https://www.youtube.com/watch?v=_bjC7mqEseo	10/10 Penalties 🥶🔥	https://i.ytimg.com/vi/_bjC7mqEseo/maxresdefault.jpg	12	39518	965	9	2026-04-28	f	4	2026-06-07 19:47:58.276914+00
+fd578a2c-54f2-41c5-800a-d51baa834058	3554653a-9f16-4cd3-92fa-1720b5d9f82e	youtube	https://www.youtube.com/watch?v=mVdOkbxbviU	কোটি টাকায় এলপিএলে দল পেলো ৫ বাংলাদেশী! কে কোন দলে খেলবেন?	https://i.ytimg.com/vi/mVdOkbxbviU/maxresdefault.jpg	\N	174	1	0	2026-06-02	t	0	2026-06-07 19:47:59.970508+00
+746257b2-76b9-45bf-828f-b3c9aea4b28d	3554653a-9f16-4cd3-92fa-1720b5d9f82e	youtube	https://www.youtube.com/watch?v=q604v7cS8Do	নাহিদ রানার তাণ্ডবে উড়ে গেলো পাকিস্তান, ঐতিহাসিক জয় বাংলাদেশের | Ban vs Pak test	https://i.ytimg.com/vi/q604v7cS8Do/maxresdefault.jpg	\N	449	10	0	2026-05-12	f	1	2026-06-07 19:47:59.970508+00
+d3f40e9d-a884-4952-acf5-5e34a8b6a689	3554653a-9f16-4cd3-92fa-1720b5d9f82e	youtube	https://www.youtube.com/watch?v=Sh-fLqNMzww	পাকিস্তানের বিপক্ষে ১ম টেস্টে রানের পাহাড় গড়লো বাংলাদেশ | Ban vs Pak 2026	https://i.ytimg.com/vi/Sh-fLqNMzww/maxresdefault.jpg	\N	2468	15	0	2026-05-11	f	2	2026-06-07 19:47:59.970508+00
+27f79bdf-eed2-4d4b-8d10-e1fe9933715e	3554653a-9f16-4cd3-92fa-1720b5d9f82e	youtube	https://www.youtube.com/watch?v=45xtZX2CX_8	পিএসএলের ফাইনালে নাহিদ রানার অবিশ্বাস্য বোলিং! অবাক বাংলাদেশি ভক্তরা | PSL Final Today	https://i.ytimg.com/vi/45xtZX2CX_8/maxresdefault.jpg	\N	1390	11	0	2026-05-03	f	3	2026-06-07 19:47:59.970508+00
+6410c4ed-a3a8-4568-ac95-9bc43df7996e	3554653a-9f16-4cd3-92fa-1720b5d9f82e	youtube	https://www.youtube.com/watch?v=VX1jg01GCRE	ও মাই গড! নিউজিল্যান্ডের বিপক্ষে ৩য় ম্যাচে শরিফুলের আগুনে বোলিং | Ban vs Nz today	https://i.ytimg.com/vi/VX1jg01GCRE/maxresdefault.jpg	\N	138	5	0	2026-05-02	f	4	2026-06-07 19:47:59.970508+00
+b5bed15a-eef3-42b4-8485-ead800e4f37f	3554653a-9f16-4cd3-92fa-1720b5d9f82e	youtube	https://www.youtube.com/watch?v=AaWnGM3G884	আইপিএলে আজ অভিষেক শর্মার ধ্বংসলীলা দেখলো ক্রিকেট বিশ্ব | Ipl Highlights today	https://i.ytimg.com/vi/AaWnGM3G884/maxresdefault.jpg	\N	165	2	0	2026-04-21	f	5	2026-06-07 19:47:59.970508+00
+d0ee5f0d-8014-4c3e-b354-5bcff8c3a57a	dfd20482-0e61-44f1-bd68-d501e4f20a31	youtube	https://www.youtube.com/watch?v=BQI-h1W4Xiw	#manik_miah #মানিক_মিয়া #maniktv	https://i.ytimg.com/vi/BQI-h1W4Xiw/maxresdefault.jpg	6	9150	889	19	2026-06-07	t	0	2026-06-07 19:48:31.193713+00
+31b756b6-130b-4fff-b6ba-54d73c15fc4c	dfd20482-0e61-44f1-bd68-d501e4f20a31	youtube	https://www.youtube.com/watch?v=6m7PFCxJIOs	শেখ হাসিনার অবধান #manik_miah	https://i.ytimg.com/vi/6m7PFCxJIOs/maxresdefault.jpg	6	13527	822	30	2026-06-07	f	1	2026-06-07 19:48:31.193713+00
+e692411e-bbba-4105-abab-d5de39c1f3f5	dfd20482-0e61-44f1-bd68-d501e4f20a31	youtube	https://www.youtube.com/watch?v=O9zZoyUB4jI	#manik_miah #maniktv #মানিক_মিয়া	https://i.ytimg.com/vi/O9zZoyUB4jI/maxresdefault.jpg	6	50256	3306	21	2026-06-07	f	2	2026-06-07 19:48:31.193713+00
+278da77e-573f-41ea-a637-951ab85f03d6	dfd20482-0e61-44f1-bd68-d501e4f20a31	youtube	https://www.youtube.com/watch?v=d197o5ahA5I	#manik_miah #maniktv #মানিক_মিয়া	https://i.ytimg.com/vi/d197o5ahA5I/maxresdefault.jpg	6	37844	853	6	2026-06-06	f	3	2026-06-07 19:48:31.193713+00
+a17550e0-ed6d-41e4-8651-33ce3c968652	dfd20482-0e61-44f1-bd68-d501e4f20a31	youtube	https://www.youtube.com/watch?v=n_pIG2bZv9o	#manik_miah #funny #মানিক_মিয়া	https://i.ytimg.com/vi/n_pIG2bZv9o/maxresdefault.jpg	6	12942	421	4	2026-06-06	f	4	2026-06-07 19:48:31.193713+00
+ff513384-327a-4740-afcd-dd01d7c6801c	dfd20482-0e61-44f1-bd68-d501e4f20a31	youtube	https://www.youtube.com/watch?v=CXj4W0MKOFQ	#manik_miah #funny #মানিক_মিয়া	https://i.ytimg.com/vi/CXj4W0MKOFQ/maxresdefault.jpg	6	7918	180	0	2026-06-06	f	5	2026-06-07 19:48:31.193713+00
+011e8995-0d18-4d3b-97ad-6d5da6e0280f	5d29465d-d338-4193-948d-429d7e88fdbc	youtube	https://www.youtube.com/watch?v=LSW6lRk41qM	রিতু হোসেন এর Hair Care রুটিন 📋 #rakibhossain	https://i.ytimg.com/vi/LSW6lRk41qM/maxresdefault.jpg	4	400939	20105	343	2026-06-02	t	0	2026-06-07 19:48:36.615608+00
+dfc59692-8500-4b3e-8aee-1f5e36ea85a2	5d29465d-d338-4193-948d-429d7e88fdbc	youtube	https://www.youtube.com/watch?v=J5frjIdQvbk	রিতু জন্মদিনে কি কি উপহার পেলো ? | Birthday Gift Unboxing VLOG | Rakib Hossain	https://i.ytimg.com/vi/J5frjIdQvbk/maxresdefault.jpg	4	1645761	41206	1021	2026-05-17	f	1	2026-06-07 19:48:36.615608+00
+eb8ddd38-faa2-4f02-af0f-8b75f51c293d	5d29465d-d338-4193-948d-429d7e88fdbc	youtube	https://www.youtube.com/watch?v=t9EUdJi67nA	রিতুর জন্মদিনের জন্য স্পেশাল শপিং করলাম! 🛍️🎂 | Birthday Surprise Preparations | Rakib Hossain	https://i.ytimg.com/vi/t9EUdJi67nA/maxresdefault.jpg	4	1100435	34066	1258	2026-05-15	f	2	2026-06-07 19:48:36.615608+00
+453c3651-66f1-4c05-a97d-9fb484ef1cb1	5d29465d-d338-4193-948d-429d7e88fdbc	youtube	https://www.youtube.com/watch?v=ttjS1IyLbZw	বাঙালি যখন ডাইমন্ড প্লে বাটন পায় 😍 | Brother Vs Sister #shorts	https://i.ytimg.com/vi/ttjS1IyLbZw/maxresdefault.jpg	4	1893004	40260	534	2026-02-25	f	3	2026-06-07 19:48:36.615608+00
+2bc34c25-f503-43d0-bee9-66f79ecd91c0	5d29465d-d338-4193-948d-429d7e88fdbc	youtube	https://www.youtube.com/watch?v=avk60TF45es	রিতুকে নিয়ে মালয়েশিয়ায় 🇲🇾✈️ | Dhaka To Malaysia Journey | Ritu Hossain | Rakib Hossain	https://i.ytimg.com/vi/avk60TF45es/maxresdefault.jpg	4	436216	17193	1071	2026-02-23	f	4	2026-06-07 19:48:36.615608+00
+4d89175e-6318-4499-91e7-54595923eec0	5d29465d-d338-4193-948d-429d7e88fdbc	youtube	https://www.youtube.com/watch?v=R85qOIFEJM0	বাঙালির ভাই যখন বিদেশ থেকে পুতুল চকলেট নিয়ে আসে 😍 | Girls’ Talk with Best Friends #shorts	https://i.ytimg.com/vi/R85qOIFEJM0/maxresdefault.jpg	4	921490	34443	488	2026-01-22	f	5	2026-06-07 19:48:36.615608+00
+ed27f6d7-2499-486d-a21f-fa8b62c1c066	00d0bcc7-6a1c-4812-aa5f-1b9809a0c0bb	youtube	https://www.youtube.com/watch?v=r-rV1VdiJmU	ঈদের আগের রাতের আনন্দ! 🥰	https://i.ytimg.com/vi/r-rV1VdiJmU/maxresdefault.jpg	7	148404	1673	1	2026-06-07	t	0	2026-06-07 19:48:53.369169+00
+2edb66f5-2c0b-443d-921f-c5a77feb54fa	00d0bcc7-6a1c-4812-aa5f-1b9809a0c0bb	youtube	https://www.youtube.com/watch?v=5lWes_CzbDk	২ লাখ টাকার কোরবানির গরু! 🥰	https://i.ytimg.com/vi/5lWes_CzbDk/maxresdefault.jpg	7	63298	965	1	2026-06-07	f	1	2026-06-07 19:48:53.369169+00
+a2fee3f1-b359-4afa-be59-f55850010053	00d0bcc7-6a1c-4812-aa5f-1b9809a0c0bb	youtube	https://www.youtube.com/watch?v=XVB3FQ9KQnQ	কোরবানির গরু ঘরে তোলা হলো! 😯	https://i.ytimg.com/vi/XVB3FQ9KQnQ/maxresdefault.jpg	7	128552	1498	1	2026-06-07	f	2	2026-06-07 19:48:53.369169+00
+a05d3885-77c5-447a-ab4c-4ec9753aafc4	00d0bcc7-6a1c-4812-aa5f-1b9809a0c0bb	youtube	https://www.youtube.com/watch?v=AsvdyOadUUk	আমাদের কোরবানির গরু! 🥰	https://i.ytimg.com/vi/AsvdyOadUUk/maxresdefault.jpg	7	333424	3244	13	2026-06-07	f	3	2026-06-07 19:48:53.369169+00
+a1ff31f7-ae3e-4e62-ac24-fdda5f5104c2	00d0bcc7-6a1c-4812-aa5f-1b9809a0c0bb	youtube	https://www.youtube.com/watch?v=5Npj-NxLEQM	কোরবানির গরু বাড়িতে! 🥰	https://i.ytimg.com/vi/5Npj-NxLEQM/maxresdefault.jpg	7	357172	3779	1	2026-06-06	f	4	2026-06-07 19:48:53.369169+00
+cc29378f-6254-4d89-a21e-4070640c74ab	00d0bcc7-6a1c-4812-aa5f-1b9809a0c0bb	youtube	https://www.youtube.com/watch?v=cb31IQuZmWE	ঈদের আগের দিন ২ লাখ টাকার কোরবানির গরু বাড়িতে! আলহামদুলিল্লাহ ❤️	https://i.ytimg.com/vi/cb31IQuZmWE/maxresdefault.jpg	7	240582	4731	14	2026-06-06	f	5	2026-06-07 19:48:53.369169+00
+b45aafb2-b730-443c-86f0-19571e393bdc	b1d9dc23-3cc2-435d-bfa4-f896f0557f66	youtube	https://www.youtube.com/watch?v=qTqqtepdkDA	পরিবারের সবাই একসাথে ঘুরতে গেলাম | Eid Outing With Family | Jahan Eity | 	https://i.ytimg.com/vi/qTqqtepdkDA/maxresdefault.jpg	3	130645	4326	71	2026-06-07	t	0	2026-06-07 19:48:59.93103+00
+80e331ed-fa2f-4735-964d-93d51c24136d	b1d9dc23-3cc2-435d-bfa4-f896f0557f66	youtube	https://www.youtube.com/watch?v=m5nb9CfaEfc	Ore amr moyna pakhi 🩵 #jahaneity	https://i.ytimg.com/vi/m5nb9CfaEfc/maxresdefault.jpg	3	461316	10572	58	2026-06-05	f	1	2026-06-07 19:48:59.93103+00
+d2d86562-4c2d-4037-bad3-4ef47b673124	b1d9dc23-3cc2-435d-bfa4-f896f0557f66	youtube	https://www.youtube.com/watch?v=T_5qEMjh3sE	ঈদ এর ২য় দিন মেলায় ঘুরতে গেলাম | Eid Day 2 Vlog | Jahan Eity | Talha 	https://i.ytimg.com/vi/T_5qEMjh3sE/maxresdefault.jpg	3	262614	6671	157	2026-06-03	f	2	2026-06-07 19:48:59.93103+00
+8fbbc27e-1e52-4a41-897f-8074df3a55f3	b1d9dc23-3cc2-435d-bfa4-f896f0557f66	youtube	https://www.youtube.com/watch?v=wE75ZQGFjz0	ইতি ঈদে কিভাবে সাজলো | My Eid Makeup Look | GRWM | Jahan Eity	https://i.ytimg.com/vi/wE75ZQGFjz0/maxresdefault.jpg	3	217268	5316	152	2026-06-01	f	3	2026-06-07 19:48:59.93103+00
+d949170b-3fa4-43bf-a949-c69445350001	b1d9dc23-3cc2-435d-bfa4-f896f0557f66	youtube	https://www.youtube.com/watch?v=aoqMbo0_1F4	ইতি কত টাকা সালামী পেল ঈদে..? | ঈদ মোবারক | Qurbani Eid 2026 | Eid Vlog | Jahan Eity | Talha 	https://i.ytimg.com/vi/aoqMbo0_1F4/maxresdefault.jpg	3	394586	11138	192	2026-05-30	f	4	2026-06-07 19:48:59.93103+00
+4cc6eb9d-5fc0-490f-840a-42212ef63f5c	b1d9dc23-3cc2-435d-bfa4-f896f0557f66	youtube	https://www.youtube.com/watch?v=6uiHcyUSENQ	🐮✨ Hambba Mubarak 🤍🌙 #jahaneity	https://i.ytimg.com/vi/6uiHcyUSENQ/maxresdefault.jpg	3	405796	11826	109	2026-05-29	f	5	2026-06-07 19:48:59.93103+00
+99090940-238f-4ca1-b2ef-1ce376043e72	f63dc656-0ef8-4c08-baba-436df84a617f	youtube	https://www.youtube.com/watch?v=C6s21G5KkVM	Саян - Оставь.	https://i.ytimg.com/vi/C6s21G5KkVM/maxresdefault.jpg	12	56	3	1	2012-12-01	t	0	2026-06-07 19:49:05.396445+00
+1e97e97d-3769-4a5e-8080-e4ca56a5b7e5	f63dc656-0ef8-4c08-baba-436df84a617f	youtube	https://www.youtube.com/watch?v=kbG_WYpa43k	Саян - Я иду	https://i.ytimg.com/vi/kbG_WYpa43k/maxresdefault.jpg	12	38	0	0	2012-12-01	f	1	2026-06-07 19:49:05.396445+00
+efacadd7-0427-451f-ba72-2a21354fc6d4	f63dc656-0ef8-4c08-baba-436df84a617f	youtube	https://www.youtube.com/watch?v=87nbFi_LlPs	Саян - Спасибо	https://i.ytimg.com/vi/87nbFi_LlPs/maxresdefault.jpg	12	135	1	1	2012-12-01	f	2	2026-06-07 19:49:05.396445+00
+7ee01608-c450-413f-babb-e83c023038bb	9b048e95-66d5-4413-a571-28874e9cd3a8	youtube	https://www.youtube.com/watch?v=JuTqlvB63M4	apu biswas hot dans	https://i.ytimg.com/vi/JuTqlvB63M4/sddefault.jpg	12	280	\N	0	2023-07-01	t	0	2026-06-07 19:49:11.131401+00
+fbce0992-5808-4777-81cb-f164dcc78204	cbfd8491-a181-4af1-ab9c-fd84549d38f5	youtube	https://www.youtube.com/watch?v=gRjaQFXGhI0	toyota-the master peice	https://i.ytimg.com/vi/gRjaQFXGhI0/hqdefault.jpg	1	357	4	1	2007-04-06	t	0	2026-06-07 19:49:12.504604+00
+252ae72a-9cdc-48cb-b76d-ecc81b147e41	bf84b6e3-379c-4631-b65f-a94c1171b30f	youtube	https://www.youtube.com/watch?v=TdyPuqmY1bY	#bestsong #trendingsongs #trendingeditor please subscribe 👍👍👍	https://i.ytimg.com/vi/TdyPuqmY1bY/maxresdefault.jpg	12	15	8	0	2023-05-24	t	0	2026-06-07 19:49:14.762594+00
+4b3313b9-16c3-4036-a627-d9f9da040e86	bf84b6e3-379c-4631-b65f-a94c1171b30f	youtube	https://www.youtube.com/watch?v=yO3-zOrojlc	#trendingsongs #bestsong #trendingeditor	https://i.ytimg.com/vi/yO3-zOrojlc/maxresdefault.jpg	12	19	7	2	2023-05-22	f	1	2026-06-07 19:49:14.762594+00
+813ceac5-3fda-4395-bcab-be00d4aabd48	b5bb4312-fb62-49ff-8598-991329403d99	youtube	https://www.youtube.com/watch?v=W4xZagNfoKI	Tiny kitten is enjoying to play 😻😸	https://i.ytimg.com/vi/W4xZagNfoKI/maxresdefault.jpg	12	31034	474	7	2026-06-06	t	0	2026-06-07 19:49:18.484553+00
+60d1e9a1-af7a-4439-b910-2b38c847ad61	b5bb4312-fb62-49ff-8598-991329403d99	youtube	https://www.youtube.com/watch?v=yoZYgqgKcRg	Fluffy Cat can be used to make so many things😻💕 #cute #kitten #cat #meow	https://i.ytimg.com/vi/yoZYgqgKcRg/maxresdefault.jpg	12	30498	418	4	2026-05-28	f	1	2026-06-07 19:49:18.484553+00
+bf04a585-9516-4b80-84db-a1a71b438a56	b5bb4312-fb62-49ff-8598-991329403d99	youtube	https://www.youtube.com/watch?v=j4GUL1kPShQ	Poke a hole first 😻💕#cute #kitten #cat #meow	https://i.ytimg.com/vi/j4GUL1kPShQ/maxresdefault.jpg	12	36106	401	6	2026-05-28	f	2	2026-06-07 19:49:18.484553+00
+4914a176-3759-49e9-b18b-fdfba585baa3	b5bb4312-fb62-49ff-8598-991329403d99	youtube	https://www.youtube.com/watch?v=hACH0bOvU4U	The kitten leap towards you 💕 ✨️	https://i.ytimg.com/vi/hACH0bOvU4U/maxresdefault.jpg	12	42988	714	14	2026-05-26	f	3	2026-06-07 19:49:18.484553+00
+66a34132-bc45-4210-8486-3e1977701d29	b5bb4312-fb62-49ff-8598-991329403d99	youtube	https://www.youtube.com/watch?v=YslEYAZ81k0	The little kitten is meowing😻✨️ #cute #kitten #cat #meow	https://i.ytimg.com/vi/YslEYAZ81k0/maxresdefault.jpg	12	52062	730	9	2026-05-25	f	4	2026-06-07 19:49:18.484553+00
+46db716d-56d1-43a5-b6c5-a1b32b2914d7	b5bb4312-fb62-49ff-8598-991329403d99	youtube	https://www.youtube.com/watch?v=vAeUSnj_yNk	I love to annoying my cute litten kitten 😻😺#cute #kitten #cat #meow	https://i.ytimg.com/vi/vAeUSnj_yNk/maxresdefault.jpg	12	60065	1201	16	2026-05-21	f	5	2026-06-07 19:49:18.484553+00
+f896b8f1-c705-407c-97fe-e508166382d4	bb4e9bb0-aac2-4a68-ac59-0633df03fc3e	youtube	https://www.youtube.com/watch?v=Gmw88kO6bLk	ওরে পাগল মন আমার | Ore Pagol Mon Amar | New Bangla Emotional Song 2026  | Nature Tune Studio	https://i.ytimg.com/vi/Gmw88kO6bLk/maxresdefault.jpg	12	1027	15	1	2026-06-06	t	0	2026-06-07 19:49:23.120564+00
+7b8cae41-c4e0-4f5d-8664-2b86aa131eea	bb4e9bb0-aac2-4a68-ac59-0633df03fc3e	youtube	https://www.youtube.com/watch?v=fBuZfMcOaSk	Brazil Remix Song 🇧🇷⚽ | Neymar & Brazil Stars Ultimate Football Remix 2026 | HD Music Video	https://i.ytimg.com/vi/fBuZfMcOaSk/maxresdefault.jpg	12	200	2	1	2026-06-04	f	1	2026-06-07 19:49:23.120564+00
+d9a89424-f729-4f6e-a41e-99901d65fbbc	bb4e9bb0-aac2-4a68-ac59-0633df03fc3e	youtube	https://www.youtube.com/watch?v=pbLZiLbWHbU	Moner Manus Moyra geche re 2026(4k)মনের মানুষ মইরা গেছে রে।Official Music Video #baul_song #folksong	https://i.ytimg.com/vi/pbLZiLbWHbU/maxresdefault.jpg	12	1449	15	8	2026-06-01	f	2	2026-06-07 19:49:23.120564+00
+23f4542c-6db4-4d50-8b6d-3eda196012bc	bb4e9bb0-aac2-4a68-ac59-0633df03fc3e	youtube	https://www.youtube.com/watch?v=Os6nXhzsSog	Tui Achis Bondhu (2K) | Best Friendship Song 2026 | Official Music Video | Nature Tune Studio	https://i.ytimg.com/vi/Os6nXhzsSog/maxresdefault.jpg	12	159	13	6	2026-05-31	f	3	2026-06-07 19:49:23.120564+00
+2e656532-1d0b-44cc-bad8-8de5e082876f	bb4e9bb0-aac2-4a68-ac59-0633df03fc3e	youtube	https://www.youtube.com/watch?v=lzwIktW70Pc	Kare Koi Moner Betha (কারে কই মনের ব্যাথা) | Rahat Uddin | Nature Tune Studio | Official Music Video	https://i.ytimg.com/vi/lzwIktW70Pc/maxresdefault.jpg	12	561	16	3	2026-05-29	f	4	2026-06-07 19:49:23.120564+00
+af96439d-c060-4028-87eb-73bbdf9f697f	7e228acf-acea-45e0-935f-90473226a8ad	youtube	https://www.youtube.com/watch?v=zPXXOmoT5Ac	#RoomJhoom #CokeStudioBanglaSeason4 #RealMagic #CokeStudioBangla	https://i.ytimg.com/vi/zPXXOmoT5Ac/maxresdefault.jpg	12	13550	369	8	2026-06-06	t	0	2026-06-07 19:49:55.970107+00
+2044b817-a75f-4602-a91c-1977c8aaf7c0	7e228acf-acea-45e0-935f-90473226a8ad	youtube	https://www.youtube.com/watch?v=TQxdrxUTNuU	লাইট, ক্যামেরা, আর Mahtim-এর magic.	https://i.ytimg.com/vi/TQxdrxUTNuU/maxresdefault.jpg	12	37401	963	33	2026-06-03	f	1	2026-06-07 19:49:55.970107+00
+5cfe9a20-bb85-4b35-ab8e-93ea7c4ec8fd	7e228acf-acea-45e0-935f-90473226a8ad	youtube	https://www.youtube.com/watch?v=el030-7tPU8	কানুনের ঝংকারে, তাম্বোরার অনুরণনে। #RoomJhoom	https://i.ytimg.com/vi/el030-7tPU8/maxresdefault.jpg	12	35354	666	6	2026-06-01	f	2	2026-06-07 19:49:55.970107+00
+26c5ad0c-f8ca-4901-a7f9-4ae1505e8b2a	7e228acf-acea-45e0-935f-90473226a8ad	youtube	https://www.youtube.com/watch?v=aOuZbLSB3kQ	From inspiration to execution — the story behind #RoomJhoom	https://i.ytimg.com/vi/aOuZbLSB3kQ/maxresdefault.jpg	12	16470	264	9	2026-05-31	f	3	2026-06-07 19:49:55.970107+00
+aa872a52-072d-413f-9c05-11cab6215bbb	7e228acf-acea-45e0-935f-90473226a8ad	youtube	https://www.youtube.com/watch?v=ZR5etQ6iS_M	স্টুডিওর ভেতর, বৃষ্টির মতো ঝরছে সুর।	https://i.ytimg.com/vi/ZR5etQ6iS_M/maxresdefault.jpg	12	146788	3699	36	2026-05-30	f	4	2026-06-07 19:49:55.970107+00
+b00185df-b525-4526-8976-421a6007bcdd	7e228acf-acea-45e0-935f-90473226a8ad	youtube	https://www.youtube.com/watch?v=_FNV5OT7BvI	একটা timeless গান, আর তার অংশ হতে পারার গর্ব #RoomJhoom	https://i.ytimg.com/vi/_FNV5OT7BvI/maxresdefault.jpg	12	84504	2289	26	2026-05-29	f	5	2026-06-07 19:49:55.970107+00
+fd093674-96c6-46c4-b115-8d0cee526128	9a5569db-64a0-4a1a-a58d-cc5a1a5abd67	youtube	https://www.youtube.com/watch?v=fxFIzO05uJ4	🎞️✨ How the plot of ‘2nd Nayok’ came to life. #pritomhasan  #2ndnayok	https://i.ytimg.com/vi/fxFIzO05uJ4/maxresdefault.jpg	12	17098	304	11	2026-05-04	t	0	2026-06-07 19:50:01.344918+00
+f4e17a03-2b19-46ef-b3e0-427ee5f75c52	9a5569db-64a0-4a1a-a58d-cc5a1a5abd67	youtube	https://www.youtube.com/watch?v=DrWo409uSD8	আমার মতো ভাঙা ছেলেকে কে ভালোবাসে? #2ndNayok #PritomHasan	https://i.ytimg.com/vi/DrWo409uSD8/maxresdefault.jpg	12	16958	303	6	2026-05-01	f	2	2026-06-07 19:50:01.344918+00
+da1de0d4-adda-4d10-a5c4-59eca41e9ce3	9a5569db-64a0-4a1a-a58d-cc5a1a5abd67	youtube	https://www.youtube.com/watch?v=yRr8j1DK8KI	যখনই তোমার মন ভাঙে, অন্য কারো হাতে। আমি কথা দিয়ে জোড়া দেই, সে মন গভীর রাতে #2ndNayok #pritomhasan	https://i.ytimg.com/vi/yRr8j1DK8KI/maxresdefault.jpg	12	32311	446	6	2026-05-01	f	3	2026-06-07 19:50:01.344918+00
+1cab6255-3fe3-4b7f-845f-172f833f2044	9a5569db-64a0-4a1a-a58d-cc5a1a5abd67	youtube	https://www.youtube.com/watch?v=AASjyMU2LF8	যাহা চাই, তাহা ভুল করে চাই। যাহা পাই, তাহা চাই না। #pritomhasan #2ndNayok #newsong	https://i.ytimg.com/vi/AASjyMU2LF8/maxresdefault.jpg	12	31941	503	21	2026-05-01	f	4	2026-06-07 19:50:01.344918+00
+3baff42b-b575-4042-9663-1bf9f0765928	9a5569db-64a0-4a1a-a58d-cc5a1a5abd67	youtube	https://www.youtube.com/watch?v=0zc-UOp59QA	pov: she chose someone else #pritomhasan #2ndNayok #newsong	https://i.ytimg.com/vi/0zc-UOp59QA/maxresdefault.jpg	12	8618	159	0	2026-04-30	f	5	2026-06-07 19:50:01.344918+00
+67a89df2-b244-4ff0-8f3f-bcc2e8cd27e1	a6e4763a-cb89-4031-b637-e93bd82863da	youtube	https://www.youtube.com/watch?v=exZDv7lbYO0	Hlw Italy 🫰	https://i.ytimg.com/vi/exZDv7lbYO0/maxresdefault.jpg	12	36413	616	15	2026-06-05	t	0	2026-06-07 19:50:07.053742+00
+4502caeb-29ca-45e8-a538-e08cbad11769	a6e4763a-cb89-4031-b637-e93bd82863da	youtube	https://www.youtube.com/watch?v=S2ST0Zc0hho	দিলে যায়গা দে	https://i.ytimg.com/vi/S2ST0Zc0hho/maxresdefault.jpg	12	6705	151	5	2026-06-03	f	1	2026-06-07 19:50:07.053742+00
+66858ca3-5ab7-459b-82e4-cafc91f21fe7	a6e4763a-cb89-4031-b637-e93bd82863da	youtube	https://www.youtube.com/watch?v=xUSquSmw_RU	আমার জান ❤️	https://i.ytimg.com/vi/xUSquSmw_RU/maxresdefault.jpg	12	8049	229	7	2026-06-03	f	2	2026-06-07 19:50:07.053742+00
+7b2c346e-27be-499d-97a0-02b360acc435	a6e4763a-cb89-4031-b637-e93bd82863da	youtube	https://www.youtube.com/watch?v=l0ltM6LsCH4	💔	https://i.ytimg.com/vi/l0ltM6LsCH4/maxresdefault.jpg	12	27434	479	15	2026-06-03	f	3	2026-06-07 19:50:07.053742+00
+d3e0d9c6-694c-46e0-95e4-c456d19c1906	a6e4763a-cb89-4031-b637-e93bd82863da	youtube	https://www.youtube.com/watch?v=2c8m4pEUm1w	দিলে যায়গা দে......  🎵🥁	https://i.ytimg.com/vi/2c8m4pEUm1w/maxresdefault.jpg	12	6914	162	7	2026-06-03	f	4	2026-06-07 19:50:07.053742+00
+8edfd53f-ac8f-42cf-9add-d89d46319ebc	a6e4763a-cb89-4031-b637-e93bd82863da	youtube	https://www.youtube.com/watch?v=mkFnA7bhXjc	দিলে যায়গা দে 🎵🔥	https://i.ytimg.com/vi/mkFnA7bhXjc/maxresdefault.jpg	12	18988	440	9	2026-06-02	f	5	2026-06-07 19:50:07.053742+00
+b797fd9f-9c11-4865-91e1-06ad0699afa9	a1a9f6c2-63ae-4b1c-a4c1-8ccd98e8e7a0	youtube	https://www.youtube.com/watch?v=3F4kZWEgtXw	Habib’s Ladakh experience !	https://i.ytimg.com/vi/3F4kZWEgtXw/maxresdefault.jpg	6	71	1	0	2018-06-27	t	0	2026-06-07 19:50:10.474293+00
+c0e04002-e8e0-411c-8dff-0a0c1fd31e60	e1b07220-c97e-4673-8939-77921b506fd8	youtube	https://www.youtube.com/watch?v=9j2PWBTeIsU	গোসলে নেমে স্রোতে ভেসে গেল দুই ভাই | Dharla River | Lalmonirhat | Prothom Alo	https://i.ytimg.com/vi/9j2PWBTeIsU/maxresdefault.jpg	\N	637	3	1	2026-06-07	t	0	2026-06-07 19:50:14.219716+00
+a3880855-76cb-4db6-ae6c-ce02970876a4	e1b07220-c97e-4673-8939-77921b506fd8	youtube	https://www.youtube.com/watch?v=5woKGOx_59w	দেশে বিদ্যুতের কোনো ঘাটতি নেই, সংসদে বিদ্যুৎমন্ত্রী | Electricity | Iqbal Hassan Mahmood | News	https://i.ytimg.com/vi/5woKGOx_59w/maxresdefault.jpg	\N	610	8	2	2026-06-07	f	1	2026-06-07 19:50:14.219716+00
+e315b782-eed3-4495-913a-47b6466b5051	e1b07220-c97e-4673-8939-77921b506fd8	youtube	https://www.youtube.com/watch?v=l27nDFgUQDE	মাফিয়া রাজত্ব, যুদ্ধ, রাজনৈতিক অস্থিরতা পেরিয়ে বিশ্বকাপে ইরাক ও হাইতি | Iraq-Haiti | World Cup 2026	https://i.ytimg.com/vi/l27nDFgUQDE/maxresdefault.jpg	\N	0	0	0	2026-06-07	f	2	2026-06-07 19:50:14.219716+00
+96eb3f0b-f9d8-405d-b71b-7e595dc3b417	e1b07220-c97e-4673-8939-77921b506fd8	youtube	https://www.youtube.com/watch?v=HiMNUsjDZ28	‘ভুক্তভোগী অন্য নারী–শিশুরাও যেন ন্যায়বিচার পায়, সেটি নিশ্চিত করতে হবে’ | Justice For Victims | News	https://i.ytimg.com/vi/HiMNUsjDZ28/maxresdefault.jpg	\N	8158	31	1	2026-06-07	f	3	2026-06-07 19:50:14.219716+00
+19391675-a1c5-420b-a77c-23f333824bb9	e1b07220-c97e-4673-8939-77921b506fd8	youtube	https://www.youtube.com/watch?v=ZrrCBv48Tts	পল্লবী শিশুহত্যায় ন্যায়বিচার, বাকিদের খবর কী? | বার্তাকক্ষ | Pallabi Incident | Prothom Alo	https://i.ytimg.com/vi/ZrrCBv48Tts/maxresdefault.jpg	\N	1290	7	4	2026-06-07	f	4	2026-06-07 19:50:14.219716+00
+20ce1c05-5397-49ca-af83-01cbb65e79f9	e1b07220-c97e-4673-8939-77921b506fd8	youtube	https://www.youtube.com/watch?v=ES17ZB83DU0	ঢাকা, কুমিল্লা, ময়মনসিংহে নিষিদ্ধ ছাত্রলীগের মিছিল থেকে গ্রেপ্তার ৫৭ | Chhatra League | Prothom Alo	https://i.ytimg.com/vi/ES17ZB83DU0/maxresdefault.jpg	\N	20708	344	44	2026-06-07	f	5	2026-06-07 19:50:14.219716+00
+edeaf2b3-67ba-4152-a02f-3d4bbffb9f0c	54be4fe8-2a6a-4ee3-b50a-73984b4c4107	youtube	https://www.youtube.com/watch?v=kMlBQ2qR6_s	কার্যক্রম নিষিদ্ধ ছাত্রলীগ যেভাবে জায়গা করল সংসদের আলোচনায় | Hasnat Abdullah | Bangladesh Politics	https://i.ytimg.com/vi/kMlBQ2qR6_s/maxresdefault.jpg	\N	536	27	5	2026-06-07	t	0	2026-06-07 19:50:47.959663+00
+982f124a-4c77-40bb-a9c9-8b9eb3cee18d	54be4fe8-2a6a-4ee3-b50a-73984b4c4107	youtube	https://www.youtube.com/watch?v=45jm_5xa0dQ	‘ভুল নকশায়’ ফের কপিলমুনি বাজার উচ্ছেদের অভিযোগ | Khulna News | The Business Standard	https://i.ytimg.com/vi/45jm_5xa0dQ/maxresdefault.jpg	\N	194	2	0	2026-06-07	f	1	2026-06-07 19:50:47.959663+00
+72a93b87-0381-40ef-92f7-c0a81fb6235b	54be4fe8-2a6a-4ee3-b50a-73984b4c4107	youtube	https://www.youtube.com/watch?v=zs5kuJGl-vo	বিজেপি সরকারকে আল্টিমেটাম ‘তেলাপোকা পার্টির’, কী করবেন মোদি? | Cockroach Janata Party| Narendra Modi	https://i.ytimg.com/vi/zs5kuJGl-vo/maxresdefault.jpg	\N	5276	93	6	2026-06-07	f	2	2026-06-07 19:50:47.959663+00
+b5b744ba-2687-4abd-899f-7c08736ec945	54be4fe8-2a6a-4ee3-b50a-73984b4c4107	youtube	https://www.youtube.com/watch?v=unnq-7AxuhA	চট্টগ্রাম মেডিকেলে কেন সংবাদ সম্মেলন করতে গিয়েছিল এনসিপি? | The Business Standard	https://i.ytimg.com/vi/unnq-7AxuhA/maxresdefault.jpg	\N	246	8	3	2026-06-07	f	3	2026-06-07 19:50:47.959663+00
+3bbee1cb-5426-4e74-a376-7c768b751713	54be4fe8-2a6a-4ee3-b50a-73984b4c4107	youtube	https://www.youtube.com/watch?v=Crf-1xZbgqE	পোপের স্পেন সফর কি শুধু ধর্মীয়, নাকি রাজনৈতিকও? | The Business Standard	https://i.ytimg.com/vi/Crf-1xZbgqE/maxresdefault.jpg	\N	220	8	0	2026-06-07	f	4	2026-06-07 19:50:47.959663+00
+b27857a1-7372-4bcf-9bc6-90efb76c6b11	54be4fe8-2a6a-4ee3-b50a-73984b4c4107	youtube	https://www.youtube.com/watch?v=Qc_ngLjqY2M	ঘণ্টায় ১০ লাখ ডলার খরচ করলেও কেন মাস্কের সম্পদ ফুরাতে লাগবে শতাব্দী? | The Business Standard	https://i.ytimg.com/vi/Qc_ngLjqY2M/maxresdefault.jpg	\N	265	14	0	2026-06-07	f	5	2026-06-07 19:50:47.959663+00
+c77658b5-d6fc-4540-933a-20d28f0d56fb	febc4b03-1599-4de7-baa4-2302d25588f5	youtube	https://www.youtube.com/watch?v=23fQN0Uj-XQ	খাদ্য হিসেবে পোকা চাষ বাড়ছে কেন?	https://i.ytimg.com/vi/23fQN0Uj-XQ/maxresdefault.jpg	5	23255	1004	92	2026-06-06	t	0	2026-06-07 19:51:26.757358+00
+7f90b8f9-a931-4429-9394-da51d9afbfaa	febc4b03-1599-4de7-baa4-2302d25588f5	youtube	https://www.youtube.com/watch?v=Lr2yo1OVixU	বাংলাদেশ জাতিসংঘের সভাপতি হল কিভাবে ?	https://i.ytimg.com/vi/Lr2yo1OVixU/maxresdefault.jpg	5	252263	6081	444	2026-06-04	f	1	2026-06-07 19:51:26.757358+00
+c0a9ab5b-6bd9-42ea-a3c2-81b0b207a3d3	febc4b03-1599-4de7-baa4-2302d25588f5	youtube	https://www.youtube.com/watch?v=sDm8d1bZJC8	ভারতের তেলাপোকা পার্টি আসলে কী?	https://i.ytimg.com/vi/sDm8d1bZJC8/maxresdefault.jpg	5	36025	1548	85	2026-06-03	f	2	2026-06-07 19:51:26.757358+00
+7a1aec27-433c-4ffb-9177-b5a6db5249d6	febc4b03-1599-4de7-baa4-2302d25588f5	youtube	https://www.youtube.com/watch?v=2lw5aPbKvx4	ব্ল্যাক আইভরি কফি এত দামি কেন?	https://i.ytimg.com/vi/2lw5aPbKvx4/maxresdefault.jpg	5	28097	1031	74	2026-06-01	f	3	2026-06-07 19:51:26.757358+00
+14b8ce7e-c204-44d6-8e02-9f86f2016532	febc4b03-1599-4de7-baa4-2302d25588f5	youtube	https://www.youtube.com/watch?v=Y9-ugtBz-7o	গরুর অর্থনীতি কত বড় ?	https://i.ytimg.com/vi/Y9-ugtBz-7o/maxresdefault.jpg	5	82467	3519	256	2026-05-25	f	4	2026-06-07 19:51:26.757358+00
+bad96a64-54eb-4145-8c22-bf1c5ae8e0f4	febc4b03-1599-4de7-baa4-2302d25588f5	youtube	https://www.youtube.com/watch?v=tu_UixFD_wY	হান্টাভাইরাস ছড়ালো কিভাবে?	https://i.ytimg.com/vi/tu_UixFD_wY/maxresdefault.jpg	5	47617	1731	87	2026-05-14	f	5	2026-06-07 19:51:26.757358+00
+8476904a-6650-4de5-89e6-741df558bebd	6c8ba08c-b3b9-4d66-adfe-83ceeeb0c8ed	youtube	https://www.youtube.com/watch?v=05Apc_2uhsg	সুজিতদা’র এক্সট্রা ফাইজলামি করার স্বভাবটা আর গেলো না।	https://i.ytimg.com/vi/05Apc_2uhsg/maxresdefault.jpg	12	1653	33	1	2026-06-07	t	0	2026-06-07 19:52:31.068476+00
+553b765c-65b9-40cb-ae4a-efbb71926a86	6c8ba08c-b3b9-4d66-adfe-83ceeeb0c8ed	youtube	https://www.youtube.com/watch?v=R5DMZJuyDdc	Bhalobasha Dish Bhalobasha Nish(ভালবাসা দিস ভালবাসা নিস) |Rockstar|Shakib,Sabila,Sunny,Jahid| Chorki	https://i.ytimg.com/vi/R5DMZJuyDdc/maxresdefault.jpg	12	323254	17093	1438	2026-06-04	f	1	2026-06-07 19:52:31.068476+00
+01e6d5fc-46b3-4cf2-90fd-68ed05338f25	6c8ba08c-b3b9-4d66-adfe-83ceeeb0c8ed	youtube	https://www.youtube.com/watch?v=au9PRPkaDkg	Besh Kichudin (বেশ কিছুদিন) | ROCKSTAR | Shakib Khan | Ahmed Hasan Sunny, Jahid Nirob | Chorki	https://i.ytimg.com/vi/au9PRPkaDkg/maxresdefault.jpg	12	743376	29686	2896	2026-05-31	f	2	2026-06-07 19:52:31.068476+00
+cddfdf7e-3b36-4b96-9869-bb7c73472c2f	6c8ba08c-b3b9-4d66-adfe-83ceeeb0c8ed	youtube	https://www.youtube.com/watch?v=A6cn7AYJCK8	Domm ( দম ) | SPARK 04 | Afran Nisho | Puja Cherry | Chanchal Chowdhury | Redoan Rony | Chorki	https://i.ytimg.com/vi/A6cn7AYJCK8/maxresdefault.jpg	12	5635	152	16	2026-05-31	f	3	2026-06-07 19:52:31.068476+00
+5b537159-62a7-40b2-923a-a3e84785b0a2	6c8ba08c-b3b9-4d66-adfe-83ceeeb0c8ed	youtube	https://www.youtube.com/watch?v=Iknrt_oJdks	Ami Jabo Hariye (আমি যাবো হারিয়ে)|Rockstar |Shakib Khan,Sabila, Ankan K, Jahid N, Azman R |Chorki	https://i.ytimg.com/vi/Iknrt_oJdks/maxresdefault.jpg	12	1002571	33708	2410	2026-05-28	f	4	2026-06-07 19:52:31.068476+00
+162d6385-db58-45d0-8d0f-9648d3f0ab91	6c8ba08c-b3b9-4d66-adfe-83ceeeb0c8ed	youtube	https://www.youtube.com/watch?v=z1ENbwEx8MQ	Domm ( দম ) | SPARK 03 | Afran Nisho | Puja Cherry | Chanchal Chowdhury | Redoan Rony | Chorki	https://i.ytimg.com/vi/z1ENbwEx8MQ/maxresdefault.jpg	12	8179	120	10	2026-05-28	f	5	2026-06-07 19:52:31.068476+00
+210a077c-305f-45e7-92a2-f0127f6b7ded	fbc0dd5f-da85-49b0-a8c8-4a1b7d4c37f9	youtube	https://www.youtube.com/watch?v=gN-2F6BtSGs	Aquafoto 2007	https://i.ytimg.com/vi/gN-2F6BtSGs/hqdefault.jpg	12	35	0	0	2007-03-22	t	0	2026-06-07 19:52:47.443304+00
+f2fb4ce9-35d6-4924-85bd-fe1888e392ce	fbc0dd5f-da85-49b0-a8c8-4a1b7d4c37f9	youtube	https://www.youtube.com/watch?v=_5VvpbsXIyM	masmedia.info	https://i.ytimg.com/vi/_5VvpbsXIyM/hqdefault.jpg	12	317	0	0	2006-10-26	f	1	2026-06-07 19:52:47.443304+00
+093bd5a2-95ae-4b2e-b811-43a802dd44d4	fbc0dd5f-da85-49b0-a8c8-4a1b7d4c37f9	youtube	https://www.youtube.com/watch?v=Zio_XbuAhpc	masmedia.info	https://i.ytimg.com/vi/Zio_XbuAhpc/hqdefault.jpg	12	60	0	0	2006-10-25	f	2	2026-06-07 19:52:47.443304+00
+b88bf5bf-ca95-4693-8008-59ebe704405e	fbc0dd5f-da85-49b0-a8c8-4a1b7d4c37f9	youtube	https://www.youtube.com/watch?v=JQKdYHxHSIY	masmedia.info	https://i.ytimg.com/vi/JQKdYHxHSIY/hqdefault.jpg	12	72	0	0	2006-10-25	f	3	2026-06-07 19:52:47.443304+00
+46d763ef-ced5-4874-b11a-ca801bd3cbcb	fbc0dd5f-da85-49b0-a8c8-4a1b7d4c37f9	youtube	https://www.youtube.com/watch?v=eMRBdCb0ins	masmedia.info	https://i.ytimg.com/vi/eMRBdCb0ins/hqdefault.jpg	12	89	0	0	2006-10-25	f	4	2026-06-07 19:52:47.443304+00
+3a6297a5-39a9-4dd8-a21c-7c7754d5dff7	fbc0dd5f-da85-49b0-a8c8-4a1b7d4c37f9	youtube	https://www.youtube.com/watch?v=iL8Gg1PltJE	masmedia.info	https://i.ytimg.com/vi/iL8Gg1PltJE/hqdefault.jpg	12	54	0	0	2006-10-25	f	5	2026-06-07 19:52:47.443304+00
+9a488d85-0d0d-4b71-b7ba-3500c6ba4b76	96bf2ef8-0a71-4358-88fb-db2e2f5639ba	youtube	https://www.youtube.com/watch?v=toW3kzkSCjc	রোবট ফার্ম : পার্ট - ৩	https://i.ytimg.com/vi/toW3kzkSCjc/maxresdefault.jpg	12	1218	16	0	2026-06-07	t	0	2026-06-07 19:52:51.798181+00
+7f0bae8e-cd51-4814-b4df-95b652d5479d	96bf2ef8-0a71-4358-88fb-db2e2f5639ba	youtube	https://www.youtube.com/watch?v=TMA9NWRYzYg	রোবট ফার্ম : পার্ট - ২	https://i.ytimg.com/vi/TMA9NWRYzYg/maxresdefault.jpg	12	2029	17	0	2026-06-07	f	1	2026-06-07 19:52:51.798181+00
+8bef50ee-8e46-4baf-bf3e-61dbaca73723	96bf2ef8-0a71-4358-88fb-db2e2f5639ba	youtube	https://www.youtube.com/watch?v=HOj6o5PNYQk	রোবট ফার্ম : পার্ট - ১	https://i.ytimg.com/vi/HOj6o5PNYQk/maxresdefault.jpg	12	3479	35	0	2026-06-07	f	2	2026-06-07 19:52:51.798181+00
+38f09a30-53df-4ea6-aba4-5edf24e2039b	96bf2ef8-0a71-4358-88fb-db2e2f5639ba	youtube	https://www.youtube.com/watch?v=9VOX7oRgdtQ	রাস্ট মনস্টার : পার্ট - ১১	https://i.ytimg.com/vi/9VOX7oRgdtQ/maxresdefault.jpg	12	2968	25	0	2026-06-07	f	3	2026-06-07 19:52:51.798181+00
+5837c170-b0db-4cd3-9f39-0e02cecce8eb	96bf2ef8-0a71-4358-88fb-db2e2f5639ba	youtube	https://www.youtube.com/watch?v=goIudHqsOn4	রাস্ট মনস্টার : পার্ট - ১০	https://i.ytimg.com/vi/goIudHqsOn4/maxresdefault.jpg	12	3468	36	0	2026-06-07	f	4	2026-06-07 19:52:51.798181+00
+3b2296c6-fb9b-4e14-b7d8-0c8bdc768bfe	96bf2ef8-0a71-4358-88fb-db2e2f5639ba	youtube	https://www.youtube.com/watch?v=Uw58hOUYQ84	রাস্ট মনস্টার : পার্ট - ৯	https://i.ytimg.com/vi/Uw58hOUYQ84/maxresdefault.jpg	12	4619	39	0	2026-06-07	f	5	2026-06-07 19:52:51.798181+00
+2cad9b38-b2e9-4ab9-8855-71956843b3b8	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/DZPWsDMzoAW/	@pochondoshop ♥️	https://scontent-atl3-2.cdninstagram.com/v/t51.71878-15/716250630_1636631740898546_7643600084066900413_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=2mgXDpJhyOkQ7kNvwFEd2mM&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_6LQEKjgtjYZCiQ8p7yjiFCuPudg2CMZgFySXNZvvVzg&oe=6A2BBE9C&_nc_sid=8b3546	3	49535	3675	28	2026-06-06	t	0	2026-06-07 20:25:32.548085+00
+d87db98e-8519-4411-a2ec-c4880913cb22	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/DY91xHOzBOa/	Eid Day - 3 😛	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-15/710423701_18595388485010426_4956252021128974854_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=iuVdu664yX0Q7kNvwFHHP_h&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkwODUxNjUyMzExMTM1NTI5MA%3D%3D.3-ccb7-5&oh=00_Af_dPKiH8lg8vCoW7sswrE6UA3apMEUMTnb9jRvfyEp6Lw&oe=6A2BC18D&_nc_sid=8b3546	3	\N	1790	60	2026-05-30	f	1	2026-06-07 20:25:32.548085+00
+0197c777-be19-46ac-9853-3119c4b478bd	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/DZL8Fx_PYmq/	❤️❤️❤️	https://scontent-ord5-2.cdninstagram.com/v/t51.82787-15/714773907_18602313331053759_4125184427222847058_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=103&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=EaoFBUwUa8EQ7kNvwEcG320&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-njAv0ETjmxBxJfJ5cE8zG8xDIBQsjwLAKxZBmAJjUkA&oe=6A2B9565&_nc_sid=8b3546	12	35008	2926	12	2026-06-05	f	6	2026-06-07 20:27:05.081743+00
+a84d5170-7054-4baf-9ec2-71af1f2f5475	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/DY7UPQok9R6/	Minimalism and I were never meant for each other. ✨🐅\nEid Mubarak again 🌙\n\nMUA: @zahidkhanbridalmakeover \nPC: @zutons_snapshoot	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-15/710245561_18595083847010426_3300078251540043784_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=incUFC-h0moQ7kNvwEweLtj&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkwNzgwNTc5MjgzNzcxODY2Nw%3D%3D.3-ccb7-5&oh=00_Af_5xmQpaPHH2EhF4MwwZmIgfb6_FK17-30UGpp9lJzBgg&oe=6A2B97B5&_nc_sid=8b3546	3	\N	13374	112	2026-05-29	f	2	2026-06-07 20:25:32.548085+00
+0e40939a-aad7-4387-9cff-927923b7fc82	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/DY4ewlzCO2I/	Eid Mubarak 💙\n\nOotd : @anillaofficial	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-15/710651700_18594751930010426_3965062183710948627_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=XfZQmWIieUMQ7kNvwHTRPsg&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkwNzAwNzgwMDY2MTgzMjU0MA%3D%3D.3-ccb7-5&oh=00_Af_D3jIpQJX49Y9wfSkqnGmq3UVJfw68vD-ZKVWoTT70tQ&oe=6A2BA179&_nc_sid=8b3546	3	\N	69895	267	2026-05-28	f	3	2026-06-07 20:25:32.548085+00
+530dabec-ec4a-461b-95d2-776bdc9993ed	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/DYz1zoQIvqu/	🐅…	https://scontent-atl3-1.cdninstagram.com/v/t51.71878-15/707963998_1344197744271894_5341894918100617513_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-1.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=3SIdq5KXYYYQ7kNvwG27SKS&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_84q1HVqUPyoUr8Eeewvq-MrH4g0Qa1vVfiqZHWScuvg&oe=6A2B906C&_nc_sid=8b3546	3	104892	12293	75	2026-05-26	f	4	2026-06-07 20:25:32.548085+00
+f4afc974-ed73-4de8-bad0-368891087e03	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/DYuIlFAEz6Q/	@ali_zafar describing me thru song 🌻 \n\nPC: @zutons_snapshoot	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-15/705374834_18593495101010426_2105993546295981179_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=yTIXi9nW4HQQ7kNvwEiqnu1&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkwNDA5NDM3Nzc5ODgyNDExNQ%3D%3D.3-ccb7-5&oh=00_Af9TeM9lnVy6-vwghFf1JYpbGrWhq1XYRXHEIBD1HHJPFQ&oe=6A2BA88A&_nc_sid=8b3546	3	\N	30191	157	2026-05-24	f	5	2026-06-07 20:25:32.548085+00
+ca28af4d-eb7e-4c9a-b095-ce8a11675893	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/DYruqQRBPUp/	Passed On With Love ✨\n\nThe items will be shared gradually as story only on @themehazabien\nWhatsApp contact number will also be provided there for inquiries.\n\nPlease message only on WhatsApp. Calls will not be attended.\nOnce your item is confirmed, the pi	https://scontent-atl3-3.cdninstagram.com/v/t51.82787-15/704041324_18048400577544776_7142602679816920158_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=tdnAp1lXQGYQ7kNvwHScNOb&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkwMzQxODcxNTg2OTYwNzIwOQ%3D%3D.3-ccb7-5&oh=00_Af8PGuXmcq2S78PdG7zb24QDI3IHDDCJ7KZ_ZfWQjNzWUw&oe=6A2B930B&_nc_sid=8b3546	3	\N	2119	48	2026-05-23	f	6	2026-06-07 20:25:32.548085+00
+af9b7f3f-6e8d-4282-9663-9f59127ee311	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/DYjWiI0k0sg/	Keep me in your heart, it’s cold outside 🥶	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-15/703752253_18592259776010426_1018567402442975657_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=IBVOiB3GrHQQ7kNvwEkl2TJ&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkwMTA2MDQ5NjQ5MzQyNzE4NQ%3D%3D.3-ccb7-5&oh=00_Af-aU3SDKsOBeLAJOBdXkm25VqIY4121AwaByyw22iVgvg&oe=6A2B8B32&_nc_sid=8b3546	3	\N	37156	143	2026-05-20	f	7	2026-06-07 20:25:32.548085+00
+28f2e4e7-62de-4ab9-a9e2-2d7238ec744b	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/DYgvly0gZDY/	The peak moment of my life. Having my parents support meant the world to me ♥️	https://scontent-atl3-3.cdninstagram.com/v/t51.82787-15/702280432_18047476784544776_8894071419486228619_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=cr4VE40MGLYQ7kNvwHzMRwg&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkwMDMyNTg1NzA5NjgzMjU0MA%3D%3D.3-ccb7-5&oh=00_Af-Kp_pXfkIt8YNSa_WqRpgxhZ3RcfBclJ4jq4dRs5IV-g&oe=6A2BBD47&_nc_sid=8b3546	3	\N	15813	53	2026-05-19	f	8	2026-06-07 20:25:32.548085+00
+2713c850-24ca-43a3-b67f-690492a49673	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/DYZe-KVzef-/	…	https://scontent-atl3-3.cdninstagram.com/v/t51.71878-15/700261035_956680817357335_5528498304413945962_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=107&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=PwE59CKnG2sQ7kNvwHG1kde&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-ws6a17Qw_hw4LsjioltmBEPb36IQdEIRd9Zxcaemvxg&oe=6A2B9B84&_nc_sid=8b3546	3	196883	18690	75	2026-05-16	f	9	2026-06-07 20:25:32.548085+00
+606eec0e-9e32-4ac8-b21d-5a24e0b83366	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/DYR85SLzsEN/	Halelalelolela 👋🏽	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-15/694119219_18590260864010426_4009218245218040979_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=hhPTqdqAkLkQ7kNvwHbASN-&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg5NjE2Mjk3MTk3ODQ4MTkzMw%3D%3D.3-ccb7-5&oh=00_Af8wdShob8F5Sd1v5a6hvFAMLLpWL_XLUR_qh0OOnTJ0wg&oe=6A2B98D1&_nc_sid=8b3546	3	\N	19598	122	2026-05-13	f	10	2026-06-07 20:25:32.548085+00
+ac1c5271-b6b8-4576-be81-ac4dab12663a	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/DYRGTaDk1JV/	May = favorite month ❤︎	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-15/696811307_18590072086010426_1647451506685541713_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=CIdB0kTZXkEQ7kNvwFteIhy&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg5NTY1MDUxNzA5NjAwODQ5Nw%3D%3D.3-ccb7-5&oh=00_Af8LPNx-3wmmWd0i2yfG13RtgPAbcZvCEJvkjIFZBjvk0w&oe=6A2BA481&_nc_sid=8b3546	3	\N	83544	104	2026-05-13	f	11	2026-06-07 20:25:32.548085+00
+01be67c8-d69f-4286-b28c-620202c1074d	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/CdH8KLwJqDo/	A day with Toggi, Flora, Touzh & some crazy fun!\n\n#ToggiFunWorld\n#FeelTheThrill\n\n@toggifunworld	https://scontent-atl3-3.cdninstagram.com/v/t51.71878-15/639851119_4301146356823989_5909507882867252192_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=UBB38FWjEmUQ7kNvwHNEwhx&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9uvJGE8E_pw6Qw2rnuNpn2EsTWgzoVtfcMcdQyv7hKug&oe=6A2BA5A0&_nc_sid=8b3546	3	131289	18015	120	2022-05-04	f	12	2026-06-07 20:25:32.548085+00
+e90a1480-b645-4e2e-b30e-c0a3f4869316	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/CcflcdCpvuh/	Batabd.com, বাংলাদেশের সবচেয়ে বড় অনলাইন ফুটওয়্যার স্টোর! দুই হাজারের বেশি স্টাইলিশ আর কম্ফোর্টেবল জুতার কালেকশন! ষোলোটি ব্র্যান্ড, একটাই ডেস্টিনেশন! সাথে সারা বছর জুড়ে স্পেশাল ডিলস পেতে ভিজিট করুন- http://t.ly/sPEe\n \nফ্রি ডেলিভারিতে অর্ডার করা পণ্য প	https://scontent-atl3-3.cdninstagram.com/v/t51.71878-15/643533921_1453592389746933_3111797356711488919_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=TgtU1zboX5IQ7kNvwFZs9xB&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-kFRqm2F2Wk1pc9VSSe3GOK4II_49EC9GegXkwFrSk0w&oe=6A2B8F80&_nc_sid=8b3546	3	144604	17189	129	2022-04-18	f	13	2026-06-07 20:25:32.548085+00
+979de022-c138-4b36-98d1-9a07eedd2864	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/CcDQvzqpNJY/	স্টাইলে কমফোর্টে ঈদ আনন্দে বাটা! ঈদের প্রতিটি মুহূর্ত রঙিন করে তুলতে ৬০০-এর ও বেশি এক্সক্লুসিভ ডিজাইন নিয়ে বাটা আছে আপনার সাথে। আকর্ষণীয় সব ডিজাইন আর ডিলস পেতে আজই চলে আসুন আপনার নিকটস্থ বাটা স্টোরে অথবা ভিজিট করুন Batabd.com-এ।\n\n#StyleAndComfort #Bata	https://scontent-atl3-3.cdninstagram.com/v/t51.71878-15/643565382_4295586340723401_917298322091593431_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=3uU7FuTGU0EQ7kNvwFctoXD&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_d3bP5Iw4Fsqx_TcCHbHSR3ZTlhn1Imn4uhsjdzlp-sA&oe=6A2BB8F4&_nc_sid=8b3546	3	92122	11179	42	2022-04-07	f	14	2026-06-07 20:25:32.548085+00
+3e122756-2361-4c42-a46c-9cfe8399a6d1	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/Cb4_FYFpPVH/	৬০০-এর ও বেশি এক্সক্লুসিভ সব ডিজাইন নিয়ে থাকছে স্টাইলে কমফোর্টে ঈদ আনন্দে বাটা! আকর্ষণীয় সব ডিজাইন আর ডিলস পেতে আজই চলে আসুন আপনার নিকটস্থ বাটা স্টোরে অথবা ভিজিট করুন Batabd.com-এ।\n\n#StyleAndComfort #BataEidExclusive #SurprisinglyBata #batabangladesh	https://scontent-atl3-3.cdninstagram.com/v/t51.71878-15/639908283_25855527874076471_6266381489985214983_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=111&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=a3sezIW5mtUQ7kNvwEK6QU-&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af885i_xMcZlrnvdZ4CgowDhgV1Kuv0_WC3v4ytKeVfE_g&oe=6A2BC236&_nc_sid=8b3546	3	108118	14830	65	2022-04-03	f	15	2026-06-07 20:25:32.548085+00
+e278adff-935f-41e7-b1b4-c7c8af024cf8	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/Cb4iw0uJtMZ/	স্টাইলে কমফোর্টে ঈদ আনন্দে বাটা! ঈদের প্রতিটি মুহূর্ত রঙিন করে তুলতে ৬০০-এর ও বেশি এক্সক্লুসিভ ডিজাইন নিয়ে বাটা আছে আপনার সাথে। আকর্ষণীয় সব ডিজাইন আর ডিলস পেতে আজই চলে আসুন আপনার নিকটস্থ বাটা স্টোরে অথবা ভিজিট করুন Batabd.com-এ।\n\n#StyleAndComfort #Bata	https://scontent-atl3-1.cdninstagram.com/v/t51.71878-15/641325699_25849940607966558_3519399263365729590_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-1.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=AYMMD4P_hQQQ7kNvwGirq8e&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-_1vm_WekVeXsfPCHl54dKINdsrLL4mR7ujvBMyez5QQ&oe=6A2BAA84&_nc_sid=8b3546	3	70171	10040	37	2022-04-03	f	16	2026-06-07 20:25:32.548085+00
+96cb684e-2279-47d5-84d3-3cbe250a74fd	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/Cbzn4rOJF-T/	When it comes to my everyday product usage I don’t risk my skin with just any products and makeup! Here is sharing with you guys my everyday tips and tricks!!! If you guys like the products and want to order in their page Use code “Mehazabien love” for 3	https://scontent-atl3-2.cdninstagram.com/v/t51.71878-15/642506909_1583573466284414_3826158111092764987_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=gWzXU6gATdsQ7kNvwGw01dP&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af856WBMfYGnsmL-IXryFwWwRL2XNf2Ug8Nv4pv2M3WbFQ&oe=6A2BA0E5&_nc_sid=8b3546	3	79417	11524	83	2022-04-01	f	17	2026-06-07 20:25:32.548085+00
+a50520ad-fd5c-44c6-939e-7135662221df	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/CYtWg2dIsZ6/	এশিয়ান নারীরা অধিকার নিয়ে হচ্ছে সোচ্চার! শুনুন তাদের তাদের সংগ্রামের গল্প। DW নারী বিষয়ক সিরিজ HER শুধুমাত্র Bongo থেকে দেখতে ভিজিট করুন tu.bongobd.com/Mehazabien অথবা আইএসও বা প্লেস্টোর থেকে ডাউনলোড করুন Bongo অ্যাপ।\n\n#DW #Bongo	https://scontent-atl3-3.cdninstagram.com/v/t51.71878-15/642737727_1832391510811306_3776388113232308745_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=110&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=aqQRBnoNC70Q7kNvwHoi7e-&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-y_PNJsyor-7vA4Suv7MmzQWJ-xXzBCc6pU0-hpOwuVQ&oe=6A2BA31B&_nc_sid=8b3546	3	218819	39369	262	2022-01-14	f	18	2026-06-07 20:25:32.548085+00
+3379557c-2613-44d0-8e85-9e974390c1f2	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/CWmw1KIlObB/	Super excited and grateful to be a part of this latest TECNO #Spark8Pro launch. #Spark8Pro has been my absolute favorite for its unstoppable features and stylish design in the shade - Komodo Island. If you are someone who is always on the go and wants to	https://scontent-atl3-3.cdninstagram.com/v/t51.71878-15/642069141_1702760504463886_5490420733268550928_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=110&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=pzUAMm_igXMQ7kNvwEYD9cA&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af900TlvrJ9kNSanAKbKAACYs3CTuLenB47r3WTUZtOcAg&oe=6A2BB715&_nc_sid=8b3546	3	113203	16564	201	2021-11-23	f	19	2026-06-07 20:25:32.548085+00
+c7c2b936-ebaa-4f7b-b4b9-e378406c1eca	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/CgC0SmpBR2O/	Poran ❤️	https://scontent-ord5-2.cdninstagram.com/v/t51.71878-15/642218442_2454567908313734_6985773359764419143_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=uBm0P80UGp0Q7kNvwGV_CCO&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8GN5Wp_FBto-KiueFCddN9D_3HjpCPmYuqxQhHIVRn4w&oe=6A2B972F&_nc_sid=8b3546	12	32518	3930	35	2022-07-15	f	17	2026-06-07 20:27:05.081743+00
+15021fc0-9a42-41b7-95aa-ab9e26c49586	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/CWNdNO-J3My/	I always love being a Trendsetter, which is why I'm offering a style of my own with the #Spark8Pro. \n\nGet ready to witness the all-new TECNO #Spark8Pro! Coming soon at the stores near you and online! \n\nStay tuned!\n\n#StopAtNothing\n#Spark8Pro \n#comingsoon	https://scontent-atl3-2.cdninstagram.com/v/t51.71878-15/641868992_2671776129865133_4897114566681482613_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=PDQlNa5FbPMQ7kNvwEU3L_J&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_DdSLQ1bMwg5OakVvVGTF442eu6HJXh5RcFcu9Lg0QbQ&oe=6A2B9643&_nc_sid=8b3546	3	172956	24083	154	2021-11-13	f	20	2026-06-07 20:25:32.548085+00
+7a0a52ec-1c41-4d4b-a6fc-9cb3275e02a1	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/CWKmhobJPnh/	I am flaunting love for the upcoming TECNO #Spark8Pro. Its unmatched beauty won me over. Coming soon to the stores!\n\nStay tuned!\n\n#StopAtNothing\n#Spark8Pro \n#comingsoon	https://scontent-atl3-3.cdninstagram.com/v/t51.71878-15/640968434_1839404723444973_8595934839399970890_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=t4nwg8vYSLMQ7kNvwHrGDlR&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9mljKQLmCq9yU4reXj5WzeZShgtFzmB146tQR4GiB4jw&oe=6A2BB0B8&_nc_sid=8b3546	3	219503	36890	265	2021-11-12	f	21	2026-06-07 20:25:32.548085+00
+6c3fb0d4-214c-4c30-9e6b-d5f4a3b9bd25	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/CV4lG_oJXIi/	THE ONE PERFECT DAY \nProducts: @konabyfarnazalam \nMakeover: @womansworldltd \nJewelry: @amisheebd \nDress: @sabyasachiofficial \n\nThe wedding day should be the most important for you  as you start a new journey today. It should have all the emotions but mos	https://scontent-atl3-3.cdninstagram.com/v/t51.71878-15/642386646_1947183109228799_6808751906288749744_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=111&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=amQdGlztfU4Q7kNvwFS331K&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af__50_X360kjyAbiJnIJuwnaNI_ItTkpLb63_EB_0g72Q&oe=6A2BB5B5&_nc_sid=8b3546	3	249691	63771	593	2021-11-05	f	22	2026-06-07 20:25:32.548085+00
+9b4ec36e-e8fd-40ce-b217-62e669a4583f	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	https://www.instagram.com/p/COHxI8RlYbW/	Love @konabyfarnazalam lipstick shades. From Casual to Glam. Use CODE “MEH” and get 30% discount on all Kona products till Eid. \n\nIf you love lipsticks this set is for you. Each and every shade is so pretty and wearable. \n\nBest parts are:\nThey don’t dry	https://scontent-atl3-2.cdninstagram.com/v/t51.71878-15/640446232_2122671278510005_8725182156852454118_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=101&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=NMrjCvIirxMQ7kNvwF4Tj-Z&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9Vm94aS16i3foYq8UGOfYvrc_-xpHwU7QvNXIUMejaKQ&oe=6A2B8FD2&_nc_sid=8b3546	3	425966	65654	813	2021-04-26	f	23	2026-06-07 20:25:32.548085+00
+6e036a9e-6e04-4139-b691-32d0ab758add	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/DWxzquRjzPy/	Just a princess in her own world 💕\n\nMUA- @signature.look.by.samia \n📷- @nasirhossinphotography \nWearing- @maison.amali	https://scontent-ord5-2.cdninstagram.com/v/t51.82787-15/659279197_18584916316053759_4658850978017095444_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=103&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=AwWjAf97cD0Q7kNvwFi5fmG&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg2OTEwMDAyOTg4MTgyOTQ3NQ%3D%3D.3-ccb7-5&oh=00_Af_Epf0vlRxax1fa2SpyXgvwjGqN7Q5t48uW2dcq8UwakA&oe=6A2BB34B&_nc_sid=8b3546	12	\N	7943	106	2026-04-06	t	0	2026-06-07 20:27:05.081743+00
+b487286b-c421-45cc-97cc-2813574881f8	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/DJB6B_IyZ9q/	Vaccines work every time, if given at the right time - hear from our national ambassador Bidya Sinha Saha Mim, on the occasion of #WorldImmunizationWeek 👆	https://scontent-ord5-3.cdninstagram.com/v/t51.71878-15/505127997_1351116975965206_6961412051918117242_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-ord5-3.cdninstagram.com&_nc_cat=110&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=zWr_6K7xSHEQ7kNvwFbxupe&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_yhE58CH7OhpvLEAGWL5VMP6baGzogTFPzaea1BoHRsw&oe=6A2BBF40&_nc_sid=8b3546	12	33289	1765	53	2025-04-29	f	1	2026-06-07 20:27:05.081743+00
+bffbe589-a4d9-42a4-8d6c-887fa5acf392	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/CniyI2HS4sD/	Spread your wings and soar. 🖤\n\nP.c- @redwanrajuphotographydxb \nWearing- @meherofficials	https://scontent-ord5-1.cdninstagram.com/v/t51.82787-15/652398022_18071747714536597_6284186151277628813_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-ord5-1.cdninstagram.com&_nc_cat=101&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=ZBUe1FWdgrcQ7kNvwF8CHIn&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzAxODE5NTIwMTg4NzQxNDQ0OQ%3D%3D.3-ccb7-5&oh=00_Af88MPnkdrjFZA1Wo0BjK8mrJe-j1b6e3IAhUYROEGhlKw&oe=6A2BBBDE&_nc_sid=8b3546	12	\N	89933	900	2023-01-18	f	2	2026-06-07 20:27:05.081743+00
+8868c35d-ce3b-4bc8-87da-fc7204d0c5fc	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/DZSeEtnvRwm/	লাইফের এই জার্নিতে সময় যখন এক বিশাল প্রতিপক্ষ।\nকাজী আসাদ পরিচালিত চরকি অরিজিনাল ফিল্ম ‘লাইফলাইন’ আসছে শীঘ্রই।\n#Lifeline #Chorki #FilmFunFoorti #FreshAnonna #norix_1 BidyaSinhaSahaMim Mim	https://scontent-ord5-2.cdninstagram.com/v/t51.82787-15/717582438_18603048697053759_4054424471060867855_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=103&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=rTOLHmSI0YgQ7kNvwGZ_EAS&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkxNDMyMzI5MTM5NjcwOTQxNA%3D%3D.3-ccb7-5&oh=00_Af_cS_tHiOQavkAc5Grqd9cS8jCoR49id30vaQXFtetAEA&oe=6A2B9126&_nc_sid=8b3546	12	\N	421	12	2026-06-07	f	3	2026-06-07 20:27:05.081743+00
+a17bad8c-9338-416e-8571-d8ea6e336b07	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/DZOnZVmEZtB/	Where the pool meets the sea, life feels perfect. 💙🌊\n \n#familytime❤️	https://scontent-ord5-2.cdninstagram.com/v/t51.82787-15/718935723_18602624752053759_3714041654344720528_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=103&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=wFYzOUopjsEQ7kNvwFzyIHc&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkxMzIzODE4MTgxODI3NDA4Ng%3D%3D.3-ccb7-5&oh=00_Af9VhnmkZzpj2GLbj4zIbWBVhUIJyqGRhIKn4-XcVj0gIg&oe=6A2B8E38&_nc_sid=8b3546	12	\N	15337	115	2026-06-06	f	4	2026-06-07 20:27:05.081743+00
+d724effb-bd48-43f3-bb9e-60205a1ebcfd	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/DZMBh_KD07P/	❤️	https://scontent-ord5-2.cdninstagram.com/v/t51.82787-15/714749490_18602323486053759_2530547684990651759_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=103&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=OFOGTLze6iUQ7kNvwG0PJ8v&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkxMjUwODUyMDI4NDUzMTAxMg%3D%3D.3-ccb7-5&oh=00_Af8fev3Kcu8FMxyRpVJCpCLSOqg21z8TGKUYrBhRYeiFyg&oe=6A2BB696&_nc_sid=8b3546	12	\N	6649	57	2026-06-05	f	5	2026-06-07 20:27:05.081743+00
+88e93380-a464-4284-92a6-480e4f899b23	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/DZLzsoOjySg/	After 5 years, finally reunited with my little sister. My heart is full. ❤️\n#familyvacation	https://scontent-ord5-2.cdninstagram.com/v/t51.82787-15/715177859_18602298607053759_8463760486424045696_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=103&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=UpVnAvSFJxQQ7kNvwHGK-pt&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkxMjQ0NzgwNTIwOTE2MTQzNg%3D%3D.3-ccb7-5&oh=00_Af9in02jQvvJtvgGpL2buPzvH-JN8KaAcSm8K7Kq2AQtww&oe=6A2BAC9C&_nc_sid=8b3546	12	\N	12844	39	2026-06-05	f	7	2026-06-07 20:27:05.081743+00
+94bcec83-f211-4edd-a5ac-28ca1e75116e	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/DZFr2M-vRt4/	অচেনা হইয়া সে অকূলে ভাসাইছে\nএমনও পিরিতি শিখাইছে...\nমায়া লাগাইছে, পিরিতি শিখাইছে\nদেওয়ানা বানাইছে\nকী জাদু করিয়া বন্দে মায়া লাগাইছে💔#malik #bidyasinhamim	https://scontent-ord5-1.cdninstagram.com/v/t51.71878-15/714561327_1692586191932833_5754749065014372595_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-ord5-1.cdninstagram.com&_nc_cat=101&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=dYc68TY7d1oQ7kNvwEMtJ86&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_zr1GSxoCFRxtPV651L3SoUD9gutCCWoeXqvHa5f8f6w&oe=6A2BAA5F&_nc_sid=8b3546	12	9628	785	9	2026-06-02	f	8	2026-06-07 20:27:05.081743+00
+538eeb45-b0eb-4b4a-9bdc-93e66d44f124	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/DZC2lvOvmRn/	মায়া লাগাইছে, পিরিতি শিখাইছে\nদেওয়ানা বানাইছে\nকী জাদু করিয়া বন্দে মায়া লাগাইছে💔\n#malik #bidyasinhamim	https://scontent-ord5-2.cdninstagram.com/v/t51.82787-15/713083361_18601229929053759_5362791498985231519_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=103&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=xkLToGCqEewQ7kNvwGF3j0w&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_1JszoXYwTRvmXjuXQwABtGFYvkTqZANORhwb9I3t1gA&oe=6A2BBB9A&_nc_sid=8b3546	12	16086	1322	20	2026-06-01	f	9	2026-06-07 20:27:05.081743+00
+3114e7e4-988c-4d29-9be0-b8f37a2e1ac5	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/DZCCyvND3uX/	So, how was the “Gulguli Pitha” song?\n#gulgulipitha	https://scontent-ord5-2.cdninstagram.com/v/t51.82787-15/714715204_18601135483053759_4080868511188710955_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=103&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=iIT7rcYFtWkQ7kNvwGAS5r0&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkwOTY5OTQ3MTAyMTE1MzQ1Ng%3D%3D.3-ccb7-5&oh=00_Af_J2LlmS6aiVCtUtyKjPelohhoxB2Lrw41d3nniBXGYCg&oe=6A2BABCC&_nc_sid=8b3546	12	\N	15528	132	2026-06-01	f	10	2026-06-07 20:27:05.081743+00
+321abdbb-b66d-4663-ae8e-073070afc68d	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/DZAqJkrj4Bh/	“Malik” running successfully in cinemas.🖤\n\n📷- @purnophotographyofficial	https://scontent-ord5-2.cdninstagram.com/v/t51.82787-15/713624303_18600939961053759_4244732627724518070_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=103&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=-HmDBkabwuoQ7kNvwFmN_GE&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkwOTMwNzM5MjAyOTYzMTgyOQ%3D%3D.3-ccb7-5&oh=00_Af9lqgzOM90RryD1rCaiw_7pTiGTmRaARYHJGpPGRCvrgQ&oe=6A2B9E65&_nc_sid=8b3546	12	\N	5746	87	2026-05-31	f	11	2026-06-07 20:27:05.081743+00
+87ed3ba4-cd45-467e-97b1-ccd985fab3cc	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/CgmKDmnDP7Z/	পরাণের অনন্যাকে আপনারা ভালোবাসা দিয়েছেন, এই চরিত্রের জন্য জানিয়েছেন ঘৃণাও। আপনাদের এই অভিব্যক্তি আমাকে উৎসাহ দিয়েছে। এমন ডার্ক শেডের ক্যারেক্টার চুজ করার সাহস পেয়েছি কারণ আমাদের দর্শকদের আমি চেয়েছি ভিন্ন কিছুর স্বাদ দেয়ার জন্য। পরাণের অনন্যা চরিত্রটির মধ	https://scontent-ord5-2.cdninstagram.com/v/t51.71878-15/643600554_3526130670887921_4174332917589276342_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=XCdP_0h-iPsQ7kNvwE6DJzL&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9172eEffLnad_syGgfCstXkI6jpHXDKAVp7FIPKy07Lg&oe=6A2B9DA2&_nc_sid=8b3546	12	80690	10464	45	2022-07-29	f	12	2026-06-07 20:27:05.081743+00
+6a7508a0-257d-4026-8087-ac4a1564527e	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/CgbtHLQD9vz/	Poran💜 \nSpecial premiere show for the success 💜\nThank you so much everyone for the love and support. 💜\n#running #successfully  #theater #poran #movie #housefull #show #bidyasinhamim	https://scontent-ord5-2.cdninstagram.com/v/t51.71878-15/641586188_1572032997613571_7349912238092072585_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=111&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=ppSEFyS45CAQ7kNvwFhsRgZ&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-h0XhkzFWfCbDwt8IEO4_EkIpzsfZgMTnHabXjsig3UA&oe=6A2BB9C3&_nc_sid=8b3546	12	116792	21395	96	2022-07-25	f	13	2026-06-07 20:27:05.081743+00
+c9152482-e367-4e5f-ab69-33ec933d1dad	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/CgZcU_0jQ4h/	My look for the premier show! Poran ❤️\n\nBeautiful saree from @roujeofficial \n\nMua- @elegant_makeover	https://scontent-ord5-1.cdninstagram.com/v/t51.71878-15/642495141_1282814340368084_5989985605647096341_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-ord5-1.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=I2wlZgOlOqEQ7kNvwFpQGST&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9AGcXox4RBZPOmYv7K2HI6FzCZZNSYz-Mh__XBTv2_EA&oe=6A2B8DD6&_nc_sid=8b3546	12	224411	43944	232	2022-07-24	f	14	2026-06-07 20:27:05.081743+00
+3d028d78-f88c-4e35-a3fc-1fcb1ee346c2	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/CgSOkNHBVqk/	❤️	https://scontent-ord5-3.cdninstagram.com/v/t51.71878-15/643066322_1642592326746871_5271976536630531663_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-ord5-3.cdninstagram.com&_nc_cat=107&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=-Sb55qFgQuIQ7kNvwHNa850&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af91OltDTRUz30wvy06qyXGX7oXAHZ-SB-HJjjnU8BC_uA&oe=6A2BA417&_nc_sid=8b3546	12	94904	11215	94	2022-07-21	f	15	2026-06-07 20:27:05.081743+00
+1254fe9d-4378-4078-b74c-aa32a606f4f3	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/CgMabyQDiXd/	Housefull poran ❤️✌🏼	https://scontent-ord5-2.cdninstagram.com/v/t51.71878-15/642546298_1918350192376744_1349521716388410567_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=Hw7ghTP9Q7YQ7kNvwE6ODeK&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9JufQl_lx_ReiMtaAX0uBX9eIINsFAZ2e1zhZI5fNgxg&oe=6A2BA999&_nc_sid=8b3546	12	51171	4148	18	2022-07-19	f	16	2026-06-07 20:27:05.081743+00
+fa3bddbd-fba9-46f8-a90b-69bd18f8b62d	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/Cf4ZcKMBRMZ/	আপনাদের ভালোবাসাই মুগ্ধ ♥️🤍🤍\n#poran #housefull	https://scontent-ord5-1.cdninstagram.com/v/t51.71878-15/641764083_1445481116987180_1983189322595670892_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-ord5-1.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=pWCWElWBYX4Q7kNvwGfm1sx&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-SbgqKh8eqvg0eO-2lXLN3PbLHyfsc8db1SPIunTiCAQ&oe=6A2BBE62&_nc_sid=8b3546	12	30360	2525	8	2022-07-11	f	18	2026-06-07 20:27:05.081743+00
+cf312eb6-4df0-4af4-9d8d-c38710df8536	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/Cf3GLUlDJWL/	ঈদের চতুর্থ দিন দুপুর ২ টায়\nফিচার ফিল্ম 'মনের মানুষ'\n\nদেখতে চোখ রাখুন আরটিভিতে।	https://scontent-ord5-2.cdninstagram.com/v/t51.71878-15/642353793_2154594528716537_2751355981302262553_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=k68_E6nPIMgQ7kNvwF_MFzO&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_5NoKL8xdRd-5EZKdyEich295in9JkNGfVYUJ2_LJCkA&oe=6A2BAE32&_nc_sid=8b3546	12	65794	6435	25	2022-07-11	f	19	2026-06-07 20:27:05.081743+00
+272121bb-c844-43dd-895f-251814fcbfb1	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/Cfyc4JTJrd3/	Poran🖤	https://scontent-ord5-2.cdninstagram.com/v/t51.71878-15/643002113_2074259683364117_2036590907704736142_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=kGkwz-rKxH4Q7kNvwFAmJPx&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af91TY9OEVdde-XD7g9Wp5Ocy1VgWiEpmVRs4Ymof2mGSw&oe=6A2B9F61&_nc_sid=8b3546	12	58949	7422	218	2022-07-09	f	20	2026-06-07 20:27:05.081743+00
+d496cdcf-874a-4959-8a47-4b812f77c79f	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/CfqWjANDx2H/	আর এক পা আগালে লাফ দিব... \n\n“কার্নিশ” ফিল্মটি ওয়ার্ল্ড প্রিমিয়ার হবে চ্যানেল আইতে ঈদ এর ৩য় দিন সকাল ১০:১৫ মিনিটে ।\n\n#Karnish\n#ThisEid\n#VickyZahed\n#bidyasinhamim\nZiaul Roshan	https://scontent-ord5-3.cdninstagram.com/v/t51.71878-15/639719815_1998820177686742_3199562902932210879_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-ord5-3.cdninstagram.com&_nc_cat=110&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=sRTA7u7Mqr4Q7kNvwHUhI5r&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-eDUiz0bc4x640_8cUTnFMyJFeIhH8DhGg12l015qwAw&oe=6A2BA572&_nc_sid=8b3546	12	62943	5594	20	2022-07-06	f	21	2026-06-07 20:27:05.081743+00
+1d7495b9-16f1-4a21-bbac-4921f5b0cec8	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/CfoePAthmqL/	Boom 💥\n\nThe wait is over! \n#poran official trailer is finally here now.!	https://scontent-ord5-2.cdninstagram.com/v/t51.71878-15/643562763_1619135045769338_1938021302353799074_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=Cq5kkeR7eDwQ7kNvwEeSbue&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_CAfcncTiGh9_PEo5ok4Ua0SLDhdIqhvNncs1SwoUcUg&oe=6A2BAC99&_nc_sid=8b3546	12	30112	3675	28	2022-07-05	f	22	2026-06-07 20:27:05.081743+00
+69f8a441-b253-4f97-a26d-2804d3af471b	dcffd160-6941-45de-9b90-a93c869dc616	instagram	https://www.instagram.com/p/CfVwX3yDzjc/	আমি আর আমি নই\nতোমাতে ডুবিয়া রই।। ❤️\n\n“পরান” movie full song..\n\nSo Romantic 😎\n\n#cholniralay\n#poran	https://scontent-ord5-2.cdninstagram.com/v/t51.71878-15/638937512_1645554183109514_1351644537789150004_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=fbH2_HE6dfUQ7kNvwHoELDx&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9o283d6Tg41jnRQSKnPPIfHrI1Ym-hYQenIKVpP8NSKg&oe=6A2BA299&_nc_sid=8b3546	12	53371	6745	58	2022-06-28	f	23	2026-06-07 20:27:05.081743+00
+28ba43b4-be91-4475-837d-8ab9983b5e71	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/DY6aJXaRPup/	প্রিয়জনের কাছেই তো হারায় মন ❤️\nগানটা dedicate করে ফেল তোমাদের প্রিয়জনকে…\n\nFull video song out now 🔗 Link in Story and highlights \n\n[Svf Music, Ami Jabo Hariye, Rockstar, New Song, Music, Reel, Trending]	https://instagram.fric1-2.fna.fbcdn.net/v/t51.71878-15/707067450_2106825160048550_8784091386834122451_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=102&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=hmuW7EC5bG8Q7kNvwEecxMr&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_Frcjn1gS3sgdy9fxTN0Z0TPipC0hrIeaYb0nQk5dEuw&oe=6A2BC19A&_nc_sid=8b3546	12	216338	12189	131	2026-05-29	t	0	2026-06-07 20:27:47.497012+00
+80afbcc5-09ec-4a8c-8859-03bd02ec3892	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/DYePeMLzsLu/	একটা রাতের ট্রেন, কিছু অগোছালো মুহূর্ত \nআর তার মাঝেই জমে ওঠা আলাপ আর মজার গল্প।\n\n#BonolotaExpress directed by @tanimnoor, adapted from the novel by Humayun Ahmed Premieres Worldwide on 24th May, only on #hoichoi.\n\n@chanchal_chowdhury @mosharraf_karim @sa	https://instagram.fric1-2.fna.fbcdn.net/v/t51.71878-15/700889789_4172435696381154_1229322302718281671_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=106&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=3tKZkuSJjQoQ7kNvwGWIRbz&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_NKZa4VHPBn76RTMLXJTrEWbwQGWWvyE33fFO-aMxXng&oe=6A2BBE29&_nc_sid=8b3546	12	42044	2807	12	2026-05-18	f	1	2026-06-07 20:27:47.497012+00
+6103b892-af62-40ea-b6bc-68d637336239	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/DXMYYTUjxN8/	“জ্বলে আগুন, থামে সময়\nচলি আমি তাই তো শুধু \nতোমারই সাথে, তোমারই সাথে”\n\n#ROCKSTAR #MegastarShakibKhan #SabilaNur	https://instagram.fric1-2.fna.fbcdn.net/v/t51.82787-15/671144356_18436898158191741_1808296424673066891_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=109&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=fMA1zgxCfRkQ7kNvwF61d0A&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg3NjU4MDYwMjM4ODg3ODIwNA%3D%3D.3-ccb7-5&oh=00_Af8pVE8KxK-9XPdP4QUcj65ne1tVbBu5gSPk_tfLYv49pA&oe=6A2BA694&_nc_sid=8b3546	12	\N	16301	233	2026-04-16	f	2	2026-06-07 20:27:47.497012+00
+5af6d3ca-f64c-4a1c-9a9e-63a6356ff791	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/DZPx6Lnj_2-/	At the special screening of “ROCKSTAR” 🎸❤️\n\nSaree: @anzara.official \nJewellery: @elor.official \nMakeup: @facebysaleha \n📸: @zutons_snapshoot	https://instagram.fric1-2.fna.fbcdn.net/v/t51.82787-15/717709104_18445768762191741_7868412167125027645_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=109&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=lqz_mC8q3F4Q7kNvwEGDM_f&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkxMzU2NDgyNzkxMzM2NzQzMA%3D%3D.3-ccb7-5&oh=00_Af9DvG75PX1mAdClYHr45bo0YTqx_PMKW_eITdX8jmps8w&oe=6A2BA5C9&_nc_sid=8b3546	12	\N	12794	110	2026-06-06	f	3	2026-06-07 20:27:47.497012+00
+674d37d7-2ee4-4d6d-9051-ab2ce07c22c0	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/DY_eDO5P5pw/	Agun & Meera in Rockstar ❤️🎸	https://instagram.fric1-2.fna.fbcdn.net/v/t51.71878-15/711209757_1532689138495226_2459877647595766589_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=102&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=j3Uj5CZvxIcQ7kNvwGpRXLQ&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af99II9bqdMnH9gSQ_VOZRDDvqITyLmgr9O-iE4EUwNe_A&oe=6A2B98EF&_nc_sid=8b3546	12	69641	8887	100	2026-05-31	f	4	2026-06-07 20:27:47.497012+00
+31ef278f-f136-47b9-a827-d5bf9ce6908b	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/DY11vZkS8EI/	আমাদের প্রিয় চিত্রা-কে জন্মদিনের অনেক শুভেচ্ছা। \nএভাবেই হাসি আর আনন্দে ভরে থাকুক তোমার প্রতিটা দিন। 🎂❤️\n\n#BonolotaExpress directed by @tanimnoor, adapted from the novel by Humayun Ahmed is streaming now, only on #hoichoi.\n\n@sabla.babla	https://instagram.fric1-2.fna.fbcdn.net/v/t51.71878-15/709266083_2868471516878621_8433987652481822154_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=105&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=NuPqdpTkiB8Q7kNvwF4Tlrd&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-PSKKrTTQP-S58kHUMM5FEWQNF_m1CNnm2M8Dmm3Bqig&oe=6A2BC1A6&_nc_sid=8b3546	12	74896	11314	110	2026-05-27	f	5	2026-06-07 20:27:47.497012+00
+fe7b7b41-12fe-4c7f-9010-4c9c43f89c77	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/DY0I_ULkrOt/	Something so beautiful about filling a frame on your day with your people . Here is to the girl who dreams and we all adore .	https://instagram.fric1-2.fna.fbcdn.net/v/t51.82787-15/707247616_18592061695025058_58900193643152588_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=106&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=i3PupG7xdwMQ7kNvwEQr_Qk&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8B6BuaP6n1W3K-Ojtu_yycpoGVirx9A80bfDDQFSSIMw&oe=6A2B93E9&_nc_sid=8b3546	12	\N	7606	79	2026-05-26	f	6	2026-06-07 20:27:47.497012+00
+de0e5627-9545-49b5-9ff6-7c159cfbc2bf	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/DYw3OHizTKw/	The countdown is officially on! \nJust 3 days left until Rockstar takes the stage. 🔥🎸 Coming to your nearest cinema hall. \nOfficial streaming partner: Chorki\n#RockStar #ShakibKhan # SabilaNur #chorki #SunMotionPictures	https://instagram.fric1-2.fna.fbcdn.net/v/t51.82787-15/705969000_18111942929509350_6575169115777479903_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=106&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=5RnQkhak8ioQ7kNvwHrhKfF&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkwNDg2MzczOTY2MTA3MTAyNA%3D%3D.3-ccb7-5&oh=00_Af_o7N7dzgFIf35eJNtzLOZt7TfS95i3LxJHLUAqCYhm7A&oe=6A2BB8B7&_nc_sid=8b3546	12	\N	1847	60	2026-05-25	f	7	2026-06-07 20:27:47.497012+00
+cba4ff41-5782-4433-81c7-fda8e7edce12	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/DYrBLk8iQ5h/	🚨 Loading... \n\n#ShakibKhan l #SabilaNur l #Rockstar l	https://instagram.fric1-2.fna.fbcdn.net/v/t39.30808-6/705340718_122174318018924269_1266242508188188438_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=101&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=6-wkMA60wpAQ7kNvwGzZjFw&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=MzkwMzIxODY5NTY3Nzc0MjY4OQ%3D%3D.3-ccb7-5&oh=00_Af-jot6qJc3E8H1IKVOs9mK9gteU9wB37Un-rTghyw6K0Q&oe=6A2BB5BD&_nc_sid=8b3546	12	\N	10511	116	2026-05-23	f	8	2026-06-07 20:27:47.497012+00
+b73c92b2-adc5-45f4-a83a-ae41549c64e4	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/DXzA6Wwj6o3/	🩵🦋	https://instagram.fric1-2.fna.fbcdn.net/v/t51.82787-15/685940562_18439422574191741_278089001280917869_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=109&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=h1ViYxne3HkQ7kNvwFNtsof&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg4NzQ1NDg0NzQ3NDA3MDk4Mw%3D%3D.3-ccb7-5&oh=00_Af9G3ALasMnXVQ30nwJkCxuyPP7d-UKXoRrmb2guisJRFg&oe=6A2B8EFA&_nc_sid=8b3546	12	\N	91377	374	2026-05-01	f	9	2026-06-07 20:27:47.497012+00
+fe81a9a4-7aaa-4eb1-ba69-4e055d3a290b	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/DXmLXuKj60d/	on my own wavelength ❄️ \n\n@maison.amali | @zahidkhanbridalmakeover	https://instagram.fric1-2.fna.fbcdn.net/v/t51.82787-15/673845597_18438560413191741_4880168107560661001_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=109&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=xGz_PxdndAoQ7kNvwH0JL1y&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg4Mzg0MTY2NTIxNjAxNTI5Mg%3D%3D.3-ccb7-5&oh=00_Af87KrUeQV5S_KNq2K3lmvgVVtB6KJMnhiCHWzr-rIrBmw&oe=6A2BBCA0&_nc_sid=8b3546	12	\N	31888	415	2026-04-26	f	10	2026-06-07 20:27:47.497012+00
+64bbcc7a-4ccd-4743-844d-f2a0a29cb78d	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/DXJ0B4IjwE6/	❤️✨	https://instagram.fric1-2.fna.fbcdn.net/v/t51.82787-15/673125464_18436753411191741_249051864684311521_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=109&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=87gECqLLWZEQ7kNvwGb2_lK&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-a9rxdvzAkYueD5HDGiVlJz9ydhaPkCyMpIJfPiggbzg&oe=6A2BB43B&_nc_sid=8b3546	12	89301	13762	178	2026-04-15	f	11	2026-06-07 20:27:47.497012+00
+acf6f919-31bc-45a2-b0c3-a02e5c92f67f	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/CesveU-FgA8/	A bit of glam 💫❤️	https://instagram.fric1-2.fna.fbcdn.net/v/t51.71878-15/642278223_1422643999638545_5190324454982312475_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=105&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=jeKnD0b0WsIQ7kNvwE1a0P6&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8zwuiAX9RQHrveBBhXu8A59dZH-omyTT68aimUPRO2Cw&oe=6A2BB022&_nc_sid=8b3546	12	62153	9297	126	2022-06-12	f	12	2026-06-07 20:27:47.497012+00
+f4a3899a-f12b-467b-a94d-773b2639d814	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/CdgXKOjlx2O/	বৃষ্টি বিলাস 🌧💕🙏🏻	https://instagram.fric1-2.fna.fbcdn.net/v/t51.71878-15/643553804_2978298962365490_7046908650327994349_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=102&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=10bauHJQE4AQ7kNvwEIeM95&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af84lPta83HE2ksK9sapjTON4szfny0fIDxT_eDcLTfTsQ&oe=6A2BA080&_nc_sid=8b3546	12	107475	22929	223	2022-05-13	f	13	2026-06-07 20:27:47.497012+00
+e59c80f4-23bd-4575-b40a-e5aaff3f60c7	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/CdI7sUMlIee/	Eid special live ❤️	https://instagram.fric1-2.fna.fbcdn.net/v/t51.71878-15/639960041_942018224838896_4691012930584106482_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=108&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=HeZagiYfGEwQ7kNvwHpwk4m&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-Pi7-e0P7SwoGgNtFXSuMBOuUo-maQiNikqOh99r92AQ&oe=6A2BAC70&_nc_sid=8b3546	12	65761	13612	478	2022-05-04	f	14	2026-06-07 20:27:47.497012+00
+3c651722-ae1a-4ff7-a7e2-4a1b3b8dd27d	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/CbuM8a-lq0K/	talking to the moon 🌙	https://instagram.fric1-2.fna.fbcdn.net/v/t51.71878-15/638291984_1409011474061621_6696151163669353998_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=105&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=HRO8ru_tyxkQ7kNvwHoB10m&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_X0aKz3tl3s3djoVYhX-6UbQEgajcCkPWv01YKA-df4Q&oe=6A2BAA5D&_nc_sid=8b3546	12	97241	21387	214	2022-03-30	f	15	2026-06-07 20:27:47.497012+00
+7bd51b62-3422-4bf6-abcf-09bba089b5be	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/CbXYnXOlIgE/	এখন সারা দুনিয়া আমার comfort zone, এগিয়ে আমি সাথে আমার Redmi Note!\n\n#LovemyRedmi #RedmiNote11 \n\n@xiaomi.bangladesh	https://instagram.fric1-2.fna.fbcdn.net/v/t51.71878-15/640416630_1428507152351823_5007924964251452341_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=103&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=osbWw8y2Hq0Q7kNvwGJRWT_&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-hZg5BNyGEj6JFW2n0f-nfw2Hl9Kb-7_8Q83PXIB23-Q&oe=6A2BAB1A&_nc_sid=8b3546	12	56418	4924	61	2022-03-21	f	16	2026-06-07 20:27:47.497012+00
+4a30387e-8363-4924-949d-14c80582692e	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/CZ4XTpOlOZz/	এই ভ্যালেন্টাইন্স ডে-তে রেডি হও গ্লো অ্যান্ড লাভলী বিবি ক্রিম-এর সাথে আর পাও একদম রাইট মেকআপ লুক! #glowandlovelyBB #JustRightValentinesLook #GetReadyWithMe\n\nClick here to order online: https://shop.shajgoj.com/product/glow-lovely-face-cream-blemish-balm-	https://instagram.fric1-2.fna.fbcdn.net/v/t51.71878-15/641787995_1249998446462665_1842859317546124560_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=101&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=EWEHTyyudbIQ7kNvwErrvl9&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_d4dnJI2akcQ8evU5zQfBkB9X-9zV-SBggz3izZ0cEMA&oe=6A2BB363&_nc_sid=8b3546	12	70007	9712	92	2022-02-12	f	17	2026-06-07 20:27:47.497012+00
+d1059d27-1729-4cc3-bea2-0c83746d0c6e	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/CZ1Ifgrl2Nq/	@shafayet_loud’s “Hot Patties”, 14th February on Maasranga Television at 10:30 pm 🔥 \n.\n.\n.\n@shafayet_loud @salmon_tbf	https://instagram.fric1-2.fna.fbcdn.net/v/t51.71878-15/639831442_1547311953017628_4009970650250975997_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=100&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=a9DmiezIDcwQ7kNvwG5AKcN&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-vknDIPXA4fwt7_aVnT7QKL2e_idN5H9o1nplC5DZHFg&oe=6A2BB0B4&_nc_sid=8b3546	12	60409	8565	76	2022-02-11	f	18	2026-06-07 20:27:47.497012+00
+041e07d5-9b43-40b8-942b-4cb653962cec	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/CZKT4xgF-gb/	গেস করে বলোতো, আমাদের কাছে আসার গল্পে দ্বিধাগুলো কী ছিলো?	https://instagram.fric1-2.fna.fbcdn.net/v/t51.71878-15/640429807_1550705356021713_3413430716661699657_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=109&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=NvGUhWP0A0EQ7kNvwF3fnw5&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8nh9ZYUZ2icwbZzYBbshvZour54VqHvhXZOnP2cywK8Q&oe=6A2B945F&_nc_sid=8b3546	12	233489	23763	271	2022-01-25	f	19	2026-06-07 20:27:47.497012+00
+60885987-9720-49d1-9284-3f3d11a77349	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/CYocx3RlAOK/	A very big thanks to all my directors, co-artists and crew for some wonderful projects in 2021. A big, big thanks to my audience for making this year so memorable for me. Fingers crossed for 2022 ❤️\n.\n.\n.\nvideo credit: @rifan_sorder	https://instagram.fric1-2.fna.fbcdn.net/v/t51.71878-15/640893897_1960261564525614_5485388651284677172_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=106&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=BVa0ne4en8AQ7kNvwHcUmOl&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8tDhSGaB0g5qF1C7Zal2N_gBGiOyQo07YAoIpYNYe5mA&oe=6A2BA80D&_nc_sid=8b3546	12	102280	11666	172	2022-01-12	f	20	2026-06-07 20:27:47.497012+00
+c5807d06-573a-4005-a2aa-5d633e1f861a	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/CXwB3P4lj_0/	☺️	https://instagram.fric1-2.fna.fbcdn.net/v/t51.71878-15/643543759_1310640930917684_7026447965858900942_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=108&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=7lfs9p5bAKMQ7kNvwFU11Ce&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9IOuIM7StuqtmbmeWBgkf51MnojOz1U3zERCDECCEQzw&oe=6A2B94B4&_nc_sid=8b3546	12	49654	12921	112	2021-12-21	f	21	2026-06-07 20:27:47.497012+00
+74b244d4-1c7a-49f9-9705-66a423c446b1	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/CW0wSTbFnVO/	💫 @amitaggarwalofficial	https://instagram.fric1-2.fna.fbcdn.net/v/t51.71878-15/639497852_909383501737803_8422147209641135539_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=103&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=4owvuY2XxugQ7kNvwGN8eEj&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_VFIeHqUKnCkownfLfHgcQrYxpq28XgRzuVDN386SmpA&oe=6A2BA3A8&_nc_sid=8b3546	12	113841	20624	193	2021-11-28	f	22	2026-06-07 20:27:47.497012+00
+87b038f8-8903-472d-b577-83d82250e45a	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	https://www.instagram.com/p/CWie25VlS3e/	…	https://instagram.fric1-2.fna.fbcdn.net/v/t51.71878-15/640270526_2890757677940066_2661356536357635906_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fric1-2.fna.fbcdn.net&_nc_cat=102&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=ZRQGplzaDksQ7kNvwGeVgLu&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9ir27q_Sj_p0vfpWqKvUQKCb9xrEJTPwX3MZTHvKXJcg&oe=6A2B93A6&_nc_sid=8b3546	12	46373	8263	77	2021-11-21	f	23	2026-06-07 20:27:47.497012+00
+02fb72ba-20d1-44f3-b9cb-87c6653db967	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/DY-KgcIhZRJ/	Makeover by - @aklimas_beauty_parlour \nLocation- @hazaricottage \n#purnima #therealpurnima #purnimabd #anniversary #4yearstogether❤️	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-15/709186372_18597516259037489_7107179170245310403_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=qnwiLBMarjkQ7kNvwHa9BYs&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_Od-8RPZgFltfKb1gveRdFyamexRZY2q9j0Ux7pnAd-w&oe=6A2BB5C5&_nc_sid=8b3546	6	118205	13392	0	2026-05-30	t	0	2026-06-07 20:28:07.914847+00
+26756ccf-3aed-43c0-96d6-d0351cced3a4	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/DY4cgN3AfJF/	Eid Mubarak \nAttire - @aazmarasofficial \nMakeover by - @aklimas_beauty_parlour \n#eiduladha2026🌙🕌❤️ #instamood #purnima #therealpurnima	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-15/709589982_18596791681037489_2241360247257505279_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=_gI3Z4D6pfgQ7kNvwFy3FqP&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkwNjk5Njk4OTA4NjY0MDQzNg%3D%3D.3-ccb7-5&oh=00_Af_w7CbWMTRr7fhPrn7sXaepShbYCzGBLK9kq3qmr7Sqhg&oe=6A2BA815&_nc_sid=8b3546	6	\N	8515	165	2026-05-28	f	1	2026-06-07 20:28:07.914847+00
+2ff5335f-89ba-4f4a-8a28-e6510b0840cf	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/DZFViQ8gY1N/	#purnima #purnimabd #therealpurnima #anniversarylook 💗\nMakeover by - @aklimas_beauty_parlour	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-15/713484395_18598406497037489_6140869466319286702_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=Mtrkm5N3OyIQ7kNvwFx6CbO&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkxMDYyMjg3MzgzNjI4MTY5Ng%3D%3D.3-ccb7-5&oh=00_Af9f4B4kh7Nds6VmEM5GlycNfdx5CibvTK6Q9jO1HbJbqw&oe=6A2B8E7B&_nc_sid=8b3546	6	\N	32187	188	2026-06-02	f	2	2026-06-07 20:28:07.914847+00
+a36fcb50-7cca-42e5-a9c4-4482b0f97d5e	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/DYT3JolgVKF/	I go into peace mode when I wear green••• 💚💚💚 #therealpurnima #purnima #foryou #highlights	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-15/691305509_18592594648037489_3392671435437033856_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=_9AsaCWYNXAQ7kNvwEo56xo&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg5NjY5OTI5MjIxNTQ5ODQ0MQ%3D%3D.3-ccb7-5&oh=00_Af9LWlm4eJGo4PqxZu9GKHwMV5abgo2CmPw3wAtKNt25PQ&oe=6A2B9575&_nc_sid=8b3546	6	\N	16594	290	2026-05-14	f	3	2026-06-07 20:28:07.914847+00
+d64c4a39-2cfb-484b-98e8-0c0d0ccae240	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/DYHOKtHATxV/	#michael #michaeljackson #purnima #therealpurnima #movie	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-15/689601174_18591222193037489_5192404498886555805_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=_K4-nrjlFHsQ7kNvwFRouQJ&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg5MzE0MjcxMTE2NjkwOTUyNQ%3D%3D.3-ccb7-5&oh=00_Af_zpOnobg-lERMUGDgynqeVHmKYKXDOVpOTGgHU7ncgWg&oe=6A2BA0D7&_nc_sid=8b3546	6	\N	3908	73	2026-05-09	f	4	2026-06-07 20:28:07.914847+00
+f50ea94e-7b16-4ef3-804e-d09260a35dc4	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/DXGvsY6gUFz/	বৈশাখী উৎসবে এই নতুন বছরে আমরা মেতেছি আসল সাদায় বৈশাখ উদযাপনে!\n#asholshadayboishakh #surfexcelexpertwhite	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-15/670927873_17882595276534377_1425776408323092375_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=GDi1lnQNCxoQ7kNvwE_hj3k&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8TE5Xpftfbv3ICPZxBOIJ2Jb4Vu2ol9P_awxSg_oF98Q&oe=6A2BBE17&_nc_sid=8b3546	6	40577	1952	21	2026-04-14	f	5	2026-06-07 20:28:07.914847+00
+d33c41c7-3e26-4a52-a328-e23da224a1b5	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/DW01wGJgVkv/	#purnima #therealpurnima #instareel #highlights #foryou ✨🫶🏼	https://scontent-atl3-2.cdninstagram.com/v/t51.71878-15/661558050_2115180852659270_8428350891687671681_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=r-0iy7lI8dUQ7kNvwEEksJS&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-RT4vKBN3ZV9l4npxdM3_-ZkFO-N0akYf7Mtm5WgX3PQ&oe=6A2BA408&_nc_sid=8b3546	6	37972	2686	50	2026-04-07	f	6	2026-06-07 20:28:07.914847+00
+af3143c0-a117-4516-ba56-167159c99225	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/DWfVGNvAdV_/	If you believe in yourself,Anything is possible ••••\n\n#purnima #therealpurnima #morning #loveyourself 🩶	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-15/658761240_18580714771037489_1132681876319747734_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=QTORychTrNUQ7kNvwEHfdHK&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg2Mzg5OTc5MTM0ODA2MTU2Nw%3D%3D.3-ccb7-5&oh=00_Af8f7dkY9l2WGJfryxLz5al_n7wMow4gaAO_j3_UHRGWXQ&oe=6A2BB5B6&_nc_sid=8b3546	6	\N	30229	429	2026-03-30	f	7	2026-06-07 20:28:07.914847+00
+7c0bb0e0-bdd4-4098-987b-069e73e91511	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/DWTlqSPgY14/	#purnima #foryou #highlights #therealpurnima #eidmubarak 🌙✨🕌🧆	https://scontent-atl3-3.cdninstagram.com/v/t51.71878-15/655602175_1298056352172432_7761053639969134596_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=100&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=nN0rQ_MdkXIQ7kNvwE4OPak&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9TPyiXMeT2b4-0ivk_MLI4yHiNwBnZDcYyAVG2QfKh8g&oe=6A2B9A59&_nc_sid=8b3546	6	39333	5596	86	2026-03-25	f	8	2026-06-07 20:28:07.914847+00
+d0f389da-4a31-4649-b678-5ccf9a2cbc1f	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/DWO8G7AAVx5/	Eid Mubarak ✨🌙🧆\n\n#eid #eidulfitr2026❤️عیدمبارک #purnima #foryou	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-15/656279514_18578794510037489_796217074241422013_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=Nci9qYXtLnkQ7kNvwFg-6BG&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg1OTI4NTU1MTU2Nzk0MDQ2NQ%3D%3D.3-ccb7-5&oh=00_Af8J8TWYcXxRR8_W8WHj4_rk_FlBDYOSCcYJyFb1XrFxEA&oe=6A2B9A25&_nc_sid=8b3546	6	\N	19526	315	2026-03-23	f	9	2026-06-07 20:28:07.914847+00
+c7fedf45-d080-469d-bd6d-b08a8e42174d	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/DWL2kQtgciN/	🧡🧡🧡 \n\n#eidday1❤️ #eidmubarak #eidulfitr2026❤️عیدمبارک #therealpurnima #foryou 🌙✨🕌🤲🏼	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-15/656279064_18578254780037489_4724946993283212699_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=BlwFhwhjrQ4Q7kNvwEo95Vj&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg1ODQxNTMwODI4OTIwMTE2NA%3D%3D.3-ccb7-5&oh=00_Af-hW3cB5hXbhNr9sKGfVv7Q5Y70RpWkNWpBM-VhPkKCeA&oe=6A2BB963&_nc_sid=8b3546	6	\N	20120	317	2026-03-22	f	10	2026-06-07 20:28:07.914847+00
+76644d4b-3217-451a-8dee-bf670357e2ab	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/DV_8QyEE9ru/	Obsessed with my fresh hair botox, gorgeous color, and this chic new cut 😍🔥 Feeling like a whole new me! 💇🏻‍♀️\n\nBig shoutout to @signature.look.by.samia for working their magic 🪄💖 You guys are amazinggg!\n\n#haircolor #hair #haircut #hairstyle #signaturelo	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-15/653710989_18576845671037489_1463322359420983614_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=4M8wMHd5xkkQ7kNvwGfTAyn&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg1NTA2NDU5OTQ3ODEzODE2MQ%3D%3D.3-ccb7-5&oh=00_Af8ReO2pLNmpiKrM1C79ZtcY8Ux4iYmCkRwGii5lIM8OxQ&oe=6A2B9E31&_nc_sid=8b3546	6	\N	11267	213	2026-03-17	f	11	2026-06-07 20:28:07.914847+00
+6fef6f64-de66-4815-b7f8-ed53dca9af6a	361323ff-e0a5-4bf7-a0e1-eeeb381b1b14	tiktok	https://www.tiktok.com/@tuhinvaia01official/video/7637785511486065927	কিছু কি বুঝতে পারছ, 😲🫡😅#	https://p19-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/oEGe3QP3gFZfEgIgXeG3R2hGYqnwbAoaEjAeLn~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=RDIcqgI%2BAxqlynyxhAPPGXq%2BMlw%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8	19	151	16	5	2026-05-09	f	2	2026-06-07 20:33:04.581566+00
+be1a77ed-66fb-4595-a79f-969deca1a08f	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/CVm462whTzm/	"রিবানা" / #Ribana \nআমাদের দেশের সর্বপ্রথম স্কিন আর হেয়ার কেয়ার Organic Brand । প্রতিষ্ঠিত হয় ২০১৫ সালে। Organic বলতে এর সবগুলো পণ্য তৈরিতে ব্যবহৃত হচ্ছে ১০০% প্রাকৃতিক উপাদান ‌।\n\nএই দেশীয় Organic Brand #Ribana এর সাথে করা আমার একটি নতুন কাজ। ☺️ পণ্য	https://scontent-atl3-2.cdninstagram.com/v/t51.71878-15/639890622_1605932083989518_8784015780100195786_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=OI7hjpR-e-AQ7kNvwGqbXsB&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_0VYW4KZVpUx6mP7QAiyzNzf2JWIlmt16h0qb1ytrXiw&oe=6A2BAD8D&_nc_sid=8b3546	6	73035	7932	100	2021-10-29	f	12	2026-06-07 20:28:07.914847+00
+3a801dba-fbc8-45d0-b0ce-4982a56c1cb1	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/CVVzczghptg/	কি আসছে নতুন.....? \n\nFollow : https://www.facebook.com/ribana.com.bd/\n\n#therealpurnima #ribanaorganic #mynewproject #comingsoon	https://scontent-atl3-2.cdninstagram.com/v/t51.71878-15/639884837_2325611191271212_1470079887914595807_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=b-_L_mvAIX0Q7kNvwGxTSUM&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_PtTe7Q-vvuCyT_KAhVaZ7U429UcxMTeUE3bj5iH_Ljg&oe=6A2BA7F5&_nc_sid=8b3546	6	94612	9016	81	2021-10-22	f	13	2026-06-07 20:28:07.914847+00
+cdf98877-3030-4e73-80a5-db2eb30e40b4	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/CTB4ymoBaQ7/	A.T.M Samsuzzaman Uncle 🙏🏼	https://scontent-atl3-3.cdninstagram.com/v/t51.71878-15/639788294_904029435711851_5605696122299473489_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=111&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=kgqEwuuYgFIQ7kNvwH8DIUd&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9OswaGIosQypxJvPZQNzIPKsjQBjvfKSOGgZ9fdp2mxA&oe=6A2B8FC0&_nc_sid=8b3546	6	87919	10988	85	2021-08-26	f	14	2026-06-07 20:28:07.914847+00
+e55ab400-3f25-43ed-8553-65b1cb6e920d	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/B9vu3X6htR9/	KONKA Refrigerator 💙	https://scontent-atl3-2.cdninstagram.com/v/t51.71878-15/628793509_1976023533008633_1521919393122058732_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=KXhxD8KX0S4Q7kNvwGJ51bN&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_F3RQAhu9eNWyWiQbikEJtvRkIku-9D22OIuAeovqKIQ&oe=6A2B8BE0&_nc_sid=8b3546	6	14060	818	18	2020-03-15	f	15	2026-06-07 20:28:07.914847+00
+025be594-c6e0-4787-9977-f889b5420b4a	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/B6kwnaHhkjh/	Bye bye 2019	https://scontent-atl3-2.cdninstagram.com/v/t51.71878-15/639877682_902080105764889_9141265121887592658_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=101&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=lrBmfYpgMm4Q7kNvwHwozWu&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_6mgIR-eNgNwH6R8Nl4hxHp2c7uuj0KP1oFvgTK0gVmA&oe=6A2B9A97&_nc_sid=8b3546	6	7447	381	5	2019-12-27	f	16	2026-06-07 20:28:07.914847+00
+31de2c82-2d17-47c8-aec5-0c140f115579	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/B08WhJYhkmC/	Director- Mizanur Rahman Aryan	https://scontent-atl3-3.cdninstagram.com/v/t51.71878-15/641271190_2011874309738085_5009564404399915760_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=kowenG2BziUQ7kNvwF0Ia-6&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_WCHeF51qhQ7TLjmPn-1_L8GjikDj7H-yjQLiNTU25Yg&oe=6A2B967C&_nc_sid=8b3546	6	0	939	20	2019-08-09	f	17	2026-06-07 20:28:07.914847+00
+0cd46b54-b1c4-4a5e-9208-dc1e2922f74b	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/B0CsrQ6g2yd/	🙈	https://scontent-atl3-3.cdninstagram.com/v/t51.71878-15/641267355_1888705628417736_1159559932158039378_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=100&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=WcM3uafPCT4Q7kNvwGFKBIx&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-7qZSgyDHmwlT1YF6sqwoMwiICi7Dr3J33h46yJTIthQ&oe=6A2BA1A3&_nc_sid=8b3546	6	0	1997	111	2019-07-18	f	18	2026-06-07 20:28:07.914847+00
+60af7334-5662-489f-a060-8ec37dd19469	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/B0Cr4lvghQp/	❤️😇	https://scontent-atl3-3.cdninstagram.com/v/t51.71878-15/642366372_1502371674644085_1604009158803276048_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=euQRQJaKyFUQ7kNvwEEQP0F&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_WPuK313SwhOeekNtxnaClrs-oRYCG6ODSXiwZwGIR1w&oe=6A2BA699&_nc_sid=8b3546	6	0	1105	18	2019-07-18	f	19	2026-06-07 20:28:07.914847+00
+f191fabc-b987-45aa-822f-c59b68d95048	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/BzQn3VVhOdW/	ইত্যাদি অনুষ্ঠান ( Ittadi program) 2019	https://scontent-atl3-3.cdninstagram.com/v/t51.71878-15/642680742_3320562661431682_5430011907632539501_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=110&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=E8VB8PjGyVkQ7kNvwHuisL_&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8RUMnEAnws04uMuUa3MYPwScrYhJ9gu8dGTUfTfJN9Mw&oe=6A2BB162&_nc_sid=8b3546	6	0	1495	38	2019-06-28	f	20	2026-06-07 20:28:07.914847+00
+55c747e1-350f-45ae-8851-d4c2e3597666	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/BybBtgCB2Xb/	Cox’s bazar... wave 🌊 #purnima #Umaiza	https://scontent-atl3-1.cdninstagram.com/v/t51.71878-15/642973817_1402698781072818_2079795486681720664_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-1.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=95QwZ7QtjpQQ7kNvwEedE25&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-e3xzqiD2RICNJBEbugpGo4PPiVPJvp3Feon_OlTEYDg&oe=6A2BA5A9&_nc_sid=8b3546	6	0	536	18	2019-06-08	f	21	2026-06-07 20:28:07.914847+00
+1408d667-64e4-43b4-baf7-951bddb23848	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/Bv9UMeVhtez/	পানওয়ালী 🙈😂	https://scontent-atl3-3.cdninstagram.com/v/t51.71878-15/642489571_1477214773923694_907497971483748972_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=110&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=-YLNY_1oHygQ7kNvwErrx54&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-dMWgfPWrP3T3VCg7HHXqoAQC0oYKi6rC7JVVU0tdlhw&oe=6A2BBFB6&_nc_sid=8b3546	6	0	55323	1102	2019-04-07	f	22	2026-06-07 20:28:07.914847+00
+458e5773-948c-4610-8395-f5b776e180dc	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	https://www.instagram.com/p/BslTW_xBV7K/	❤️	https://scontent-atl3-3.cdninstagram.com/v/t51.71878-15/641150286_1445405324040983_4824732398927577157_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=111&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=7Cr0hNCKBjEQ7kNvwHG_6-X&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_-278NpqofHwOa16mytz6bAnd2BR8BXZEmRO4_judGxw&oe=6A2BBBDB&_nc_sid=8b3546	6	0	1636	63	2019-01-13	f	23	2026-06-07 20:28:07.914847+00
+823680f7-2af0-46c3-9458-9f081631f064	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/DZSvzWkDMQq/	READY TO ROAR! 🔥 Just One Day to Go | Bangladesh vs Australia ODI Series Begins 9 June\n\n#BCB #Bangladesh #Cricket #BANvAUS #Tigers #Aussies #Australia	https://scontent-den2-1.cdninstagram.com/v/t51.82787-15/719636102_18468893341096556_3438044016347784156_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=ktVv2F6wIiMQ7kNvwH6X-3N&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-ZdgW53Nb3wyOLyJxSYoZxSWSnDTKyIIL8T7y3h_ZYJw&oe=6A2BAB41&_nc_sid=8b3546	10	2173	189	2	2026-06-07	t	0	2026-06-07 20:28:36.501125+00
+9d4c5120-1da7-492c-af35-db5c8c54c82a	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/DZSoz6piDyF/	New Journey. New Jersey. New Hope. 🇧🇩 The Bangladesh Women’s Team's official jersey for the upcoming ICC Women’s T20 World Cup is here.\n\nDressed for the challenge. Ready to represent Bangladesh on the world stage. 🏏\n\n#BCB #ICC #Tigresses #T20WorldCup	https://scontent-den2-1.cdninstagram.com/v/t51.82787-15/717248421_18468883480096556_6761937064809382753_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=VvEc4rFgmX0Q7kNvwF8hE_r&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8l8ejNzMeaLYEGfMpzNwoQehpInifKySI7PfPtvYC15w&oe=6A2BAAFD&_nc_sid=8b3546	10	1946	375	4	2026-06-07	f	1	2026-06-07 20:28:36.501125+00
+92a34864-fc5c-43ad-8e9c-61f9e4822148	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/DZSmb4IDSWs/	The Reason Why Sayeed Ibrahim Prefers Teaching 🎓🏏\n\nChar Chokka Podcast | S01 E04 | Sayeed Ibrahim Ahmed x SameerScane | BCB\n\n#Bangladesh #Cricket #4ChokkaPodcast #SameerScane	https://scontent-den2-1.cdninstagram.com/v/t51.82787-15/718315661_18468880726096556_3222589939641793623_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=4e7g73C2nSUQ7kNvwHfwuCw&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-NJgbFTt7HVq4D4fenUpM6-sFVsNLGZZX5nDlaw1CcIQ&oe=6A2B8DB2&_nc_sid=8b3546	10	4337	329	0	2026-06-07	f	2	2026-06-07 20:28:36.501125+00
+c90dc6aa-f103-4bf2-8b51-8fc4095adb6b	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/DZShfwcjLOV/	Locked in. 🎯 The Fizz in action. 🏏\n\n#BCB #Bangladesh #Cricket #MustafizurRahman #Tigers #Fizz	https://scontent-den2-1.cdninstagram.com/v/t51.82787-15/719109798_18468874714096556_5712153416224913513_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=tQa1Rz_-ueUQ7kNvwHrcN4U&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9xcJ1v44nwRv0bFWsj8x9H3nq_4qirGHQCPKNkvopUbg&oe=6A2BB70A&_nc_sid=8b3546	10	3572	842	8	2026-06-07	f	3	2026-06-07 20:28:36.501125+00
+a18d67ff-cfe7-4b9f-8b9b-22f663a31a30	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/DZSehvJCPRl/	Turn the volume up. 🔊🏏 No music. No commentary. Just the sweet sound of leather on willow.\n\n#BCB #Bangladesh #Cricket #ASMR #Batting	https://scontent-den2-1.cdninstagram.com/v/t51.82787-15/717215871_18468870211096556_5290026058289892326_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=DHoBd1--zW0Q7kNvwHgx6La&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_Xb2LtgLgvR82pkGWIjC6GORhId8a_FMEbly4Y-RWf4Q&oe=6A2B9592&_nc_sid=8b3546	10	3541	724	4	2026-06-07	f	4	2026-06-07 20:28:36.501125+00
+62c94d88-1dbb-4447-ab73-44f8fe5cdc2d	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/DZSXdhqFX39/	Eyes on the challenge ahead. 👀🏏 Bangladesh put in the hard yards at training as preparations continue for the ODI series against Australia. 🇧🇩\n\n#BCB #Bangladesh #Cricket #BANvAUS #Tigers	https://scontent-den2-1.cdninstagram.com/v/t51.82787-15/719427263_18468860422096556_3225341725258868713_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=DGuM7biH4HcQ7kNvwEHSiiw&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af832ZsNOk1aRHP1Bt0n4811baw4XRUCEYqV9sGK2jOowg&oe=6A2BB16C&_nc_sid=8b3546	10	2241	358	5	2026-06-07	f	5	2026-06-07 20:28:36.501125+00
+20adfcf3-6ef8-4256-b70a-0b012bdaee9c	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/DZSKKokDBQa/	Mosaddek Hossain Saikat returns to Bangladesh squad after 4 years for the Australia series 🇧🇩	https://scontent-den2-1.cdninstagram.com/v/t51.82787-15/717582454_18468844999096556_3749151578204143875_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=qEe2D6au-S8Q7kNvwHT0tdE&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9ACn0GzFavhtsD2ROUkmiCbRYrXE1IXD1KqK5k7hjuLg&oe=6A2BA466&_nc_sid=8b3546	10	6731	1374	16	2026-06-07	f	6	2026-06-07 20:28:36.501125+00
+f462b5eb-5f24-4e8f-b3de-cf791e02cadb	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/DZSAFf-DNeB/	Transparency at every step. ✅ Public monitoring of the voting process continues during the BCB Board of Directors Election 2026.\n\n#BCB #BangladeshCricket #Election2026	https://scontent-den2-1.cdninstagram.com/v/t51.82787-15/719150226_18468833704096556_8991058469788453391_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=4FgsRia9So8Q7kNvwFUzCLn&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-_pTssS2cP6gqkIjhMrWIEn99_VgmRjLo8fg_rbQh7ew&oe=6A2B9D03&_nc_sid=8b3546	10	2835	146	0	2026-06-07	f	7	2026-06-07 20:28:36.501125+00
+033e541a-a94f-4887-a999-c5297b6d4533	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/DZR5O2OlIbl/	BCB Board of Directors Election 2026. 🏏 The voting process is underway as members take part in shaping the future of Bangladesh cricket.\n\n#BCB #BangladeshCricket #Election2026	https://scontent-den2-1.cdninstagram.com/v/t39.30808-6/719876451_1490621333076362_6325100934646040542_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=jZtZv5zQYlAQ7kNvwHhOXhw&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=MzkxNDE2MTI0NjYzMTY0MTIwOA%3D%3D.3-ccb7-5&oh=00_Af_qGqvUFPTOTgRkhELWy8iQVIXg3usCs8sQ7EZ2MwPBpw&oe=6A2BAB52&_nc_sid=8b3546	10	\N	489	2	2026-06-07	f	8	2026-06-07 20:28:36.501125+00
+7f4213dc-4a23-439e-9df9-a55ce851fec5	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/DZR5FuAjuBU/	Fahim Sinha casts his vote | BCB Board of Directors Election 2026. 🏏\n\n#BCB #BangladeshCricket #Election2026	https://scontent-den2-1.cdninstagram.com/v/t51.82787-15/719051186_18468826312096556_6111209229160116003_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=bn0Em04pyEwQ7kNvwFipveM&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_R7wRTTKsyVH6uB5jZTUgPx06Ux36XioJteoaaxxjnVQ&oe=6A2BB4E9&_nc_sid=8b3546	10	1781	133	1	2026-06-07	f	9	2026-06-07 20:28:36.501125+00
+4590dca2-f552-4e34-9bf1-c2e50ac9251b	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/DZR5GnYlBxF/	BCB Board of Directors Election 2026. 🏏 The voting process is underway as members take part in shaping the future of Bangladesh cricket.\n\n#BCB #BangladeshCricket #Election2026	https://scontent-den2-1.cdninstagram.com/v/t39.30808-6/719222981_1490620509743111_2727516477468057905_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=1&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=95EoXs7N6ZYQ7kNvwFhKWgL&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=MzkxNDE2MDY4Mjc3NDYxNjEyMw%3D%3D.3-ccb7-5&oh=00_Af9uJJE3Hr3GlsSOyW9mD1ciWvSjLluJEtfy4oEsKSlPYQ&oe=6A2BB652&_nc_sid=8b3546	10	\N	132	0	2026-06-07	f	10	2026-06-07 20:28:36.501125+00
+4853c209-84f2-496a-9d3e-2a806108a1ea	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/DZR4uxclLTI/	BCB Board of Directors Election 2026. 🏏 The voting process is underway as members take part in shaping the future of Bangladesh cricket.\n\n#BCB #BangladeshCricket #Election2026	https://scontent-den2-1.cdninstagram.com/v/t39.30808-6/719659891_1490618063076689_2551322052710916636_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=1&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=8bIfJrLJyYwQ7kNvwGrGr-a&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=MzkxNDE1OTA0MzI2MzA4OTI4Mg%3D%3D.3-ccb7-5&oh=00_Af8gA23vixiAXdAAQPzR5ZuM6kTvjn4FyTdJthshRh-cNg&oe=6A2BBA3E&_nc_sid=8b3546	10	\N	1985	43	2026-06-07	f	11	2026-06-07 20:28:36.501125+00
+2d413d45-57d7-479a-b5a2-966c5d32677d	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/C6_zCEZrYCH/	Media Conference | Najmul Hossain Shanto, Bangladesh Captain\n#BCB #Cricket #T20WorldCup 2024	https://scontent-den2-1.cdninstagram.com/v/t51.71878-15/643555537_1633411674329089_4158572395670778062_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=101&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=tfiupYwGjykQ7kNvwF2LMl6&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9cjY9434L_eO_Uu753LDI1aglKAFjwgjAtTPUDXB1MSg&oe=6A2BA729&_nc_sid=8b3546	10	7469	1026	18	2024-05-15	f	12	2026-06-07 20:28:36.501125+00
+fcbfd4be-0953-44d4-a1d5-ea2c1d02aa24	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/C68wDKVp7WJ/	Watch the press conference featuring Bangladesh Cricket Board's Chief Selector Gazi Ashraf Hossain, alongside selectors Hannan Sarkar and Abdur Razzak, as they announced the squads for the ICC Men's T20 World Cup in West Indies and USA 2024.\n\n#BCB #Crick	https://scontent-den2-1.cdninstagram.com/v/t51.71878-15/640908975_922629487047247_4833046514741754929_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=107&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=zA4UKZcBWUoQ7kNvwHE6Wq8&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8miBht9PPoC2sp6Fhr_ZsK8GB54cEguGUvCBbOH1lsWA&oe=6A2BC032&_nc_sid=8b3546	10	11039	1330	26	2024-05-14	f	13	2026-06-07 20:28:36.501125+00
+45870152-a685-41be-99e1-9e84c6c4a033	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/C4xySPEpiti/	Highlights | 1st ODI | Australia Women’s Team Tour of Bangladesh 2024 \n\nAustralia Women Tour of Bangladesh 2024 | March 21, 2024 | SBNCS\n\n#BCB #Cricket #BANWvAUSW #BDCricket #LiveCrcket #Bangladesh #HomeSeries #odiseries #womenscricket	https://scontent-den2-1.cdninstagram.com/v/t51.71878-15/640403645_814337855014368_5430691546839193879_n.jpg?stp=dst-jpg_e15_fr_s1080x1080_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=100&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=VUCwd9Ucs1gQ7kNvwGvYs_N&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9_u7IWNX5Z86ZLJQheDgYlXbTdbNoumgE5bO968Oqjrw&oe=6A2BAD27&_nc_sid=8b3546	10	44395	2681	16	2024-03-21	f	14	2026-06-07 20:28:36.501125+00
+22914c83-a4c8-4ce3-b412-e613ac9c8e3c	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/C3-_JsQNSnz/	BPL T20 2024: Final | Comilla Victorians vs Fortune Barishal\nPost Match Media Conference | Tamim Iqbal, Fortune Barishal\n\n#BPL | #BCB | #Cricket | #BPL2024	https://scontent-den2-1.cdninstagram.com/v/t51.71878-15/643623915_1861923664497801_1025724988691240772_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=PEtBTqG9s1kQ7kNvwGEB6sw&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_HWvP3zKW4e-fYEQkKmx6xJFdK6zi95SOxD7Ye8Lam4Q&oe=6A2B91AD&_nc_sid=8b3546	10	13857	2771	19	2024-03-01	f	15	2026-06-07 20:28:36.501125+00
+1ad5a3d8-33b3-48b8-9018-1f8289137ad8	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/C3VjmQUiMHc/	BPL T20 2024: Match 32 | Comilla Victorians vs Khulna Tigers\nPost Match Media Conference | Mohammad Salahuddin, Comilla Victorians\n\n#BPL | #BCB | #Cricket | #BPL2024	https://scontent-den2-1.cdninstagram.com/v/t51.71878-15/640801607_1585225175913594_2356701059909309299_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=sj6SHXU2MUIQ7kNvwHwmSfR&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8msQmf_Y7BJ7OQw4Jq_nt2-dQaMUqKAv1wINeZgoq7ow&oe=6A2BB8C6&_nc_sid=8b3546	10	8816	825	4	2024-02-14	f	16	2026-06-07 20:28:36.501125+00
+29f446ff-b8f9-4b32-a514-5565b7c953df	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/C3LUJ5uM8Tb/	BPL Diaries 2024 | Episode 02 \nA mesmerizing display of cricket brilliance that encapsulates the essence and spirit of the tournament! 🎥🔥	https://scontent-den2-1.cdninstagram.com/v/t51.71878-15/641313689_2428365977575943_7995411502819696104_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=111&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=BU0WQ-KLXa0Q7kNvwEpcc_g&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8uLL2We779ozUGaSLwNma9zM0-0HLeMxT8z2M__MR4ig&oe=6A2BA060&_nc_sid=8b3546	10	21781	2034	5	2024-02-10	f	17	2026-06-07 20:28:36.501125+00
+59f58121-4069-4d52-8116-6959ba74391f	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/CuReHpFsfOw/	Walton ODI Series: Bangladesh vs Afghanistan \n\nBangladesh Captain Tamim Iqbal pre series press conference (04 July 2023)\n\n#BCB | #Cricket | #BANvAFG	https://scontent-den2-1.cdninstagram.com/v/t51.71878-15/641944288_1483295453414154_1884834743024595267_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=IZzx87fJBwcQ7kNvwFI0yve&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-VbVWEgXjfie79whePNkExZaU7gdb8IqA4O8Dq6f1tmw&oe=6A2BA6A1&_nc_sid=8b3546	10	34978	6153	31	2023-07-04	f	18	2026-06-07 20:28:36.501125+00
+0e9e08a9-ee54-4880-8e68-1d3eced0bbf0	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/CpMpfd7NL77/	Pre-match press conference (28 Feb. 2023) | Chandika Hathurusighe, Head Coach Bangladesh\n\n#BCB | #Cricket | #BANvENG	https://scontent-den2-1.cdninstagram.com/v/t51.71878-15/638289740_910125885172986_3219087827619700901_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=rDYDysEejS8Q7kNvwFvD15y&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9n3aj-v6PQHmU88D3RNACr4M62Tu0hlLcKy4dFGBlnCg&oe=6A2BB704&_nc_sid=8b3546	10	6442	1179	0	2023-02-28	f	19	2026-06-07 20:28:36.501125+00
+444e9813-8c5d-497d-bef2-1089460e9b0d	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/CpLNR9NgVed/	Bangladesh Cricket Team Training at the SBNCS \n\n#BCB | #Cricket | #BANvENG	https://scontent-den2-1.cdninstagram.com/v/t51.71878-15/639906206_1262784802617136_8739324179367555264_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=xAFn8aEf5joQ7kNvwH755ih&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9NFyIbSjpSPcDM8CrwgI9usZbobn1XSP9dfwGQXWf5Mw&oe=6A2BB82D&_nc_sid=8b3546	10	14899	3263	8	2023-02-27	f	20	2026-06-07 20:28:36.501125+00
+f5c2b899-9026-4b07-8c6d-786327f285aa	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/CpH9sAss7NZ/	Tamim Iqbal Press Conference (26 Febuary 2023)	https://scontent-den2-1.cdninstagram.com/v/t51.71878-15/643573170_1457498849162179_5982706041177485580_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=107&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=xbz0eMkx7FMQ7kNvwH2ZKVL&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af89a0xW854brZwm3bklfoC2ApUwkInbZ2_DwHLHBwFGog&oe=6A2B8F4C&_nc_sid=8b3546	10	10965	2323	4	2023-02-26	f	21	2026-06-07 20:28:36.501125+00
+4d56ab63-8108-4442-a9c3-ebfd0c896ce7	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/Co-f8oNuxsZ/	Head Coach Chandika Hathurusinghe press conference (22 Feb. 2023)\n\n#BCB | #Cricket	https://scontent-den2-1.cdninstagram.com/v/t51.71878-15/642401948_4200186550124955_9001670787299504171_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=103&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=BRdaidB36YkQ7kNvwEE_K5c&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-j9zk4CpOWWHwrMOmzLBX2ZC1A1SioppjG2eYHOVFjcA&oe=6A2BA63F&_nc_sid=8b3546	10	10604	1585	8	2023-02-22	f	22	2026-06-07 20:28:36.501125+00
+32ea7fff-e2fc-4daa-8c2f-efc55789874d	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	https://www.instagram.com/p/CovWA7Xvguw/	BPL T20 2023: FINAL\nPost Match Presentation\n\n#BPL | #BCB | #Cricket	https://scontent-den2-1.cdninstagram.com/v/t51.71878-15/640394913_1983666989248305_3520720254125454743_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=P2feqYsl7PYQ7kNvwHimcCi&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9mYmqbSmYNe8Gk0CQnNqDaLMlYBOcXBzVGPOYTKCxZnA&oe=6A2B8B99&_nc_sid=8b3546	10	10406	1854	20	2023-02-16	f	23	2026-06-07 20:28:36.501125+00
+24186557-bb51-461e-b7a6-d96fc46b2d5e	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/DZNNYZPBmEX/	সফল হওয়ার সবচেয়ে Boring Secret 🤫\n.\n.\n.\n#hacks #success #secret	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/715425772_18529234759073598_1334443617774827208_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=btigg05asrEQ7kNvwHOSsoD&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_2VZZ7kTsmuo5Ghn9g1BG8gnD04eOjKoRse2rHemu9NA&oe=6A2BAF65&_nc_sid=8b3546	8	11864	1462	14	2026-06-05	t	0	2026-06-07 20:28:54.858262+00
+f3863381-2bc2-40ba-aba6-958b26378d86	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/DY4ocTXgRDV/	Eid Mubarak ❤️	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/709700664_18527338108073598_8306601897692387060_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=ovozrdlfp2AQ7kNvwEMj7_9&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkwNzA0ODQzNzA3MzU3NjY4NA%3D%3D.3-ccb7-5&oh=00_Af9HVzVpRJgPxRwQCb9tLvHIVDEIFZRDt2PrJ7s4Gvcx8w&oe=6A2BC2AA&_nc_sid=8b3546	8	\N	62192	113	2026-05-28	f	1	2026-06-07 20:28:54.858262+00
+3185e90e-8009-44d4-ab4f-587ac1be8d4d	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/DY3UNcIsjED/	Eid Mubarak ❤️	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/707866888_18527222998073598_7275261447955199081_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=AuBNDdd7vskQ7kNvwEUKl57&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkwNjY4MDA4NjI2MTI4MTAyNw%3D%3D.3-ccb7-5&oh=00_Af8wExrQSJnICwjjAg18L9rg0GaRvOx423zlTmCbcj_KTQ&oe=6A2B8B6F&_nc_sid=8b3546	8	\N	51917	135	2026-05-28	f	2	2026-06-07 20:28:54.858262+00
+b93d06c1-988c-4c77-848c-877424b7c4d5	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/DYwkIpCBsh8/	‘School e Shekhayni’ tour begins 🇧🇩	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/707048730_18526625560073598_2526689956361025884_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=Fn1i4oMbZ60Q7kNvwGXBHGA&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkwNDc3OTgwMDQxNzg0NzQyMA%3D%3D.3-ccb7-5&oh=00_Af-o4vry80qHbaMBazRUCxJ7kVJN1J9gJ_Ia4h5shel7ag&oe=6A2BA755&_nc_sid=8b3546	8	\N	4081	60	2026-05-25	f	3	2026-06-07 20:28:54.858262+00
+246689a0-ccf4-4ae4-a5c6-b1b2580b4192	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/DYfTVAwB4rd/	Today’s reset button. 🚴 \n\n#cycling	https://scontent-lga3-2.cdninstagram.com/v/t51.71878-15/700378257_4207207792925105_82000913296514997_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=8Lf7peFDbvYQ7kNvwHmicOV&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-7PvIjg6bRtZ24ss7XTjWM5vOFUl0SGlaVnMM4saEwHA&oe=6A2B8D10&_nc_sid=8b3546	8	37436	4613	83	2026-05-18	f	4	2026-06-07 20:28:54.858262+00
+c1e4b1c2-6a00-4a0c-85b6-72e28456e843	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/DYV6bm7AfuZ/	First 40km cycle ride 🚴	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/696722472_18524307133073598_7356143591054849267_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=Acxsy2zQRYgQ7kNvwHTLzru&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg5NzI3NzU1MDk1MDY0NDg0Ng%3D%3D.3-ccb7-5&oh=00_Af8R8hcA9Fw9lCrXW478bvbshOgjNtrr1sjVhNtr5-C9Jw&oe=6A2B98DA&_nc_sid=8b3546	8	\N	12540	60	2026-05-15	f	5	2026-06-07 20:28:54.858262+00
+3c52ed37-8bb2-4bc7-97a5-e0de0f902f92	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/DYHnXM4pi_G/	Run... 🏃\n.\n.\n.\n#running	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/694112122_18523120411073598_4800361174601575519_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=rO2JGhs9lUoQ7kNvwGEpe9g&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_BQUg8bgQd6IaUfZCOnY-pTNvOazZ3kQqOPK9apq8t0g&oe=6A2B9E0A&_nc_sid=8b3546	8	38976	2370	30	2026-05-09	f	6	2026-06-07 20:28:54.858262+00
+da30f57c-9716-45a0-af79-67f26d94f62a	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/DX9ivg-hlgM/	আমার টিচার হয়ে ওঠার জার্নি 😇\n.\n.\n.\n#teacher #students #journey #memories	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/688958756_18522308620073598_421870988804214928_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=uFJRnckkS00Q7kNvwGW65XL&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8QLiUt6daLAojrwG3I_E1Hib8rasVyQxBu6irYtKGKLg&oe=6A2BC18E&_nc_sid=8b3546	8	20808	1231	13	2026-05-05	f	7	2026-06-07 20:28:54.858262+00
+74149afc-a32d-4348-9ef2-a79785f61af0	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/DX1IAKIAZF2/	Shada or Kalo? 🤔\nShoot e jabo in an hour	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/689079258_18521590948073598_7686020900398000355_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=NHMopvS50kcQ7kNvwG1oys8&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg4ODA0ODA4MTk0NTU5NjA3Mg%3D%3D.3-ccb7-5&oh=00_Af93lcxrBIaMWvaXD90_LMMOMR-wT6QDqvftvJUdsU5i0A&oe=6A2B99D5&_nc_sid=8b3546	8	\N	7548	283	2026-05-02	f	8	2026-06-07 20:28:54.858262+00
+ca264e55-31a7-41b0-a79a-1002f24933c2	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/DXyhR9oBpM1/	Hit and Run Challenge 👊⚽🏃\n.\n.\n.\n#football #fun #challenge	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/687020257_18521363950073598_2168555015877410241_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=BU3lpbT-knUQ7kNvwHAJFA0&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_zR_TOv71BkKGL9WoM_MFCGlQHLDCJ09agiNpJKlK_Dw&oe=6A2BB82F&_nc_sid=8b3546	8	39757	2494	18	2026-05-01	f	9	2026-06-07 20:28:54.858262+00
+14b6769b-0414-458b-8d1d-ebe7cf530f3a	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/DXg-_uKDJbL/	একটা কঠিন প্রশ্নের উত্তর ✅	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/674430643_18519823429073598_4959350355702037562_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=vlH-Bu1QwcIQ7kNvwE4VNh-&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9jvI3NFkJUES_3ZeS0CJCBVlqTZgvMuv_ZPZaUCrvpAw&oe=6A2BAFAE&_nc_sid=8b3546	8	24532	1922	22	2026-04-24	f	10	2026-06-07 20:28:54.858262+00
+51a2d7c1-cc09-4dd3-9d1d-cec537189f00	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/DXCOSFDhaSz/	ইংরেজি জানলে যে ৪টা benefit অবশ্যই পাবা 👊\n.\n.\n.\n#english #spokenenglish #learn	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/670423033_18517587853073598_2863264588358945616_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=CokVkq8NuPEQ7kNvwFC616g&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8H5Ck4yshn7XWI8XYouom-fbU5c_A9-6NCQoKO9rwQ7g&oe=6A2BA0F1&_nc_sid=8b3546	8	11980	978	18	2026-04-12	f	11	2026-06-07 20:28:54.858262+00
+26f2eded-506c-444d-b185-6a0068441c83	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/CiF1hr4pUys/	Back to Life Again. ❤ মাইক ছাড়া ৫০০ জন স্টুডেন্টের সেশনে কথা বলার অভিজ্ঞতা... 🙌\n\n10 Minute School x Chattogram🔥 [Day 02]\n\n#10MS #AymanSadiq	https://scontent-lga3-2.cdninstagram.com/v/t51.71878-15/641247260_1760163274944389_511027606228753673_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=qEtEPR9VYmYQ7kNvwHYsIwv&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-t2g7OCQ3zLfdpVppztpfwtKpMIfuSXNt1NEKCe9HFZg&oe=6A2BC0D5&_nc_sid=8b3546	8	45158	8601	77	2022-09-04	f	12	2026-06-07 20:28:54.858262+00
+bc5b86df-4b86-4175-8eff-cc87eac11e63	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/CgUYT_qpu9b/	খাতির করার উপায় খুঁজছেন? ✌️\n\n#communication #hack #hacks #praise #findmatch	https://scontent-lga3-2.cdninstagram.com/v/t51.71878-15/643048613_26347023234923616_1445148888636455615_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-2.cdninstagram.com&_nc_cat=100&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=JiUAAvMQ94MQ7kNvwERj69p&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_VaU0hFk_UCOhiVNdlC9OUeByoJLMW6g-5h71R3Nvodg&oe=6A2BBB9C&_nc_sid=8b3546	8	53721	13885	145	2022-07-22	f	13	2026-06-07 20:28:54.858262+00
+52dc6ac5-1a1e-44dc-a5a4-80c9405c4e07	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/CeBoQN2pOdy/	এই 'কথাগুলো' কথার চেয়েও বেশি POWERFUL 👊\n\n#letactionbethenoise #letyouractionsspeak #powerfultalk  #workhard	https://scontent-lga3-2.cdninstagram.com/v/t51.71878-15/640980478_1269344778406477_4512065346689522079_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-2.cdninstagram.com&_nc_cat=101&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=t7FwM8RbmToQ7kNvwEaEL3I&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_zB1Y_fsuI_HteHlRI1bgUDUd0lnBDoe86Fn56sXuXZg&oe=6A2BB99F&_nc_sid=8b3546	8	44154	6033	118	2022-05-26	f	14	2026-06-07 20:28:54.858262+00
+e5b39b53-6a36-4482-b8da-ecc1da013ad1	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/CbFiouWpjqx/	২০২২ এ যেকোনো স্কিল যেভাবে শিখবেন 👨‍🏫\n.\n.\n.\n.\n.\n#skills #learning #earning #onlineearning #howtoearn #howtolearn #2022 #aymansadiq	https://scontent-lga3-2.cdninstagram.com/v/t51.71878-15/641739145_1178869697450389_4566476610932574232_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-2.cdninstagram.com&_nc_cat=101&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=Ly-p3cmk7k8Q7kNvwFIhjVb&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-jSLoDL5rVO8CSdH9JqdbhnkEQlKYVxA6-RwH_xyj17g&oe=6A2BBD4C&_nc_sid=8b3546	8	33145	4455	49	2022-03-14	f	15	2026-06-07 20:28:54.858262+00
+23e5cf8a-6381-4a5c-ba25-e722fbcc5176	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/CaKYX6_h6Ac/	সব ভোগান্তির মূল আসলে..... 🤦🏻‍♂️\n\n#present #imagination #memories #makelifeeasier	https://scontent-lga3-3.cdninstagram.com/v/t51.71878-15/640139058_2119162778856388_2973087904072358334_n.webp?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=6u8rg6nBrO8Q7kNvwGAAHap&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9JkWYW0QoaK1HtRTn50hGnjrnXM4-f6HSVepyEzSecMg&oe=6A2B8F54&_nc_sid=8b3546	8	36954	5798	76	2022-02-19	f	16	2026-06-07 20:28:54.858262+00
+bbcc8a2c-9504-4f75-80f0-a8b2b9589f7c	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/CaCt-HGBx6g/	You are what you do. 👊\n\n#developskills #bebettereveryday	https://scontent-lga3-3.cdninstagram.com/v/t51.71878-15/643197289_2285750628582368_6051122290040291872_n.webp?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=Ll0f8ovueDYQ7kNvwHPWr6k&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af--87l_P0C_4KatkrH_u6HDS4sgovwZlnWpoJeZh19-Og&oe=6A2BA8A5&_nc_sid=8b3546	8	80323	15172	215	2022-02-16	f	17	2026-06-07 20:28:54.858262+00
+52f07af5-4879-43e8-88db-f1218699a948	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/CZwkm59BQKH/	Are you an overthinker? Get the solution in the video. 😇\n\n#overthink #overthinker #solution #imagination	https://scontent-lga3-1.cdninstagram.com/v/t51.71878-15/640393974_1633662361114917_443334494599566704_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-1.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=Ii490wLphWMQ7kNvwHj2U8Z&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9nhaqjVlnuqQEC3dh4NHRLLSsSI_uQHVFn7VNZ-nK4QQ&oe=6A2B9997&_nc_sid=8b3546	8	100912	23491	264	2022-02-09	f	18	2026-06-07 20:28:54.858262+00
+47aa5370-53ee-428e-a0ec-66161289bbf7	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/CZj1_28hJ5S/	আমি যেভাবে আলসেমিকে কাজে লাগিয়ে বদভ্যাস দূর করেছি 😀\n.\n.\n.\n.\n#laziness #lifehack #tips	https://scontent-lga3-2.cdninstagram.com/v/t51.71878-15/642496424_907492732077685_318798452741523145_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-2.cdninstagram.com&_nc_cat=101&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=9Cs9yP_y48sQ7kNvwEr0QKC&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8KU5a9l6j6Pq2XHDF1JNo258w9W3L2j5Asl5MF5twUCQ&oe=6A2B9994&_nc_sid=8b3546	8	52048	6491	103	2022-02-04	f	19	2026-06-07 20:28:54.858262+00
+4d9312db-cb84-449e-a901-35df08347ebd	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/CXwFMdehA2i/	আপনার আছে তো এই Checklist টা বানানো? | Power of A Checklist 📝\n\n#checklist #productivity\n#power #regularity\n#goodhabits	https://scontent-lga3-3.cdninstagram.com/v/t51.71878-15/641776354_2260175091175830_3511195842008005449_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=C0khCDofCdYQ7kNvwHTv7hf&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_bVwRLZ3Ww3fTkUtfSrBS40-u71hhGgFdjzBcaKH1g-A&oe=6A2B9069&_nc_sid=8b3546	8	29932	4749	69	2021-12-21	f	20	2026-06-07 20:28:54.858262+00
+ab46ea6f-5aff-4e15-84f0-7fb488c675cf	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/CW0wSCZB_Rr/	Happiness is the absence of striving for happiness. What is happiness to you? ❤️\n.\n.\n.\n#happiness #quotes #favoritequotes #inspirationalquotes	https://scontent-lga3-2.cdninstagram.com/v/t51.71878-15/642957506_2193599491459561_881351062645658695_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-2.cdninstagram.com&_nc_cat=101&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=BLNcIUNXF8QQ7kNvwHXMJNC&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9CqcgvwFcat3Dupwxo3X2Z_5zyzdqVTqxhUWOFQAb17Q&oe=6A2BA802&_nc_sid=8b3546	8	29448	7501	92	2021-11-28	f	21	2026-06-07 20:28:54.858262+00
+6ccdd22b-342b-4747-b3a9-47303378711a	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	https://www.instagram.com/p/CWN8wltoPil/	Commitment এর pressure! 🤦‍♂️\n\n#story #fact #commitment	https://scontent-lga3-2.cdninstagram.com/v/t51.71878-15/643093280_1100025478924843_3918610930500496089_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-2.cdninstagram.com&_nc_cat=107&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=NfOSgTtlPlsQ7kNvwG0Y-32&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af85nhyiR3MuGiYRUGmsXgpfLmPTdgcLnWJRr00YuYAfZQ&oe=6A2BAF1A&_nc_sid=8b3546	8	28826	4348	52	2021-11-13	f	22	2026-06-07 20:28:54.858262+00
+64540dac-a4d5-428a-a23b-b4587714ca27	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/DZPynZSzbcc/	“Memory is the diary that \n  we all carry  about us “	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.82787-15/716250349_18601235086054486_4078791276651352128_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=110&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=QNitQ_w0ifgQ7kNvwFi9919&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkxMzU2OTIxMDc1MjQxNTUxNg%3D%3D.3-ccb7-5&oh=00_Af-aP2vYzXhtxTvBKtYWwNOWqzRZQeK0y_kHJaSVQFufGA&oe=6A2BBB02&_nc_sid=8b3546	10	\N	6694	66	2026-06-06	t	0	2026-06-07 20:30:05.599271+00
+4f868212-002c-4403-8d70-c70a5510fdbb	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/DZK0nz7CEgl/	Don't spill the Strawberry Margarita while facing Bangladesh's fiery pace duo — Nahid Rana & Shoriful Islam! 🔥🏏\n\nThink you've got the balance, focus, and nerves to survive? Game on!\n\n#PlayDrinks #playbd #wannaplay #GameOn #taskinahmed #playbangladesh	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.82787-15/715970296_17874071139672175_232930658303847784_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=107&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=6Tyskl4_0fQQ7kNvwG-JxgH&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9889jO6mYz8lkCsQ0bTf0rAInPQV82AKV6WznvPH33ZQ&oe=6A2B8E78&_nc_sid=8b3546	10	23253	3454	19	2026-06-04	f	1	2026-06-07 20:30:05.599271+00
+90eedb28-055a-40df-bba4-d240b0a8b295	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/DZFTtn9z4Jy/	Mohammedan S C 🏏	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.82787-15/713684815_18600014680054486_3546811687658464979_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=110&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=lKovmSG4NmsQ7kNvwHcJWnh&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkxMDYxODU0OTYxNDI0ODU2Mg%3D%3D.3-ccb7-5&oh=00_Af_A2RDS7-CfhlgI2H1gfuDPPi4EIqqOKuJ6jcGXgZnYJA&oe=6A2B8EE4&_nc_sid=8b3546	10	\N	2111	20	2026-06-02	f	2	2026-06-07 20:30:05.599271+00
+b0fb605a-4874-4e8f-a66f-6e17d3405350	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/DZAOO7mz0Bd/	Your time is limited, so don’t waste it living someone else’s life. 💪🏻	https://instagram.fagc1-2.fna.fbcdn.net/v/t51.71878-15/710432098_999624729149796_4516240558214788152_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fagc1-2.fna.fbcdn.net&_nc_cat=100&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=JHQNpM_H34oQ7kNvwGxiqR7&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-CfpoVl3wCNezWbJKKGbNeQ1BGUZyV001PeQkMLnbHoA&oe=6A2BBE43&_nc_sid=8b3546	10	40735	4818	26	2026-05-31	f	3	2026-06-07 20:30:05.599271+00
+e3aae933-a036-48ca-9ab4-6d383953979a	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/DY_Wis-harf/	Another experienced campaigner in the bag 💪 \n\nWelcome to the Kingdom, Taskin Ahmed 💙\n\n#JaffnaKings #KingsFamily #LPL2026 #TamilPride #GoForFive	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.82787-15/709700538_18106468546869425_8761648113222030636_n.webp?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=105&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=hb89ToDq8R0Q7kNvwEcR7ol&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkwODk0MjE0MzM1OTkyMDg2Mw%3D%3D.3-ccb7-5&oh=00_Af9IVuu_Z5SLkb8BJFOu3G3nHHunznidMx57hALcCnt6hg&oe=6A2BBF12&_nc_sid=8b3546	10	\N	2067	15	2026-05-31	f	4	2026-06-07 20:30:05.599271+00
+2dcf76e4-58ec-4be4-844f-3a1dd4cd076c	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/DY9cnovzaFf/	when my princess destroy her \nmother’s make up box 🤣🤣	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.71878-15/711268660_1521968269306375_2907300146837275714_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=107&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=uy_bRxdTgVIQ7kNvwG4noGO&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9cPnUDjX4gJjpC0WC3f8X6F4BUTH5loPtaC2RUr0Pcbw&oe=6A2B9204&_nc_sid=8b3546	10	77297	10758	65	2026-05-30	f	5	2026-06-07 20:30:05.599271+00
+0aa0b586-4918-495c-a8db-a8bb6411c36a	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/CbnIR0DoQjn/	Don't Decrease \n  The Goal \n  Increase The \n  Effort .\nGym session with @tamimofficial  bhai \n#trusttheprocess	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.71878-15/641794016_1935474717354293_5852954675711643787_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=105&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=NO3ybhrprZ8Q7kNvwGkW9FE&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_xSA7_RyMBO9aibX7rp0qpAkn1weDMmAxzX8mAs_h_6g&oe=6A2BB461&_nc_sid=8b3546	10	34787	7359	61	2022-03-27	f	17	2026-06-07 20:30:05.599271+00
+50ff701c-dd8f-4b39-b945-0520bad6de06	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/DY393ajFNQr/	Locked in. 🔥👑\nTaskin Ahmed is ready to bring the heat for the Jaffna Kings this season!\n\n#JaffnaKings #LPL2026 #TaskinAhmed #LankaPremierLeague #IPG #SriLankaCricket	https://instagram.fagc1-1.fna.fbcdn.net/v/t39.30808-6/709844031_1458854239612254_6622923228693518233_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=106&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=LKB-L2t1cQUQ7kNvwHYPqmO&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=MzkwNjg2MzI5MDY4MTQ0NzQ2Nw%3D%3D.3-ccb7-5&oh=00_Af9Uhlwn5fNGhC3eJFTzupOSl8rvY60XL5S0TWr56NEr_A&oe=6A2BAE6C&_nc_sid=8b3546	10	\N	5555	28	2026-05-28	f	6	2026-06-07 20:30:05.599271+00
+5d9f56a6-24df-4224-95a4-497249afdabd	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/DY3X4ZVTXLE/	Assalamualaikum \nEid Mubarak to everyone 🤲🏼	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.82787-15/708882233_18598342675054486_3508683784025883792_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=110&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=aILplbj8iY8Q7kNvwGJymMT&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkwNjY5NjIzMjMyODU5MDAyMA%3D%3D.3-ccb7-5&oh=00_Af-TJMfFsjpdwAlWon5crjKg7Q5YNZXdaJBrV4XpQNGlxw&oe=6A2BA8F3&_nc_sid=8b3546	10	\N	19548	117	2026-05-28	f	7	2026-06-07 20:30:05.599271+00
+94da4270-ba6a-401f-bb28-30324d2fbecd	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/DY2FwhVTV4v/	Pagla goru	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.71878-15/706054279_1553866032977598_1903149279454206160_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=106&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=aNGcXG51uhUQ7kNvwEpTTta&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_Dc9ekYnuQ7FwcpOJJ7e5Ss-Ft6YvMd_BmFQQTIwP34A&oe=6A2B9369&_nc_sid=8b3546	10	87612	9878	24	2026-05-27	f	8	2026-06-07 20:30:05.599271+00
+b9fb22f0-b693-4023-9174-61b6ad67b855	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/DY1vMEZTPx5/	No one is Perfect 👌🏼 \nImproving 1% everyday	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.71878-15/708442198_1740499930468994_8394374396526323122_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=102&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=Z4anwGWqRvsQ7kNvwHB4vO6&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8LEltjdZH8t_nBzr7YJtFFygHOyaIIBI-1DzHP-jL1oA&oe=6A2BA61F&_nc_sid=8b3546	10	56726	6624	39	2026-05-27	f	9	2026-06-07 20:30:05.599271+00
+30728b27-8503-4d62-a494-94374e21bf7c	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/DYxTikek7xd/	\N	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.82787-15/705587584_18597616276054486_8559772092611370378_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=110&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=HHAXnKUoOaUQ7kNvwEXxnNs&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkwNDk4ODAwNDU5MTAzNzIyMA%3D%3D.3-ccb7-5&oh=00_Af_KmpAUjTgo692F7hzkY_RAfBgVPn08_HDg3vZLlN_3zA&oe=6A2BA0EB&_nc_sid=8b3546	10	\N	29457	86	2026-05-25	f	10	2026-06-07 20:30:05.599271+00
+b9da67bc-313a-408d-9706-157c79a77d65	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/DYu0pr8GotZ/	Celebrate every moment with PLAY.\n\n#playbd #slaywithplay #TA3 #orangesunrise #strawberrymargarita #classiccola	https://instagram.fagc1-1.fna.fbcdn.net/v/t39.30808-6/707377975_122113485411259057_1593856045081287903_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=101&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=EtRsyBl9fCkQ7kNvwH_mL3F&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=MzkwNDI4OTQ5MDA3MzE5MzMwNQ%3D%3D.3-ccb7-5&oh=00_Af-AEPcidW7rmRya39Ex63PyNlq-cKh2qdWDZR1g5AZssw&oe=6A2BBD20&_nc_sid=8b3546	10	\N	2449	11	2026-05-24	f	11	2026-06-07 20:30:05.599271+00
+58428ebd-5b67-465d-bd73-14ed3e9b8e2a	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/CfZX9MEjf37/	I am the Speed star with Speed Master handset -Infinix NOTE 12 G96\nCheck out the fastest AMOLED phone with a G96 Chipset, which will make your user experience extra speedier. Start your adventure for speed with Infinix and me now .\nTo know more click:  h	https://instagram.fagc1-2.fna.fbcdn.net/v/t51.71878-15/642225970_1537080888422928_1049634437743697299_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fagc1-2.fna.fbcdn.net&_nc_cat=100&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=cEC3Bmnq240Q7kNvwEfewJs&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_OwsrkFOmP0XJvCMXBw9QkU5Jq7C1R1ImCYphpA-QZKQ&oe=6A2BA7B6&_nc_sid=8b3546	10	18798	3537	24	2022-06-29	f	12	2026-06-07 20:30:05.599271+00
+3f6f902b-e0a5-49fd-90ad-ddd9bb770cc0	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/Cef_MVgFvy2/	TRUST \n  THE PROCESS \n  AND \n  BET ON YOURSELF .	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.71878-15/643586041_2037614393633008_8298281173801373608_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=104&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=IzcotGtSnPMQ7kNvwExLA6E&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af903CBKN9RPXuKl06RLR6CNhUTDJplkwa5wBRfHJxQCLg&oe=6A2B9AFF&_nc_sid=8b3546	10	48811	8372	47	2022-06-07	f	13	2026-06-07 20:30:05.599271+00
+486da34f-306f-48d0-9ba1-154dc7939100	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/CecuIttl3RE/	Remind yourself:\nIf it was easy ,\nEveryone \nWould do it . \nAlhamdulillah morning started with a good vibe .	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.71878-15/639919135_1345540020670084_257815444913712332_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=104&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=lK1fwK7MJXoQ7kNvwF3nAx4&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-zDNIxEMWl_UPUfraKzdH1iqxtdjSrFIOqWpT2uv5b8g&oe=6A2BAEBC&_nc_sid=8b3546	10	36136	8513	40	2022-06-06	f	14	2026-06-07 20:30:05.599271+00
+fc01b210-dd2b-4ee6-8ae6-2fd42fd5ece6	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/CeRAv6Jl0Cj/	Don't wait for perfect moment, \nTake the moment and make it perfect ..💪🏼💪🏼 \nIn sha Allah  long way to go	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.71878-15/642502784_1291721753096949_4669511827737960655_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=109&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=zvZHSm6awz4Q7kNvwHq9Aw4&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9mhxhDcoqJ0xWpX-uuQvxGU48vb1fb8ZrK5Nls9Pv5GQ&oe=6A2BB244&_nc_sid=8b3546	10	34064	6544	36	2022-06-01	f	15	2026-06-07 20:30:05.599271+00
+61cf43d7-6e95-4c55-adfa-20d36b304133	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/CcCzrC-D03f/	My son @tashfeen_ahmed_rihan  is very happy with those trophies 🏆 😍\n#MashAllah	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.71878-15/641745814_1256684286423655_3380315190281788675_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=107&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=h3uV_BKJhm4Q7kNvwFSmvWz&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-LVUt4ndiUjMzWIK5i6GgSSP3TZZEdAPH9hFgI_gWAhA&oe=6A2B99D5&_nc_sid=8b3546	10	160149	39586	238	2022-04-07	f	16	2026-06-07 20:30:05.599271+00
+70f2caf1-dee4-43ce-882d-3c033b420b01	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/CawMXytFiDa/	If I do the work, \nthe results will come! (InSha Allah)	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.71878-15/642225041_1640648614041507_3887685556739353576_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=103&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=HjUjQwbNqb8Q7kNvwEdYJLk&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-BfrYt8cMbgd_COLhVFNGk6OlA3e6hLx28TR-c0ggJiw&oe=6A2B9CE4&_nc_sid=8b3546	10	23086	6544	58	2022-03-06	f	18	2026-06-07 20:30:05.599271+00
+adae50d2-ca6a-4212-a4db-a57d20f7bbf8	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/CY30QpPlqbT/	Playing badminton 🏸 with my son @tashfeen_ahmed_rihan	https://instagram.fagc1-2.fna.fbcdn.net/v/t51.71878-15/629014555_1620569059750884_4363242665704321113_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fagc1-2.fna.fbcdn.net&_nc_cat=100&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=fIT0wxPHqdkQ7kNvwFKzwtj&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af80EQDeWQ3ScniLO2K3RiBCtK7-1EIFij_g9smkjA5BmA&oe=6A2BB411&_nc_sid=8b3546	10	69705	12615	86	2022-01-18	f	19	2026-06-07 20:30:05.599271+00
+a0afd685-f45d-463d-87dd-889ee64e7ab0	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/CYWSo-QlUBx/	Amra korbo joy..	https://instagram.fagc1-2.fna.fbcdn.net/v/t51.71878-15/642097232_1376409677670912_4777560610929734774_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fagc1-2.fna.fbcdn.net&_nc_cat=100&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=ME8vAww39DMQ7kNvwHcWAQA&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_GaLJ8w_gAteJPRuG3jhTmUC8j390DuJajn92u2S_Dyw&oe=6A2BC2A3&_nc_sid=8b3546	10	64507	16686	135	2022-01-05	f	20	2026-06-07 20:30:05.599271+00
+03e06f5a-2d43-415c-910c-e0e56022412a	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/CXqK_sgF5X_/	যখন আপনি একটি শক্তিশালী উদ্দেশ্যের জন্য বেঁচে থাকেন, তখন কঠোর পরিশ্রম একটি বিকল্প নয়। এটি একটি প্রয়োজনীয়তা.\nQuarantine Day 10 💪🏼	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.71878-15/642533164_2365847423912546_7955262998601506013_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=102&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=5Yj05JCIWrwQ7kNvwGnnkNu&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8-QW6xwoD8MzadB0vos6qojvNeo0t64hYa3k_0q62oww&oe=6A2BC12B&_nc_sid=8b3546	10	32712	7393	56	2021-12-19	f	21	2026-06-07 20:30:05.599271+00
+f7bcbfb7-3053-4da2-af80-d51bb828a11c	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/CXXtaJHFLzQ/	Excuses \nDon't burn\nCalories..\n#trustingtheprocess \n#quarintinelife #AllahVorosha	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.71878-15/641257257_2123147775169854_2615304947095853333_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=106&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=-g86JNHf57QQ7kNvwGS2_pU&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-VEspPlSbXsE7q_LDah3C-T6m32rRc2DBjFtqZULLT1w&oe=6A2BA3C4&_nc_sid=8b3546	10	22342	4502	39	2021-12-12	f	22	2026-06-07 20:30:05.599271+00
+43841016-c182-4db5-8f7f-4826c87ab0e6	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	https://www.instagram.com/p/CW2_ThIFk_W/	"A positive mindset \n  Brings positive things "\n#plyometrics 💪🏼 with @devs_level	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.71878-15/641184562_1970715983869167_941532941673308017_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=103&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=tNKNCSpA__QQ7kNvwGmsZ-E&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_PmeItcKA0D-qxs0mxgtYN3XWyVDGPp-Jykwixt7k22w&oe=6A2BADB1&_nc_sid=8b3546	10	52258	8458	76	2021-11-29	f	23	2026-06-07 20:30:05.599271+00
+15f23d37-b35e-4d0d-9e7f-ebf421b1935b	9dc3097f-caba-4e35-afa2-f473d9ac0337	instagram	https://www.instagram.com/p/DZSFwM3JRa9/	Enjoying the process. 😁	https://scontent-dfw5-1.cdninstagram.com/v/t51.82787-15/719452280_18564915451066557_6699807105064756724_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-dfw5-1.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gEbW1958WPPrkFuPnu5UqN4alNPElmmkWwxgixg3RXoOtT7B7HDKChWLK6ZSIW5sLw&_nc_ohc=kFq7QWUUmzoQ7kNvwH6Jyi-&_nc_gid=_-Bf__5Vzu6wmVPJmpNQkQ&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzkxNDIxNjMyODcxNTkwMDYwNQ%3D%3D.3-ccb7-5&oh=00_Af81CHcdab4zdxwp8brAHYxo0Rd-VAL_QLBWI4yyMLzADg&oe=6A2BB9F3&_nc_sid=8b3546	10	\N	3543	83	2026-06-07	t	0	2026-06-07 20:30:36.25088+00
+369fe836-143b-430f-aac0-4752f63fb7c4	9dc3097f-caba-4e35-afa2-f473d9ac0337	instagram	https://www.instagram.com/p/DXhAu8biWSv/	😇	https://scontent-dfw5-1.cdninstagram.com/v/t51.82787-15/670483750_18553895353066557_716768312856496552_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-dfw5-1.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gEbW1958WPPrkFuPnu5UqN4alNPElmmkWwxgixg3RXoOtT7B7HDKChWLK6ZSIW5sLw&_nc_ohc=sHmcE9QXUQQQ7kNvwEdJWhq&_nc_gid=_-Bf__5Vzu6wmVPJmpNQkQ&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg4MjM4NzU3OTc1MjUwNjU0Mw%3D%3D.3-ccb7-5&oh=00_Af_VLAE_ULyB9mhDWRhadahKcvlzvB1mbaskEzo19nmSIw&oe=6A2BB510&_nc_sid=8b3546	10	\N	20370	258	2026-04-24	f	1	2026-06-07 20:30:36.25088+00
+20306827-8110-42e7-9423-dd6f89f3ece4	9dc3097f-caba-4e35-afa2-f473d9ac0337	instagram	https://www.instagram.com/p/DXezglxkgP4/	🏆	https://scontent-dfw5-2.cdninstagram.com/v/t51.82787-15/673012354_17872246026605472_5081659076642145333_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-dfw5-2.cdninstagram.com&_nc_cat=100&_nc_oc=Q6cZ2gEbW1958WPPrkFuPnu5UqN4alNPElmmkWwxgixg3RXoOtT7B7HDKChWLK6ZSIW5sLw&_nc_ohc=tlApBNPjIh0Q7kNvwHQm_5j&_nc_gid=_-Bf__5Vzu6wmVPJmpNQkQ&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg4MTc2NjQ2ODc5NTM2ODQ0MA%3D%3D.3-ccb7-5&oh=00_Af-LtqWZYIeQmZXvN38Mq6dosLfDbS90oYZu5IK6TKoPzw&oe=6A2BA21F&_nc_sid=8b3546	10	\N	8580	70	2026-04-23	f	2	2026-06-07 20:30:36.25088+00
+fc626711-7e8d-43b2-8f7e-d65d54ebe139	9dc3097f-caba-4e35-afa2-f473d9ac0337	instagram	https://www.instagram.com/p/DXJotGNCQgw/	Working on my bowling in the nets. 🏏	https://scontent-dfw6-1.cdninstagram.com/v/t51.71878-15/670283337_1499427924864350_432301346488392166_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-dfw6-1.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gEbW1958WPPrkFuPnu5UqN4alNPElmmkWwxgixg3RXoOtT7B7HDKChWLK6ZSIW5sLw&_nc_ohc=f3aN0kFjaZkQ7kNvwE8eJgB&_nc_gid=_-Bf__5Vzu6wmVPJmpNQkQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_fNKnKg3x7NnIxIw6imDVzdXhWDmNbv7K_QLaPAxcJvQ&oe=6A2BBEE9&_nc_sid=8b3546	10	98712	22343	196	2026-04-15	f	3	2026-06-07 20:30:36.25088+00
+ab3855c6-3f5a-4664-9c33-c7d19a6ccde8	9dc3097f-caba-4e35-afa2-f473d9ac0337	instagram	https://www.instagram.com/p/DWmcsVXDAnn/	Mustafizur Rahman, the man you are. 🙌🏼\n\n#Number1TeamForAReason #QalandarDilSe #HBLPSL11	https://scontent-dfw5-2.cdninstagram.com/v/t51.82787-15/657286432_18523477057077164_5926142942145417103_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-dfw5-2.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gEbW1958WPPrkFuPnu5UqN4alNPElmmkWwxgixg3RXoOtT7B7HDKChWLK6ZSIW5sLw&_nc_ohc=cLIfIYNxdqQQ7kNvwHsb8Rv&_nc_gid=_-Bf__5Vzu6wmVPJmpNQkQ&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg2NTkwMjEzNDAzNDQ3NzQ4Mw%3D%3D.3-ccb7-5&oh=00_Af9gzcn0SKETIBmBjIQhFIjuhqo3qYl9nCvQP5ORwtEZtA&oe=6A2BA836&_nc_sid=8b3546	10	\N	21079	178	2026-04-01	f	4	2026-06-07 20:30:36.25088+00
+db64f8b3-a1f2-40b4-9728-9f60e70183fd	361323ff-e0a5-4bf7-a0e1-eeeb381b1b14	tiktok	https://www.tiktok.com/@tuhinvaia01official/video/7637939059121294600	#কট	https://p19-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/oQQfQCGdGaefAXGnOLnBezM6u9ER7IzAQssSF4~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=MV1Zy1eLJpZXeDRr%2Fnr1q98bqQI%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8	19	16	5	1	2026-05-09	t	0	2026-06-07 20:33:04.581566+00
+cfd1c539-5952-4d4c-8912-ee853de0218c	9dc3097f-caba-4e35-afa2-f473d9ac0337	instagram	https://www.instagram.com/p/DWMCSDFCRTL/	Happy 7th Anniversary ❤️	https://scontent-dfw5-1.cdninstagram.com/v/t51.82787-15/656212520_18546116650066557_8663111962772324339_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-dfw5-1.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gEbW1958WPPrkFuPnu5UqN4alNPElmmkWwxgixg3RXoOtT7B7HDKChWLK6ZSIW5sLw&_nc_ohc=NMlewt_7OEIQ7kNvwEWkTi0&_nc_gid=_-Bf__5Vzu6wmVPJmpNQkQ&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg1ODQ2OTAxNzA5ODk4MjYwMw%3D%3D.3-ccb7-5&oh=00_Af_t-TAedjikakbdTdqZxFc1Qqnij8FCJoZns5-MQpNHEw&oe=6A2B8DED&_nc_sid=8b3546	10	\N	98714	413	2026-03-22	f	5	2026-06-07 20:30:36.25088+00
+42e2cbd0-2611-42a7-9ebb-667ac7ed8ced	9dc3097f-caba-4e35-afa2-f473d9ac0337	instagram	https://www.instagram.com/p/DWIsr5DCbB5/	Eid Mubarak to everyone! 🌙	https://scontent-dfw5-1.cdninstagram.com/v/t51.82787-15/655597418_18545668918066557_4351081101521951817_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-dfw5-1.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gEbW1958WPPrkFuPnu5UqN4alNPElmmkWwxgixg3RXoOtT7B7HDKChWLK6ZSIW5sLw&_nc_ohc=QitAfDSAxFUQ7kNvwHd1usM&_nc_gid=_-Bf__5Vzu6wmVPJmpNQkQ&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg1NzUyOTYxMTA4MTA2ODY2NQ%3D%3D.3-ccb7-5&oh=00_Af-UcnPDk98aAxieB3RXrewyGhrlkDbAdcRLwtl6q48aIQ&oe=6A2BAF12&_nc_sid=8b3546	10	\N	77414	501	2026-03-21	f	6	2026-06-07 20:30:36.25088+00
+37ed4fab-0cef-48dd-b9df-71b36ed6d726	9dc3097f-caba-4e35-afa2-f473d9ac0337	instagram	https://www.instagram.com/p/DV-rvO3CboM/	😊	https://scontent-dfw5-1.cdninstagram.com/v/t51.82787-15/643008126_18544229605066557_276552702762964725_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-dfw5-1.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gEbW1958WPPrkFuPnu5UqN4alNPElmmkWwxgixg3RXoOtT7B7HDKChWLK6ZSIW5sLw&_nc_ohc=ZWHCf0ZL0ZwQ7kNvwFDh3lc&_nc_gid=_-Bf__5Vzu6wmVPJmpNQkQ&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg1NDcxMDY5Mjg0Njg3NzE5Ng%3D%3D.3-ccb7-5&oh=00_Af_J52Z8BAp0UPKmP_2YCQiewSLHtcoBD04H_jFVZUPidg&oe=6A2BA40F&_nc_sid=8b3546	10	\N	39097	419	2026-03-17	f	7	2026-06-07 20:30:36.25088+00
+df1958aa-0c5b-46f3-9cc0-3b3a77d49a4c	9dc3097f-caba-4e35-afa2-f473d9ac0337	instagram	https://www.instagram.com/p/DUi-Ps1ElyU/	Alhamdulillah! 🏆	https://scontent-dfw5-1.cdninstagram.com/v/t51.82787-15/632138742_18534810682066557_276519668475340166_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-dfw5-1.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gEbW1958WPPrkFuPnu5UqN4alNPElmmkWwxgixg3RXoOtT7B7HDKChWLK6ZSIW5sLw&_nc_ohc=QgdDaWkrQYsQ7kNvwHKaMKd&_nc_gid=_-Bf__5Vzu6wmVPJmpNQkQ&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzgyODg5NjM5MTAyOTIxODQ1Mg%3D%3D.3-ccb7-5&oh=00_Af_f3g_AHNxvzq0sNpzKIGWcE4znYPHMgIgIzaFMJSrxKQ&oe=6A2B98CC&_nc_sid=8b3546	10	\N	58986	514	2026-02-09	f	8	2026-06-07 20:30:36.25088+00
+8525447e-668e-4d31-936b-92af0d16e67e	9dc3097f-caba-4e35-afa2-f473d9ac0337	instagram	https://www.instagram.com/p/DTK2rlICRmO/	Eyes on the field, mind on the win!	https://scontent-dfw5-1.cdninstagram.com/v/t51.82787-15/609558899_18526909834066557_6400575794037901941_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-dfw5-1.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gEbW1958WPPrkFuPnu5UqN4alNPElmmkWwxgixg3RXoOtT7B7HDKChWLK6ZSIW5sLw&_nc_ohc=-YyOJYhKAL0Q7kNvwHMS7Vh&_nc_gid=_-Bf__5Vzu6wmVPJmpNQkQ&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=MzgwNDA5MzMyNDU4MDE2NjAzMA%3D%3D.3-ccb7-5&oh=00_Af9FcYDqCQQ_e3rbWYVpLhwrThnxRrzGrM_iYcO0OprA8w&oe=6A2BADF9&_nc_sid=8b3546	10	\N	81593	2194	2026-01-06	f	9	2026-06-07 20:30:36.25088+00
+8d0e55f9-87b1-49e8-8f89-535b4ac9aefc	9dc3097f-caba-4e35-afa2-f473d9ac0337	instagram	https://www.instagram.com/p/DSSQCbiiUgV/	Spending some quality time playing with birds!	https://scontent-dfw5-1.cdninstagram.com/v/t51.82787-15/588479980_18523235203066557_1602430575962593774_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-dfw5-1.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gEbW1958WPPrkFuPnu5UqN4alNPElmmkWwxgixg3RXoOtT7B7HDKChWLK6ZSIW5sLw&_nc_ohc=LxIzKpo1SQ0Q7kNvwF26Cn7&_nc_gid=_-Bf__5Vzu6wmVPJmpNQkQ&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzc4ODE2MDc3MjMyNTU5MTA2MQ%3D%3D.3-ccb7-5&oh=00_Af843UZKdN4tgB66SWaQaLaiqy4On9jePX1fa9sN4M8j8Q&oe=6A2BBC87&_nc_sid=8b3546	10	\N	109970	3856	2025-12-15	f	10	2026-06-07 20:30:36.25088+00
+c9250150-3b4f-48d8-9d9b-c7a48820bca7	9dc3097f-caba-4e35-afa2-f473d9ac0337	instagram	https://www.instagram.com/p/DR2pWTFE5Rc/	Heading to UAE for ILT20 - 2025. Can’t wait to join my @dubaicapitals family. ✈️\n\n#SoarHighDubai #WeAreCapitals	https://scontent-dfw5-1.cdninstagram.com/v/t51.82787-15/588973986_18521437033066557_5472030996264600270_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-dfw5-1.cdninstagram.com&_nc_cat=109&_nc_oc=Q6cZ2gEbW1958WPPrkFuPnu5UqN4alNPElmmkWwxgixg3RXoOtT7B7HDKChWLK6ZSIW5sLw&_nc_ohc=dWnEcbohaqYQ7kNvwGRHgug&_nc_gid=_-Bf__5Vzu6wmVPJmpNQkQ&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzc4MDM5MDc4OTQ0NTgxNzQzNg%3D%3D.3-ccb7-5&oh=00_Af9s1hVaxQ16dNBU_aMB2kywaolFpCJa-i2CU3P5vnhe4w&oe=6A2B93F8&_nc_sid=8b3546	10	\N	88252	1310	2025-12-04	f	11	2026-06-07 20:30:36.25088+00
+1e15ac40-da61-42b7-acbb-f06908933c57	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/DLSAvXlyRXc/	A worm made this ✨	https://scontent-lga3-3.cdninstagram.com/v/t51.2885-15/510330875_18272441047263148_8774569807098663420_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=JJ2ov_4uAk0Q7kNvwFMlrVU&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9OKc8ygGmky9_a-6s3CzmIj0FINQTWqtDVwRTQmwnDdg&oe=6A2BC24B&_nc_sid=8b3546	19	909857	553701	3366	2025-06-24	t	0	2026-06-07 20:31:02.485081+00
+aefa8eb7-d76b-4175-8fb5-3b28dfd04e92	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/DM73OLxylOv/	Disney princesses but make it ✨desi✨	https://scontent-lga3-1.cdninstagram.com/v/t51.71878-15/527450619_1809996756604978_6476267408101616784_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-1.cdninstagram.com&_nc_cat=110&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=JsTQ_ja9sqIQ7kNvwHt2jbm&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_qAbhNnYH_mU_Fr7f5FmLGbep0HThBCddHrKHvMWEkeg&oe=6A2B9B90&_nc_sid=8b3546	19	2243970	498393	5097	2025-08-04	f	1	2026-06-07 20:31:02.485081+00
+30f7f109-9312-41ad-907a-e955a96efc35	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/DIeHmCHyywu/	Ei saree’r daam shunle akash theke porba 👀	https://scontent-lga3-3.cdninstagram.com/v/t51.2885-15/511252481_18272654197263148_4853263885301792769_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=huQvDjiYCIMQ7kNvwFkmncN&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_VXileSM6RI66gKU4O7Ife-GzQfe9Z6a8JBnaJlqkjbA&oe=6A2BA7CF&_nc_sid=8b3546	19	2305566	551547	3972	2025-04-15	f	2	2026-06-07 20:31:02.485081+00
+7fdc51a2-db14-4870-8041-3bb5fd8e9bce	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/DZDWIf1zepw/	My Akash Chowa moment	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/713524231_18315230641263148_7719833624113123612_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=CIH908qQbTYQ7kNvwGr2U0E&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-AsJrQvpEsJ45DiXZ7bzExLrwJBCAfPNCgPT-cqWDdIw&oe=6A2B965D&_nc_sid=8b3546	19	716562	158343	613	2026-06-01	f	3	2026-06-07 20:31:02.485081+00
+15d5ffef-aad6-413c-b6fc-c35a4f890e00	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/DYXBdsITnwg/	Today I’m Bipasha Tasnim	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/700143275_18312987706263148_4525767449546281500_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=LCrMCJaaThAQ7kNvwGbBC5J&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-gCPqZOBoXUv3kjy85EV7T_Ac76JExN7WDCqraAaIt1g&oe=6A2BC038&_nc_sid=8b3546	19	2395507	487234	2460	2026-05-15	f	4	2026-06-07 20:31:02.485081+00
+b1c3b7dd-8e32-4eb4-bac4-301c547cd051	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/DX9edffk3b9/	Mausam’s awesome, but have u seen me? 🤪	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/684820274_18311763013263148_2756869781269464053_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=Ruyk9zb3TDwQ7kNvwHFE1Ug&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg5MDM5ODUzNDEwOTcyOTc0MA%3D%3D.3-ccb7-5&oh=00_Af-JPopXYdE8CMeR41JeLVwapzE7EJAvLSsxsNvt_RjJ1Q&oe=6A2B9241&_nc_sid=8b3546	19	\N	394805	1511	2026-05-05	f	5	2026-06-07 20:31:02.485081+00
+df6188cb-7256-4998-b146-9e401125b14d	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/DXZDo6BkxZ1/	Eta na dekhle miss 🫦	https://scontent-lga3-2.cdninstagram.com/v/t51.71878-15/674566358_1487683656247332_3601941884978902174_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-2.cdninstagram.com&_nc_cat=100&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=cvyJtWriZt8Q7kNvwEbcYx1&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_kJ-lu4SnQU63YTAi1giQtdmzJGlUINxD1XExnXevDog&oe=6A2BAA37&_nc_sid=8b3546	19	1352475	215443	496	2026-04-21	f	6	2026-06-07 20:31:02.485081+00
+e32fdbad-9ae5-444f-b19c-5730a3cf3ab7	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/DXEpXdik-PY/	Chaader Alo is back ✨	https://scontent-lga3-3.cdninstagram.com/v/t51.71878-15/670544588_930073403136512_6114752817065394599_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=-AVzFJsMqgMQ7kNvwGKS9Av&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9T3ne2fh5r1Zt7W91ee-RxU0PxI1pqMBFLOVNGpyXyQw&oe=6A2BB6C4&_nc_sid=8b3546	19	1929442	434849	2940	2026-04-13	f	7	2026-06-07 20:31:02.485081+00
+7b4f060d-e397-4e03-ac8b-f8e99a45e357	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/DWJddJ5E9pn/	Mini Eid dump 💕✨	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/655706989_18305581039263148_9956169249545265_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=1CpnAJHjag4Q7kNvwHrRB6o&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg1NzczMjQyODIyODY3MDczMg%3D%3D.3-ccb7-5&oh=00_Af-OaYXQD6sgPmkdj2roZlwIL2EkHYvDfkwr-Ryk0QoQBQ&oe=6A2B9358&_nc_sid=8b3546	19	\N	215433	556	2026-03-21	f	8	2026-06-07 20:31:02.485081+00
+43b523db-5ca9-4bfd-a775-ea676d973b20	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/DVqS71Ok4Hq/	Mention that girl 👀	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/649223956_18303429448263148_6058434962600430321_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=o16LojodVc0Q7kNvwG8bJ2r&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af99NSZKua7kIn1iewuFUxQ8UYnkHZYZJmESZU08N9B_Vw&oe=6A2BA219&_nc_sid=8b3546	19	1129808	265232	1818	2026-03-09	f	9	2026-06-07 20:31:02.485081+00
+e7ed011c-b42c-4b3d-9296-9c79b4dbeb19	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/DVdy4nlk9d7/	Abar natok shuru korlam	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/645469510_18302816356263148_5395799442984843523_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=_0AC20ee-yQQ7kNvwE7NLFP&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_Fk-Iyv0_1GQZlc-gUjyCavn2O5iCcw6UTqTMu2BZrIg&oe=6A2BA7D4&_nc_sid=8b3546	19	864942	240006	2504	2026-03-04	f	10	2026-06-07 20:31:02.485081+00
+4265ad07-5b10-4851-aea6-69cb73546f85	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/DVTp3e6k9Ei/	My toxic trait? Making my friends take 5392528 pics and never posting a single one. \nTonight, I’m finally making them proud 🫶🏻	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-15/642492158_18302379334263148_3581632006633577173_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=alxxwUNiEqYQ7kNvwFCZkZx&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&ig_cache_key=Mzg0MjU5NDU4OTcyNzk5MzU4MA%3D%3D.3-ccb7-5&oh=00_Af8FWpV4UqUWuIrfNKFVS9PEhxwsV_Zi6MGabp2ZgKr74w&oe=6A2BB568&_nc_sid=8b3546	19	\N	268617	1113	2026-02-28	f	11	2026-06-07 20:31:02.485081+00
+d8548a14-4d1a-4371-a0b9-ce28b0a9a5b8	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/Cf6JR0hFOBD/	My current favourite lip combo 💯❤️	https://scontent-lga3-2.cdninstagram.com/v/t51.71878-15/640265213_1579375423142383_5318307137195792680_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-2.cdninstagram.com&_nc_cat=107&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=PbmZjPUjAjUQ7kNvwEhZs77&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-QqjfM68MZSSZibnLxGV6G_x9x0IlPoXzF97vGvbC9aQ&oe=6A2B9729&_nc_sid=8b3546	19	103456	13807	46	2022-07-12	f	12	2026-06-07 20:31:02.485081+00
+f4932b3d-f016-4086-a599-274367778e7b	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/Cf1Hab3JK5t/	Eid Mubarak everyone ❤️	https://scontent-lga3-2.cdninstagram.com/v/t51.71878-15/641932776_1941293173140223_63994565348118951_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-2.cdninstagram.com&_nc_cat=107&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=RT_kCZwrRs0Q7kNvwE9yjqg&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8ufp-cKv-V5tIvsezIJt9v2mvc5_9MH1y5GjyiebqiEA&oe=6A2BB912&_nc_sid=8b3546	19	134253	22413	109	2022-07-10	f	13	2026-06-07 20:31:02.485081+00
+624e6932-171b-4c3a-9e5b-401b7a5ca8ba	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/CfbxzobJiJx/	Testing Viral Tiktok Hacks video is outtt now! Watch the full video on my Facebook page 🥰	https://scontent-lga3-1.cdninstagram.com/v/t51.71878-15/643537788_1409390653639019_7808710420083061453_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-1.cdninstagram.com&_nc_cat=111&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=bfbPz-HqCScQ7kNvwEo6ifM&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_HaalVM1ES1dFc6GNJZG28yEE-hrYc6LNC6erZmmUmUg&oe=6A2BC32E&_nc_sid=8b3546	19	81069	7566	17	2022-06-30	f	14	2026-06-07 20:31:02.485081+00
+77811199-e807-43c5-96d7-1f6fa6786b50	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/CedvLSBpRvI/	1 Bodycon | 3 ways\nStyling ‘Candy Crush’ from my latest drop @ehra.official!! The best part is that you can wear it both ways 😉💜💙\n\nWhich style was your favourite? \n\nShop NOW | DM @ehra.official to Order or visit DEFCLO.com 💕\n\n#NeverMissAnEhraSelfie	https://scontent-lga3-2.cdninstagram.com/v/t51.71878-15/639985694_1138541268302508_4018566494704906389_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-2.cdninstagram.com&_nc_cat=100&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=48RvPbkYUHcQ7kNvwGYb4IU&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af91CdOzHtaakxEUISxlCWXyHL5OvpzNYDES57CN5AQXtg&oe=6A2B8E07&_nc_sid=8b3546	19	146340	17462	97	2022-06-06	f	15	2026-06-07 20:31:02.485081+00
+ef134acf-d653-4949-bd0d-6ff1357de660	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/CakOD4olkBv/	Churi kine diba? 🥺	https://scontent-lga3-2.cdninstagram.com/v/t51.71878-15/641157838_1237090141967364_909067111951805260_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-2.cdninstagram.com&_nc_cat=100&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=4ivr8utW6IUQ7kNvwFwFrjt&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af80wy_x9Fm83tWZ2WcithMjTPSOYN8597sxako6BNkJqQ&oe=6A2B91BC&_nc_sid=8b3546	19	281808	31001	344	2022-03-01	f	16	2026-06-07 20:31:02.485081+00
+dd301190-c07c-49cb-9a41-a101dee609aa	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/CXoc79EFTkr/	✨In Ankhon Ki Masti Ke ✨\n#OsakiWedding \n@fariha.tasnim @saboziee @pinkypeya @osamabhuiya \n\nOrna tar kotha bhule gesilam last e hehe	https://scontent-lga3-3.cdninstagram.com/v/t51.71878-15/642098453_25901211376198422_5632897015914718264_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=MBOgqCelBVwQ7kNvwGZF8vL&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af80oVjcnuhWP0cF1gXHYFRXvk1nH4wRZj639WwrRBJu_Q&oe=6A2B8EFD&_nc_sid=8b3546	19	174123	18978	62	2021-12-18	f	17	2026-06-07 20:31:02.485081+00
+91a49696-3040-4b8f-bc6c-573fc787f607	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/CWDy7HiBbtg/	Presenting to you my constant during winter, @vaselinebd Petroleum Jelly!! It’s always great to carry a product that has multiple uses and so to celebrate Vaseline’s 150 years of healing, here are some easy hacks that I personally love! Also, it’s 100% p	https://scontent-lga3-3.cdninstagram.com/v/t51.71878-15/640382241_1441479190841056_1792771301669504570_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=sVeRstrwxNMQ7kNvwEl8XLa&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9cxwMobJzodTwsDPzGYaQoKt94QchCdkCHEToimhgMRw&oe=6A2BAAC7&_nc_sid=8b3546	19	128271	12258	49	2021-11-09	f	18	2026-06-07 20:31:02.485081+00
+c0a6fcc0-0475-4f8f-b379-3a4823bbaa31	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/CTXa_O5lk9h/	SO I GUESS I'M BACK??? \nHad a lot of fun filming a video after so long! Also, I actually have aloe plants at home if you're wondering. My sister and I have been using it since ages now for skin care and also to detox. Besides organic Aloe Vera gel, I lov	https://scontent-lga3-1.cdninstagram.com/v/t51.71878-15/641307873_2108778513191710_2731520627825247597_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-lga3-1.cdninstagram.com&_nc_cat=110&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=_edhtitMr_MQ7kNvwFmt2xN&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_JZrEsxFEAB4IqC2FEXNAEq6F6TCQbbVqWepJCDNUR4A&oe=6A2BBAFF&_nc_sid=8b3546	19	57779	5665	41	2021-09-04	f	19	2026-06-07 20:31:02.485081+00
+82e78ebf-9192-4bd0-b685-b49415c71dfa	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/CQbRCeWDWMW/	Thank you dost @thechotobhai for nominating me! Here’s my take on the @ruchi.explore.limitless BBQ chanachur food hack! \n\nUse the hashtag #RuchiBBQfest and share your food hack with Ruchi BBQ Chanachur to win an awesome smartphone! Good luck ❤️	https://scontent-lga3-2.cdninstagram.com/v/t51.71878-15/643041262_1629726151356233_1086179885431161410_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-lga3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=u5MgrTYAVOEQ7kNvwGwx1ec&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8_QWr93uku8aXvUqXaMyyeFwgc19ifnrDyNGiMJCAreg&oe=6A2BB11A&_nc_sid=8b3546	19	116828	11094	68	2021-06-22	f	20	2026-06-07 20:31:02.485081+00
+0661fa80-f008-4644-86ca-5061bc69ba3c	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/CPQvlWwjaPH/	Sleeping is my favourite pastime. I think you guys know that by now cause most of my videos start with me waking up or falling asleep 🤷🏻‍♀️🤷🏻‍♀️\n#vacaying with @yoyoso.bangladesh \n\nAmaaazing video by @itsirfanahmed @tsmd.films	https://scontent-lga3-1.cdninstagram.com/v/t51.71878-15/639515040_3281627271998711_6056436574125541778_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-lga3-1.cdninstagram.com&_nc_cat=111&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=RPDanm0fuaoQ7kNvwHV3Lvy&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-bEIlWPsYvW252dDcdjZNedEeXV4FFtZfnWD3Ra--mtg&oe=6A2BBBE8&_nc_sid=8b3546	19	78763	6785	64	2021-05-24	f	21	2026-06-07 20:31:02.485081+00
+bd8e818e-6ec5-49e1-8a0d-aacfa3b24d4f	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/CMkFIAljH-C/	I  wish my dreams were actually this much fun! But sadly nightmare’s my bff 😭 What do you usually dream about?\n\nHere I present you 4 denim fits that are casual, comfortable and superr cute for a day out! \n\n@gozayaan is here to make your your tour worthwh	https://scontent-lga3-1.cdninstagram.com/v/t51.71878-15/641149324_1241738150798519_8764796561004090017_n.jpg?stp=dst-jpg_e15_fr_p1080x1080_tt6&_nc_ht=scontent-lga3-1.cdninstagram.com&_nc_cat=111&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=CWYZ_0xp9wAQ7kNvwFXW68a&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-mWTjflOf50ZzjV-eFvAT01txqupZUdaqBy-F4DMJH_g&oe=6A2BA36E&_nc_sid=8b3546	19	93373	8517	130	2021-03-18	f	22	2026-06-07 20:31:02.485081+00
+f2deec9f-6741-44cf-9f88-e7ba084b7046	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	https://www.instagram.com/p/CLo2vs5DCxR/	I'm so excited to show you how I put together 4 outfits from @rise.brand that are simple yet chic for this spring! Let me know what you think!!\n\nAlso, did anyone recognize the songs? I absolutely love both versions. Let me know about other remakes that y	https://scontent-lga3-1.cdninstagram.com/v/t51.71878-15/645515038_923191190567074_4257574202680870130_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-lga3-1.cdninstagram.com&_nc_cat=110&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=G5UZG-ksbxwQ7kNvwFUUuxY&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9IkJZHNTzB73bwfTDdMVSVJ0K8bkoKnLQ46n89fDjFKw&oe=6A2B9445&_nc_sid=8b3546	19	145292	13038	85	2021-02-23	f	23	2026-06-07 20:31:02.485081+00
+003a4d22-0960-4c23-93b6-8ec26ea063b7	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/DY2a2utj0jT/	আনন্দের এই পবিত্র দিনে সকলকে জানাই ঈদ মোবারক...	https://scontent-mia3-2.cdninstagram.com/v/t39.30808-6/709981804_1547874203359073_570938710613977524_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-mia3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=CF7-HcNkNEsQ7kNvwE5YPTx&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=MzkwNjQyNzgzNzAwODAwNTMzMQ%3D%3D.3-ccb7-5&oh=00_Af-Zp9Sprb1KhRDCwKFXFM1Nc07KYrhU2rKKHHlpXTwxcw&oe=6A2B9A61&_nc_sid=8b3546	10	\N	517	3	2026-05-27	t	0	2026-06-07 20:31:27.216287+00
+e101ef65-6594-4a1b-9ec4-ae1a1240ed55	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/DYnCEWEGCuX/	রামিসার মতো নিষ্পাপ শিশুদের আর যেন এভাবে প্রাণ হারাতে না হয়। প্রতিটি শিশুর নিরাপত্তা নিশ্চিত করা রাষ্ট্র ও সমাজের দায়িত্ব। এই নির্মম হত্যার দ্রুত ও দৃষ্টান্তমূলক বিচার হোক, যেন আর কোনো অপরাধী এমন জঘন্য কাজ করার সাহস না পায়। শিশুরা বাঁচুক ভয়হীন, সুন্দর এক	https://scontent-mia3-1.cdninstagram.com/v/t39.30808-6/703811988_1542989383847555_2467250906252963173_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-mia3-1.cdninstagram.com&_nc_cat=111&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=K6OLb2TNHFMQ7kNvwEC7mg_&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=MzkwMjA5NjY5NjgwMTc2NjI5NQ%3D%3D.3-ccb7-5&oh=00_Af9itx2TeetnQfYGABd57OFjhJADwn8zmKoBDbzkvd58cg&oe=6A2B9881&_nc_sid=8b3546	10	\N	5912	44	2026-05-21	f	1	2026-06-07 20:31:27.216287+00
+f348ba3d-5697-4fd5-a20b-01f726f516aa	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/DYjcEmpElAG/	History made. Series secured. A monumental 2-0 Test series victory that will be remembered for generations!	https://scontent-mia5-1.cdninstagram.com/v/t39.30808-6/701726158_1541834220629738_4506596512878852123_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-mia5-1.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=o9bKffD-7vUQ7kNvwFyPPdA&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=MzkwMTA4NTE2MzkwNDQ1NDY2Mg%3D%3D.3-ccb7-5&oh=00_Af-M5O9fPzPDPJBydcXMRoTiLVddKk86brxlQu0Yd1WJkg&oe=6A2BC07A&_nc_sid=8b3546	10	\N	1193	2	2026-05-20	f	2	2026-06-07 20:31:27.216287+00
+8d66f251-c332-4a6c-a63c-cea4c9521b8a	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/DYPJ9qvE6ZN/	History belongs to the brave. Well done, Tigers.	https://scontent-mia5-1.cdninstagram.com/v/t39.30808-6/699560098_1535187821294378_141248642398827408_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-mia5-1.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=b8nVCZyvWh8Q7kNvwFV65nh&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=Mzg5NTM3NjAyMjg5MjQyMjczMw%3D%3D.3-ccb7-5&oh=00_Af8tjDi9vsgmvMI2f_rfMM8RwgAFRECCaSmY20Y4QLNY6Q&oe=6A2BBF85&_nc_sid=8b3546	10	\N	1085	5	2026-05-12	f	3	2026-06-07 20:31:27.216287+00
+42075cc7-a3af-43a0-8ce3-cebd0d5910c9	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/DX_7yy9Enl6/	Cricket is fun. Play it, enjoy it, live it.	https://scontent-mia3-3.cdninstagram.com/v/t39.30808-6/691282075_1530424388437388_3201178796427704626_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-mia3-3.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=KVVfpJFH1m8Q7kNvwEV8qsl&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=Mzg5MTA5MTU3ODUwMTEwMTk0Ng%3D%3D.3-ccb7-5&oh=00_Af_ox6pSvO9Byfrcfumjdk4bUiErwI1Kpoh5BJp0SA09Wg&oe=6A2B8EAA&_nc_sid=8b3546	10	\N	1928	26	2026-05-06	f	4	2026-06-07 20:31:27.216287+00
+cf485a52-ce35-4d18-a382-4711481f3979	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/DXwni0GEsQQ/	Back to the grind. Focused on the process, chasing improvement every day. The work never stops.	https://scontent-mia3-3.cdninstagram.com/v/t39.30808-6/686952373_1525730348906792_1765129926873087598_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-mia3-3.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=jLfNG8fMKqgQ7kNvwFlY_rR&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=Mzg4Njc4MDM5NDYzMzM0ODExMg%3D%3D.3-ccb7-5&oh=00_Af8I_kgq4vzmtv7fKElw1cdRIkzG_k8SxREuxv-2gyO7lg&oe=6A2BA4C5&_nc_sid=8b3546	10	\N	1463	6	2026-04-30	f	5	2026-06-07 20:31:27.216287+00
+fecde793-25f5-4990-bdbb-ad2c01fda27c	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/DXokD7CD920/	Jersey launch done. Time to perform on the field.	https://scontent-mia5-1.cdninstagram.com/v/t39.30808-6/682890824_1523142569165570_7494723812001175424_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-mia5-1.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=BHpmwinOZOIQ7kNvwHee9hk&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=Mzg4NDUxMzI1ODEyODc4NDI4Ng%3D%3D.3-ccb7-5&oh=00_Af-FG8L1KPntuQkVKTW_znwS8yfLn72VAVdslEAYSA3f0g&oe=6A2BC23E&_nc_sid=8b3546	10	\N	1901	7	2026-04-27	f	6	2026-06-07 20:31:27.216287+00
+595420f4-e8be-4106-ab0f-9ba517879d44	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/DXedG4jDygf/	Series win against New Zealand. Well done, Tigers.	https://scontent-mia3-2.cdninstagram.com/v/t39.30808-6/678875039_1519767286169765_3053889695484569806_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-mia3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=sMD8sS_WO2IQ7kNvwH_8ahi&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=Mzg4MTY2Nzk0NTIyMzM2NjY4Nw%3D%3D.3-ccb7-5&oh=00_Af9JWV0Jg16Vqlf55EVGfenF1Jh_IgM5I4apU7LIdRGmiQ&oe=6A2BC010&_nc_sid=8b3546	10	\N	1027	2	2026-04-23	f	7	2026-06-07 20:31:27.216287+00
+64b2f99d-eb9b-4602-852e-22b704134e67	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/DXeBwQLEoBR/	Brilliant Hundred by Shanto. Top knock!	https://scontent-mia5-1.cdninstagram.com/v/t39.30808-6/678983003_1519621049517722_9073386228440897362_n.jpg?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-mia5-1.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=iME8ZC1qIJMQ7kNvwHa0ezN&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=Mzg4MTU0NzY0Mjc4Njk3MTcyOQ%3D%3D.3-ccb7-5&oh=00_Af_xVmiRHEbW0SCRHerRmkmrkMMAcu6k55Lb0gUjjI63kw&oe=6A2BA286&_nc_sid=8b3546	10	\N	1837	16	2026-04-23	f	8	2026-06-07 20:31:27.216287+00
+137de5ff-4673-4c26-8baa-f744f9c9c59b	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/DXWeU-zEoQa/	Wonderful, Nahid Rana! Brilliant performance.	https://scontent-mia5-1.cdninstagram.com/v/t39.30808-6/674005494_1517303903082770_6231902075220750063_n.avif?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-mia5-1.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=-sR-D7sAuv0Q7kNvwFYChcN&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=Mzg3OTQyMTUxMjIzOTk3MzQwMg%3D%3D.3-ccb7-5&oh=00_Af_rePJiVlsL_1xdgg4OY7dNtEB8PC-QvNi9hK80M-cYsA&oe=6A2BA820&_nc_sid=8b3546	10	\N	1151	11	2026-04-20	f	9	2026-06-07 20:31:27.216287+00
+2880febc-e259-4d95-a303-35d45fb9a160	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/DXTsONWkiaJ/	Focused on the new mission. Prime Bank colors in the upcoming DPL.	https://scontent-mia5-1.cdninstagram.com/v/t39.30808-6/671824573_1516451049834722_6847715596755626631_n.avif?stp=dst-jpg_e35_p1080x1080_sh2.08_tt6&_nc_ht=scontent-mia5-1.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=uozjD0FQv_gQ7kNvwGnQLpA&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=Mzg3ODYzODE5NDU1MjYxMjQ4OQ%3D%3D.3-ccb7-5&oh=00_Af86Z4TQ-N8ptQG18u6DMqhjx1tToUtxrH_TJ_XrRtiGMg&oe=6A2BBB56&_nc_sid=8b3546	10	\N	1805	14	2026-04-19	f	10	2026-06-07 20:31:27.216287+00
+bd11d31a-97a7-4619-9001-8b1f1efc249c	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/DXGW3Chkql1/	নতুন বছরে নতুন গল্প লিখি। শুভ নববর্ষের আন্তরিক শুভেচ্ছা।	https://scontent-mia3-2.cdninstagram.com/v/t39.30808-6/672154554_1512450060234821_1808828122539442159_n.jpg?stp=dst-jpg_e35_s1080x1080_sh2.08_tt6&_nc_ht=scontent-mia3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=bUJmwtDSLswQ7kNvwHwxZJx&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wAAAAA&ccb=7-5&ig_cache_key=Mzg3NDg4NTA2ODcwNDA5ODY3Nw%3D%3D.3-ccb7-5&oh=00_Af87pfKVTV0qaKrU5hpZMQ1hGF_GBw0AUuIv5_QMRJjSJw&oe=6A2B914E&_nc_sid=8b3546	10	\N	359	6	2026-04-14	f	11	2026-06-07 20:31:27.216287+00
+4a6509f1-79f7-44fc-8180-d6931d8d551b	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/Cbrpb5Qg9gr/	The most beautiful & soul pleasing 🤍	https://scontent-mia5-1.cdninstagram.com/v/t51.71878-15/642969136_1464743515203757_2433912351156544214_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-mia5-1.cdninstagram.com&_nc_cat=101&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=FfsBHWSQjuAQ7kNvwGSoo3w&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-2VSVSNQSwyrxT4BnAbFUFDnUpyq47KkolPGDchYFVow&oe=6A2B9897&_nc_sid=8b3546	10	33209	7856	58	2022-03-29	f	12	2026-06-07 20:31:27.216287+00
+af032f6e-650b-450f-a1d8-8c858fd524e3	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/CNcH7S-HtV0/	Glad to be part of Rooh Afza family.#Brand Ambassador#best refreshing drink of the century.	https://scontent-mia3-1.cdninstagram.com/v/t51.71878-15/643044869_844797718565267_3027481692317959604_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-mia3-1.cdninstagram.com&_nc_cat=111&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=qpyF1CmD2EMQ7kNvwEWpJqx&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9cZ31v4vFGCjGpm3VyowTGeHN3Zvu9vakwlP3BTmJZ-w&oe=6A2BA3CD&_nc_sid=8b3546	10	34917	7292	65	2021-04-09	f	13	2026-06-07 20:31:27.216287+00
+8544f6f8-b6c2-4d70-8bec-800b6387042f	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/CKynFS0BjG2/	This afternoon Raeid was playing cricket with me at our balcony. I have played with him for few minutes, came back to my room & he continued. Suddenly I heard raeid is reciting some duas & Azan while playing. Alhamdulillah! I felt so happy. He didn't kno	https://scontent-mia3-1.cdninstagram.com/v/t51.71878-15/641280899_1453446699747102_4968527494221598251_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-mia3-1.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=eeiYippRVlwQ7kNvwGEmpFR&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-OE8MkKHthUIFZN884R_hTX9Y-OMTV0mYfCH_foQx3MQ&oe=6A2B8C93&_nc_sid=8b3546	10	38245	8670	105	2021-02-02	f	14	2026-06-07 20:31:27.216287+00
+c2d0f9c9-0b70-4e49-b843-a6f5a83c241f	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/CG4NQW5BiZI/	Alhamdulillah 🏃‍♂️	https://scontent-mia3-1.cdninstagram.com/v/t51.71878-15/641459263_1610112230312526_6553692719989892208_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-mia3-1.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=GD7tt-8Ql0gQ7kNvwFaPHi2&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8M8y76Is22HBKOKLUNHqk8tc2CBXm_HMGS47sZFvXBZA&oe=6A2B91D9&_nc_sid=8b3546	10	13611	4687	62	2020-10-28	f	15	2026-06-07 20:31:27.216287+00
+92ad5366-6ab1-4ff6-abb8-b37189093715	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/CC-jrbXpF6O/	Keep sweating# Alhamdulillah 😊	https://scontent-mia3-2.cdninstagram.com/v/t51.71878-15/642353910_1652546756092647_3551641152531960838_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-mia3-2.cdninstagram.com&_nc_cat=103&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=ydaUK56GMd4Q7kNvwHvdSuW&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af_CrjUMF07wgdmDwPOx2w5xx6NgEJJsiqBsS2g-Qa6UAg&oe=6A2BB265&_nc_sid=8b3546	10	20599	4914	31	2020-07-23	f	16	2026-06-07 20:31:27.216287+00
+d77974fb-c555-4606-8f36-818757a37286	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/CCnPwQGpii1/	Self motivation always is the key to stay positive & go forward.😊	https://scontent-mia3-1.cdninstagram.com/v/t51.71878-15/640901640_1640777693783598_657691345801333145_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-mia3-1.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=sMEpUGGwhNgQ7kNvwH_5wjj&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9_CfHwSziRNURAhTmgzwVJl6IGxs5NGkGg3j1gThCIyQ&oe=6A2B964F&_nc_sid=8b3546	10	19376	4535	24	2020-07-14	f	17	2026-06-07 20:31:27.216287+00
+947b8216-b689-4fd4-9a77-e4048dc5423f	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/CBpoKDVp5-h/	Running time	https://scontent-mia5-1.cdninstagram.com/v/t51.71878-15/642227907_2629518904091356_8254820742129648286_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-mia5-1.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=4N8fQsWpPU0Q7kNvwGVWR5y&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9xfJrN0s5s483NUnahNz_XfLL5N4_WomypDJr_wKnhRQ&oe=6A2BA1BD&_nc_sid=8b3546	10	16922	5179	59	2020-06-20	f	18	2026-06-07 20:31:27.216287+00
+f8d42ec6-8357-4604-a948-3233b36a767a	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/B-Wf42gpB3K/	Alhamdulillah! Good one today. Enjoyed it. Stay home# stay safe.	https://scontent-mia3-1.cdninstagram.com/v/t51.71878-15/642460145_3514588628709582_3593772889669315789_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-mia3-1.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=HDfbVN-B4JsQ7kNvwH_Fj-2&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-i54nizwjHhCETgnF1VVvkjfgvIjBso-M__LuK-gKjkg&oe=6A2BAD62&_nc_sid=8b3546	10	30122	7658	69	2020-03-30	f	19	2026-06-07 20:31:27.216287+00
+fa4cd514-947b-4d6a-bdaa-8ee3d9589be3	766ada28-1457-4625-8437-9a96fa614d65	instagram	https://www.instagram.com/p/B-RBw4IJwcG/	#StayHome #StaySafe	https://scontent-mia5-2.cdninstagram.com/v/t51.71878-15/640919073_1631795287844304_4183332650947773295_n.jpg?stp=dst-jpg_e15_tt6&_nc_ht=scontent-mia5-2.cdninstagram.com&_nc_cat=100&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=BoxxftClUIcQ7kNvwEE8nqU&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8DiOQ-k5H3f8xMbfeMn7nfv1XjoXv9kg_YzvdCQaqJVw&oe=6A2B9065&_nc_sid=8b3546	10	27236	9418	119	2020-03-28	f	20	2026-06-07 20:31:27.216287+00
+f9d3fc83-a4f6-4c36-aefb-13e2376be1bc	668d8f17-a74e-4200-80a2-668ad6ae2817	tiktok	https://www.tiktok.com/@tawhidafridi121/video/7532208192772787464	I love you papa #papa #tawhidafridi #trending #bangladesh #happy #birthday #tawhidafridipapa #tawhidafridi #papamerijaan #tawhidafridi121 #foryou #song #hindisong	https://p16-common-sign.tiktokcdn-eu.com/tos-alisg-p-0037/osfob6RyETBhCH8i5xiO4Im3BpjRIgB7eBDUoA~tplv-tiktokx-origin.image?dr=10395&x-expires=1781035200&x-signature=2lu7rxnP7sFGP1RGB35tO%2FJeoHY%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=no1a	12	1700000	66900	1754	2025-07-28	t	0	2026-06-07 20:31:28.278762+00
+73961457-c0a6-42f0-a4f7-411336c47053	668d8f17-a74e-4200-80a2-668ad6ae2817	tiktok	https://www.tiktok.com/@tawhidafridi121/video/7527180984136109330	#tawhidafridi #trending #bangladesh #kgf #foryou #music #TikTokBangla #gangster #tawhidafridi121 #foruyou #song #hindisong	https://p16-common-sign.tiktokcdn-eu.com/tos-alisg-p-0037/o0mQ6ABtEDEiAB57fIAAI3Aime1eKOTszpvjo6~tplv-tiktokx-origin.image?dr=10395&x-expires=1781035200&x-signature=jBsnyQHd3SOWQFHc%2F2UyvDSkdYo%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=no1a	12	2200000	118000	3375	2025-07-15	f	1	2026-06-07 20:31:28.278762+00
+2f55eb9f-19d9-43ea-a075-bac154700877	668d8f17-a74e-4200-80a2-668ad6ae2817	tiktok	https://www.tiktok.com/@tawhidafridi121/video/7514144900103949586	#tawhidafridi #tawhidafridi #trending #abangladesh #foryou #bangladesh #foryoupage #music #song #tawhidafridi121	https://p16-common-sign.tiktokcdn-eu.com/tos-alisg-p-0037/ogN0sAaSqAOzFIGKwIiqImqBivsoNweiACABHI~tplv-tiktokx-origin.image?dr=10395&x-expires=1781035200&x-signature=VeEs28NE5SHnviffCk%2BURE0Cx38%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=no1a	12	951600	57500	1677	2025-06-10	f	2	2026-06-07 20:31:28.278762+00
+59cddb24-57d4-44e3-ae06-aeaf0685f0d5	668d8f17-a74e-4200-80a2-668ad6ae2817	tiktok	https://www.tiktok.com/@tawhidafridi121/video/7511786965117865234	Tomake Mone Pore Song #TomakeMonePore  \n#BanglaSadSong #BanglaEmotionalSong  \n#HeartTouchingBangla  \n#SadTokBD  \n#BanglaGaan2025  \n#BrokenHeartBD  \n#KosterGaan  \n#SmritirGaan  \n#TikTokBangla  \n#TumiChilo  \n#EmoVibesBD  \n#Bhalobasha  \n#BanglaLyricsTok  \n#	https://p16-common-sign.tiktokcdn-eu.com/tos-alisg-p-0037/owJfQQFQGQwPnFOkAIezABI0HLyZNgGRZ3eGBf~tplv-tiktokx-origin.image?dr=10395&x-expires=1781035200&x-signature=5RAljzKVhWscYg7Qi7Nb6MyKp%2Bg%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=no1a	12	643700	27600	900	2025-06-03	f	3	2026-06-07 20:31:28.278762+00
+abd68607-a0d4-4d7a-b5fc-d3987218db95	361323ff-e0a5-4bf7-a0e1-eeeb381b1b14	tiktok	https://www.tiktok.com/@tuhinvaia01official/video/7637933760339512583	#কি ভাবছো হবে হবে তোমাদের সাথেও দেখা হবে 🤫😅🫡#💕	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/o8nQFrLMGDZfaQlfLoFXAaQEGAvGE3efRbFnXs~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=oo8OpmVbVhKDzTwy46WsfKBwnuE%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8	19	245	25	2	2026-05-09	f	1	2026-06-07 20:33:04.581566+00
+16d492bb-96f0-4ea5-8c05-694fe5ebc74e	668d8f17-a74e-4200-80a2-668ad6ae2817	tiktok	https://www.tiktok.com/@tawhidafridi121/video/7505603629487787282	যখন শব্দ হারিয়ে যায়, নীরবতা তার নিজের ভাষায় কথা বলে। এটি এমন এক ভাষা যা চিৎকার বা হুমকির চেয়েও জোরালো হতে পারে। একদিন কেউ এসে আপনার হয়ে এই কথাগুলো বলে দিয়ে যাবে।#foryou #foryoupage #fyp #viral #funny #music #trending #love #tawhidafridi #tawhidafridi121	https://p16-common-sign.tiktokcdn-eu.com/tos-alisg-p-0037/o05pCiI4ACBllALBIraiEHYvEAyAYaMAQAvBs~tplv-tiktokx-origin.image?dr=10395&x-expires=1781035200&x-signature=OFKfhDAg4REymLemJdL57gm5WWM%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=no1a	12	5300000	257900	4316	2025-05-18	f	4	2026-06-07 20:31:28.278762+00
+f6b838ab-b58e-4190-bb71-190a2d4c73da	668d8f17-a74e-4200-80a2-668ad6ae2817	tiktok	https://www.tiktok.com/@tawhidafridi121/video/7497282882130414866	Life may knock him down, but the king will rise again back soon, stronger than ever\n#shakibkhan #borbad #tawhidafridi #shakib #nissash #fyp #bangladesh🇧🇩 #foryou #foryoupage #trend	https://p16-common-sign.tiktokcdn-eu.com/tos-alisg-p-0037/ooEb7SEgUQAFIE7sALRf0CfvAMDYBCAIhAxouL~tplv-tiktokx-origin.image?dr=10395&x-expires=1781035200&x-signature=3d5ZQ3t5v4bj1DxZV1e0soMQvFk%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=no1a	12	3300000	171700	4877	2025-04-25	f	5	2026-06-07 20:31:28.278762+00
+b701603b-eedf-4d1d-b34f-ee079a81bd41	2ffc3a98-89a2-40a2-ad1e-26f5ae391c1a	tiktok	https://www.tiktok.com/@rakib_hossain_vlogs/video/7648684034545011989	শেষ দিন বোনের সাথে… 🥺❤️\nআবার চলে যাচ্ছে প্রবাসের জীবনে। মানুষের চোখে শুধু বিদেশ, কিন্তু আমরা জানি এর পেছনে কত ত্যাগ আর কষ্ট লুকিয়ে থাকে।\nযাওয়ার আগে বোনটার জন্য ছোট্ট একটা উপহার… ভালো থেকো, আল্লাহ তোমাকে হেফাজত করুন। 🤍✈️”	https://p19-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/oE1AElECABiVpwAAwlPBfiaxrAKvSIwKIsEVVA~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=cjyxtP4eZhYlDcPPulwcuh8IDwQ%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8	7	53500	4117	175	2026-06-07	t	0	2026-06-07 20:32:14.091701+00
+0ba17764-3ed8-4cde-872a-1c2aba862d72	2ffc3a98-89a2-40a2-ad1e-26f5ae391c1a	tiktok	https://www.tiktok.com/@rakib_hossain_vlogs/video/7643832684380310805	রাকিবের সারপ্রাইজ দেখে অন্তুরা অবাক! 😱❤️| Rakib Hossain #HarpicLemon #PowerOfLemon#smellsfresh	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/o0AYAiAbYMh9WEVjBZIEaUiABRANwoAniWPAu~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=9MrMNJL%2F5v1T%2FEfoKn9xKwiH5Fw%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8	7	752800	27600	947	2026-05-25	f	1	2026-06-07 20:32:14.091701+00
+d77a95a2-fd67-424c-85e1-ba9a55c7c14b	2ffc3a98-89a2-40a2-ad1e-26f5ae391c1a	tiktok	https://www.tiktok.com/@rakib_hossain_vlogs/video/7643385648866430229	\N	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-i-photomode-sg/32ae59004cf54640871fed1837ac5b7a~tplv-photomode-image.jpeg?dr=9616&x-expires=1781035200&x-signature=rDo8ajvYvdCGo%2Bq%2FMwKtYm2wqqE%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=9b759fb9&idc=useast8&ftpl=1	7	90100	6136	354	2026-05-24	f	2	2026-06-07 20:32:14.091701+00
+f0997b53-54e3-43ad-ad37-a2758f261e48	2ffc3a98-89a2-40a2-ad1e-26f5ae391c1a	tiktok	https://www.tiktok.com/@rakib_hossain_vlogs/video/7639695675994737940	outfit From :- Azran	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-i-photomode-sg/c14a6c0e38594fbc88ab8e1b31e2ba1a~tplv-photomode-image.jpeg?dr=9616&x-expires=1781035200&x-signature=leug%2BryPimtS5X%2FyWIqYHMh9KXo%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=9b759fb9&idc=useast8&ftpl=1	7	843600	55500	1750	2026-05-14	f	3	2026-06-07 20:32:14.091701+00
+d7947ac4-da0f-43da-8c8f-e5889bdd7ffb	2ffc3a98-89a2-40a2-ad1e-26f5ae391c1a	tiktok	https://www.tiktok.com/@rakib_hossain_vlogs/video/7639428043525655829	রিতুর জন্য স্পেশাল কেক 🤣 Cake From :- Baked By Robayet #rakibhossain #rakibhossainvlogs	https://p19-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/owCGFFIwuHAi2ils40IJ2AfxUmBdAAvIVB11bE~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=W8SQMjxZ0RP9AGkW1bnTUHWXoS0%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8	7	1500000	47800	1301	2026-05-13	f	4	2026-06-07 20:32:14.091701+00
+95bcd1f0-e6f0-4e04-86be-4687772f97b4	2ffc3a98-89a2-40a2-ad1e-26f5ae391c1a	tiktok	https://www.tiktok.com/@rakib_hossain_vlogs/video/7639422658177682708	রিতুর জন্মদিনের কেক কাটছে 😍#rakibhossain	https://p19-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/o0IWEUgIrCVy0AjeFjIAkLIDzrGJeCCUleHXn4~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=yfSSMVdYjG3JChmg0LsDHJdkUPE%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8	7	1200000	54200	1143	2026-05-13	f	5	2026-06-07 20:32:14.091701+00
+ef8797ab-becc-4053-b30c-fc76258fc4f1	9adfcea6-cb9a-4c50-af83-656afe19e890	tiktok	https://www.tiktok.com/@rezaandpuja/video/7641712371311906079	he’s grandpamaxxing	https://p19-common-sign.tiktokcdn-us.com/tos-useast8-p-0068-tx2/oUQIAtBETAA0iu1AzimfC1iAMB8PPwAAIABhAK~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=KsTKYsQ4IvxKjq50jRYxg2Fd5JE%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	19	174900	10300	56	2026-05-19	t	0	2026-06-07 20:32:55.714901+00
+625f5ffb-034a-476a-921c-4f29ae038794	9adfcea6-cb9a-4c50-af83-656afe19e890	tiktok	https://www.tiktok.com/@rezaandpuja/video/7637781722880281886	Give your wife the Mother’s Day she deserves. #mothersday	https://p16-common-sign.tiktokcdn-us.com/tos-useast8-p-0068-tx2/oQGHcQJRAeAQ1AEnKbUWQRVfIJf8fAi9xAMtRU~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=vZXCZmHLBHE2vB5NPnSRp5JEZRk%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	19	41800	1775	39	2026-05-09	f	1	2026-06-07 20:32:55.714901+00
+d9f6f1c0-75f2-4995-a01e-602ed22661fa	9adfcea6-cb9a-4c50-af83-656afe19e890	tiktok	https://www.tiktok.com/@rezaandpuja/video/7636881141865155870	It never lasts long	https://p16-common-sign.tiktokcdn-us.com/tos-useast8-p-0068-tx2/o8nIIKcfEFADleCAIjJDqAMT6rpKa3T72IQfCw~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=FJLzJHHoObYebav15%2BqeRidVlWw%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	19	1700000	89900	323	2026-05-06	f	2	2026-06-07 20:32:55.714901+00
+b0272f0e-8e5a-4e98-a7ec-5c4f3365659a	9adfcea6-cb9a-4c50-af83-656afe19e890	tiktok	https://www.tiktok.com/@rezaandpuja/video/7635767009724075294	I need a new babysitter	https://p16-common-sign.tiktokcdn-us.com/tos-useast8-p-0068-tx2/oMiAIVWvebWEwrERtsepUAixwAKBdDAEAx9b3C~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=vbrBlAql7Ot2JiVMb31IficGbJQ%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	19	53400	2565	16	2026-05-03	f	3	2026-06-07 20:32:55.714901+00
+a191c52c-e1b1-40b5-92db-63cd37d5d9f0	9adfcea6-cb9a-4c50-af83-656afe19e890	tiktok	https://www.tiktok.com/@rezaandpuja/video/7633907064766500127	Dads/husbands! It’s time to lock in	https://p19-common-sign.tiktokcdn-us.com/tos-useast8-p-0068-tx2/oEuR78ED5ANUdxVhEfYXFNAEDfAEFEAnuCApRI~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=Y1bDGqtuxEQvrws2jZWzSlpwAIM%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	19	96800	5780	35	2026-04-28	f	4	2026-06-07 20:32:55.714901+00
+69c35792-c62f-434d-89be-6c69ad75d0b2	9adfcea6-cb9a-4c50-af83-656afe19e890	tiktok	https://www.tiktok.com/@rezaandpuja/video/7633192461833112862	Why is this video so long	https://p19-common-sign.tiktokcdn-us.com/tos-useast8-p-0068-tx2/oQn1EfbPBi30ibTCauij0UIC9AqIlB7A32IbTA~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=2Qpse%2Bhptvvipe6D%2FAWb9xgOwSU%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	19	273900	7295	14	2026-04-26	f	5	2026-06-07 20:32:55.714901+00
+79d5836b-54ab-4d06-9e6c-136ecefbc239	361323ff-e0a5-4bf7-a0e1-eeeb381b1b14	tiktok	https://www.tiktok.com/@tuhinvaia01official/video/7617054559113973000	#চাঁদপুরের_পোলা😲 এবারেও ব্যথা হয়ে গেলাম কিন্তু তোমাকে আমার করে নেব, 💔💔🌞😭😭😚😚😄😄💰💰💰	https://p19-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/oQcrMBuB0ANx3MZiiNEpoAI9CAr1f2CwqIItCW~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=IGj%2F3NHgLlUsk1jwnECPMAst9Qo%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8	19	201	14	1	2026-03-14	f	3	2026-06-07 20:33:04.581566+00
+a54c38a4-795e-47f4-beae-a315dbbfc2bd	361323ff-e0a5-4bf7-a0e1-eeeb381b1b14	tiktok	https://www.tiktok.com/@tuhinvaia01official/video/7617046546802068744	#চাঁদপুরের_পোলা😲   না ভাই গরিব	https://p19-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/oIW1IUWo3DA4LeIVBSFiBRpEuExg1BDtIVfW1E~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=gNS9et0MJ8Bf9oETkvtJ6lUiXGY%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8	19	161	17	1	2026-03-14	f	4	2026-06-07 20:33:04.581566+00
+cdede377-db5d-41df-8336-7133cdcbad47	361323ff-e0a5-4bf7-a0e1-eeeb381b1b14	tiktok	https://www.tiktok.com/@tuhinvaia01official/video/7616377346743995655	#tuhin you too 😁😁😁😁😊😁	https://p19-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/oYHBoAfixw2t0oMu3IAdIvAw0cI7ibCTB4SWzy~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=%2B3dPPiYoTQmw23qaRXQEHd%2FiiV0%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8	19	184	15	3	2026-03-12	f	5	2026-06-07 20:33:04.581566+00
+9a057920-874c-4eff-9a37-73d54af47450	8724cd98-6837-4fb0-85f8-ad0adff0ae6a	tiktok	https://www.tiktok.com/@mr_mehedi_05/video/7025448000138775834	কি হলো এটা🤣#foryou #foryoupage #trending #mr_mehedi_05 #tiktok @bdtiktokofficial	https://p19-common-sign.tiktokcdn-us.com/tos-useast2a-p-0037-aiso/b6f2ba1b92db4a59b7df4c0bdb97a116_1635739581~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=eqGAJ0o%2F%2BBnd5M%2FEOQhhAFSs25g%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	7	2500000	329600	3248	2021-11-01	t	0	2026-06-07 20:33:13.973677+00
+2c53943f-a39e-4f0c-a582-32923f6a3f7e	8724cd98-6837-4fb0-85f8-ad0adff0ae6a	tiktok	https://www.tiktok.com/@mr_mehedi_05/video/7000736894438968603	😭😭#foryou #foryoupage #friendship #sad @ariyan_official @bdtiktokofficial	https://p16-common-sign.tiktokcdn-us.com/tos-useast2a-p-0037-aiso/5f06c12a33f14780832968f8db35cd45_1629986079~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=bvRizLCS76r%2F5kaRXUXI%2FNL5Rok%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	7	5900000	613700	3036	2021-08-26	f	1	2026-06-07 20:33:13.973677+00
+49fe0168-2371-472e-a321-3bc557d4f190	8724cd98-6837-4fb0-85f8-ad0adff0ae6a	tiktok	https://www.tiktok.com/@mr_mehedi_05/video/7005136054579727642	friendship😍😍#foryou #foryoupage #friendship #kishoreganjbd #bdtiktokofficiai @ariyan_official @bdtiktokofficial	https://p19-common-sign.tiktokcdn-us.com/tos-useast2a-p-0037-aiso/3c929a735f964910a78b85e9c715ac96~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=1ZV2V%2BKYI9zOOABAxPoqzJI18P0%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	7	7900000	775400	3802	2021-09-07	f	2	2026-06-07 20:33:13.973677+00
+4493f832-393e-4af2-9c41-c546dfebbc12	8724cd98-6837-4fb0-85f8-ad0adff0ae6a	tiktok	https://www.tiktok.com/@mr_mehedi_05/video/7540975778624785665	মাছ খাবা মাছ😋#foryou #foryoupage #trending	https://p19-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/oop6gwfB0IyMIB0C87ngaUH3mAZAjiXpiFFLIw~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=GKJYx3yS1g%2B%2B4fb1ltRTeJ%2BRUm8%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	7	2963	331	16	2025-08-21	f	3	2026-06-07 20:33:13.973677+00
+06c7a972-1884-4380-9692-65c62d8e2e0d	8724cd98-6837-4fb0-85f8-ad0adff0ae6a	tiktok	https://www.tiktok.com/@mr_mehedi_05/video/7540963066561826065	দুই কেবলা ওলা মসজিদ🌻#foryou #foryoupage #trending #viralvideo	https://p19-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/oQJtDsDiIFAGIHBphJEpu4EFBfuFfRpmoohqgy~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=oO3akUPN49gfF5O%2BeDw%2FgzHyons%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	7	976	152	9	2025-08-21	f	4	2026-06-07 20:33:13.973677+00
+1d65b89e-d384-45a4-b879-a6812fcfb45b	8724cd98-6837-4fb0-85f8-ad0adff0ae6a	tiktok	https://www.tiktok.com/@mr_mehedi_05/video/7540961280039914768	কোবা মসজিদ🌻#foryou #foryoupage #trending #viralvideo #islamic_video	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/o8ERIp3ftGVEqmERw4pofEF8R1jD8ygBAYgRmB~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=WL2zvYd%2FKbRs9uReE3pSrsijEw0%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	7	910	135	8	2025-08-21	f	5	2026-06-07 20:33:13.973677+00
+52c0099a-2156-46c8-af37-fa734cc4b73f	c3708c3c-41d5-4e93-a297-8112133b2cda	tiktok	https://www.tiktok.com/@rafi.bhaiyu/video/7648574502984600852	Nepal Vlog - Nagarkot | #rafibhaiyu	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/ogUBpItwl31AFVXMwMiAAiECIAgBjwjqSIf4uv~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=g2R%2BF90ermFri9klhMFotzRw9gs%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	6	3070	158	19	2026-06-07	t	0	2026-06-07 20:33:59.303941+00
+29072534-7037-443a-af03-2e1dbda28847	c3708c3c-41d5-4e93-a297-8112133b2cda	tiktok	https://www.tiktok.com/@rafi.bhaiyu/video/7647998929388178709	#rafibhaiyu	https://p19-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/o0VRGASJJwOt4IgopjLeGFA7XTffl8gzG0GIRf~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=1aSvA4hO4B%2Btye%2FlaC6ulHwq%2B6M%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	6	7670	634	18	2026-06-05	f	1	2026-06-07 20:33:59.303941+00
+0b4ce2b1-c746-49ff-8efd-c40caaadf9d7	c3708c3c-41d5-4e93-a297-8112133b2cda	tiktok	https://www.tiktok.com/@rafi.bhaiyu/video/7647998881963314453	#rafibhaiyu	https://p19-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/ogOaC4jiIu7fGM0aJwAZyIJEEAv1y0BiwjnAiA~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=fWEh9%2F2iHNZizdFbB%2FCZ8JRnR%2BY%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	6	8188	590	28	2026-06-05	f	2	2026-06-07 20:33:59.303941+00
+eeb91804-7c08-4007-aee3-0c53ab4228f0	c3708c3c-41d5-4e93-a297-8112133b2cda	tiktok	https://www.tiktok.com/@rafi.bhaiyu/video/7647112178272685333	একটু মোটিভেশন দেয়ার চেষ্টা 🙃\n\n📍 Hazari Cottage & Resort \n\n#rafibhaiyu	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/o8IRfUqAfCsm46vgBBEXVHicdXBBYgP8iAENZB~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=2DRAH%2F4caRwR%2BRlD6c00B842sxs%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	6	82700	5170	126	2026-06-03	f	3	2026-06-07 20:33:59.303941+00
+9978143c-2d7e-4ea4-9ed5-069d7ec7d91b	c3708c3c-41d5-4e93-a297-8112133b2cda	tiktok	https://www.tiktok.com/@rafi.bhaiyu/video/7646777219620015381	Guess the lyrics!! 😂\n\n📍Hazari Cottage and Resort. \n#rafibhaiyu	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/oMueZgIggDAUlFPeWzLoelYSU33xBIAAGCZjgn~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=uF%2Fdlby1Xdf0OzBY6CbzHJ091R4%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	6	972300	14400	79	2026-06-02	f	4	2026-06-07 20:33:59.303941+00
+5893bd0b-ae31-40c6-9d6a-50e5718a3d04	c3708c3c-41d5-4e93-a297-8112133b2cda	tiktok	https://www.tiktok.com/@rafi.bhaiyu/video/7644933788534983957	Biyer por “Prithibi Bodle Geche” 🙂\n@shusmi👑 #RafiBhaiyu	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/o4kIEEQDEFAF4GBgIR7DUamXETQuJeqYuBMfBs~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=RtAARbVlVdsTTbbJl%2F8mOlKWohk%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	6	126700	6231	118	2026-05-28	f	5	2026-06-07 20:33:59.303941+00
+65525841-257f-460e-a0d7-f960a276577b	5e41b0f3-ce73-4601-9508-34aafcd45039	tiktok	https://www.tiktok.com/@rsfahimchowdhury/video/7645610117693459719	Medina, also known as Al-Madinah Al-Munawwarah, is a peaceful and spiritually significant city in Saudi Arabia, cherished by millions for its deep Islamic heritage and historical significance. Home to the Prophet's Mosque (Masjid an-Nabawi), visitors com	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-i-photomode-sg/c94ac10ad4874fe0a4c360bcfbc1bb7d~tplv-photomode-image.jpeg?dr=9616&x-expires=1781035200&x-signature=VHPo9QtLPaYHxZa0fCjvTTIWNvA%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=9b759fb9&idc=useast8&ftpl=1	6	411	164	1	2026-05-30	t	0	2026-06-07 20:34:07.3816+00
+3be984c5-1691-4952-b3bf-94208cb5d47e	5e41b0f3-ce73-4601-9508-34aafcd45039	tiktok	https://www.tiktok.com/@rsfahimchowdhury/video/7643087167052320018	Medina, also known as Al-Madinah Al-Munawwarah, is a peaceful and spiritually significant city in Saudi Arabia, cherished by millions for its deep Islamic heritage and historical significance. Home to the Prophet's Mosque (Masjid an-Nabawi), visitors com	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-i-photomode-sg/67c3f3b612804a13b5076c8ede1107a3~tplv-photomode-image.jpeg?dr=9616&x-expires=1781035200&x-signature=FYGsnCNndE8WvQQsxE5ZGAsGa34%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=9b759fb9&idc=useast8&ftpl=1	6	350	133	2	2026-05-23	f	1	2026-06-07 20:34:07.3816+00
+7b638bfe-b288-4f50-825b-9f889acd831b	5e41b0f3-ce73-4601-9508-34aafcd45039	tiktok	https://www.tiktok.com/@rsfahimchowdhury/video/7642538259993693448	Medina, also known as Al-Madinah Al-Munawwarah, is a peaceful and spiritually significant city in Saudi Arabia, cherished by millions for its deep Islamic heritage and historical significance. Home to the Prophet's Mosque (Masjid an-Nabawi), visitors com	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-i-photomode-sg/17a135f6b3364246b0b107ae69d937cb~tplv-photomode-image.jpeg?dr=9616&x-expires=1781035200&x-signature=BkSN5JsRI7%2FygKCHPksdixlQoSk%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=9b759fb9&idc=useast8&ftpl=1	6	368	146	0	2026-05-22	f	2	2026-06-07 20:34:07.3816+00
+e421a809-a442-4011-b56a-e12c904331b3	5e41b0f3-ce73-4601-9508-34aafcd45039	tiktok	https://www.tiktok.com/@rsfahimchowdhury/video/7641912308888882439	"মদিনা, যা আল-মদিনা আল-মনাওয়ারা নামেও পরিচিত, সৌদি আরবে একটি শান্তিপূর্ণ এবং আধ্যাত্মিকভাবে গুরুত্বপূর্ণ শহর, যার গভীর ইসলামী ঐতিহ্য এবং ইতিহাসিক গুরুত্বের জন্য লক্ষ লক্ষ মানুষ এটিকে লালন করে। মসজিদে নববী (মসজিদে নববী) এর আবাসস্থল হিসাবে, এটি বিশ্বজুড়ে	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-i-photomode-sg/eb601e5822f14634b7e2d224f0f7a29e~tplv-photomode-image.jpeg?dr=9616&x-expires=1781035200&x-signature=vRHGYPlAvIMHONYu7HIMPyeKtrA%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=9b759fb9&idc=useast8&ftpl=1	6	73	8	1	2026-05-20	f	3	2026-06-07 20:34:07.3816+00
+2ed165e7-2d50-4719-b30c-af962879e6be	5e41b0f3-ce73-4601-9508-34aafcd45039	tiktok	https://www.tiktok.com/@rsfahimchowdhury/video/7641612472868293896	Medina, also known as Al-Madinah Al-Munawwarah, is a peaceful and spiritually significant city in Saudi Arabia, cherished by millions for its deep Islamic heritage and historical significance. Home to the Prophet's Mosque (Masjid an-Nabawi), visitors com	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-i-photomode-sg/943328a72f3248bc82e41baf6ceb51ac~tplv-photomode-image.jpeg?dr=9616&x-expires=1781035200&x-signature=Naj%2FsldpvchNMwMW9via3Fa064c%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=9b759fb9&idc=useast8&ftpl=1	6	319	121	2	2026-05-19	f	4	2026-06-07 20:34:07.3816+00
+bcd2883f-3e53-4aff-96e1-c1fd5e0c7932	5e41b0f3-ce73-4601-9508-34aafcd45039	tiktok	https://www.tiktok.com/@rsfahimchowdhury/video/7641441568724995346	Medina, also known as Al-Madinah Al-Munawwarah, is a peaceful and spiritually significant city in Saudi Arabia, cherished by millions for its deep Islamic heritage and historical significance. Home to the Prophet's Mosque (Masjid an-Nabawi), visitors com	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-i-photomode-sg/0b5bf23e297745448e21975e37a580ce~tplv-photomode-image.jpeg?dr=9616&x-expires=1781035200&x-signature=50bqO3ZNakvaedeAvoBlDw8DRmM%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=9b759fb9&idc=useast8&ftpl=1	6	313	101	1	2026-05-19	f	5	2026-06-07 20:34:07.3816+00
+4dbdea7c-e93f-41a9-8547-6bb8ded50796	85bb9525-c119-40ad-a32c-33efab808e63	tiktok	https://www.tiktok.com/@theshakibkhan_	\N	\N	1	\N	\N	\N	\N	t	0	2026-06-07 20:34:12.776364+00
+fa0f9651-cc69-460d-bbde-6dfe57bbfe16	a3d360a0-922f-4c06-8104-6c1af88ef38d	tiktok	https://www.tiktok.com/@safieahafizretu/video/7120964227791211803	Amr bon Jokon Camara man😅#fyp #foryou #foryoupage #expression #safiea_hafiz_retu #unfrezzmyaccount	https://p16-common-sign.tiktokcdn-us.com/tos-useast2a-p-0037-aiso/603c25c276cd49928d79a62aeb0c8325_1657978691~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=F7l7kj5DbPhc%2FqkFErVFafjBsRs%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	19	1100000	74400	512	2022-07-16	t	0	2026-06-07 20:34:31.864588+00
+cb81bf6e-fcdc-43b8-a4e1-3d392a714683	a3d360a0-922f-4c06-8104-6c1af88ef38d	tiktok	https://www.tiktok.com/@safieahafizretu/video/7118337172071025947	😇#fyp #foryou #foryoupage #expression #safiea_hafiz_retu #unfrezzmyaccount	https://p16-common-sign.tiktokcdn-us.com/tos-useast2a-p-0037-aiso/cb67b780cdb7410a8dcac9c025d2e0ad_1657367044~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=GiaLpKkdRem8g%2F5ZYFrM14XQxcw%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	19	179300	15700	214	2022-07-09	f	1	2026-06-07 20:34:31.864588+00
+b40d4ef6-09ad-410e-bf8b-03af02c011bf	a3d360a0-922f-4c06-8104-6c1af88ef38d	tiktok	https://www.tiktok.com/@safieahafizretu/video/7118326620640906522	Bujta paro na😕#fyp #foryou #foryoupage #expression #safiea_hafiz_retu #unfrezzmyaccount	https://p16-common-sign.tiktokcdn-us.com/tos-useast2a-p-0037-aiso/45763c67c26643118c3e05383e40c0de~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=nczYcvc7HysoaBD0JbHbMIXYHi4%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	19	117000	7871	96	2022-07-09	f	2	2026-06-07 20:34:31.864588+00
+3e9d874a-1955-473a-95b1-ad0dd2826fd4	a3d360a0-922f-4c06-8104-6c1af88ef38d	tiktok	https://www.tiktok.com/@safieahafizretu/video/7117236413925543195	🙄🤓#fyp #foryou #foryoupage #expression #safiea_hafiz_retu #unfrezzmyaccount	https://p19-common-sign.tiktokcdn-us.com/tos-useast2a-p-0037-aiso/9e2046fe1c424adeb7558c7f2717dff3~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=LHufBwVjmYxoiS7iHiMcL2gcDk4%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	19	498200	40200	413	2022-07-06	f	3	2026-06-07 20:34:31.864588+00
+a45fbd3d-1be0-4920-abce-1b692a749128	a3d360a0-922f-4c06-8104-6c1af88ef38d	tiktok	https://www.tiktok.com/@safieahafizretu/video/7116833500711505179	Tag your favorite TikTokr🖤#fyp #foryou #foryoupage #expression #safiea_hafiz_retu #unfrezzmyaccount	https://p16-common-sign.tiktokcdn-us.com/tos-useast2a-p-0037-aiso/cc625218917f4a5ca40b685e9aee7bbd_1657016933~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=ktwZMPjKNAFkWE0WQEfmsztSfwQ%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	19	240900	17900	327	2022-07-05	f	4	2026-06-07 20:34:31.864588+00
+f76a8f43-9941-4a0f-98d0-a3da49a5fe57	a3d360a0-922f-4c06-8104-6c1af88ef38d	tiktok	https://www.tiktok.com/@safieahafizretu/video/7116797226537585946	Thank For 1M ❤️ Keep Support Me Love You All ❤️ Content Rabbi Islam via 🥰#fyp #foryou #foryoupage #safiea_hafiz_retu #unfrezzmyaccount	https://p16-common-sign.tiktokcdn-us.com/tos-useast2a-p-0037-aiso/df104ae5463849e6b04ddb52854bfceb~tplv-tiktokx-origin.image?dr=9636&x-expires=1781035200&x-signature=ZO5J1%2FELrSm1LGhYeuBPVOPFH60%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5	19	127300	12300	200	2022-07-05	f	5	2026-06-07 20:34:31.864588+00
+\.
+
+
+--
+-- Data for Name: creator_profiles; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.creator_profiles (id, user_id, display_name, full_name, profile_photo_url, bio, tagline, country_code, city, timezone, gender, date_of_birth, is_available, min_budget, response_time_hours, preferred_collaboration_types, contact_whatsapp, contact_email, is_identity_verified, verified_at, total_collaborations, average_rating, created_at, updated_at, deleted_at) FROM stdin;
+5dafde33-3117-4f0b-9ecd-b958462aa368	51f4f602-e604-4f47-bda0-9c9522bd8b9d	SS FOOD CHALLENGE	\N	https://yt3.ggpht.com/ytc/AIdro_ktXCaGOxB6MpI5fJBHitzBywhnFLbjzzoFJ6ftVF1dxBE=s800-c-k-c0x00ffffff-no-rj	SS Food Challenge is a unique show that brings fun village games together with real social impact. Through inventive village game shows, we have created a movement that unites people, spreads joy, and empowers lives. \n\nFounded by Md. Omar Sunny Somrat, a visionary creator who believes content can do more than entertain — it can employ, empower, and elevate communities. Today, over 40 full-time team members work.	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:38:54.551262+00	2026-06-07 19:38:54.551262+00	\N
+07091792-bad6-4f26-bd94-7e0a2e3ea351	465d4838-61ab-4b28-8060-f6eef75165ea	Fun Games For Kids	\N	https://yt3.ggpht.com/WFw8hJ8J_740bvn40rE-S7Ti7jBtYu_ZuzdtLKC4_vHSqd1cuf5tv8R2mFgOB73pXmtrk9-7YQg=s800-c-k-c0x00ffffff-no-rj	Fun Games For Kids creates YouTube content. Recent uploads include: Challenge video; Challenge games for kids; Challenge Game; Fun videos for kids; Fun games for kids	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:38:58.045159+00	2026-06-07 19:38:58.045159+00	\N
+9c00c3ef-3454-4fbc-8cf0-f578cf0ea468	ec8ad189-5181-4e18-b817-1fe8170f075d	SK SABIR ali	\N	https://yt3.ggpht.com/1ZE6iwpyL-M4_WDcq1FvQY95ThjgPRVG7Qx0qvj9UXf1DY7KyQk6_2NkYC3m699sZj3jHENACg=s800-c-k-c0x00ffffff-no-rj	Hi ❤️	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:38:59.888318+00	2026-06-07 19:38:59.888318+00	\N
+72b690f1-2102-4740-8ca6-ee710cfd89bf	fb7da1f8-7224-4f64-8f41-078e939c11c3	Waziha's Vlog	\N	https://yt3.ggpht.com/yv7FMfWvKStkxrCL00LwgSRu1iFp7TBS4Ux2FZeGDOHB4t1_m4YwPjUS9GRTSyPcli4riAw-m5I=s800-c-k-c0x00ffffff-no-rj	Assalamu Alaikum, we are Bangladesh family, we love blogging our daily lives to keep a record and to share with all off you!! Subscriber and follow us as we continue to do all short of fun together,,""	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:39:01.221656+00	2026-06-07 19:39:01.221656+00	\N
+fdbdf485-e255-4085-9277-8190e0022811	2d4183d8-df9a-48e0-9155-c7c81ba386a8	Doyel Agro	\N	https://yt3.ggpht.com/ytc/AIdro_lXf-tLGQX3tzJH-4Q3A7nIRJUUxKBgcQSst_V_lFnijag=s800-c-k-c0x00ffffff-no-rj	আমি একজন কম্পিউটার ইঞ্জিনিয়ার। বিভিন্ন ইউটিউব ভিডিও দেখে আমি চাকরি বাদ দিয়ে খামার শুরু করছি । বেশির ভাগ ভিডিওতে দেখানো হয় কৃষিকাজ আর খামার করে মাসে লাখ লাখ টাকা ইনকাম করছে। আসলে লাভ হয় না লস হয় তার বাস্তব চিত্র জানতে পারবেন আমার থেকে। আমার এই খামারের ভিডিও দেখতে আমার সাথে থাকুন। ধন্যবাদ।\n\nI'm a software engineer but love to grow my own food. শেষ পর্যন্ত শম্পা আমাকে পচা মাছ রান্না করে খাওয়ালো! আমাদের সাথে যোগাযোগ.	\N	BD	\N	Asia/Dhaka	\N	\N	t	8500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:39:02.695081+00	2026-06-07 19:39:02.695081+00	\N
+42e12f8f-04fd-42cd-86e5-5ffbbe47c281	45ad41e2-c48c-47e4-9849-231350fdf898	AroundMeBD	\N	https://yt3.ggpht.com/ytc/AIdro_kvcUa53Lsf39vxyaXu7AtJ5AHLAKrAAQOLtLdOqUTB9Nc=s800-c-k-c0x00ffffff-no-rj	AroundMeBD loves doing charity work. We cook a variety of delicious food together with the people of our village after that we had a lot of fun eating together. Besides AroundMeBD love cooking dishes in an unique way that you can understand by watching this channel's video.\n\nAroundMeBD also do different things for the village children.\nIn our village we make some fun toys to further develop their childhood which.	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:39:06.107089+00	2026-06-07 19:39:06.107089+00	\N
+51cdbea5-c7d2-49fe-87ba-db598d4ecac5	62ff254d-dd0b-4250-8962-0fcbd597251e	Extreme Launch Lover	\N	https://yt3.ggpht.com/Xg21d0Rz03e0V2A3VkITxaq31xL30jMsKvZttTQUqKmvQAKbwNFcg0nxC-CDGVP3ZOXoAEXf3w=s800-c-k-c0x00ffffff-no-rj	Home of launch enthusiasts and a place of updated & exclusive videos, news, informations & reviews of river transports from the whole of Bangladesh.\n\nEnjoy all passengers ship video in Bangladesh.You can get latest passengers ship video update from us.\n\nIf you have any question about launch time schedule or phone number and any information so please contact with us via-\n\n🅾Facebook Page-Extreme Launch.	\N	BD	\N	Asia/Dhaka	\N	\N	t	7500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:39:13.604253+00	2026-06-07 19:39:13.604253+00	\N
+70be3112-3530-4fbd-8ee3-a88acd20ccb9	21540e38-ce0d-4a5c-b593-0ff3eecf71cc	Tonni art & craft	\N	https://yt3.ggpht.com/6ZpS-uLwUAv_Q-ra_AG73Cxm4_8pmXIPf8ub1lIZ0OSI4zGOdVawa3bfOwfhTrLLQuorF6t6=s800-c-k-c0x00ffffff-no-rj	Tonni art & craft creates YouTube content. Recent uploads include: butterfly keyboard 🦋🦋; #tonniartandcraft || kawaii squishy sticker's 🤍	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:39:18.892221+00	2026-06-07 19:39:18.892221+00	\N
+8127f14d-7fc7-4e47-a3ce-195d54f2f41f	64fc6c13-3546-4a00-bcdc-06a480abfc7b	Farjana Drawing Academy	\N	https://yt3.ggpht.com/hm6mWNIIYmhAk9PkkUl-yjXLlhCfj8GciMnbYDHVcGlNY0Jj-AccxhS_nPxXp1fsvvrCiGt1s1c=s800-c-k-c0x00ffffff-no-rj	Good News!! I’ve recently started an online stationery shop. (Iris Store) Link - https://iris.sellbd.shop\nFacebook page link- https://www.facebook.com/irisonlinestore   \n\nAesthetic stationery and Arts supplies are found in this store. Currently the product shipment system of this shop is available only in Bangladesh.\n\nAbout me:\nIf you're new, hi, my name's Farjana! \nOn this channel I always try to show the easiest.	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:39:21.162682+00	2026-06-07 19:39:21.162682+00	\N
+5519f9b5-8d0a-4854-a590-170882420cf0	58cddefc-9381-4bd4-ae39-5ee636c60caa	Gaming With Talha is Back	\N	https://yt3.ggpht.com/yoiwSMAV30N8Wk8rpMEZSgYLoWsUm8PGlNbBKOqSWMf0NVwCbMcbO_ATH3hj3kkM9YEtwC5fsg=s800-c-k-c0x00ffffff-no-rj	gameng with tahla famey vidio	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:41:05.507162+00	2026-06-07 19:41:05.507162+00	\N
+ae9568ff-7a6a-47a8-ac4f-91ec762ef9a3	f8755e6a-d631-4ef6-8a3d-b67ee736c113	ART and CRAFT	\N	https://yt3.ggpht.com/3XrdLklm6sXE6ITNBhuJppniWQs3JzM19BKX35IJR6qz748H5gjzl7UJhquIzLIjllTBIT17QQ=s800-c-k-c0x00ffffff-no-rj	Welcome to Art & Craft, your go-to destination for all things creative! Dive into a world of imagination and inspiration as we explore various art forms, DIY projects, crafting tutorials, and more. Whether you're a seasoned artist or just starting your creative journey, our channel offers something for everyone. Join us as we unleash our creativity, share handy tips, and embark on exciting crafting adventures..	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:39:28.529631+00	2026-06-07 19:39:28.529631+00	\N
+440f955d-039d-4db5-8590-35e0a837918c	91cecd1a-82ec-45e3-a6c3-5827f09a4357	Ara's Easy Art	\N	https://yt3.ggpht.com/YMZZNS7SKnDoRNTBxEQa-ybUigZn2N18bINI_zvi3RlSpKAKQJYJZgIAeIwa66ChXPPdOe9x3g=s800-c-k-c0x00ffffff-no-rj	ASSALAMU WALAIKUM, Everyone! \n\n🌸Welcome To Ara's Easy Art 🎨 - The Fun, Easy Drawing, Educational World of Art, DIY and Origami Ideas 💫 For all Ages!\n\nSubscribe Today, and Let's Draw, Create and Imagine Together with Ara's Easy Art!✨\n\nFor Contact ✉️ 👉\naras.easy.art@gmail.com 🤢😈👹😡🤩💡Satisfying Art colouring for kids @ArasEasyArt  #colourful #easydrawing #lollipop #icecream #satisfying  #viral #art #colour #ytshorts.	\N	BD	\N	Asia/Dhaka	\N	\N	t	8500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:39:43.215011+00	2026-06-07 19:39:43.215011+00	\N
+673d48a6-bf94-4d7a-a1f2-851357978fb0	84f5700d-efde-491e-ad9c-034aa68ec777	Selai tutorial	\N	https://yt3.ggpht.com/q5QxkeUNXK81ENX4Xd-p7MgVh34pliBUmlfcg32wrZCbSw4RITk-7DaHeocMtWiCZvOQsvWP67M=s800-c-k-c0x00ffffff-no-rj	Welcome to Selai Tutorial channel.\nThis channel will offer you of how to sew, how to cut clothes, how to make clothes and get success.\n\nপোশাক মানুষের সৌন্দর্য বাড়ায়,\nআর আমরা পোশাকের সৌন্দর্য বাড়াই!\n\n\nyunuskh500@gmail.com Quick and Beautiful Neck Design Idea Sewing techniques for beginners Helpful and informative sewing method New Stylish Trouser Design You’ll Love V-neck sewing method  #neck  #sewing	\N	BD	\N	Asia/Dhaka	\N	\N	t	8500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:39:56.968481+00	2026-06-07 19:39:56.968481+00	\N
+0e8a07c1-ff6d-4394-859f-151f39779107	fc4b005a-3d9c-469a-bdfd-fae14f956a2e	Bamboo / Shorts	\N	https://yt3.ggpht.com/j2RfVkT9EQMM7ggja0wG1ybCiQp-JhF2ALzPyFOaMjei7NzHpEqjun2gRBnMPG1oIdKOykQNaQ=s800-c-k-c0x00ffffff-no-rj	Hello👋 Bamboo Lovers💕\n\nbusiness email: mehedimoderator@gmail.com Creative wooden Craft with Iron Nail Key Using Bamboo Slingshots \n\nbamboo key holder, diy bamboo craft, handmade key organizer, creative bamboo project, bamboo diy idea, home organization craft, unique bamboo design, rustic bamboo decor Wooden DIY Slingshots\n\nHandcrafted wooden slingshots made with creative design and smooth finishing. A simple DIY.	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:40:01.378559+00	2026-06-07 19:40:01.378559+00	\N
+6ab37117-0165-49c7-b569-9f2d5b16d0be	e8fcc0fd-9b36-48d1-a9d1-32c9929a47f3	Crazy Bangla Tips	\N	https://yt3.ggpht.com/kbAC6f2fVkn5990k5zP538j5ZfEqoSyftiPyvhPTmvEvb6EKON3HdrQhFxqk23Xb3oQ4i-SKUOE=s800-c-k-c0x00ffffff-no-rj	Hello Guys Welcome To My Channel\nI Am Upload Lifestyle Video Every Week আজ আমি আপনাদের জন্য এমন একটি উপকারী টিপস নিয়ে এসেছি ।যা আপনার চুলের সকল ধরনের সমস্যা দূর করতে সাহায্য করে। তো বন্ধুরা চলুন আজকের এই ভিডিওটি দেখে নেয়া যাক। কেননা এই ভিডিওতে যে ধরনের টিপস ব্যবহার করা হয়েছে ।তা সকলে ব্যবহার করতে পারবেন এবং এটি আপনার চুলের জন্য খুবই উপকার করবে।\n#tips \n#crazybanglatips Kalojirate 2nd Opadan Mesalei Chul Hatu Obdi.	\N	BD	\N	Asia/Dhaka	\N	\N	t	9000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:40:05.909454+00	2026-06-07 19:40:05.909454+00	\N
+20ac3692-ee06-4bf2-9c60-554a5b131486	5641267d-a62d-4824-9919-7e9294e181b9	PC Builder Bangladesh	\N	https://yt3.ggpht.com/ytc/AIdro_nXbuocFI9aQP3LrygYeWOsTdr39DyoFfIzZOAq6ta-PYU=s800-c-k-c0x00ffffff-no-rj	PC Builder Bangladesh is the first video based technology  podcast in Bangladesh.\n\nWe create video regarding gaming, tech news, tutorials and pc builds. You can learn about gaming, gaming pc, pc building tutorials and other pc issues. Apart from these we also unbox and review pc components and other tech gadgets. You can join local and international tech gossips as well. \n\nSubscribe and join us over youtube. We are.	\N	BD	\N	Asia/Dhaka	\N	\N	t	7500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:40:30.101002+00	2026-06-07 19:40:30.101002+00	\N
+7db49e06-546f-47e2-90bb-040f77ae36c2	6f0be408-84c0-4b34-85e2-f403d5ce0aee	ATC Android ToTo Company	\N	https://yt3.ggpht.com/ytc/AIdro_nextcfEo7l5bBFhHGruWTQm33-YiguIfFquZU0FJEdAqc=s800-c-k-c0x00ffffff-no-rj	Android ToTo Company | Pioneering Tech Reviews in Bangla since 2013 এক সময় বাংলাদেশের স্মার্টফোন মার্কেটে Huawei ছিল অন্যতম জনপ্রিয় নাম। দীর্ঘ সময় পর এবার Huawei আবারও অফিসিয়ালি বাংলাদেশে ফিরছে নতুন পরিকল্পনা, নতুন ডিভাইস এবং নতুন সম্ভাবনা নিয়ে।\n\n===============Follow ATC================\n\nInstagram - https://instagram.com/atctoto?igshid=...\nFacebook page - https://www.facebook.com/atctoto/\n\nFacebook group  ATC.	\N	BD	\N	Asia/Dhaka	\N	\N	t	9000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:40:37.620958+00	2026-06-07 19:40:37.620958+00	\N
+88339740-4c5a-4866-8617-b810ddb7b89a	3fa708fc-5a75-4b65-97b3-ee3d9c5f4734	Hemel 360°	\N	https://yt3.ggpht.com/weWbwrfQzjoNTBAtZCezatCvByxWt5MdTfGm0GjOgfUZpXFLIeg3KyUzs1F2TlzNJp_J2j1m6Pk=s800-c-k-c0x00ffffff-no-rj	My motive behind creating this channel is to make easy to understand Technology in Bangla.I want each and every individual whoever is interested in technology to be able to understand it in the easily possible way.please SUBSCRIBE to Hemel 360°💓\n\nFor Business Enquiries:\ntoukirahmad@icloud.com	\N	BD	\N	Asia/Dhaka	\N	\N	t	6000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:40:52.437767+00	2026-06-07 19:40:52.437767+00	\N
+2b69a960-320d-447f-b598-ee9e8a28185c	77d90c43-0c9e-4a5d-bbc0-744758a54216	allgaming	\N	https://yt3.ggpht.com/ytc/AIdro_l4ZmvjjPz0vY3lnqJiBht1HQ8e_CaHxMoc6cBYH-AUL0Q=s800-c-k-c0x00ffffff-no-rj	daily gaming videos so come on hit that subscribe button!\nthanks you so much for the support! hope you will enjoy and share it with your friends! \ngoal 100 subs done - an EPIC video has been done!\nnext goal: 1k subs - an EPIC MYSTERY video, stay tuned for more info ! ► Subscribe! : https://www.youtube.com/c/allgaming\n\nToday we are checking out a new game that came out recently called genshin impact!\r\n genshin.	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:40:54.53377+00	2026-06-07 19:40:54.53377+00	\N
+c1b988f2-9e42-4b77-9ed8-247ce8789369	b50c7236-f149-4ff5-b252-8b45ec0c814e	Nqisik	\N	https://yt3.ggpht.com/rzVw8cpKbWxMTB9hSGmjT-maRDBXlQVctgD3GWEvYyjql1eM5xLu-6qn7umcHHRNTMXqKGKG=s800-c-k-c0x00ffffff-no-rj	Hey, I'm Nqisik! With every block and adventure, I aim to spread some joy through my Minecraft videos,  I might not be the expert, but I always give it my all to keep you entertained! :)	\N	BD	\N	Asia/Dhaka	\N	\N	t	9500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:41:01.906437+00	2026-06-07 19:41:01.906437+00	\N
+992ac30b-3d68-4c9f-8ac2-f48173323732	cdc987c8-4d54-44de-b88d-520a74c655f3	REVENGE 9T4	\N	https://yt3.ggpht.com/4fMxHsNE3myOdxlR8oXBxtIT4m7OZmwk23U5qLUAcLxmytqKlZNFqunY9-gJqs8oQro-o9Y4QQ=s800-c-k-c0x00ffffff-no-rj	[REVENGE 9T4 From BANGLADESH]\n🎮 Welcome to My channel! I’m Rahul, a passionate Battle Royale gamer. As a professional player, I strive to bring you the best in-game footage. Join the community by hitting that like button, leaving a comment, and subscribing! And don’t forget to click the bell icon 🔔\n\n★INFO:\nIN GAME ID: 2205088378\n\n★Copyright:\nWe allow anyone to make reaction videos, but the video must remain branded.	\N	BD	\N	Asia/Dhaka	\N	\N	t	6500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:41:08.957113+00	2026-06-07 19:41:08.957113+00	\N
+2beeb4ae-b74a-4153-a16b-42be716fa93e	ba390260-8102-4f5e-b236-931217ca2b65	games hole	\N	https://yt3.ggpht.com/ytc/AIdro_lgxyhxyNBdn3uHTHC0UxVRytuOlflbDNX-pf0c7xRAO9E=s800-c-k-c0x00ffffff-no-rj	Welcome to games hole ,\nThis channel is about iOS & Android latest Gameplay Video everyday. \nNew iOS and Android game reviews,\nWe're helping you to discover the best new IOS/Android games. If you want to support our channel, please Subscribe, Like, Comment and Share our videos.\nDON'T FORGET TO SUBSCRIBE DON'T FORGET TO SUBSCRIBE DON'T FORGET TO SUBSCRIBE DON'T FORGET TO SUBSCRIBE DON'T FORGET TO SUBSCRIBE DON'T.	\N	BD	\N	Asia/Dhaka	\N	\N	t	8500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:41:16.246633+00	2026-06-07 19:41:16.246633+00	\N
+a4e9230c-d1bf-494e-ba4c-13ded0b417ca	cdb12ea4-bc45-4bf0-a5fe-00b8d2eba7a4	MD Junaed	\N	https://yt3.ggpht.com/ytc/AIdro_nAbwF2k8fOU3TMwm5M9yVEY1snpAUdWWEq9wPq4bvm_ig=s800-c-k-c0x00ffffff-no-rj	the is test channel for tutorial	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:41:34.790408+00	2026-06-07 19:41:34.790408+00	\N
+f1a4d39f-eb69-427c-98f7-4229eb1957fb	844843f1-c9d3-4aa1-b90e-183a0acbe845	The Ajaira LTD.	\N	https://yt3.ggpht.com/ytc/AIdro_kKhYrSge0deIDMcNYf3h614pDr6d-yTUkadK8XcGXXLHk=s800-c-k-c0x00ffffff-no-rj	Wasting time is also an art ;) Here is our Prithibi Bodle Geche A little gift. Bangla Eid Natok for you all. Enjoy it with your family and friends. \n\nPRITHIBI BODLE GECHE\n Presented BY Splayd\n\nAn AE Productions\n\nSTORY\nPROTTOY HERON \n\nDirection - MO MO PRITHTHY \n\nSCREENPLAY \nRAGIB RAIHAN PIAL \nMO MO PRITHTHY \n\n\nSTARRING \n\nPROTTOY HERON\nMAKHNUN SULTANA MAHIMA\nDILARA ZAMAN\nDEEPA KHANDAKAR\nMILI BASHAR \nRAYHAN KHAN.	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:41:35.932772+00	2026-06-07 19:41:35.932772+00	\N
+70d4faed-1c19-4481-bc93-41c68f619f52	d57b5342-8f26-4cfa-a3ea-36a6f3d85fbb	Dhruba TV	\N	https://yt3.ggpht.com/iEAq-7B2Jt0F7y8KYPOKykTT51xeCuwz42EgekbKkFnclBilgnusanuSwaD2J-80G12WI0eZDg=s800-c-k-c0x00ffffff-no-rj	Premium Bangladeshi Drama Channel Bachelor’s Football | Brazil vs Argentina | Episode 01\n\nBachelor’s Football is a Football World Cup special drama presented by Dhruba TV.\n\nFootball fever has taken over the bachelor house! ⚽🔥\n\nIn Episode 1 of Bachelor’s Football, the battle begins as everyone chooses their favorite team — Brazil 🇧🇷 or Argentina 🇦🇷. From funny arguments and supporter rivalries to unexpected.	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:41:55.128296+00	2026-06-07 19:41:55.128296+00	\N
+d401eb80-d2b4-49ed-8fa1-3db159d000eb	5ec8bef3-9f43-486e-8c38-d3a47b430173	AGAIN FOYSAL	\N	https://yt3.ggpht.com/ZfXyWtZw4N4UOAHySEDdGU8Gilim_GSBhdEwQXstMkfZ4YN_h-KCcZ2gJ9e-qKiVDkGq0hBexg=s800-c-k-c0x00ffffff-no-rj	AGAIN FOYSAL creates YouTube content. Recent uploads include: May 13, 2025	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:42:01.774507+00	2026-06-07 19:42:01.774507+00	\N
+ee47630d-81c0-4921-a625-c5e461f2080a	a84db67d-c925-4cf4-8710-01af78c1aebc	TAWHID AFRIDI	\N	https://yt3.ggpht.com/ytc/AIdro_k90PZ48ixKHaRvXDtAx51aWSBnX61FEzyiJWul8A3TBFo=s800-c-k-c0x00ffffff-no-rj	Step into a world of boundless laughter and captivating vlogs at  tawhidafridi  Here, a vibrant cast of characters awaits, each brimming with witty punchlines and an endless supply of comedic antics.\nOur channel is your daily prescription for unadulterated joy. With a kaleidoscope of characters that never fail to hit the mark, we're dedicated to being your daily source of happiness. Whether it's a hilarious sketch,.	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:42:03.121323+00	2026-06-07 19:42:03.121323+00	\N
+124a6af3-80b6-4d3e-813f-2feb41ae5139	715a10ce-9bdd-43ed-b161-7f2ec6996bbf	TikTok vibes	\N	https://yt3.ggpht.com/eRizd3zzH-4PkdisdcGKTU8oDJUG2Y2_V8HQGhu78xGgvTN2ycjMOOcxghKvTgBkMRqR1kd8Sw=s800-c-k-c0x00ffffff-no-rj	Like live Welcome. To my YouTube channel tik tok video \r\nThis is amazing uploading videos \r\nAll time.\r\n#Tiktokcomedy#Animalcomedy#Manandwomancomedy💃🛀Please subscribe my YouTube channel..And like my YouTube channel..\r\nAnd belicon button...And shire my YouTube channel...😁😁😁😁\r\nPubliccomedy.....please subscribe to my YouTube channel #https://www.youtube.com/channel/UCIp0LvSwoUhBoZr488oW6-w Welcome. To my YouTube.	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:42:25.173318+00	2026-06-07 19:42:25.173318+00	\N
+06ebd671-f79b-41e2-9f49-eb7a6430347e	ce9351ed-0134-41e8-939e-678628af1414	Advance Search is Back	\N	https://yt3.ggpht.com/jkchDgv6YjupWSK__eYUyBR4ApTb4GEvvoNq-mhpqaDYRKnQt8ZnY52qz8feIyLXqanb42US8w=s800-c-k-c0x00ffffff-no-rj	Hi, I'm Yasin Arafat.\nI create engaging YouTube Shorts focused on fascinating facts and the latest trending topics. With my unique voiceovers and a strong sense of what's viral, I turn everyday curiosity into powerful, short-form content that informs and entertains a global audience.\nMy mission is to spark interest and deliver value—one short at a time.\n\n\nInfo -	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:42:26.690348+00	2026-06-07 19:42:26.690348+00	\N
+a55751a8-7f75-472a-b660-fc89d4158622	16ccb096-15c8-47ae-822d-0c006899c399	Zan Zamin	\N	https://yt3.ggpht.com/US-fff5axQJtfD-aeK5ZW16v9ql-EXIhkPk1lY8zSMSUlCT9kpGsmbOLVfbDGy_7eMQa_d_E=s800-c-k-c0x00ffffff-no-rj	Any Business Requires:Email : zanzamin98@gmail.com\n\nদেশী লেবুর শরবত 2 || Desi Lubur Sorbot 2 || Zan Zamin || Bangla Funny Video 2026\n\nThis Video was only for fun.So don't take this video seriously.\ni hope you enjoyed the video.Comment your Best part of this video.Make sure you hit the subscribe button and like the video.\nKeep supporting Zan Zamin ! \n\n"দেশী লেবুর শরবত 2"\nScript & Diarection - Zan Zamin\nEdit & Color.	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:42:30.333828+00	2026-06-07 19:42:30.333828+00	\N
+8d823b4f-81a4-4215-a245-68d4ce84dbc2	7bb0bdd2-555b-43ac-8921-41e38d6f3f09	Mr. Triple R	\N	https://yt3.ggpht.com/aduvRrAka4iwQ3XD7XR3agLNl5Uwqs4sNCf50CCPJkbOTjiE18ZgFKPeom5ZDBincl57v29tMz4=s800-c-k-c0x00ffffff-no-rj	What's Up Guys, I'm Mr. Triple R. \n\nI'm gonna do Gaming Video And  Live Stream.\n\nMy Goal Is To Make You Guys Smile Every Single Day. :)\n\nPeace💚\n\n\nMail Me Here For Business Purpose :\n\ntriplershort@gmail.com Hey Chandu ra, Mr Triple R Here 🥳\n\n\nThis Video Is About Big Chimni Loot  Challenge In Free Fire \n\nHow Was The Video Guys And What Should I Do Next ! Comment Below.👇\n\n\nLike Share And Subscribe . 🥰 \n\n\nThanks For.	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:42:47.257116+00	2026-06-07 19:42:47.257116+00	\N
+7bd7f363-5ead-45f6-9a82-0c9e5e6f0663	393dab13-5d60-4a46-8297-c821321e3869	Sagor Bhuyan	\N	https://yt3.ggpht.com/Xa00Kd4ndhs3MqSck2k1EHR6C8pPu5Y_D2BBsfbarwVQXz2bWQ4p2iQmNt5UdIyabW1r2cRnDLE=s800-c-k-c0x00ffffff-no-rj	This Sagor Bhuyan channel is all about enjoying life and making people laugh. We do this for our own enjoyment and the laughs of other people. We make funny, prank, comedy for this channel.\n \nThumbs up 👍👍 If You Enjoyed This Video,\nDon't forget to SUBSCRIBE and Turning ON Notifications 🔔 for Weekly Videos.\n\n\nThanks for watching and support my channel subscribe like and share video. Epic Fake Tiger Sighting Prank.	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:43:04.838779+00	2026-06-07 19:43:04.838779+00	\N
+402e84bc-ea89-4151-bd85-c3705aa44c62	389a810f-831e-4ba7-b4a3-6ac428263529	10 Minute School	\N	https://yt3.ggpht.com/YefB7MkFWisMrAZy5Aq0yI_ewqLA-w9p-I82Xg4suKFQbRHDz5VyjYVvlf6BxEFtuBvSgrW7=s800-c-k-c0x00ffffff-no-rj	আসসালামু আলাইকুম! স্কিল শেখার সেরা প্ল্যাটফর্ম টেন মিনিট স্কুলে আপনাকে স্বাগতম! আপনার স্কিল ডেভেলপমেন্টের যাত্রা শুরু করুন আমাদের সাথেই। \n\nটেন মিনিট স্কুলে বিভিন্ন স্কিলস কোর্সের পাশাপাশি আপনি একদম ফ্রি-তে প্রফেশনালদের থেকে সরাসরি দিক-নির্দেশনা, ভিডিও টিউটোরিয়ালের মাধ্যমে স্কিল ট্রেনিং এবং এমন সব টিপস পাবেন যা আপনাকে ক্যারিয়ারে এগিয়ে থাকতে সহায়তা করবে। \n\nআমাদের স্কিলস কোর্স সম্পর্কে বিস্তারিত জানতে এবং.	\N	BD	\N	Asia/Dhaka	\N	\N	t	9500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:37:16.193851+00	2026-06-07 19:37:16.193851+00	\N
+e81ece61-8eef-4679-9f4c-3df3f93c9397	90425878-f2f7-4086-8b3f-e634eaa47c04	Shykh Seraj	\N	https://yt3.ggpht.com/-9AbdgUeuWuL32XKwlFSjyLsHcaXvTYv5TTOS2je1FvEekM-96MPBvbpEfMn3UfeOXD5Pyw99Q=s800-c-k-c0x00ffffff-no-rj	Shykh Seraj's influence transcends the traditional boundaries of journalism; he stands as a beacon of rural empowerment, embodying the spirit and struggles of Bangladesh's agrarian heartland. Seraj has become the voice of the voiceless, amplifying the stories of farmers and rural communities, casting a spotlight on the lifeblood of the nation's economy—agriculture.\nHis reportage is not merely an exercise in.	\N	BD	\N	Asia/Dhaka	\N	\N	t	9500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:43:53.68621+00	2026-06-07 19:43:53.68621+00	\N
+dfe87fc4-207a-4ddf-8252-9885cc4eae50	197b9d66-0746-432a-90c4-27f2fdcbf122	মায়াজাল	\N	https://yt3.ggpht.com/ytc/AIdro_l3GUfvh-r43O0qvg2fhGQ22PTLEzWU_u_sybx6TsDmJzM=s800-c-k-c0x00ffffff-no-rj	Hi There,\nThis is a Most Uncommon channel which provides Mysteries, Amazing, top 10, top 5 Types of Videos regularly.  We provide our best. \nWe regularly upload video . If you have any problem or request , than tell us , will try to help you . So stay tuned. #মায়াজাল  #Mayajaal\n\n\nCopyright Disclaimer: \n===================\nThis channel may use some copyrighted materials without specific authorization of the owner.	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:44:41.420051+00	2026-06-07 19:44:41.420051+00	\N
+3554653a-9f16-4cd3-92fa-1720b5d9f82e	1168e9bb-13dd-4e28-af52-a98623f1c5b7	BD Sports Network	\N	https://yt3.ggpht.com/P44786CRCEZkv2qzysTOm54suFAH_9VniDnnbSSRcs9wap8L4IRAFkxAOwArKaMPulOpC2lz-g=s800-c-k-c0x00ffffff-no-rj	BD Sports network Brings you All latest News About Sports ( খেলার খবর )\n- Stay Tune With us and Subscribe.\n\nOur Vision:\n● Providing best international cricket news\n● Delivering daily 'Major' sports updates\n● Providing Entertainment to our subscribers\n● Promoting the global game\n\nIf you have any copyright issue with our uploaded videos, please contact us to avoid the conflict. বাংলাদেশের পাঁচ ক্রিকেটারসহ এলপিএলে কে.	\N	BD	\N	Asia/Dhaka	\N	\N	t	7500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:47:59.970508+00	2026-06-07 19:47:59.970508+00	\N
+dfd20482-0e61-44f1-bd68-d501e4f20a31	9e551dac-b854-4a87-8846-bdda3135fe2f	Manik Miah Official	\N	https://yt3.ggpht.com/IV3qmgR6O_mk112BogaS_qPNdCPJ9jJJrsBM3ZkrmzejnzhgaxVCqSTbMQD9p8TGe2bKcy0abQ=s800-c-k-c0x00ffffff-no-rj	Manik Miah   is a Bangladeshi Tiktok Star, Singer,Model,And Actor But he Lives in Saudi Arabia. He is best known for Tiktok videos. \nManik Miah is a digital content creator on Tiktok, YouTube, Facebook and Instagram who was ( Born – 15 January 1993 ) in Tangail, Bangladesh. He makes travel vlogs, daily life vlogs, cinematic, etc. \nManik Miah is a famous Tiktoker in Bangladesh. He started his Tiktok journey at an.	\N	BD	\N	Asia/Dhaka	\N	\N	t	8500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:48:31.193713+00	2026-06-07 19:48:31.193713+00	\N
+5d29465d-d338-4193-948d-429d7e88fdbc	0f4d22bf-c6e3-4970-9568-e8e2af05b9d4	Ritu Hossain	\N	https://yt3.ggpht.com/XNtz3ZdGNgzQS44H_iMXepxUixnTVjlrUB9QosN51n0TEa9lFk6cB3cBMpyJS6y4u8WawgIzwcE=s800-c-k-c0x00ffffff-no-rj	Hey Guys My Name Is Ritu Hossain . I'm New Vlogger . Keep Supporting Me 😭\n\nDm for business enquiries or paid collaboration :\nteamrakibhossain@gmail.com রিতুর জন্মদিনের জন্য স্পেশাল শপিং করলাম! 🛍️🎂 | Birthday Surprise Preparations | Rakib Hossain\n\n\nরাকিব রিতুকে জন্মদিনে সারপ্রাইজ দিয়ে অবাক করে দিলো! 😱🎂 | Ritu Hossain’s Birthday Special VLOG | Rakib Hossain\n\n🎯Follow us on Social Media:\n👉Facebook Account :.	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:48:36.615608+00	2026-06-07 19:48:36.615608+00	\N
+00d0bcc7-6a1c-4812-aa5f-1b9809a0c0bb	f725e70f-0973-4547-b9dc-7339cf6e3eba	Soniya Akter Rima	\N	https://yt3.ggpht.com/KDhi-KojbhUpIc1dpGj9UEANqw-Fj9ogmCjoul45dtIPNIZ5ksj17xF8I_5AIkj9jgNkpVia=s800-c-k-c0x00ffffff-no-rj	always try to do something soniya akter rima , sonia akter rima ঈদের আগের রাতের আনন্দ! \n\n#ঈদের_আনন্দ \n\n@soniyaakterrima ২ লাখ টাকার কোরবানির গরু! \n\n#কোরবানির_গরু \n\n@soniyaakterrima কোরবানির গরু ঘরে তোলা হলো! \n\n#কোরবানির_গরু\n\n@soniyaakterrima আমাদের কোরবানির গরু! \n\n#কোরবানির_গরু\n\n@soniyaakterrima কোরবানির গরু বাড়িতে! \n\n#কোরবানির_গরু\n\n@soniyaakterrima	\N	BD	\N	Asia/Dhaka	\N	\N	t	9000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:48:53.369169+00	2026-06-07 19:48:53.369169+00	\N
+b1d9dc23-3cc2-435d-bfa4-f896f0557f66	bb6993f2-4004-4584-b3f2-6b94fcdaa010	Oishrat Jahan Eity	\N	https://yt3.ggpht.com/7YrkGbYGWsmZSk-zORa0stHqH0fJ3x3SRvkCqbw_ZkpcdMLWr6jciUihsYKfrrc1F4B1Q6YH=s800-c-k-c0x00ffffff-no-rj	Fashion Model, Influencer and Vlogger	\N	BD	\N	Asia/Dhaka	\N	\N	t	8500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:48:59.93103+00	2026-06-07 19:48:59.93103+00	\N
+cdcaf960-a659-45b9-a53f-4255717ab2e8	c9b5f995-356b-4951-b223-9c15e60277ab	Kuti Bari	\N	https://yt3.ggpht.com/ytc/AIdro_kh1Mp26Yx8mPaFGE8raB4SuoXqcWC9aUwDzWlcDQqHZ7U=s800-c-k-c0x00ffffff-no-rj	আস্সালামুআলাইকুম hi viewer, কুটি বাড়ি আপনাদের জন্য নিয়ে এলো এক দারুণ সুখবর, অনেকেই অনুরোধ করেছিলেন আমাদের কাজ গুলো শেখানোর জন্য so তাদের কথা মাথায় রেখে আমরা ইউটিউবে একটি চ্যানেল খুলেছি Kuti Bari  নামেই যেখানে আমরা আমাদের বিভিন্ন কাজের ভিডিও দেখাব যেমন রিবন ফ্লাওয়ার, পেপার ফ্লাওয়ার, শোপিস, গায়ে হলুদের গহনা, পুঁথির গহনা ইত্যাদি। আশা করি আপনারা আমাদের সাথেই থাকবেন। আমাদের কাজগুলো পর্যায়ক্রমে দেখে যেতে অবশ্যই আমাদের.	\N	BD	\N	Asia/Dhaka	\N	\N	t	9500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:44:57.277696+00	2026-06-07 19:44:57.277696+00	\N
+8696151a-53f5-4734-9085-ecb8f8246f01	4566be59-50cf-4210-8530-61a0513799ea	Bangla Lecture	\N	https://yt3.ggpht.com/ytc/AIdro_lgEOjB-j6KBPQIFcJDUFNTDjVThn7qi_wEAcSVI3s67e4=s800-c-k-c0x00ffffff-no-rj	As-salamu alaikum, You Can Watch Here: bangla lecture, bangla waz, bangla mahfil, islamic lecture, jumar khutba, islamic jalsha, waz, new bangla waz, abdur razzak bin yousuf, abdur razzak bin yousuf waz, abdullah bin abdur razzak, abdullah bin abdur razzak new waz, mujaffor bin mohsin, amanullah madani, dr mufti imam hossain, mufti kazi ibrahim, bashar bin hayat ali, rofiqul islam bin sayed and More..... মুযাফ্ফর.	\N	BD	\N	Asia/Dhaka	\N	\N	t	8000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:45:22.740134+00	2026-06-07 19:45:22.740134+00	\N
+e80894b5-faba-4bc3-8c4a-f047cea47924	bea844c7-7a02-41ff-8526-9d2afe838483	Drawing Fantasy	\N	https://yt3.ggpht.com/_9R0IHK__sCYuLnUd6Wu4j8CpVHRmOYTS1-Gq7KDr8ukIoDzvCbwaRUAoKrHH0j2GyxcxMk4Ps4=s800-c-k-c0x00ffffff-no-rj	I Do What You Want to See how to draw beer step by step how to draw dog how to draw dinosaur step by step for beginners how to draw elephant with pencil how to draw boy with cap	\N	BD	\N	Asia/Dhaka	\N	\N	t	7500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:45:47.802522+00	2026-06-07 19:45:47.802522+00	\N
+0ee9f78b-8c67-4fb4-a977-1e0c571a617e	759dd5be-451a-42aa-8b3e-38df7b9a37aa	AL HERA ISLAMIC CENTER	\N	https://yt3.ggpht.com/ytc/AIdro_nusOhMI_O1hsgv3lDzBnAuA04w_KHNR0mQCdBoA8C4Es0=s800-c-k-c0x00ffffff-no-rj	Welcome to Al Hera Islamic Center!\n\nWe are dedicated to promoting a deeper understanding of Islam and fostering a vibrant community through knowledge and spirituality. Our Facebook page and YouTube channel feature enlightening speeches from esteemed Islamic scholars, along with captivating Waz Mahfil videos designed to inspire, educate, and uplift hearts. We also provide videos of Quran recitation by international.	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:45:52.697652+00	2026-06-07 19:45:52.697652+00	\N
+65b00a73-b334-4571-8dbf-ace2a42a581f	61ddb7f3-afa8-4c16-8e06-b92b0f2bdc1a	RI media	\N	https://yt3.ggpht.com/JMUZf9xOYJWKji4hN0BhjmJadwDFXtZW_nkZ2d28UcMRuMzNE3HIjE71vo8c_7D2PVdFuP73=s800-c-k-c0x00ffffff-no-rj	আসসালামু আলাইকুম, RI media এ আপনাকে স্বাগতম, নিত্য নতুন ইসলামী সংঙ্গীত, ওয়াজ, মাদ্রাসার ছাত্রদের বিভিন্ন প্রর্দশনী,ও বিভিন্ন ক্বারীদের তেলাওয়াত পেতে আমার এই চ্যানেলটিকে সাবস্ক্রাইব করুন,এবং চ্যানেলটির ভিডিওগুলোতে লাইক, কমেন্ট,ও বেশি বেশি শেয়ার করে সবাইকে দেখার সুযোগ করে দিন,,,ধন্যবাদ,, প্রিয় বন্ধুরা,\nআমাদের এই ভিডিওটি যদি আপনার কাছে ভালো লেগে থাকে তাহলে অবশ্যই আমাদের চ্যানেলে একটি সাবস্ক্রাইব করবেন আশা.	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:46:30.831568+00	2026-06-07 19:46:30.831568+00	\N
+1c494a0b-d1c1-4492-968a-b67391d7f271	e8329d30-d94e-46a5-9120-af0982a00a05	Bangladesh Cricket : The Tigers	\N	https://yt3.ggpht.com/jOp3YBX6EuuK3SWgbrg8x91476bCzPp2D0-T7sQ1OEbD7lq1Dtexqig_vYUzUdjFrRePEs6_=s800-c-k-c0x00ffffff-no-rj	Bangladesh Cricket : The Tigers is the Official YouTube channel of the Bangladesh Cricket Board (BCB) and the Cricket Team.\nBangladesh Cricket Board (BCB) is the governing body of cricket in Bangladesh. It is recognized under the National Sports Council (NSC) Act 1974, having its Head Office in Sher-e-Bangla National Cricket Stadium, Dhaka 1216, Bangladesh.\n\nThe Bangladesh national cricket team, known as The.	\N	BD	\N	Asia/Dhaka	\N	\N	t	8000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:47:10.819466+00	2026-06-07 19:47:10.819466+00	\N
+256108ed-3a83-4dfa-8e94-075938f15d08	d425d9ab-fe49-4edc-aaf2-27df06a3d015	SOMOY SPORTS	\N	https://yt3.ggpht.com/ytc/AIdro_kgkgyzSu_faIAc_kybO3VMPvF6d9IoLcU7oTDPjXTiZLg=s800-c-k-c0x00ffffff-no-rj	"SOMOY SPORTS" is the Based on Sports Content.  \n\n"SOMOY TV" is the Bangladesh Government Approved Most Popular Reliable News Source and Leading 24/7 News Based TV Channel in Bangladesh by Company Name : "SOMOY Media Limited".\n\nWe are using Multi-screening Digital Technology where Audience can watch 'SOMOY TV'  through Satellite Feed, Live Streaming, Website, any kind of Mobile Device, OTT, Smart TV etc.  \n\nSomoy.	\N	BD	\N	Asia/Dhaka	\N	\N	t	7500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:47:26.551686+00	2026-06-07 19:47:26.551686+00	\N
+04de1faa-1765-4a12-99f8-caf903567f21	95381acc-9847-4bd5-aa67-1c1411caa8bc	ON FIELD	\N	https://yt3.ggpht.com/lUxNCTXmypmnOcdhAswHimn36AyT55Xzikh_oHTmcOSqSnw_OpWy2db1vlpyOGaCAvrPruBtwg=s800-c-k-c0x00ffffff-no-rj	This is official youtube channel of 'ON FIELD'\n\n\n#onfield #on_field  #onfield_sami  #অনফিল্ড   #sami_onfield #onfield_sami  #Syedsami  #shakib75 #Tamim  #mushfiq  #mashrafespeech  #viral  #tranding  #headshot #bangladeshTeam #ipl #ipl2024  #iplmustafiz2024  #mustafiz  #thalapathy  #thala  #msdhoni   #ms   #msdhoni  #wistlepodu  #csk  #chennai  #chennaisuperkings  #chennaicricket   #dhoni  #dhonicaptaincy.	\N	BD	\N	Asia/Dhaka	\N	\N	t	8000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:47:57.15661+00	2026-06-07 19:47:57.15661+00	\N
+f3721816-01b6-4194-bf8c-c20e10a31fa4	d8462b4a-3d5d-4a61-8ade-4fac993da9cd	Futbalgamerz	\N	https://yt3.ggpht.com/a2nZBiVq2cS0sEyXn0_2lUO9447oyvTwzByaIdC3PLWeoBZZf_Z_EBySSWPml07bWf_cL80vKQ=s800-c-k-c0x00ffffff-no-rj	Hello my channel name is futbalgamerz I upload football Shorts for entertainment thanks for visiting.	\N	BD	\N	Asia/Dhaka	\N	\N	t	8500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:47:58.276914+00	2026-06-07 19:47:58.276914+00	\N
+f63dc656-0ef8-4c08-baba-436df84a617f	7942b727-cd12-4f9c-92c5-fa765770237b	Макс Саян	\N	https://yt3.ggpht.com/ytc/AIdro_k202AI-vCDOpMHEXMAOLQh5WtT4-qQKUaiGc3TbqNvkg=s800-c-k-c0x00ffffff-no-rj	Хип-Хоп исполнитель. Промо ролик 2011г.\nМузыка текст песни:Саян\nВидео:Denka Демка в дороге.\nГород Солнца 2012г. Хочу поделится с вами кусочком тепла дорогие друзья и слушатели.Данная песня была сделана в тяжелые для меня времена.Каждый из вас услышит и увидит в ней что то свое.Приятного просмотра и прослушивания.\nГород солнца 2012г.\nВидео снимали и монтировали CK video PRODUCTION.\nМузыка,текст песни:Саян.	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:49:05.396445+00	2026-06-07 19:49:05.396445+00	\N
+9b048e95-66d5-4413-a571-28874e9cd3a8	80b1f8f8-4d4f-43a6-bd12-45534ac1a1a9	Apu Biswas official 	\N	https://yt3.ggpht.com/5AO4H3Pf9ihhR4QJLBJ753ELhkVGp3_6UyqP9JS5PzmvtXdCPQE0tCKGmcPIf2Df0bh9RAkyHEo=s800-c-k-c0x00ffffff-no-rj	Apu Biswas official  creates YouTube content. Recent uploads include: apu biswas hot dans	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:49:11.131401+00	2026-06-07 19:49:11.131401+00	\N
+cbfd8491-a181-4af1-ab9c-fd84549d38f5	ea4b22b8-2dfd-4de2-95d1-a198027a0785	dishamoni	\N	https://yt3.ggpht.com/ytc/AIdro_lWwRpohvVGk7gEV-JaKvQOofnR5xEa3Kt-g25xUZfTtw=s800-c-k-c0x00ffffff-no-rj	its just amazing 2 c how the guy comes 2 knw abt the trap set 4 him..	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:49:12.504604+00	2026-06-07 19:49:12.504604+00	\N
+bf84b6e3-379c-4631-b65f-a94c1171b30f	1b251e79-f8f7-44ab-b32f-d91af78ed2a7	M S STAR DADA	\N	https://yt3.ggpht.com/EzsVC8-qXOx6w3g5dE6Gr9QhMIvy0fE5in_Ij8yRy_lFdNHQZE-P7eAvHjXWqbds5dd1f3MwlOs=s800-c-k-c0x00ffffff-no-rj	TAG SONGS LOVER	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:49:14.762594+00	2026-06-07 19:49:14.762594+00	\N
+b5bb4312-fb62-49ff-8598-991329403d99	3bac966a-28c4-4d87-b944-c555d164f91a	Meowphorius 	\N	https://yt3.ggpht.com/Jbk8hyWk8bQS4nkD75v2AWyNsQ3YVr0AhHzMM8MQXX_7pvSiNqHa6XQ6I_3ynxKGPfi2unQh=s800-c-k-c0x00ffffff-no-rj	😻 Your daily dose of kitten videos! 😻\n\nWe share the tiniest, funniest, quirkiest, clumsiest, and most adorable kittens being their hilarious selves. From their first wobbly steps to epic nap fails, our videos capture the cutest cat moments from around the globe. 🐱🌍\n\nThis is your go-to place for laughter, cuteness, and a guaranteed smile every day. 💖\n\n👉 Subscribe for a Meow so you never miss a purr! 🐾 Tiny kitten is.	\N	BD	\N	Asia/Dhaka	\N	\N	t	7500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:49:18.484553+00	2026-06-07 19:49:18.484553+00	\N
+bb4e9bb0-aac2-4a68-ac59-0633df03fc3e	e7811e0d-eae7-4cae-89b2-a1d876d9ea49	Nature Tune Studio	\N	https://yt3.ggpht.com/mA5sXGfdyO51mttlQFxZH2mNWFJL4KpK4U4Mti-Q056YYJM-EuwiySzB5eM39kl2zS1vq51P2m4=s800-c-k-c0x00ffffff-no-rj	Nature Tune Studio is an independent music label and creative media platform dedicated to cinematic storytelling through music and visuals.\n\nWe publish original cinematic soundtracks, epic orchestral compositions, ambient music, emotional instrumentals, and visually captivating music videos crafted for audiences around the world.\n\nOur vision is to create immersive audio-visual experiences that inspire imagination,.	\N	BD	\N	Asia/Dhaka	\N	\N	t	6500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:49:23.120564+00	2026-06-07 19:49:23.120564+00	\N
+7e228acf-acea-45e0-935f-90473226a8ad	1851d727-ca50-40fa-b371-702d37d959d3	Coke Studio Bangla	\N	https://yt3.ggpht.com/nrwXuQgXdOlZUJQYyCJMK_K1F3Um7yT_qjC_YDrIF_1B9HCSn8JF9ygN9cpDNpThxxHfa8Z2ZDU=s800-c-k-c0x00ffffff-no-rj	Coke Studio Bangla brings the musical magic of Coke Studio to Bangla Music. Coke Studio Bangla pays ode to the richness of Bangladeshi Music, while paves the way for global sound and musicians to pave the way to a richer Bangladeshi Music. Coke Studio Bangla bridges the global sound to native treasures to showcase how tradition and modernity beautifully share a common ground and thus deliver REAL MAGIC.	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:49:55.970107+00	2026-06-07 19:49:55.970107+00	\N
+9a5569db-64a0-4a1a-a58d-cc5a1a5abd67	f6e71317-1bae-4761-b52c-aa6a618cd7f5	Pritom Hasan	\N	https://yt3.ggpht.com/xy9WF5aszAAlRYd-43XEdIe4nK3-60BGS2RIdQB-JJwLGz2tDznxDXUf-2XEmVQ-NWGKBwPkzQ=s800-c-k-c0x00ffffff-no-rj	One Man Band	\N	BD	\N	Asia/Dhaka	\N	\N	t	7000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:50:01.344918+00	2026-06-07 19:50:01.344918+00	\N
+a6e4763a-cb89-4031-b637-e93bd82863da	b08bcb89-7961-47a7-8ca3-7dbb9d785518	Sathi Khan	\N	https://yt3.ggpht.com/IXrN-Y45z96YgwHeJCmJuDgy9ly4O6EYKcCSBEgGkzJ4E7CuV4WUV2oh_50gC2hmmeO4RROjjw=s800-c-k-c0x00ffffff-no-rj	Official YouTube channel of the Bangladeshi singer Sathi Khan	\N	BD	\N	Asia/Dhaka	\N	\N	t	8000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:50:07.053742+00	2026-06-07 19:50:07.053742+00	\N
+a1a9f6c2-63ae-4b1c-a4c1-8ccd98e8e7a0	091f6405-7ade-49c1-a42b-587a682e888a	Habib Wahid	\N	https://yt3.ggpht.com/ytc/AIdro_ktptich7MeqscRXdO0B2DsU-baz79elmqR7ODFWoj3MA=s800-c-k-c0x00ffffff-no-rj	Habib Wahid shares his experience exploring Leh city, in the majestic land of Ladakh!	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:50:10.474293+00	2026-06-07 19:50:10.474293+00	\N
+e1b07220-c97e-4673-8939-77921b506fd8	bc552d81-57a5-4305-ae78-065da02c92ec	Prothom Alo	\N	https://yt3.ggpht.com/vstRK0VbdrsA7LZPmQcYlA9wT-6x4vBVGeHU9qRLsQgCfLLuWtY3pBq15I6nyKl-D_xidwJx=s800-c-k-c0x00ffffff-no-rj	It's the official YouTube channel of Prothom Alo. Prothom Alo (Owned by Mediastar Limited) is considered as the largest & most popular newspaper in Bangladesh based on circulation, pageviews, and unique Visits. Prothom Alo has a readership from 200 countries around the world.\nProthoma Prokashon (Book Publisher), Protichinta (Quarterly Magazine), Kishor Alo, Bigganchinta, Prothom Alo Trust, Prothom Alo Jobs(Job.	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:50:14.219716+00	2026-06-07 19:50:14.219716+00	\N
+54be4fe8-2a6a-4ee3-b50a-73984b4c4107	12e478e8-58a6-4fcc-b2ff-4a28f7163a92	The Business Standard	\N	https://yt3.ggpht.com/ytc/AIdro_k7ejpqV95gR9rwx1E_M8c67AcOulie8ts8kxMhdZEfNQ=s800-c-k-c0x00ffffff-no-rj	The Business Standard is a news platform that operates in both online and print versions. It is owned by The Horizon Media and Publication Ltd based in Dhaka, Bangladesh.\n\nWith the goal to promote good governance and best practices in business and economy, the Business Standard puts an extra emphasis on business news. However, it also covers general news, sports, features and entertainment.\n\nPowered by a group of.	\N	BD	\N	Asia/Dhaka	\N	\N	t	9000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:50:47.959663+00	2026-06-07 19:50:47.959663+00	\N
+febc4b03-1599-4de7-baa4-2302d25588f5	78d0b5af-5cb2-41f6-8cc8-d6b6e0817501	Ki Keno Kivabe	\N	https://yt3.ggpht.com/RL3HaRFSwxuW2j91RiP8EuwSzMUVyCXhHScpquIDw4ANhd3g-1BmLt-VOQ-Tx-AxrKiGfNZa5g=s800-c-k-c0x00ffffff-no-rj	প্রতিদিন আমাদের মাথায় অসংখ্য প্রশ্ন ঘুরতে থাকে। কিছু প্রশ্ন শুধুই কৌতুহল, আর কিছু প্রশ্নের উত্তর জানাটা আমাদের খুব জরুরী। কি কেন কিভাবে টিম মনে করে অজানাকে জানার ইচ্ছেটাই সবচেয়ে গুরুত্বপূর্ণ।\n\nমনের সকল জিজ্ঞাসা আর কৌতুহল মেটাতে অজানাকে জানার যাত্রায় আমাদের সঙ্গী হতে পারেন আপনিও।\n\n💡 সাবস্ক্রাইব করুন\nঅজানাকে জানার যাত্রা শুরু হোক এখনই.. .. .. Video Editing Mastry কোর্স লিংকঃ.	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:51:26.757358+00	2026-06-07 19:51:26.757358+00	\N
+6c8ba08c-b3b9-4d66-adfe-83ceeeb0c8ed	628f626f-a8c9-43f7-90f5-3a9c6fff1d08	Chorki	\N	https://yt3.ggpht.com/Gu3MR9d-5eHerF_oCxtBhzHrztQ1qLwzPkTRztlM8p5zUoKp77Wd5lyAd26WcfjZNAW7k4aML3A=s800-c-k-c0x00ffffff-no-rj	Chorki is a popular streaming platform in Bangladesh that has taken the Bengali entertainment industry by storm since its inception in July 2021. It offers a wide range of content, including original movies, series, and short films. The service is available on a variety of devices, including smartphones, tablets, laptops, and smart TVs. Chorki has captivated audiences in 194 countries and has become a favorite.	\N	BD	\N	Asia/Dhaka	\N	\N	t	9000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:52:31.068476+00	2026-06-07 19:52:31.068476+00	\N
+fbc0dd5f-da85-49b0-a8c8-4a1b7d4c37f9	2741df37-6600-4636-b332-95fc6ce425f4	masmediainfo	\N	https://yt3.ggpht.com/ytc/AIdro_lifxeixjERSs2oDb4Z0rNc0PVH78RwIsAKLlMWY0IUNw=s800-c-k-c0x00ffffff-no-rj	Fundació CASSA / Aquafoto 2007 Reprotatge C. E. Vidal i Barraquer. Programa 35 amb gel, presentat i dirigit per Anna Castro i Òscar Gómez. Canal 35tv. Programa Vox Populi, presentat i dirigit per òscar Gómez. Canal 35tv. Municipàlia 2005.	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:52:47.443304+00	2026-06-07 19:52:47.443304+00	\N
+96bf2ef8-0a71-4358-88fb-db2e2f5639ba	a07c506b-3e40-4e5f-8209-e17a9dece216	Maasranga Kids	\N	https://yt3.ggpht.com/ZAjyJnmcfHkufvfbjnvN7WWDl4sVEHY8JVqpFgpGecx0eH-qgibq_Lof-c56EOSOnVcqKGC4=s800-c-k-c0x00ffffff-no-rj	Maasranga Television, a Member of Square Group, is a leading satellite television channel in Bangladesh. Since its inception on July 30, 2011 as a mixed TV channel; Maasranga Television is broadcasting accurate, time-honored, and credible news from home and abroad along with exciting and inspiring entertainment for the whole family.\n\nHigh-quality drama, serials, films, musical, educational and entertaining programs.	\N	BD	\N	Asia/Dhaka	\N	\N	t	10000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 19:52:51.798181+00	2026-06-07 19:52:51.798181+00	\N
+361df2c2-5c4b-4bcb-bc9f-343dc90a040e	a8b805e8-70c9-44a8-a173-0c0b6c2b1491	Mehazabien Chowdhury	\N	https://scontent-atl3-3.cdninstagram.com/v/t51.82787-19/673864731_18585278356010426_4170862132940506339_n.jpg?stp=dst-jpg_e0_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=scontent-atl3-3.cdninstagram.com&_nc_cat=1&_nc_oc=Q6cZ2gEm8h6HZmzZCi4JOxyidSivD_BYFW4t8E5z84pdOppAIRZJY-B5ECwcPkX2BECCH-s&_nc_ohc=mH1aavFw41AQ7kNvwHzKoTE&_nc_gid=gJ-2spKvP_b_0VZUiCkIRw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8fuO86q7lguheIBhk6_dlp2om9u2dh8T2VSw014GEF_g&oe=6A2BA83B&_nc_sid=8b3546	Otrovert from 🇧🇩 Tiktok ⬇️ @pochondoshop ♥️ Eid Day - 3 😛 Minimalism and I were never meant for each other. ✨🐅 Eid Mubarak again 🌙 MUA: @zahidkhanbridalmakeover PC: @zutons_snapshoot Eid Mubarak 💙 Ootd : @anillaofficial 🐅…	\N	BD	\N	Asia/Dhaka	\N	\N	t	5500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:25:32.548085+00	2026-06-07 20:25:32.548085+00	\N
+dcffd160-6941-45de-9b90-a93c869dc616	b57ed987-d1bd-4dd7-a992-5c8d04ce9e6c	Bidya Sinha Saha MiM	\N	https://scontent-ord5-2.cdninstagram.com/v/t51.82787-19/711229048_18600929902053759_8756075889060127900_n.jpg?stp=dst-jpg_e0_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=scontent-ord5-2.cdninstagram.com&_nc_cat=103&_nc_oc=Q6cZ2gG3lBSlFti_M-1OIsAtGRpXiNN6M5dkRynF03d1a7KUoljNy2mXfsuVk0zeVGPmrk8&_nc_ohc=ES7my7ZzBWYQ7kNvwF_iRmw&_nc_gid=uMMjNoM9RGBRoDPukmULjw&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9QhEQQOwTUdpMq9yrrPUEG5un9ae1IDyoURnjtihKfig&oe=6A2B9FD2&_nc_sid=8b3546	An actress 🇧🇩 Goodwill ambassador of @unicefbangladesh Just a princess in her own world 💕 MUA- @signature.look.by.samia 📷- @nasirhossinphotography Wearing- @maison.amali Vaccines work every time, if given at the right time - hear from our national ambassador Bidya Sinha Saha Mim, on the occasion of #WorldImmunizationWeek 👆 Spread your wings and soar. 🖤 P.c- @redwanrajuphotographydxb Wearing- @meherofficials লাইফের.	\N	BD	\N	Asia/Dhaka	\N	\N	t	5500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:27:05.081743+00	2026-06-07 20:27:05.081743+00	\N
+4068df14-4f1a-40a8-83a1-2ac0a433b907	6111262d-0692-4a19-bb64-4558acf3419a	Sabila Nur (সাবিলা নূর)	\N	https://instagram.fric1-1.fna.fbcdn.net/v/t51.82787-19/689228448_18441466216191741_822594174645004881_n.jpg?stp=dst-jpg_e0_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=instagram.fric1-1.fna.fbcdn.net&_nc_cat=1&_nc_oc=Q6cZ2gEefihxgn4FyiFeM4D50P5oTYU2Yke1ptVRw4-TX1wpRjIL8wNoFUwxTsUAlkUh4cg&_nc_ohc=IRFUkxmsH_kQ7kNvwGcpK-n&_nc_gid=23UdXAOpUO6SXZRMeLIoKg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-bKuDMhTr2f1CAwNzP-6MyGerXPmAC7JmxCjncJ4tvHw&oe=6A2B97C4&_nc_sid=8b3546	✦ INFJ, space bound, and permanently in transit between galaxies no one else can see 🚀 ✦ প্রিয়জনের কাছেই তো হারায় মন ❤️ গানটা dedicate করে ফেল তোমাদের প্রিয়জনকে… Full video song out now 🔗 Link in Story and highlights [Svf Music, Ami Jabo Hariye, Rockstar, New Song, Music, Reel, Trending] একটা রাতের ট্রেন, কিছু অগোছালো মুহূর্ত আর তার মাঝেই জমে ওঠা আলাপ আর মজার গল্প। #BonolotaExpress directed by @tanimnoor,.	\N	BD	\N	Asia/Dhaka	\N	\N	t	5500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:27:47.497012+00	2026-06-07 20:27:47.497012+00	\N
+58844295-1d58-4cfe-a1da-1f9cdb66611d	53025914-fa8f-42b7-a8cb-ffb0898dc884	𝒫𝓊𝓇𝓃𝒾𝓂𝒶 ✨	\N	https://scontent-atl3-2.cdninstagram.com/v/t51.82787-19/588235800_18550557922037489_7900848787472337468_n.jpg?stp=dst-jpg_e0_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=scontent-atl3-2.cdninstagram.com&_nc_cat=105&_nc_oc=Q6cZ2gFBTIqmQ5qJIRBpW76pUeRk5Hp-2mbJkqYOelO40Q1rkZCDMzMyYemwW53awLpbJAI&_nc_ohc=bW8vmXR_1-sQ7kNvwHStbg3&_nc_gid=Z5TmC-ldXLWXtdooGsVS1w&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8TNYAxvkUXAjhi8wxmZ7FP12TgLEHDQXm8us7anSpErQ&oe=6A2BAB16&_nc_sid=8b3546	👉🏼 ✈️Love to travel 🧳 👉🏼 🍱🍲🍨 foodie 🫒🥑 👉🏼 witty 😉 👉🏼 yellow 🟡& green 🟢lover 👉🏼 super mommy 💁🏻‍♀️ Dhaka Bangladesh 🇧🇩📍 Makeover by - @aklimas_beauty_parlour Location- @hazaricottage #purnima #therealpurnima #purnimabd #anniversary #4yearstogether❤️ Eid Mubarak Attire - @aazmarasofficial Makeover by - @aklimas_beauty_parlour #eiduladha2026🌙🕌❤️ #instamood #purnima #therealpurnima #purnima #purnimabd #therealpurnima.	\N	BD	\N	Asia/Dhaka	\N	\N	t	5500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:28:07.914847+00	2026-06-07 20:28:07.914847+00	\N
+5b495b03-38e5-47c6-99cd-9f0c21158fd4	34245b80-48d4-4553-8f0e-285d64dba9b0	Bangladesh Cricket : Tigers	\N	https://scontent-den2-1.cdninstagram.com/v/t51.82787-19/588000595_18436082452096556_4879825360611787911_n.jpg?stp=dst-jpg_e0_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby43MjEuYzIifQ&_nc_ht=scontent-den2-1.cdninstagram.com&_nc_cat=1&_nc_oc=Q6cZ2gH6zpSYlJMmx8MJlOGTxZv6k6ucvUpR8NUf2sxs5i6VFTEc8KeufzY9yS3QLFb0IjA&_nc_ohc=PuT6uTmjzGcQ7kNvwFu-X9b&_nc_gid=l2tfxIYYKPswjzo9ToZq_Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9is93MeZs6JrHuP66u4iXhWADlmh3ce2mzp6-O72t_Ag&oe=6A2B940E&_nc_sid=8b3546	Official Instagram of Bangladesh Cricket. #RiseOfTheTigers READY TO ROAR! 🔥 Just One Day to Go | Bangladesh vs Australia ODI Series Begins 9 June #BCB #Bangladesh #Cricket #BANvAUS #Tigers #Aussies #Australia New Journey. New Jersey. New Hope. 🇧🇩 The Bangladesh Women’s Team's official jersey for the upcoming ICC Women’s T20 World Cup is here. Dressed for the challenge. Ready to represent Bangladesh on the world.	\N	BD	\N	Asia/Dhaka	\N	\N	t	5000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:28:36.501125+00	2026-06-07 20:28:36.501125+00	\N
+dfd6c24b-b5b4-4f41-a90d-85ade89f3443	f9845c4e-15b6-453e-ad38-71e26050ee90	Ayman Sadiq	\N	https://scontent-lga3-3.cdninstagram.com/v/t51.82787-19/517362887_18465699454073598_7550317265444338772_n.jpg?stp=dst-jpg_e0_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby44MDAuYzEifQ&_nc_ht=scontent-lga3-3.cdninstagram.com&_nc_cat=106&_nc_oc=Q6cZ2gGBn0mGyZ3ZugtZckwZ5Nobb-V9MYKyMFOETX5GgFcmoz4pbTvNDmS99lbjIbjFH8K1XXuGzgN1rWc99G3vSWJ7&_nc_ohc=mg_2a1QxxJ4Q7kNvwEj5-hI&_nc_gid=Crf-USnOsrWN3F2nYaR3tg&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af8co5xRjfRj6ovW8vS714dT6_lO3GKCQ1WzpRXyFPlVow&oe=6A2BACF5&_nc_sid=8b3546	Teacher | Author | Entrepreneur 📚 Teaching 3M+ students daily @10ms_insta 👑 Queen’s Young Leader 🎖️ Forbes 30 Under 30 👇 Free Groups of Your Class সফল হওয়ার সবচেয়ে Boring Secret 🤫 . . . #hacks #success #secret Eid Mubarak ❤️ Eid Mubarak ❤️ ‘School e Shekhayni’ tour begins 🇧🇩 Today’s reset button. 🚴 #cycling	\N	BD	\N	Asia/Dhaka	\N	\N	t	5000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:28:54.858262+00	2026-06-07 20:28:54.858262+00	\N
+18b79944-fd4c-4aae-a716-ce799c8dd8a2	c28c703e-f183-4d4b-a258-875376bfa4b3	Taskin Ahmed Tazim	\N	https://instagram.fagc1-1.fna.fbcdn.net/v/t51.82787-19/649563815_18576291220054486_4126730878320322458_n.jpg?stp=dst-jpg_e0_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=instagram.fagc1-1.fna.fbcdn.net&_nc_cat=110&_nc_oc=Q6cZ2gEHfCXHuapzl5hTApI9YrauuiUhm950rKOiA0CMPBcYnU-VTO_xiBXUJ0V8IQWwr6E3tERVZcgokA-1UO9hOCHH&_nc_ohc=FUB4uhbL1CgQ7kNvwG-PdBE&_nc_gid=esnrP53QW7bfEy5AlMxU0Q&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af9H7cyAP1L4g8apjVnURPyIyxym6N0uyYhVBjCkwDMPfg&oe=6A2BB7F7&_nc_sid=8b3546	Athlete “Memory is the diary that we all carry about us “ Don't spill the Strawberry Margarita while facing Bangladesh's fiery pace duo — Nahid Rana & Shoriful Islam! 🔥🏏 Think you've got the balance, focus, and nerves to survive? Game on! #PlayDrinks #playbd #wannaplay #GameOn #taskinahmed #playbangladesh Mohammedan S C 🏏 Your time is limited, so don’t waste it living someone else’s life. 💪🏻 Another experienced.	\N	BD	\N	Asia/Dhaka	\N	\N	t	5000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:30:05.599271+00	2026-06-07 20:30:05.599271+00	\N
+9dc3097f-caba-4e35-afa2-f473d9ac0337	f9e67eb8-f0cc-4587-a9d9-3dc8710c77e5	Mustafizur Rahman	\N	https://scontent-dfw6-1.cdninstagram.com/v/t51.2885-19/126889712_1721523408055033_6809355920063483003_n.jpg?stp=dst-jpg_e0_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=scontent-dfw6-1.cdninstagram.com&_nc_cat=101&_nc_oc=Q6cZ2gEbW1958WPPrkFuPnu5UqN4alNPElmmkWwxgixg3RXoOtT7B7HDKChWLK6ZSIW5sLw&_nc_ohc=XXnLRwe_VhMQ7kNvwGpqT0G&_nc_gid=_-Bf__5Vzu6wmVPJmpNQkQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-VveFb-56-FOszWpPM2jnY3oeBsKt9z4_EQvNDdrfXPg&oe=6A2B9B98&_nc_sid=8b3546	Professional cricketer, Playing cricket for Bangladesh. Proud to be a Bangladeshi. 🇧🇩 For queries: mustafiz.ninety@gmail.com Enjoying the process. 😁 😇 🏆 Working on my bowling in the nets. 🏏 Mustafizur Rahman, the man you are. 🙌🏼 #Number1TeamForAReason #QalandarDilSe #HBLPSL11	\N	BD	\N	Asia/Dhaka	\N	\N	t	5000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:30:36.25088+00	2026-06-07 20:30:36.25088+00	\N
+1e11af50-b4c1-46aa-942d-88bc0581ee8e	9dfed8a5-5b82-4c62-b5ba-18867bb0eadf	Sunehra Tasnim	\N	https://scontent-lga3-2.cdninstagram.com/v/t51.2885-19/454450994_419916457747718_5530043009815806020_n.jpg?stp=dst-jpg_e0_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=scontent-lga3-2.cdninstagram.com&_nc_cat=1&_nc_oc=Q6cZ2gFz--M_xAOaFSS6zLqDx7mN6MLoSl-HNJBg3zK8Dyd1f8qwtmtlQXt2Jx4jMJixg74&_nc_ohc=JGRC2FAe0cgQ7kNvwETk-of&_nc_gid=LOCJTHc-PkJAfVc6p9YUIQ&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-RB5FVtErxnowohI4uKXKG0-GWg_mlNzq4rPyVtaZMWQ&oe=6A2B8B7F&_nc_sid=8b3546	smoller, stronger, sharper 🇧🇩 📩:sunehratasnim18@gmail.com A worm made this ✨ Disney princesses but make it ✨desi✨ Ei saree’r daam shunle akash theke porba 👀 My Akash Chowa moment Today I’m Bipasha Tasnim	\N	BD	\N	Asia/Dhaka	\N	\N	t	5000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:31:02.485081+00	2026-06-07 20:31:02.485081+00	\N
+766ada28-1457-4625-8437-9a96fa614d65	c884fe37-0f43-480e-a74e-a03364f83746	Mahmudullah Riyad	\N	https://scontent-mia3-3.cdninstagram.com/v/t51.2885-19/460148711_720854790223004_4658510593766140869_n.jpg?stp=dst-jpg_e0_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby40ODMuYzIifQ&_nc_ht=scontent-mia3-3.cdninstagram.com&_nc_cat=108&_nc_oc=Q6cZ2gEHXT8XizkOIACFDYGiOnC6ysuZorHx37BKTZYpiKzj-pYEb5j7-nJghq_CSOg7hEw&_nc_ohc=5weKOfBCoKAQ7kNvwEicFoJ&_nc_gid=-z2D2VjGSg2pB-MCw5v1Ig&edm=AOQ1c0wBAAAA&ccb=7-5&oh=00_Af-2bovH-hCoWFfV91TcR7qmDrc4GHTmWzB4MWhZu2pPZw&oe=6A2BB0EC&_nc_sid=8b3546	Being a proud Bangladeshi. #MR30 আনন্দের এই পবিত্র দিনে সকলকে জানাই ঈদ মোবারক... রামিসার মতো নিষ্পাপ শিশুদের আর যেন এভাবে প্রাণ হারাতে না হয়। প্রতিটি শিশুর নিরাপত্তা নিশ্চিত করা রাষ্ট্র ও সমাজের দায়িত্ব। এই নির্মম হত্যার দ্রুত ও দৃষ্টান্তমূলক বিচার হোক, যেন আর কোনো অপরাধী এমন জঘন্য কাজ করার সাহস না পায়। শিশুরা বাঁচুক ভয়হীন, সুন্দর এক পৃথিবীতে। History made. Series secured. A monumental 2-0 Test series victory that.	\N	BD	\N	Asia/Dhaka	\N	\N	t	4500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:31:27.216287+00	2026-06-07 20:31:27.216287+00	\N
+668d8f17-a74e-4200-80a2-668ad6ae2817	e15723c1-61b7-4d38-bfa5-89124d0a151d	Tawhid Afridi	\N	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-avt-0068/dd015cb0dd55a0d5bcaf04fd3f3d764c~tplv-tiktokx-cropcenter:720:720.jpeg?dr=9640&refresh_token=6cf14670&x-expires=1781035200&x-signature=r6QbWt0Xqcpz4sPZDJ32ixwVMB8%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=useast8	King Is Always King Youtuber 🇧🇩 I love you papa #papa #tawhidafridi #trending #bangladesh #happy #birthday #tawhidafridipapa #tawhidafridi #papamerijaan #tawhidafridi121 #foryou #song #hindisong #tawhidafridi #trending #bangladesh #kgf #foryou #music #TikTokBangla #gangster #tawhidafridi121 #foruyou #song #hindisong #tawhidafridi #tawhidafridi #trending #abangladesh #foryou #bangladesh #foryoupage #music #song.	\N	BD	\N	Asia/Dhaka	\N	\N	t	5500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:31:28.278762+00	2026-06-07 20:31:28.278762+00	\N
+69328474-b706-4cb0-b7c3-6996d4a95946	bd39d263-9e81-4db5-b7ca-3c91d48fb60d	Sakib Al Hasan	\N	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-avt-0068/6bfb94e122b194bda8da75f117d438dd~tplv-tiktokx-cropcenter:720:720.jpeg?dr=9640&refresh_token=ef6b452b&x-expires=1781035200&x-signature=JNjFn7fi3afovzNpedo%2BulWKd4k%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=useast8	Sakib Al Hasan creates content on tiktok.	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:31:47.897584+00	2026-06-07 20:31:47.897584+00	\N
+2ffc3a98-89a2-40a2-ad1e-26f5ae391c1a	2af6444d-4b90-48e0-8c59-396528ac0277	Rakib Hossain	\N	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-avt-0068/a73ed01dcd88379ea181936915e21ea6~tplv-tiktokx-cropcenter:720:720.jpeg?dr=9640&refresh_token=72bce079&x-expires=1781035200&x-signature=vAGRyN%2FxZxXmw0doFOcSYVYDmlg%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=useast5	YouTuber (20M+ Subscribers) I Love My Fans Bangladeshi LifeStyle Vlogger শেষ দিন বোনের সাথে… 🥺❤️ আবার চলে যাচ্ছে প্রবাসের জীবনে। মানুষের চোখে শুধু বিদেশ, কিন্তু আমরা জানি এর পেছনে কত ত্যাগ আর কষ্ট লুকিয়ে থাকে। যাওয়ার আগে বোনটার জন্য ছোট্ট একটা উপহার… ভালো থেকো, আল্লাহ তোমাকে হেফাজত করুন। 🤍✈️” রাকিবের সারপ্রাইজ দেখে অন্তুরা অবাক! 😱❤️| Rakib Hossain #HarpicLemon #PowerOfLemon#smellsfresh outfit From :- Azran রিতুর.	\N	BD	\N	Asia/Dhaka	\N	\N	t	5500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:32:14.091701+00	2026-06-07 20:32:14.091701+00	\N
+9adfcea6-cb9a-4c50-af83-656afe19e890	cb90f3a4-3574-4578-951b-a99df9ddbebb	Reza & Puja Khan	\N	https://p16-common-sign.tiktokcdn-us.com/tos-useast8-avt-0068-tx2/c0e7e9a657afe8a1a8c8550f1a0ffbbc~tplv-tiktokx-cropcenter:720:720.jpeg?dr=9640&refresh_token=e398a802&x-expires=1781035200&x-signature=Hcm6DJ2qbMv4vAGVZXZoNA6RoEA%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=useast8	📧: partnerships@rezaandpuja.com he’s grandpamaxxing Give your wife the Mother’s Day she deserves. #mothersday It never lasts long I need a new babysitter Dads/husbands! It’s time to lock in	\N	BD	\N	Asia/Dhaka	\N	\N	t	5000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:32:55.714901+00	2026-06-07 20:32:55.714901+00	\N
+361323ff-e0a5-4bf7-a0e1-eeeb381b1b14	f91a7442-45fb-4dd3-9123-35a9160a35f2	voice🤭🤭🥀 fo Tuhin 🤫	\N	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-avt-0068/e3c2d7a918552e13f973ca143f426981~tplv-tiktokx-cropcenter:720:720.jpeg?dr=9640&refresh_token=4d1a4ff1&x-expires=1781035200&x-signature=dLgi6z4CqecU0JFzdyILl79RHzE%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=useast5	🥀🥀😎একাই একশ 😎🥀🥀 #কট #কি ভাবছো হবে হবে তোমাদের সাথেও দেখা হবে 🤫😅🫡#💕 কিছু কি বুঝতে পারছ, 😲🫡😅# #চাঁদপুরের_পোলা😲 এবারেও ব্যথা হয়ে গেলাম কিন্তু তোমাকে আমার করে নেব, 💔💔🌞😭😭😚😚😄😄💰💰💰 #চাঁদপুরের_পোলা😲 না ভাই গরিব	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:33:04.581566+00	2026-06-07 20:33:04.581566+00	\N
+8724cd98-6837-4fb0-85f8-ad0adff0ae6a	695254e1-565b-40c1-a4c7-5af903daae22	♥mehedi hasan♥	\N	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-avt-0068/03c5a8b8c261b0392201aeda21d28c48~tplv-tiktokx-cropcenter:720:720.jpeg?dr=9640&refresh_token=6503a509&x-expires=1781035200&x-signature=kPFAb1rg6fdmoYl3gzAFPBxC6VQ%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=useast8	Exclusively managed by glee Digital 🕋Muslim🕋 🇧🇩~Bangladeshi~🇧🇩 Fb 👇 কি হলো এটা🤣#foryou #foryoupage #trending #mr_mehedi_05 #tiktok @bdtiktokofficial 😭😭#foryou #foryoupage #friendship #sad @ariyan_official @bdtiktokofficial friendship😍😍#foryou #foryoupage #friendship #kishoreganjbd #bdtiktokofficiai @ariyan_official @bdtiktokofficial মাছ খাবা মাছ😋#foryou #foryoupage #trending দুই কেবলা ওলা মসজিদ🌻#foryou #foryoupage.	\N	BD	\N	Asia/Dhaka	\N	\N	t	4500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:33:13.973677+00	2026-06-07 20:33:13.973677+00	\N
+c3708c3c-41d5-4e93-a297-8112133b2cda	da3a42a0-e308-43f7-9795-c5f7bbb30278	Ra Fi 🇧🇩	\N	https://p19-common-sign.tiktokcdn-us.com/tos-maliva-avt-0068/3a4c342e91e4924cc3c226b2cc964b26~tplv-tiktokx-cropcenter:720:720.jpeg?dr=9640&refresh_token=da01bb4d&x-expires=1781035200&x-signature=wcPWnJ8z4NRJudwBOCBevm2t1SQ%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=useast8	• Youtube : Rafi Bhaiyu • • Insta : rafi.bhaiyu • • rafisaifulislam@gmail.com • Nepal Vlog - Nagarkot | #rafibhaiyu #rafibhaiyu #rafibhaiyu একটু মোটিভেশন দেয়ার চেষ্টা 🙃 📍 Hazari Cottage & Resort #rafibhaiyu Guess the lyrics!! 😂 📍Hazari Cottage and Resort. #rafibhaiyu	\N	BD	\N	Asia/Dhaka	\N	\N	t	5000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:33:59.303941+00	2026-06-07 20:33:59.303941+00	\N
+5e41b0f3-ce73-4601-9508-34aafcd45039	8272b588-5092-43c3-b8e5-352a887766fa	I M T I A Z ❤️‍🩹 K🤟	\N	https://p16-common-sign.tiktokcdn-us.com/tos-alisg-avt-0068/8273f09901ac76800d34eaea9aadb49f~tplv-tiktokx-cropcenter:720:720.jpeg?dr=9640&refresh_token=d002ae15&x-expires=1781035200&x-signature=JRdjMWQUgfPi7pYJx9Pmd8p8sdo%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=useast5	আসসালামু আলাইকুম সবাইকে বলছি সাপোর্ট করলে সাপোর্ট পাবেন আর ফলো দিলে ফলো ব্যাক পাবেন ইনশাল্লাহ Medina, also known as Al-Madinah Al-Munawwarah, is a peaceful and spiritually significant city in Saudi Arabia, cherished by millions for its deep Islamic heritage and historical significance. Home to the Prophet's Mosque (Masjid an-Nabawi), visitors come to experience its holy land, find peace, and connect with.	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:34:07.3816+00	2026-06-07 20:34:07.3816+00	\N
+85bb9525-c119-40ad-a32c-33efab808e63	a66f6b1d-e82b-4b4c-a99f-e0892343bdc2	Shakib Khan	\N	\N	theshakibkhan_ creates content on tiktok.	\N	BD	\N	Asia/Dhaka	\N	\N	t	1000	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:34:12.776364+00	2026-06-07 20:34:12.776364+00	\N
+a3d360a0-922f-4c06-8104-6c1af88ef38d	aed4e407-eedc-4bcd-b14d-1b70eea63608	Safiea Hafiz Retu	\N	https://p16-common-sign.tiktokcdn-us.com/tos-useast2a-avt-0068-giso/c02cdbe1b867b0f796798b744def1e2d~tplv-tiktokx-cropcenter:720:720.jpeg?dr=9640&refresh_token=404b1efe&x-expires=1781035200&x-signature=h9asmDoixRELRcmB72MzgSSsN5E%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=useast5	🥰Allahamdurillah For Everything 🥰 ❤️Any Promotion Massage On Instagram ⬇️Fb⬇️ Amr bon Jokon Camara man😅#fyp #foryou #foryoupage #expression #safiea_hafiz_retu #unfrezzmyaccount 😇#fyp #foryou #foryoupage #expression #safiea_hafiz_retu #unfrezzmyaccount Bujta paro na😕#fyp #foryou #foryoupage #expression #safiea_hafiz_retu #unfrezzmyaccount 🙄🤓#fyp #foryou #foryoupage #expression #safiea_hafiz_retu #unfrezzmyaccount.	\N	BD	\N	Asia/Dhaka	\N	\N	t	4500	48	{}	\N	\N	f	\N	0	\N	2026-06-07 20:34:31.864588+00	2026-06-07 20:34:31.864588+00	\N
+\.
+
+
+--
+-- Data for Name: creator_rate_cards; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.creator_rate_cards (id, creator_id, platform, deliverable_type, price_bdt, price_usd, includes, excludes, turnaround_days, is_negotiable, is_active, created_at, updated_at, deliverable_code, suggested_price_bdt) FROM stdin;
+6b9367c9-539f-4ca6-b2b6-58dbd35a2f2b	5dafde33-3117-4f0b-9ecd-b958462aa368	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:38:54.551262+00	2026-06-07 19:38:54.551262+00	youtube_short	10000
+653280f8-113a-436e-82fa-66cb1c46386f	5dafde33-3117-4f0b-9ecd-b958462aa368	youtube	dedicated_video	20000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:38:54.551262+00	2026-06-07 19:38:54.551262+00	youtube_video	20000
+ef2a13f0-7145-4d13-8ea3-4ad259859f24	5dafde33-3117-4f0b-9ecd-b958462aa368	youtube	live_stream	50000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:38:54.551262+00	2026-06-07 19:38:54.551262+00	youtube_live	50000
+1a3ebc16-da39-4305-ac1b-4c56531e4d58	07091792-bad6-4f26-bd94-7e0a2e3ea351	youtube	short_video	1000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:38:58.045159+00	2026-06-07 19:38:58.045159+00	youtube_short	1000
+153ee812-bb38-44d5-8e5c-48f9f44cb2a3	07091792-bad6-4f26-bd94-7e0a2e3ea351	youtube	dedicated_video	5000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:38:58.045159+00	2026-06-07 19:38:58.045159+00	youtube_video	5000
+ba5a3958-fd3d-4c37-bccd-5c34a3f80fd3	07091792-bad6-4f26-bd94-7e0a2e3ea351	youtube	live_stream	10000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:38:58.045159+00	2026-06-07 19:38:58.045159+00	youtube_live	10000
+6aa3f8c9-404a-4111-be39-5da9178e86ee	9c00c3ef-3454-4fbc-8cf0-f578cf0ea468	youtube	short_video	1000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:38:59.888318+00	2026-06-07 19:38:59.888318+00	youtube_short	1000
+80ee83cb-c355-4ab2-8b24-defb425d5e3b	9c00c3ef-3454-4fbc-8cf0-f578cf0ea468	youtube	dedicated_video	5000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:38:59.888318+00	2026-06-07 19:38:59.888318+00	youtube_video	5000
+8b90d97e-0813-44ba-9cdd-7e52789a4cf1	9c00c3ef-3454-4fbc-8cf0-f578cf0ea468	youtube	live_stream	10000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:38:59.888318+00	2026-06-07 19:38:59.888318+00	youtube_live	10000
+be3940d2-b1a4-45ad-b432-62ce19ae7ca9	72b690f1-2102-4740-8ca6-ee710cfd89bf	youtube	short_video	1000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:39:01.221656+00	2026-06-07 19:39:01.221656+00	youtube_short	1000
+6774b6ec-9647-4fe4-97b3-8383c8f4aad2	72b690f1-2102-4740-8ca6-ee710cfd89bf	youtube	dedicated_video	5000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:39:01.221656+00	2026-06-07 19:39:01.221656+00	youtube_video	5000
+b22b39c5-6ef3-4bf6-89cc-8756e6f7497e	72b690f1-2102-4740-8ca6-ee710cfd89bf	youtube	live_stream	10000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:39:01.221656+00	2026-06-07 19:39:01.221656+00	youtube_live	10000
+e75f8766-8633-4fb8-a96f-f6900db3adab	fdbdf485-e255-4085-9277-8190e0022811	youtube	short_video	8500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:39:02.695081+00	2026-06-07 19:39:02.695081+00	youtube_short	8500
+516405d4-f775-4649-821e-87c216729914	fdbdf485-e255-4085-9277-8190e0022811	youtube	dedicated_video	18000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:39:02.695081+00	2026-06-07 19:39:02.695081+00	youtube_video	18000
+aff77d9e-fa2d-43de-93d5-81912e1f905f	fdbdf485-e255-4085-9277-8190e0022811	youtube	live_stream	44000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:39:02.695081+00	2026-06-07 19:39:02.695081+00	youtube_live	44000
+5f985d59-d277-4e73-9808-dad1c357a8dc	42e12f8f-04fd-42cd-86e5-5ffbbe47c281	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:39:06.107089+00	2026-06-07 19:39:06.107089+00	youtube_short	10000
+8a48ce23-c665-4ed9-a5fd-d6ad849b2d5f	42e12f8f-04fd-42cd-86e5-5ffbbe47c281	youtube	dedicated_video	20000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:39:06.107089+00	2026-06-07 19:39:06.107089+00	youtube_video	20000
+8cfa196a-aa8a-4838-aa18-901fbf586813	42e12f8f-04fd-42cd-86e5-5ffbbe47c281	youtube	live_stream	49500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:39:06.107089+00	2026-06-07 19:39:06.107089+00	youtube_live	49500
+86df583b-a272-4601-b679-065942c0703b	51cdbea5-c7d2-49fe-87ba-db598d4ecac5	youtube	short_video	7500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:39:13.604253+00	2026-06-07 19:39:13.604253+00	youtube_short	7500
+5535e6b7-f09f-4e95-a5bd-3c7dfd783685	51cdbea5-c7d2-49fe-87ba-db598d4ecac5	youtube	dedicated_video	15500	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:39:13.604253+00	2026-06-07 19:39:13.604253+00	youtube_video	15500
+949067c4-21fb-4b2d-a166-90f39da4c4d3	51cdbea5-c7d2-49fe-87ba-db598d4ecac5	youtube	live_stream	38000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:39:13.604253+00	2026-06-07 19:39:13.604253+00	youtube_live	38000
+243a9a93-9344-410b-90b7-421b0f1ce4fe	70be3112-3530-4fbd-8ee3-a88acd20ccb9	youtube	short_video	1000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:39:18.892221+00	2026-06-07 19:39:18.892221+00	youtube_short	1000
+374271e0-36eb-40ec-8531-733c0d3bc8fc	70be3112-3530-4fbd-8ee3-a88acd20ccb9	youtube	dedicated_video	5000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:39:18.892221+00	2026-06-07 19:39:18.892221+00	youtube_video	5000
+da09c761-326f-4b4b-97cc-e9202e09f82c	70be3112-3530-4fbd-8ee3-a88acd20ccb9	youtube	live_stream	10000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:39:18.892221+00	2026-06-07 19:39:18.892221+00	youtube_live	10000
+6b9827a3-e029-430f-b8a6-eb2df502cd26	8127f14d-7fc7-4e47-a3ce-195d54f2f41f	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:39:21.162682+00	2026-06-07 19:39:21.162682+00	youtube_short	10000
+78a12193-a2af-4fe2-b5e3-b66779aa8f92	8127f14d-7fc7-4e47-a3ce-195d54f2f41f	youtube	dedicated_video	20000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:39:21.162682+00	2026-06-07 19:39:21.162682+00	youtube_video	20000
+55d19dfc-e916-4494-874a-41cd0fd2c0c9	8127f14d-7fc7-4e47-a3ce-195d54f2f41f	youtube	live_stream	50000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:39:21.162682+00	2026-06-07 19:39:21.162682+00	youtube_live	50000
+042f7a2c-544e-4890-b936-4ad2936044f4	ae9568ff-7a6a-47a8-ac4f-91ec762ef9a3	youtube	short_video	1000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:39:28.529631+00	2026-06-07 19:39:28.529631+00	youtube_short	1000
+49b93a8d-c1cb-4f09-bd21-d44f2b8533d7	ae9568ff-7a6a-47a8-ac4f-91ec762ef9a3	youtube	dedicated_video	5000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:39:28.529631+00	2026-06-07 19:39:28.529631+00	youtube_video	5000
+37d7201b-4162-4115-97c2-67edada4b234	ae9568ff-7a6a-47a8-ac4f-91ec762ef9a3	youtube	live_stream	10000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:39:28.529631+00	2026-06-07 19:39:28.529631+00	youtube_live	10000
+33daec01-8829-4a25-9cd4-c1371bccda1d	440f955d-039d-4db5-8590-35e0a837918c	youtube	short_video	8500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:39:43.215011+00	2026-06-07 19:39:43.215011+00	youtube_short	8500
+9f9c8155-542d-413c-8f2d-f24cfb0e644d	440f955d-039d-4db5-8590-35e0a837918c	youtube	dedicated_video	18000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:39:43.215011+00	2026-06-07 19:39:43.215011+00	youtube_video	18000
+4c035d16-5694-4a1f-806f-2a01a81f00ff	440f955d-039d-4db5-8590-35e0a837918c	youtube	live_stream	44500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:39:43.215011+00	2026-06-07 19:39:43.215011+00	youtube_live	44500
+8c390580-17ae-416a-9f37-b6819af2e347	673d48a6-bf94-4d7a-a1f2-851357978fb0	youtube	short_video	8500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:39:56.968481+00	2026-06-07 19:39:56.968481+00	youtube_short	8500
+64aedf69-d7dd-498a-925a-ed21919370ef	673d48a6-bf94-4d7a-a1f2-851357978fb0	youtube	dedicated_video	18000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:39:56.968481+00	2026-06-07 19:39:56.968481+00	youtube_video	18000
+7c6b3728-44f7-4d3e-9aa5-ffd81a38d785	673d48a6-bf94-4d7a-a1f2-851357978fb0	youtube	live_stream	44000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:39:56.968481+00	2026-06-07 19:39:56.968481+00	youtube_live	44000
+97295945-0fc4-43ed-8a9d-d5b698e35120	0e8a07c1-ff6d-4394-859f-151f39779107	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:40:01.378559+00	2026-06-07 19:40:01.378559+00	youtube_short	10000
+3843e5bc-36e4-44d1-94e1-b1ed1270c5a1	0e8a07c1-ff6d-4394-859f-151f39779107	youtube	dedicated_video	19500	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:40:01.378559+00	2026-06-07 19:40:01.378559+00	youtube_video	19500
+c8a37bba-e72b-4756-9f01-4da252d4cebf	0e8a07c1-ff6d-4394-859f-151f39779107	youtube	live_stream	49000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:40:01.378559+00	2026-06-07 19:40:01.378559+00	youtube_live	49000
+689c8598-74c0-45e0-b1fa-122282fa99cb	6ab37117-0165-49c7-b569-9f2d5b16d0be	youtube	short_video	9000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:40:05.909454+00	2026-06-07 19:40:05.909454+00	youtube_short	9000
+6309c34a-fe2f-4c8d-9d21-138f28309542	6ab37117-0165-49c7-b569-9f2d5b16d0be	youtube	dedicated_video	18000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:40:05.909454+00	2026-06-07 19:40:05.909454+00	youtube_video	18000
+a2cd0149-0a93-4e0e-8112-301ff4cfa358	6ab37117-0165-49c7-b569-9f2d5b16d0be	youtube	live_stream	44500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:40:05.909454+00	2026-06-07 19:40:05.909454+00	youtube_live	44500
+edfdec66-af96-4311-8034-b9889685cb60	20ac3692-ee06-4bf2-9c60-554a5b131486	youtube	short_video	7500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:40:30.101002+00	2026-06-07 19:40:30.101002+00	youtube_short	7500
+035eecb8-29af-47bd-a81e-6ffecc4bb738	20ac3692-ee06-4bf2-9c60-554a5b131486	youtube	dedicated_video	15500	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:40:30.101002+00	2026-06-07 19:40:30.101002+00	youtube_video	15500
+4cc4864a-ea15-4b44-b72b-7f35bf708a7a	20ac3692-ee06-4bf2-9c60-554a5b131486	youtube	live_stream	38000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:40:30.101002+00	2026-06-07 19:40:30.101002+00	youtube_live	38000
+4caeec9a-26e5-48d0-889b-ebe0a12cece2	7db49e06-546f-47e2-90bb-040f77ae36c2	youtube	short_video	9000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:40:37.620958+00	2026-06-07 19:40:37.620958+00	youtube_short	9000
+f6b468dd-2190-4878-a7a9-9d69aa5cfe2f	7db49e06-546f-47e2-90bb-040f77ae36c2	youtube	dedicated_video	18000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:40:37.620958+00	2026-06-07 19:40:37.620958+00	youtube_video	18000
+b0d3e21a-504a-47d0-9ab7-fa9866310144	7db49e06-546f-47e2-90bb-040f77ae36c2	youtube	live_stream	45000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:40:37.620958+00	2026-06-07 19:40:37.620958+00	youtube_live	45000
+21b2835a-0c51-4d57-92d8-d93beda480c5	88339740-4c5a-4866-8617-b810ddb7b89a	youtube	short_video	6000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:40:52.437767+00	2026-06-07 19:40:52.437767+00	youtube_short	6000
+7bfa060b-6bac-472f-b28b-d021fd6114a1	88339740-4c5a-4866-8617-b810ddb7b89a	youtube	dedicated_video	13500	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:40:52.437767+00	2026-06-07 19:40:52.437767+00	youtube_video	13500
+da5a9734-0155-405f-a1b5-d2e45a73dbd7	88339740-4c5a-4866-8617-b810ddb7b89a	youtube	live_stream	32000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:40:52.437767+00	2026-06-07 19:40:52.437767+00	youtube_live	32000
+4273deca-1b58-4c7e-919d-806256f203e5	2b69a960-320d-447f-b598-ee9e8a28185c	youtube	short_video	1000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:40:54.53377+00	2026-06-07 19:40:54.53377+00	youtube_short	1000
+1947aca0-8f11-4036-88f4-5e11442da6f5	2b69a960-320d-447f-b598-ee9e8a28185c	youtube	dedicated_video	5000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:40:54.53377+00	2026-06-07 19:40:54.53377+00	youtube_video	5000
+e188df8e-1c09-4129-b83a-d9e3ef9dacca	2b69a960-320d-447f-b598-ee9e8a28185c	youtube	live_stream	10000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:40:54.53377+00	2026-06-07 19:40:54.53377+00	youtube_live	10000
+cf8a43c2-da1e-411f-a9a0-845655133eff	c1b988f2-9e42-4b77-9ed8-247ce8789369	youtube	short_video	9500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:41:01.906437+00	2026-06-07 19:41:01.906437+00	youtube_short	9500
+16fecc6e-d5a5-45ca-b0e2-fd7e0187681b	c1b988f2-9e42-4b77-9ed8-247ce8789369	youtube	dedicated_video	19500	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:41:01.906437+00	2026-06-07 19:41:01.906437+00	youtube_video	19500
+21fcd67c-bc4e-4525-b155-e9789c7a24d7	c1b988f2-9e42-4b77-9ed8-247ce8789369	youtube	live_stream	48500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:41:01.906437+00	2026-06-07 19:41:01.906437+00	youtube_live	48500
+6de068d7-8c28-4834-aad8-f4e0ed2fa131	5519f9b5-8d0a-4854-a590-170882420cf0	youtube	short_video	1000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:41:05.507162+00	2026-06-07 19:41:05.507162+00	youtube_short	1000
+e5812024-7d54-4bd8-989a-de1336784b71	5519f9b5-8d0a-4854-a590-170882420cf0	youtube	dedicated_video	5000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:41:05.507162+00	2026-06-07 19:41:05.507162+00	youtube_video	5000
+c6dd78f7-834d-4e08-89d6-1e9fe160bab5	5519f9b5-8d0a-4854-a590-170882420cf0	youtube	live_stream	10000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:41:05.507162+00	2026-06-07 19:41:05.507162+00	youtube_live	10000
+3426d208-0656-49a3-9c72-5b653d36897c	992ac30b-3d68-4c9f-8ac2-f48173323732	youtube	short_video	6500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:41:08.957113+00	2026-06-07 19:41:08.957113+00	youtube_short	6500
+4b6b346d-d23a-4e28-8658-ba75ffd5a38c	992ac30b-3d68-4c9f-8ac2-f48173323732	youtube	dedicated_video	14000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:41:08.957113+00	2026-06-07 19:41:08.957113+00	youtube_video	14000
+3a98feab-a230-4fbe-b62d-fa444c1107db	992ac30b-3d68-4c9f-8ac2-f48173323732	youtube	live_stream	33500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:41:08.957113+00	2026-06-07 19:41:08.957113+00	youtube_live	33500
+3ef2ff90-c5f9-4de9-ada3-2c776d0d68e1	2beeb4ae-b74a-4153-a16b-42be716fa93e	youtube	short_video	8500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:41:16.246633+00	2026-06-07 19:41:16.246633+00	youtube_short	8500
+bcd04d28-3696-4949-80f1-c7e3aeff444f	2beeb4ae-b74a-4153-a16b-42be716fa93e	youtube	dedicated_video	17000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:41:16.246633+00	2026-06-07 19:41:16.246633+00	youtube_video	17000
+7c9dbedf-43ec-42fd-a052-61274b16a525	2beeb4ae-b74a-4153-a16b-42be716fa93e	youtube	live_stream	42500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:41:16.246633+00	2026-06-07 19:41:16.246633+00	youtube_live	42500
+522db8c8-e830-4a0a-8dd7-569c53b78fed	a4e9230c-d1bf-494e-ba4c-13ded0b417ca	youtube	short_video	1000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:41:34.790408+00	2026-06-07 19:41:34.790408+00	youtube_short	1000
+1c09fe20-51bd-4d67-bd85-ae5790af9904	a4e9230c-d1bf-494e-ba4c-13ded0b417ca	youtube	dedicated_video	5000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:41:34.790408+00	2026-06-07 19:41:34.790408+00	youtube_video	5000
+f6003894-ee92-4b4c-86f2-88cc8d3ffa31	a4e9230c-d1bf-494e-ba4c-13ded0b417ca	youtube	live_stream	10000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:41:34.790408+00	2026-06-07 19:41:34.790408+00	youtube_live	10000
+02392187-2d48-4585-b60f-a51c038321ae	f1a4d39f-eb69-427c-98f7-4229eb1957fb	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:41:35.932772+00	2026-06-07 19:41:35.932772+00	youtube_short	10000
+8ded106c-a38e-40ad-8e67-ae32eaf0da78	f1a4d39f-eb69-427c-98f7-4229eb1957fb	youtube	dedicated_video	20000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:41:35.932772+00	2026-06-07 19:41:35.932772+00	youtube_video	20000
+df833dcf-23dd-49cc-8fc7-e99197f81b97	f1a4d39f-eb69-427c-98f7-4229eb1957fb	youtube	live_stream	49500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:41:35.932772+00	2026-06-07 19:41:35.932772+00	youtube_live	49500
+21fd50cf-9228-411d-82fc-4757d9d2f063	70d4faed-1c19-4481-bc93-41c68f619f52	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:41:55.128296+00	2026-06-07 19:41:55.128296+00	youtube_short	10000
+ecfe417e-83c3-45c3-b199-e237935d8ac7	70d4faed-1c19-4481-bc93-41c68f619f52	youtube	dedicated_video	20000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:41:55.128296+00	2026-06-07 19:41:55.128296+00	youtube_video	20000
+5d19ca4c-8bb8-4b57-9e03-3fe13ab21d6e	70d4faed-1c19-4481-bc93-41c68f619f52	youtube	live_stream	50000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:41:55.128296+00	2026-06-07 19:41:55.128296+00	youtube_live	50000
+eb871381-42f4-4b18-8bb3-4cce317550c1	d401eb80-d2b4-49ed-8fa1-3db159d000eb	youtube	short_video	1000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:42:01.774507+00	2026-06-07 19:42:01.774507+00	youtube_short	1000
+fe599dda-19ab-4f94-af8f-c2690cbdc3c7	d401eb80-d2b4-49ed-8fa1-3db159d000eb	youtube	dedicated_video	5000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:42:01.774507+00	2026-06-07 19:42:01.774507+00	youtube_video	5000
+f9c6d73a-3758-4f1b-9af9-764df50b8ee7	d401eb80-d2b4-49ed-8fa1-3db159d000eb	youtube	live_stream	10000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:42:01.774507+00	2026-06-07 19:42:01.774507+00	youtube_live	10000
+b32d2b54-9096-4d35-95a4-bf07bb50f40f	ee47630d-81c0-4921-a625-c5e461f2080a	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:42:03.121323+00	2026-06-07 19:42:03.121323+00	youtube_short	10000
+0e830133-6e59-4219-b0c3-bcd8c575ee74	ee47630d-81c0-4921-a625-c5e461f2080a	youtube	dedicated_video	20000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:42:03.121323+00	2026-06-07 19:42:03.121323+00	youtube_video	20000
+3e3fc696-4d85-4c5e-b76b-3ae8bab73d7f	ee47630d-81c0-4921-a625-c5e461f2080a	youtube	live_stream	50000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:42:03.121323+00	2026-06-07 19:42:03.121323+00	youtube_live	50000
+055bfec6-a03c-445d-8a97-ef4b2b90c2eb	124a6af3-80b6-4d3e-813f-2feb41ae5139	youtube	short_video	1000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:42:25.173318+00	2026-06-07 19:42:25.173318+00	youtube_short	1000
+d08e4c78-68d0-422a-9fbe-5053c099320f	124a6af3-80b6-4d3e-813f-2feb41ae5139	youtube	dedicated_video	5000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:42:25.173318+00	2026-06-07 19:42:25.173318+00	youtube_video	5000
+f9a78b7b-57be-4a42-a245-f926391e412c	124a6af3-80b6-4d3e-813f-2feb41ae5139	youtube	live_stream	10000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:42:25.173318+00	2026-06-07 19:42:25.173318+00	youtube_live	10000
+dc57343e-6680-4edb-958c-8c9a6ebd6926	06ebd671-f79b-41e2-9f49-eb7a6430347e	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:42:26.690348+00	2026-06-07 19:42:26.690348+00	youtube_short	10000
+72b53824-9972-46bb-9ab7-f40baab84097	06ebd671-f79b-41e2-9f49-eb7a6430347e	youtube	dedicated_video	20000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:42:26.690348+00	2026-06-07 19:42:26.690348+00	youtube_video	20000
+d7bd6c6d-6236-44c9-a16b-70e7d64ad079	06ebd671-f79b-41e2-9f49-eb7a6430347e	youtube	live_stream	50000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:42:26.690348+00	2026-06-07 19:42:26.690348+00	youtube_live	50000
+81f54073-3d85-4a91-b363-c5c51bc66238	a55751a8-7f75-472a-b660-fc89d4158622	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:42:30.333828+00	2026-06-07 19:42:30.333828+00	youtube_short	10000
+b5b4ce88-b681-4a51-afb8-086380f7ed51	a55751a8-7f75-472a-b660-fc89d4158622	youtube	dedicated_video	19500	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:42:30.333828+00	2026-06-07 19:42:30.333828+00	youtube_video	19500
+3a104c36-a4aa-4a31-98ee-729911161b5e	a55751a8-7f75-472a-b660-fc89d4158622	youtube	live_stream	49000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:42:30.333828+00	2026-06-07 19:42:30.333828+00	youtube_live	49000
+193697bf-37b0-4ffe-a2ee-5fcf9bb745b5	8d823b4f-81a4-4215-a245-68d4ce84dbc2	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:42:47.257116+00	2026-06-07 19:42:47.257116+00	youtube_short	10000
+cb97bddc-eae0-4d9a-a3d3-1b73b891a260	8d823b4f-81a4-4215-a245-68d4ce84dbc2	youtube	dedicated_video	20000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:42:47.257116+00	2026-06-07 19:42:47.257116+00	youtube_video	20000
+8e16f72c-abc9-4fa0-88c7-de15af3168b3	8d823b4f-81a4-4215-a245-68d4ce84dbc2	youtube	live_stream	50000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:42:47.257116+00	2026-06-07 19:42:47.257116+00	youtube_live	50000
+ae22b9a3-5598-4477-91d6-7df1bb4c8a17	7bd7f363-5ead-45f6-9a82-0c9e5e6f0663	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:43:04.838779+00	2026-06-07 19:43:04.838779+00	youtube_short	10000
+bce2124c-83c2-415f-a90c-3c07ca9c97a9	7bd7f363-5ead-45f6-9a82-0c9e5e6f0663	youtube	dedicated_video	20000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:43:04.838779+00	2026-06-07 19:43:04.838779+00	youtube_video	20000
+8c111e89-4104-4745-ba14-6b6a5f1faf9b	7bd7f363-5ead-45f6-9a82-0c9e5e6f0663	youtube	live_stream	50000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:43:04.838779+00	2026-06-07 19:43:04.838779+00	youtube_live	50000
+183a4d10-f168-484f-8020-650138f7e550	402e84bc-ea89-4151-bd85-c3705aa44c62	youtube	short_video	9500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:43:18.008659+00	2026-06-07 19:43:18.008659+00	youtube_short	9500
+08b69c10-521c-46ea-a086-8b514f682b8a	402e84bc-ea89-4151-bd85-c3705aa44c62	youtube	dedicated_video	19000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:43:18.008659+00	2026-06-07 19:43:18.008659+00	youtube_video	19000
+83225d60-df8f-4636-9b88-4df9c2952973	402e84bc-ea89-4151-bd85-c3705aa44c62	youtube	live_stream	47500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:43:18.008659+00	2026-06-07 19:43:18.008659+00	youtube_live	47500
+df044539-d9af-43c0-91b2-10a13ca13213	e81ece61-8eef-4679-9f4c-3df3f93c9397	youtube	short_video	9500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:43:53.68621+00	2026-06-07 19:43:53.68621+00	youtube_short	9500
+8a8e6ec9-3cf7-4506-a633-41ccbe8a9c0c	e81ece61-8eef-4679-9f4c-3df3f93c9397	youtube	dedicated_video	19000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:43:53.68621+00	2026-06-07 19:43:53.68621+00	youtube_video	19000
+5004c4b2-31bf-4175-9545-132667bd7669	e81ece61-8eef-4679-9f4c-3df3f93c9397	youtube	live_stream	48000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:43:53.68621+00	2026-06-07 19:43:53.68621+00	youtube_live	48000
+778e5fc0-165f-4950-ad3b-aaae1bfb866e	dfe87fc4-207a-4ddf-8252-9885cc4eae50	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:44:41.420051+00	2026-06-07 19:44:41.420051+00	youtube_short	10000
+5e5391e0-631f-4c7b-8605-0be320acf67b	dfe87fc4-207a-4ddf-8252-9885cc4eae50	youtube	dedicated_video	20000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:44:41.420051+00	2026-06-07 19:44:41.420051+00	youtube_video	20000
+4a60ec82-66b9-44a3-a3b4-df59c182675a	dfe87fc4-207a-4ddf-8252-9885cc4eae50	youtube	live_stream	50000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:44:41.420051+00	2026-06-07 19:44:41.420051+00	youtube_live	50000
+527dc359-23d4-409b-b1f6-0fe19944b604	cdcaf960-a659-45b9-a53f-4255717ab2e8	youtube	short_video	9500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:44:57.277696+00	2026-06-07 19:44:57.277696+00	youtube_short	9500
+e8df0716-8b6f-449d-8f49-ffc38e3f5baa	cdcaf960-a659-45b9-a53f-4255717ab2e8	youtube	dedicated_video	19500	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:44:57.277696+00	2026-06-07 19:44:57.277696+00	youtube_video	19500
+2ad034d6-51dd-4eee-9a51-a9cdac073a2b	cdcaf960-a659-45b9-a53f-4255717ab2e8	youtube	live_stream	48500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:44:57.277696+00	2026-06-07 19:44:57.277696+00	youtube_live	48500
+71d9b093-3ea0-485f-af57-730c072833ed	8696151a-53f5-4734-9085-ecb8f8246f01	youtube	short_video	8000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:45:22.740134+00	2026-06-07 19:45:22.740134+00	youtube_short	8000
+4e0945e7-d277-4648-a5f4-47cea72a3bdc	8696151a-53f5-4734-9085-ecb8f8246f01	youtube	dedicated_video	17000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:45:22.740134+00	2026-06-07 19:45:22.740134+00	youtube_video	17000
+a08d85a0-9575-4614-ac88-b85543db5645	8696151a-53f5-4734-9085-ecb8f8246f01	youtube	live_stream	42000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:45:22.740134+00	2026-06-07 19:45:22.740134+00	youtube_live	42000
+97fa3522-5b06-4075-9ebf-d218bb6239de	e80894b5-faba-4bc3-8c4a-f047cea47924	youtube	short_video	7500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:45:47.802522+00	2026-06-07 19:45:47.802522+00	youtube_short	7500
+f433724b-a6a2-4184-8b24-1aff607993f4	e80894b5-faba-4bc3-8c4a-f047cea47924	youtube	dedicated_video	16000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:45:47.802522+00	2026-06-07 19:45:47.802522+00	youtube_video	16000
+9a46d654-a2cd-4ee2-9940-deacc50f70cb	e80894b5-faba-4bc3-8c4a-f047cea47924	youtube	live_stream	39500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:45:47.802522+00	2026-06-07 19:45:47.802522+00	youtube_live	39500
+41586d7c-4ba5-4a4b-8ca0-4ad127436e0c	0ee9f78b-8c67-4fb4-a977-1e0c571a617e	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:45:52.697652+00	2026-06-07 19:45:52.697652+00	youtube_short	10000
+ce32be49-6639-40d3-8925-396320529735	0ee9f78b-8c67-4fb4-a977-1e0c571a617e	youtube	dedicated_video	20000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:45:52.697652+00	2026-06-07 19:45:52.697652+00	youtube_video	20000
+23c2fd92-aa30-4cf2-a798-8463a08355d0	0ee9f78b-8c67-4fb4-a977-1e0c571a617e	youtube	live_stream	50000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:45:52.697652+00	2026-06-07 19:45:52.697652+00	youtube_live	50000
+4f5cf215-d5bf-40c4-a540-d6bff8d1e0ed	65b00a73-b334-4571-8dbf-ace2a42a581f	youtube	short_video	1000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:46:30.831568+00	2026-06-07 19:46:30.831568+00	youtube_short	1000
+dcd54abf-34e0-4250-b61e-4e1d9cb96024	65b00a73-b334-4571-8dbf-ace2a42a581f	youtube	dedicated_video	5000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:46:30.831568+00	2026-06-07 19:46:30.831568+00	youtube_video	5000
+d22b2d60-1e58-4f3d-af4e-e1b867f3276d	65b00a73-b334-4571-8dbf-ace2a42a581f	youtube	live_stream	10000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:46:30.831568+00	2026-06-07 19:46:30.831568+00	youtube_live	10000
+c93caa2a-b063-4109-9855-a30f42adf9fc	1c494a0b-d1c1-4492-968a-b67391d7f271	youtube	short_video	8000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:47:10.819466+00	2026-06-07 19:47:10.819466+00	youtube_short	8000
+a52f328d-4163-44cb-8e91-a9149463eda2	1c494a0b-d1c1-4492-968a-b67391d7f271	youtube	dedicated_video	16500	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:47:10.819466+00	2026-06-07 19:47:10.819466+00	youtube_video	16500
+24b103c7-d35e-4150-9a45-72f32f85a81e	1c494a0b-d1c1-4492-968a-b67391d7f271	youtube	live_stream	41000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:47:10.819466+00	2026-06-07 19:47:10.819466+00	youtube_live	41000
+28626158-786e-4219-ba2a-31057b3257bc	256108ed-3a83-4dfa-8e94-075938f15d08	youtube	short_video	7500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:47:26.551686+00	2026-06-07 19:47:26.551686+00	youtube_short	7500
+6e8b869e-3a94-41f8-9a4f-b0fbb887b8fc	256108ed-3a83-4dfa-8e94-075938f15d08	youtube	dedicated_video	16000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:47:26.551686+00	2026-06-07 19:47:26.551686+00	youtube_video	16000
+a1770cbf-329a-48b3-9e5b-1f019da4c168	256108ed-3a83-4dfa-8e94-075938f15d08	youtube	live_stream	39500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:47:26.551686+00	2026-06-07 19:47:26.551686+00	youtube_live	39500
+4067df07-4372-47f6-9fc7-ea119855b7e4	04de1faa-1765-4a12-99f8-caf903567f21	youtube	short_video	8000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:47:57.15661+00	2026-06-07 19:47:57.15661+00	youtube_short	8000
+b98c915e-3b58-4492-8d91-e62018c2b954	04de1faa-1765-4a12-99f8-caf903567f21	youtube	dedicated_video	16500	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:47:57.15661+00	2026-06-07 19:47:57.15661+00	youtube_video	16500
+351d09cf-c32a-4c96-867e-440641a92a82	04de1faa-1765-4a12-99f8-caf903567f21	youtube	live_stream	40000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:47:57.15661+00	2026-06-07 19:47:57.15661+00	youtube_live	40000
+d22e8966-de26-45a4-ab67-909fa8202f0a	f3721816-01b6-4194-bf8c-c20e10a31fa4	youtube	short_video	8500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:47:58.276914+00	2026-06-07 19:47:58.276914+00	youtube_short	8500
+75ee007e-56a8-4f5c-adea-b2aefb07adfd	f3721816-01b6-4194-bf8c-c20e10a31fa4	youtube	dedicated_video	17000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:47:58.276914+00	2026-06-07 19:47:58.276914+00	youtube_video	17000
+ffba59c1-78ad-46ad-afc0-0953b656bc73	f3721816-01b6-4194-bf8c-c20e10a31fa4	youtube	live_stream	42500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:47:58.276914+00	2026-06-07 19:47:58.276914+00	youtube_live	42500
+069e37c4-79cc-41e5-86b5-7523e900e4d9	3554653a-9f16-4cd3-92fa-1720b5d9f82e	youtube	short_video	7500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:47:59.970508+00	2026-06-07 19:47:59.970508+00	youtube_short	7500
+d7d04ce4-9438-432c-95ee-a1e551cca456	3554653a-9f16-4cd3-92fa-1720b5d9f82e	youtube	dedicated_video	16000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:47:59.970508+00	2026-06-07 19:47:59.970508+00	youtube_video	16000
+993b1fb5-0c88-409f-9bde-858640a1697d	3554653a-9f16-4cd3-92fa-1720b5d9f82e	youtube	live_stream	39000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:47:59.970508+00	2026-06-07 19:47:59.970508+00	youtube_live	39000
+6162f0e9-17ab-40a4-897b-458e9f063cc3	dfd20482-0e61-44f1-bd68-d501e4f20a31	youtube	short_video	8500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:48:31.193713+00	2026-06-07 19:48:31.193713+00	youtube_short	8500
+a9202255-2040-4e61-a207-197865116ede	dfd20482-0e61-44f1-bd68-d501e4f20a31	youtube	dedicated_video	17500	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:48:31.193713+00	2026-06-07 19:48:31.193713+00	youtube_video	17500
+930f4b9c-85aa-4b3e-baef-6dcfebed301d	dfd20482-0e61-44f1-bd68-d501e4f20a31	youtube	live_stream	43500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:48:31.193713+00	2026-06-07 19:48:31.193713+00	youtube_live	43500
+3d4190d3-cfb8-4c8f-ad84-ea29e60a34d9	5d29465d-d338-4193-948d-429d7e88fdbc	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:48:36.615608+00	2026-06-07 19:48:36.615608+00	youtube_short	10000
+34c610b2-c5ad-4a12-9808-79860c13a3fb	5d29465d-d338-4193-948d-429d7e88fdbc	youtube	dedicated_video	20000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:48:36.615608+00	2026-06-07 19:48:36.615608+00	youtube_video	20000
+86eb283d-4932-4232-aa0a-3a440f729f65	5d29465d-d338-4193-948d-429d7e88fdbc	youtube	live_stream	50000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:48:36.615608+00	2026-06-07 19:48:36.615608+00	youtube_live	50000
+272755d6-0000-4f57-a4f2-b5aadc51f8ad	00d0bcc7-6a1c-4812-aa5f-1b9809a0c0bb	youtube	short_video	9000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:48:53.369169+00	2026-06-07 19:48:53.369169+00	youtube_short	9000
+766e72d6-2a05-47ee-aeb2-2215b4273ca6	00d0bcc7-6a1c-4812-aa5f-1b9809a0c0bb	youtube	dedicated_video	18000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:48:53.369169+00	2026-06-07 19:48:53.369169+00	youtube_video	18000
+61f59c1a-33c6-4f00-9ec8-5f51a84e702f	00d0bcc7-6a1c-4812-aa5f-1b9809a0c0bb	youtube	live_stream	45500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:48:53.369169+00	2026-06-07 19:48:53.369169+00	youtube_live	45500
+0040b223-9143-4686-923d-f90823190781	b1d9dc23-3cc2-435d-bfa4-f896f0557f66	youtube	short_video	8500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:48:59.93103+00	2026-06-07 19:48:59.93103+00	youtube_short	8500
+5b5cfcdd-f97b-49f0-a2db-b7a82c4c36a2	b1d9dc23-3cc2-435d-bfa4-f896f0557f66	youtube	dedicated_video	17500	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:48:59.93103+00	2026-06-07 19:48:59.93103+00	youtube_video	17500
+9c84db56-8e84-4e5b-8ca1-2053f95e464e	b1d9dc23-3cc2-435d-bfa4-f896f0557f66	youtube	live_stream	43500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:48:59.93103+00	2026-06-07 19:48:59.93103+00	youtube_live	43500
+6e3e214f-9cca-4f17-a822-8d22b42391c1	f63dc656-0ef8-4c08-baba-436df84a617f	youtube	short_video	1000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:49:05.396445+00	2026-06-07 19:49:05.396445+00	youtube_short	1000
+a4ed6492-43c3-4d69-8f45-c2ea8be37acb	f63dc656-0ef8-4c08-baba-436df84a617f	youtube	dedicated_video	5000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:49:05.396445+00	2026-06-07 19:49:05.396445+00	youtube_video	5000
+fa2123df-49ec-4be1-bd46-6ee7cd92a74f	f63dc656-0ef8-4c08-baba-436df84a617f	youtube	live_stream	10000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:49:05.396445+00	2026-06-07 19:49:05.396445+00	youtube_live	10000
+758d0d77-c47a-450d-ba1a-79f1a31ca880	9b048e95-66d5-4413-a571-28874e9cd3a8	youtube	short_video	1000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:49:11.131401+00	2026-06-07 19:49:11.131401+00	youtube_short	1000
+96ed811e-981e-4fc7-bdf7-cd24728d7033	9b048e95-66d5-4413-a571-28874e9cd3a8	youtube	dedicated_video	5000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:49:11.131401+00	2026-06-07 19:49:11.131401+00	youtube_video	5000
+c3617e74-1f6b-43b0-bccf-645caadc3667	9b048e95-66d5-4413-a571-28874e9cd3a8	youtube	live_stream	10000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:49:11.131401+00	2026-06-07 19:49:11.131401+00	youtube_live	10000
+6946137c-f8cd-4826-ba3a-aafcb9b4ea5d	cbfd8491-a181-4af1-ab9c-fd84549d38f5	youtube	short_video	1000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:49:12.504604+00	2026-06-07 19:49:12.504604+00	youtube_short	1000
+8e1305d0-51ee-4210-bb2e-dbef3de0b2d8	cbfd8491-a181-4af1-ab9c-fd84549d38f5	youtube	dedicated_video	5000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:49:12.504604+00	2026-06-07 19:49:12.504604+00	youtube_video	5000
+2884e8d4-0969-4d2b-be96-908b9d89953a	cbfd8491-a181-4af1-ab9c-fd84549d38f5	youtube	live_stream	10000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:49:12.504604+00	2026-06-07 19:49:12.504604+00	youtube_live	10000
+f0850f11-d5e9-4c78-8702-03953c0f1c21	bf84b6e3-379c-4631-b65f-a94c1171b30f	youtube	short_video	1000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:49:14.762594+00	2026-06-07 19:49:14.762594+00	youtube_short	1000
+fca866dd-7b08-4bf9-8855-50f800856ef7	bf84b6e3-379c-4631-b65f-a94c1171b30f	youtube	dedicated_video	5000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:49:14.762594+00	2026-06-07 19:49:14.762594+00	youtube_video	5000
+0362c96a-3c57-4715-8392-86c8d20e5f33	bf84b6e3-379c-4631-b65f-a94c1171b30f	youtube	live_stream	10000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:49:14.762594+00	2026-06-07 19:49:14.762594+00	youtube_live	10000
+5f16a419-39e1-4283-b9d9-ab2a251114c9	b5bb4312-fb62-49ff-8598-991329403d99	youtube	short_video	7500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:49:18.484553+00	2026-06-07 19:49:18.484553+00	youtube_short	7500
+f23c9cc9-a5ef-4059-9e89-d63bc68c1b38	b5bb4312-fb62-49ff-8598-991329403d99	youtube	dedicated_video	16000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:49:18.484553+00	2026-06-07 19:49:18.484553+00	youtube_video	16000
+256cb294-9ac9-450b-8104-3281fbfbb594	b5bb4312-fb62-49ff-8598-991329403d99	youtube	live_stream	38500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:49:18.484553+00	2026-06-07 19:49:18.484553+00	youtube_live	38500
+b7b6c226-8143-4772-92cf-4413c88e9f40	bb4e9bb0-aac2-4a68-ac59-0633df03fc3e	youtube	short_video	6500	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:49:23.120564+00	2026-06-07 19:49:23.120564+00	youtube_short	6500
+10e46dc7-a440-4fc1-a14a-474ba78eebf7	bb4e9bb0-aac2-4a68-ac59-0633df03fc3e	youtube	dedicated_video	14000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:49:23.120564+00	2026-06-07 19:49:23.120564+00	youtube_video	14000
+7648d637-e0fd-4176-8eac-d1a132c91679	bb4e9bb0-aac2-4a68-ac59-0633df03fc3e	youtube	live_stream	33500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:49:23.120564+00	2026-06-07 19:49:23.120564+00	youtube_live	33500
+911d1bf1-358d-4a8b-9bfa-b9c7d3cd4c57	7e228acf-acea-45e0-935f-90473226a8ad	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:49:55.970107+00	2026-06-07 19:49:55.970107+00	youtube_short	10000
+e8c29bca-b00d-4fa8-867f-98469e9a0970	7e228acf-acea-45e0-935f-90473226a8ad	youtube	dedicated_video	20000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:49:55.970107+00	2026-06-07 19:49:55.970107+00	youtube_video	20000
+f159bffc-6e47-4a77-9877-8a5ac1202e34	7e228acf-acea-45e0-935f-90473226a8ad	youtube	live_stream	49500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:49:55.970107+00	2026-06-07 19:49:55.970107+00	youtube_live	49500
+69b45f23-9e97-4079-8c8a-0ecde63fc12a	9a5569db-64a0-4a1a-a58d-cc5a1a5abd67	youtube	short_video	7000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:50:01.344918+00	2026-06-07 19:50:01.344918+00	youtube_short	7000
+c54ce262-c8e5-4ae5-874b-a45eea17f2d6	9a5569db-64a0-4a1a-a58d-cc5a1a5abd67	youtube	dedicated_video	15000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:50:01.344918+00	2026-06-07 19:50:01.344918+00	youtube_video	15000
+8aacb8c7-73d1-402d-b88c-817be9ed3a12	9a5569db-64a0-4a1a-a58d-cc5a1a5abd67	youtube	live_stream	36500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:50:01.344918+00	2026-06-07 19:50:01.344918+00	youtube_live	36500
+e62fc5bd-0d90-4757-8368-f29186a9d264	a6e4763a-cb89-4031-b637-e93bd82863da	youtube	short_video	8000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:50:07.053742+00	2026-06-07 19:50:07.053742+00	youtube_short	8000
+98be6869-1ff5-4ba0-b1f1-6edc511cb91b	a6e4763a-cb89-4031-b637-e93bd82863da	youtube	dedicated_video	17000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:50:07.053742+00	2026-06-07 19:50:07.053742+00	youtube_video	17000
+7c26d21a-6785-4ef3-b11c-d74d2adf4369	a6e4763a-cb89-4031-b637-e93bd82863da	youtube	live_stream	42000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:50:07.053742+00	2026-06-07 19:50:07.053742+00	youtube_live	42000
+406f42f2-ae11-4f13-9fe5-2be94addb732	a1a9f6c2-63ae-4b1c-a4c1-8ccd98e8e7a0	youtube	short_video	1000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:50:10.474293+00	2026-06-07 19:50:10.474293+00	youtube_short	1000
+8ec2c9c9-d38b-4c84-b36c-23d319d9cee5	a1a9f6c2-63ae-4b1c-a4c1-8ccd98e8e7a0	youtube	dedicated_video	5000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:50:10.474293+00	2026-06-07 19:50:10.474293+00	youtube_video	5000
+c8352851-479b-4c13-8684-a7bfe77f5ee2	a1a9f6c2-63ae-4b1c-a4c1-8ccd98e8e7a0	youtube	live_stream	10000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:50:10.474293+00	2026-06-07 19:50:10.474293+00	youtube_live	10000
+c33faca8-aa4a-469c-b6a2-3697b5da039f	e1b07220-c97e-4673-8939-77921b506fd8	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:50:14.219716+00	2026-06-07 19:50:14.219716+00	youtube_short	10000
+8c9faf50-1fd8-4fb8-84a4-3bcf8ffaaf70	e1b07220-c97e-4673-8939-77921b506fd8	youtube	dedicated_video	20000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:50:14.219716+00	2026-06-07 19:50:14.219716+00	youtube_video	20000
+be5112c0-dd24-44b4-b396-42e5b482fe14	e1b07220-c97e-4673-8939-77921b506fd8	youtube	live_stream	50000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:50:14.219716+00	2026-06-07 19:50:14.219716+00	youtube_live	50000
+329d61c1-5976-4582-b1ea-58ff953d3e1a	54be4fe8-2a6a-4ee3-b50a-73984b4c4107	youtube	short_video	9000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:50:47.959663+00	2026-06-07 19:50:47.959663+00	youtube_short	9000
+90617177-7dcf-490d-8da1-2e2cfd118acd	54be4fe8-2a6a-4ee3-b50a-73984b4c4107	youtube	dedicated_video	18500	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:50:47.959663+00	2026-06-07 19:50:47.959663+00	youtube_video	18500
+d56b5dd8-a9ec-44ed-a773-79b14b7aaf48	54be4fe8-2a6a-4ee3-b50a-73984b4c4107	youtube	live_stream	45500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:50:47.959663+00	2026-06-07 19:50:47.959663+00	youtube_live	45500
+bd32e7e9-7080-41bc-9b93-fb30db255f9b	febc4b03-1599-4de7-baa4-2302d25588f5	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:51:26.757358+00	2026-06-07 19:51:26.757358+00	youtube_short	10000
+30c02069-ae3b-4030-a142-ad5b3121dd34	febc4b03-1599-4de7-baa4-2302d25588f5	youtube	dedicated_video	19500	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:51:26.757358+00	2026-06-07 19:51:26.757358+00	youtube_video	19500
+d2f183a4-0f22-40b8-892b-120dcace16fe	febc4b03-1599-4de7-baa4-2302d25588f5	youtube	live_stream	49000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:51:26.757358+00	2026-06-07 19:51:26.757358+00	youtube_live	49000
+599abbb9-2a84-4133-8583-4528491ba1c3	6c8ba08c-b3b9-4d66-adfe-83ceeeb0c8ed	youtube	short_video	9000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:52:31.068476+00	2026-06-07 19:52:31.068476+00	youtube_short	9000
+1c41a434-e667-4805-b9bf-436038da90b2	6c8ba08c-b3b9-4d66-adfe-83ceeeb0c8ed	youtube	dedicated_video	18500	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:52:31.068476+00	2026-06-07 19:52:31.068476+00	youtube_video	18500
+7d68794b-d499-4327-9835-d6c3e571aeec	6c8ba08c-b3b9-4d66-adfe-83ceeeb0c8ed	youtube	live_stream	46500	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:52:31.068476+00	2026-06-07 19:52:31.068476+00	youtube_live	46500
+a8dd24ed-ffbd-4fa6-92cc-72a20f0576de	fbc0dd5f-da85-49b0-a8c8-4a1b7d4c37f9	youtube	short_video	1000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:52:47.443304+00	2026-06-07 19:52:47.443304+00	youtube_short	1000
+ef49a8a0-6e9b-471f-93e6-3e850e87995a	fbc0dd5f-da85-49b0-a8c8-4a1b7d4c37f9	youtube	dedicated_video	5000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:52:47.443304+00	2026-06-07 19:52:47.443304+00	youtube_video	5000
+4c827e6b-0620-41f1-8d2f-6c45d8484410	fbc0dd5f-da85-49b0-a8c8-4a1b7d4c37f9	youtube	live_stream	10000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:52:47.443304+00	2026-06-07 19:52:47.443304+00	youtube_live	10000
+f74cd16b-760c-4946-a7c2-038e45a9036a	96bf2ef8-0a71-4358-88fb-db2e2f5639ba	youtube	short_video	10000	\N	1 YouTube Shorts	\N	3	t	t	2026-06-07 19:52:51.798181+00	2026-06-07 19:52:51.798181+00	youtube_short	10000
+1b79dd67-df6f-45ba-9d4f-46268484412a	96bf2ef8-0a71-4358-88fb-db2e2f5639ba	youtube	dedicated_video	20000	\N	1 YouTube Video	\N	7	t	t	2026-06-07 19:52:51.798181+00	2026-06-07 19:52:51.798181+00	youtube_video	20000
+3f46915f-2af4-461f-93dd-7d7178cbe8ac	96bf2ef8-0a71-4358-88fb-db2e2f5639ba	youtube	live_stream	50000	\N	1 YouTube Live	\N	5	t	t	2026-06-07 19:52:51.798181+00	2026-06-07 19:52:51.798181+00	youtube_live	50000
+1c589279-dbd6-43a9-8ab2-102dff76b5ad	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	story	5500	\N	1 Instagram Story	\N	2	t	t	2026-06-07 20:25:32.548085+00	2026-06-07 20:25:32.548085+00	instagram_story	5500
+e00cb88b-48bb-4d51-be53-4bb4c234ae2d	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	photo_post	7500	\N	1 Instagram Feed	\N	3	t	t	2026-06-07 20:25:32.548085+00	2026-06-07 20:25:32.548085+00	instagram_feed	7500
+c2bdc41b-8e4d-40a8-a33a-cc786edfafd7	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	short_video	14000	\N	1 Instagram Reel	\N	4	t	t	2026-06-07 20:25:32.548085+00	2026-06-07 20:25:32.548085+00	instagram_reel	14000
+daef4f21-ba63-4de6-989f-9f865032eb59	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	live_stream	47000	\N	1 Instagram Live	\N	5	t	t	2026-06-07 20:25:32.548085+00	2026-06-07 20:25:32.548085+00	instagram_live	47000
+33fc2f9d-e314-420b-b049-f0fd302519e0	dcffd160-6941-45de-9b90-a93c869dc616	instagram	story	5500	\N	1 Instagram Story	\N	2	t	t	2026-06-07 20:27:05.081743+00	2026-06-07 20:27:05.081743+00	instagram_story	5500
+751a7211-4784-48c2-b233-e6958d4e659d	dcffd160-6941-45de-9b90-a93c869dc616	instagram	photo_post	7000	\N	1 Instagram Feed	\N	3	t	t	2026-06-07 20:27:05.081743+00	2026-06-07 20:27:05.081743+00	instagram_feed	7000
+e2cd5f9d-9857-4d52-a688-6d562d09026a	dcffd160-6941-45de-9b90-a93c869dc616	instagram	short_video	13500	\N	1 Instagram Reel	\N	4	t	t	2026-06-07 20:27:05.081743+00	2026-06-07 20:27:05.081743+00	instagram_reel	13500
+f57f3c0a-19dd-4f1d-ac9c-a5fb1b92b022	dcffd160-6941-45de-9b90-a93c869dc616	instagram	live_stream	45000	\N	1 Instagram Live	\N	5	t	t	2026-06-07 20:27:05.081743+00	2026-06-07 20:27:05.081743+00	instagram_live	45000
+44f54c32-ccb1-4c8c-a904-1e9e5a4cc85f	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	story	5500	\N	1 Instagram Story	\N	2	t	t	2026-06-07 20:27:47.497012+00	2026-06-07 20:27:47.497012+00	instagram_story	5500
+610545f1-84d3-4e95-ba59-59787a23e422	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	photo_post	7000	\N	1 Instagram Feed	\N	3	t	t	2026-06-07 20:27:47.497012+00	2026-06-07 20:27:47.497012+00	instagram_feed	7000
+3938579c-604f-44d8-8679-3ab127138e4a	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	short_video	13000	\N	1 Instagram Reel	\N	4	t	t	2026-06-07 20:27:47.497012+00	2026-06-07 20:27:47.497012+00	instagram_reel	13000
+98c440e2-ec18-463d-a975-f0f9d483417e	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	live_stream	44500	\N	1 Instagram Live	\N	5	t	t	2026-06-07 20:27:47.497012+00	2026-06-07 20:27:47.497012+00	instagram_live	44500
+983646bb-de2e-4d06-8b82-0e604e632904	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	story	5500	\N	1 Instagram Story	\N	2	t	t	2026-06-07 20:28:07.914847+00	2026-06-07 20:28:07.914847+00	instagram_story	5500
+fb25b1ee-c2dd-4cb9-a135-f33308ed1430	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	photo_post	7000	\N	1 Instagram Feed	\N	3	t	t	2026-06-07 20:28:07.914847+00	2026-06-07 20:28:07.914847+00	instagram_feed	7000
+2939a169-b87e-4bf5-b3f8-9f889dfa7f72	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	short_video	13000	\N	1 Instagram Reel	\N	4	t	t	2026-06-07 20:28:07.914847+00	2026-06-07 20:28:07.914847+00	instagram_reel	13000
+b8a77d19-7eae-46f1-9e78-0515d509a8a1	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	live_stream	44000	\N	1 Instagram Live	\N	5	t	t	2026-06-07 20:28:07.914847+00	2026-06-07 20:28:07.914847+00	instagram_live	44000
+7499b04e-7979-47a9-81d6-beafaec71f5a	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	story	5000	\N	1 Instagram Story	\N	2	t	t	2026-06-07 20:28:36.501125+00	2026-06-07 20:28:36.501125+00	instagram_story	5000
+d853f36c-7a31-485e-9e4b-db6119ef0b7c	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	photo_post	7000	\N	1 Instagram Feed	\N	3	t	t	2026-06-07 20:28:36.501125+00	2026-06-07 20:28:36.501125+00	instagram_feed	7000
+1b417cbc-a991-40b0-998a-5b39cc492162	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	short_video	13000	\N	1 Instagram Reel	\N	4	t	t	2026-06-07 20:28:36.501125+00	2026-06-07 20:28:36.501125+00	instagram_reel	13000
+b3ec6925-f500-4c8e-a85e-1adcf8a60c25	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	live_stream	43000	\N	1 Instagram Live	\N	5	t	t	2026-06-07 20:28:36.501125+00	2026-06-07 20:28:36.501125+00	instagram_live	43000
+717ac91e-006e-47f7-a3b8-04fde8ffec5a	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	story	5000	\N	1 Instagram Story	\N	2	t	t	2026-06-07 20:28:54.858262+00	2026-06-07 20:28:54.858262+00	instagram_story	5000
+8c814ae0-9596-4b76-b20c-d19e8ee52579	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	photo_post	6500	\N	1 Instagram Feed	\N	3	t	t	2026-06-07 20:28:54.858262+00	2026-06-07 20:28:54.858262+00	instagram_feed	6500
+e1910146-cee5-4d96-8462-34d8dc4e4da6	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	short_video	12500	\N	1 Instagram Reel	\N	4	t	t	2026-06-07 20:28:54.858262+00	2026-06-07 20:28:54.858262+00	instagram_reel	12500
+b20c1282-0e4e-4f93-8faf-3f160b3f50ec	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	live_stream	41500	\N	1 Instagram Live	\N	5	t	t	2026-06-07 20:28:54.858262+00	2026-06-07 20:28:54.858262+00	instagram_live	41500
+0998b723-afa7-4499-aabc-b6c10f9e4b73	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	story	5000	\N	1 Instagram Story	\N	2	t	t	2026-06-07 20:30:05.599271+00	2026-06-07 20:30:05.599271+00	instagram_story	5000
+7440166f-41af-41e0-9d28-c4d164f07648	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	photo_post	6500	\N	1 Instagram Feed	\N	3	t	t	2026-06-07 20:30:05.599271+00	2026-06-07 20:30:05.599271+00	instagram_feed	6500
+d5ec8090-44b8-48ee-9efb-8490b3cb6782	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	short_video	12000	\N	1 Instagram Reel	\N	4	t	t	2026-06-07 20:30:05.599271+00	2026-06-07 20:30:05.599271+00	instagram_reel	12000
+b300939f-8b9a-46db-b8c2-2952b459bc48	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	live_stream	41500	\N	1 Instagram Live	\N	5	t	t	2026-06-07 20:30:05.599271+00	2026-06-07 20:30:05.599271+00	instagram_live	41500
+3b53f73b-e868-463a-aed1-a8a6f9963e06	9dc3097f-caba-4e35-afa2-f473d9ac0337	instagram	story	5000	\N	1 Instagram Story	\N	2	t	t	2026-06-07 20:30:36.25088+00	2026-06-07 20:30:36.25088+00	instagram_story	5000
+35a21683-25df-45f5-8653-5de0ad374957	9dc3097f-caba-4e35-afa2-f473d9ac0337	instagram	photo_post	6500	\N	1 Instagram Feed	\N	3	t	t	2026-06-07 20:30:36.25088+00	2026-06-07 20:30:36.25088+00	instagram_feed	6500
+cc56df98-4174-4738-b0ae-8400fefe2b19	9dc3097f-caba-4e35-afa2-f473d9ac0337	instagram	short_video	12000	\N	1 Instagram Reel	\N	4	t	t	2026-06-07 20:30:36.25088+00	2026-06-07 20:30:36.25088+00	instagram_reel	12000
+d585ea19-75c5-481d-ada3-2a19a06cc5d5	9dc3097f-caba-4e35-afa2-f473d9ac0337	instagram	live_stream	40500	\N	1 Instagram Live	\N	5	t	t	2026-06-07 20:30:36.25088+00	2026-06-07 20:30:36.25088+00	instagram_live	40500
+1843da49-8eaf-4da2-8a27-b30b8e2f9182	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	story	5000	\N	1 Instagram Story	\N	2	t	t	2026-06-07 20:31:02.485081+00	2026-06-07 20:31:02.485081+00	instagram_story	5000
+8f8025e8-741f-4b3c-8269-a24e8f9e8399	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	photo_post	6500	\N	1 Instagram Feed	\N	3	t	t	2026-06-07 20:31:02.485081+00	2026-06-07 20:31:02.485081+00	instagram_feed	6500
+da637eac-cc10-48b5-be78-3c4ae0f109cb	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	short_video	12000	\N	1 Instagram Reel	\N	4	t	t	2026-06-07 20:31:02.485081+00	2026-06-07 20:31:02.485081+00	instagram_reel	12000
+5184258f-c66a-44d1-a7f8-701ebbf46e82	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	live_stream	41500	\N	1 Instagram Live	\N	5	t	t	2026-06-07 20:31:02.485081+00	2026-06-07 20:31:02.485081+00	instagram_live	41500
+6d099183-b112-41cc-a680-237f26b6b54d	766ada28-1457-4625-8437-9a96fa614d65	instagram	story	4500	\N	1 Instagram Story	\N	2	t	t	2026-06-07 20:31:27.216287+00	2026-06-07 20:31:27.216287+00	instagram_story	4500
+b080f54a-5c74-492f-bb65-bf1bd7e28a38	766ada28-1457-4625-8437-9a96fa614d65	instagram	photo_post	6000	\N	1 Instagram Feed	\N	3	t	t	2026-06-07 20:31:27.216287+00	2026-06-07 20:31:27.216287+00	instagram_feed	6000
+fba2d770-a082-4a58-87fe-364154758ba5	766ada28-1457-4625-8437-9a96fa614d65	instagram	short_video	11000	\N	1 Instagram Reel	\N	4	t	t	2026-06-07 20:31:27.216287+00	2026-06-07 20:31:27.216287+00	instagram_reel	11000
+a6ff3d72-c712-421a-a665-d225e109b6b9	766ada28-1457-4625-8437-9a96fa614d65	instagram	live_stream	38500	\N	1 Instagram Live	\N	5	t	t	2026-06-07 20:31:27.216287+00	2026-06-07 20:31:27.216287+00	instagram_live	38500
+f932d487-971f-4a80-bf97-c71702939eeb	668d8f17-a74e-4200-80a2-668ad6ae2817	tiktok	story	5500	\N	1 TikTok Story	\N	2	t	t	2026-06-07 20:31:28.278762+00	2026-06-07 20:31:28.278762+00	tiktok_story	5500
+b0d6e875-2272-4035-96d8-467e2df389b7	668d8f17-a74e-4200-80a2-668ad6ae2817	tiktok	short_video	13000	\N	1 TikTok Video	\N	4	t	t	2026-06-07 20:31:28.278762+00	2026-06-07 20:31:28.278762+00	tiktok_video	13000
+5a99bfa7-7ae0-4e21-beb2-78720b09e264	668d8f17-a74e-4200-80a2-668ad6ae2817	tiktok	live_stream	46000	\N	1 TikTok Live	\N	5	t	t	2026-06-07 20:31:28.278762+00	2026-06-07 20:31:28.278762+00	tiktok_live	46000
+a0ec75ac-b658-405b-83b8-dd947091bd2b	69328474-b706-4cb0-b7c3-6996d4a95946	tiktok	story	1000	\N	1 TikTok Story	\N	2	t	t	2026-06-07 20:31:47.897584+00	2026-06-07 20:31:47.897584+00	tiktok_story	1000
+c66d34ce-e4c9-458e-80b0-01985b886793	69328474-b706-4cb0-b7c3-6996d4a95946	tiktok	short_video	2000	\N	1 TikTok Video	\N	4	t	t	2026-06-07 20:31:47.897584+00	2026-06-07 20:31:47.897584+00	tiktok_video	2000
+9e67eeff-c534-437d-88e9-8b18cfdc5520	69328474-b706-4cb0-b7c3-6996d4a95946	tiktok	live_stream	10000	\N	1 TikTok Live	\N	5	t	t	2026-06-07 20:31:47.897584+00	2026-06-07 20:31:47.897584+00	tiktok_live	10000
+43714bc5-8a39-4c5b-b25c-b91e0e3398f8	2ffc3a98-89a2-40a2-ad1e-26f5ae391c1a	tiktok	story	5500	\N	1 TikTok Story	\N	2	t	t	2026-06-07 20:32:14.091701+00	2026-06-07 20:32:14.091701+00	tiktok_story	5500
+eb3dfdef-7932-4197-97ec-57e510ea0087	2ffc3a98-89a2-40a2-ad1e-26f5ae391c1a	tiktok	short_video	12500	\N	1 TikTok Video	\N	4	t	t	2026-06-07 20:32:14.091701+00	2026-06-07 20:32:14.091701+00	tiktok_video	12500
+1f0012bb-962e-4900-ab87-2705f0a506f9	2ffc3a98-89a2-40a2-ad1e-26f5ae391c1a	tiktok	live_stream	45500	\N	1 TikTok Live	\N	5	t	t	2026-06-07 20:32:14.091701+00	2026-06-07 20:32:14.091701+00	tiktok_live	45500
+5f7d52c1-4c55-4e94-84ef-6298a35a321b	9adfcea6-cb9a-4c50-af83-656afe19e890	tiktok	story	5000	\N	1 TikTok Story	\N	2	t	t	2026-06-07 20:32:55.714901+00	2026-06-07 20:32:55.714901+00	tiktok_story	5000
+22ed1e40-09fd-47e7-ac64-7821d970b823	9adfcea6-cb9a-4c50-af83-656afe19e890	tiktok	short_video	11000	\N	1 TikTok Video	\N	4	t	t	2026-06-07 20:32:55.714901+00	2026-06-07 20:32:55.714901+00	tiktok_video	11000
+413c78ab-37fd-4952-9b53-e213c986fee0	9adfcea6-cb9a-4c50-af83-656afe19e890	tiktok	live_stream	40500	\N	1 TikTok Live	\N	5	t	t	2026-06-07 20:32:55.714901+00	2026-06-07 20:32:55.714901+00	tiktok_live	40500
+b83f8ad5-92fd-4b82-a032-727bbed7b5a7	361323ff-e0a5-4bf7-a0e1-eeeb381b1b14	tiktok	story	1000	\N	1 TikTok Story	\N	2	t	t	2026-06-07 20:33:04.581566+00	2026-06-07 20:33:04.581566+00	tiktok_story	1000
+7252eb09-1a40-4a6a-8fb4-27e82606982b	361323ff-e0a5-4bf7-a0e1-eeeb381b1b14	tiktok	short_video	2000	\N	1 TikTok Video	\N	4	t	t	2026-06-07 20:33:04.581566+00	2026-06-07 20:33:04.581566+00	tiktok_video	2000
+6194917b-faa2-4c49-a48a-5f28935f04e2	361323ff-e0a5-4bf7-a0e1-eeeb381b1b14	tiktok	live_stream	10000	\N	1 TikTok Live	\N	5	t	t	2026-06-07 20:33:04.581566+00	2026-06-07 20:33:04.581566+00	tiktok_live	10000
+43a1d6f7-3bc8-4267-ab03-6ccac0e166a4	8724cd98-6837-4fb0-85f8-ad0adff0ae6a	tiktok	story	4500	\N	1 TikTok Story	\N	2	t	t	2026-06-07 20:33:13.973677+00	2026-06-07 20:33:13.973677+00	tiktok_story	4500
+fcdcbdac-feed-4efa-a9e1-834673f746f0	8724cd98-6837-4fb0-85f8-ad0adff0ae6a	tiktok	short_video	10500	\N	1 TikTok Video	\N	4	t	t	2026-06-07 20:33:13.973677+00	2026-06-07 20:33:13.973677+00	tiktok_video	10500
+ff0b8d06-4a6e-4179-800d-1cf8f8ff131b	8724cd98-6837-4fb0-85f8-ad0adff0ae6a	tiktok	live_stream	37500	\N	1 TikTok Live	\N	5	t	t	2026-06-07 20:33:13.973677+00	2026-06-07 20:33:13.973677+00	tiktok_live	37500
+b7b17913-c76b-49f4-8f9b-d7cf3a8b6ac6	c3708c3c-41d5-4e93-a297-8112133b2cda	tiktok	story	5000	\N	1 TikTok Story	\N	2	t	t	2026-06-07 20:33:59.303941+00	2026-06-07 20:33:59.303941+00	tiktok_story	5000
+42cf83cc-5617-46bb-a194-9fad445bf909	c3708c3c-41d5-4e93-a297-8112133b2cda	tiktok	short_video	11500	\N	1 TikTok Video	\N	4	t	t	2026-06-07 20:33:59.303941+00	2026-06-07 20:33:59.303941+00	tiktok_video	11500
+7e3b65cf-c4ed-41e1-977c-81beb1509ce9	c3708c3c-41d5-4e93-a297-8112133b2cda	tiktok	live_stream	41500	\N	1 TikTok Live	\N	5	t	t	2026-06-07 20:33:59.303941+00	2026-06-07 20:33:59.303941+00	tiktok_live	41500
+1960f16b-6a33-4726-9e4b-8b0e00afd31d	5e41b0f3-ce73-4601-9508-34aafcd45039	tiktok	story	1000	\N	1 TikTok Story	\N	2	t	t	2026-06-07 20:34:07.3816+00	2026-06-07 20:34:07.3816+00	tiktok_story	1000
+73074dcc-0369-442f-ac56-29abefe4798d	5e41b0f3-ce73-4601-9508-34aafcd45039	tiktok	short_video	2000	\N	1 TikTok Video	\N	4	t	t	2026-06-07 20:34:07.3816+00	2026-06-07 20:34:07.3816+00	tiktok_video	2000
+8fc18306-f3ee-46a6-bb6c-cd5ce75deab8	5e41b0f3-ce73-4601-9508-34aafcd45039	tiktok	live_stream	10000	\N	1 TikTok Live	\N	5	t	t	2026-06-07 20:34:07.3816+00	2026-06-07 20:34:07.3816+00	tiktok_live	10000
+75fc8302-f534-4529-b3e1-0206927722d3	85bb9525-c119-40ad-a32c-33efab808e63	tiktok	story	1000	\N	1 TikTok Story	\N	2	t	t	2026-06-07 20:34:12.776364+00	2026-06-07 20:34:12.776364+00	tiktok_story	1000
+6fc49336-d708-4e32-bf71-7c1f68e2608b	85bb9525-c119-40ad-a32c-33efab808e63	tiktok	short_video	2000	\N	1 TikTok Video	\N	4	t	t	2026-06-07 20:34:12.776364+00	2026-06-07 20:34:12.776364+00	tiktok_video	2000
+08c172bf-d314-4893-bce4-00f8dd26734e	85bb9525-c119-40ad-a32c-33efab808e63	tiktok	live_stream	10000	\N	1 TikTok Live	\N	5	t	t	2026-06-07 20:34:12.776364+00	2026-06-07 20:34:12.776364+00	tiktok_live	10000
+bde42820-02dc-4550-b67a-0cb08ac5a17e	a3d360a0-922f-4c06-8104-6c1af88ef38d	tiktok	story	4500	\N	1 TikTok Story	\N	2	t	t	2026-06-07 20:34:31.864588+00	2026-06-07 20:34:31.864588+00	tiktok_story	4500
+185e1d6b-06e7-4c70-ba29-7fc5ba747b98	a3d360a0-922f-4c06-8104-6c1af88ef38d	tiktok	short_video	10000	\N	1 TikTok Video	\N	4	t	t	2026-06-07 20:34:31.864588+00	2026-06-07 20:34:31.864588+00	tiktok_video	10000
+ba1cfb5c-3d00-4829-a28f-9e0c78f7fc07	a3d360a0-922f-4c06-8104-6c1af88ef38d	tiktok	live_stream	37500	\N	1 TikTok Live	\N	5	t	t	2026-06-07 20:34:31.864588+00	2026-06-07 20:34:31.864588+00	tiktok_live	37500
+\.
+
+
+--
+-- Data for Name: creator_social_profiles; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.creator_social_profiles (id, creator_id, platform, handle, profile_url, platform_user_id, display_name_on_platform, follower_count, following_count, avg_views_per_post, avg_likes_per_post, avg_comments_per_post, avg_shares_per_post, engagement_rate, posts_per_month, is_primary_platform, account_created_year, is_monetized, has_verified_badge, audience_country_primary, audience_city_primary, audience_age_range_min, audience_age_range_max, audience_gender_majority, audience_gender_pct, content_languages, notes, stats_reported_at, stats_reported_for_period, created_at, updated_at, is_api_verified, api_verified_at, api_channel_id, data_source) FROM stdin;
+f2222b55-79fc-413c-ab4c-36bd76357eb5	5dafde33-3117-4f0b-9ecd-b958462aa368	youtube	@ssfoodchallenge	https://www.youtube.com/channel/UCx1prWrMNDAInA97EU2QUEg	UCx1prWrMNDAInA97EU2QUEg	SS FOOD CHALLENGE	14000000	\N	160650	2255	7	\N	0.0141	90.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	SS Food Challenge is a unique show that brings fun village games together with real social impact. Through inventive village game shows, we have created a movement that unites people, spreads joy, and empowers lives. \n\nFounded by Md. Omar Sunny Somrat, a visionary creator who believes content can do more than entertain — it can employ, empower, and elevate communities. Today, over 40 full-time team members work behind the scenes, and more than 120 individuals benefit financially every month through the SS Food Challenge ecosystem — from participants and crew to local vendors and collaborators.\n\nOur impact has gone far beyond borders, earning us YouTube’s Diamond Play Button — a milestone achieved by only a handful of Bangladeshi creators.\n\n📩 Email: oss@ssfoodchallenge.com\n📍 Location: Faridpur Upazila, Pabna District, Rajshahi Division, Bangladesh\n	2026-06-07 19:38:56.879004+00	recent 6 uploads	2026-06-07 19:38:54.551262+00	2026-06-07 19:38:54.551262+00	t	2026-06-07 19:38:56.879004+00	UCx1prWrMNDAInA97EU2QUEg	verified
+0a16e12f-21ff-455c-b7e1-a3850b095ad4	07091792-bad6-4f26-bd94-7e0a2e3ea351	youtube	@ssfoodchallengejunior	https://www.youtube.com/channel/UCSIjsnIwZ3ywzahm_2xYEMw	UCSIjsnIwZ3ywzahm_2xYEMw	Fun Games For Kids	5	\N	34	0	0	\N	0.0098	45.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}		2026-06-07 19:38:58.865576+00	recent 6 uploads	2026-06-07 19:38:58.045159+00	2026-06-07 19:38:58.045159+00	t	2026-06-07 19:38:58.865576+00	UCSIjsnIwZ3ywzahm_2xYEMw	verified
+68ab0e2a-9743-4cdc-ac4b-eda02f04ce84	9c00c3ef-3454-4fbc-8cf0-f578cf0ea468	youtube	@nobabicouple	https://www.youtube.com/channel/UC1s39STnxpFtzgdFiGxfzGQ	UC1s39STnxpFtzgdFiGxfzGQ	SK SABIR ali	9	\N	17	2	1	\N	0.1765	\N	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Hi ❤️\n	2026-06-07 19:39:00.20891+00	recent 1 uploads	2026-06-07 19:38:59.888318+00	2026-06-07 19:38:59.888318+00	t	2026-06-07 19:39:00.20891+00	UC1s39STnxpFtzgdFiGxfzGQ	verified
+a132f7b8-de41-4cc0-87c6-9c6b25265e38	72b690f1-2102-4740-8ca6-ee710cfd89bf	youtube	@wazihasvlog	https://www.youtube.com/channel/UCw8hZJ5JqC6lWxhmzD2MLdA	UCw8hZJ5JqC6lWxhmzD2MLdA	Waziha's Vlog	4	\N	15	\N	\N	\N	0.0000	\N	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Assalamu Alaikum, we are Bangladesh family, we love blogging our daily lives to keep a record and to share with all off you!! Subscriber and follow us as we continue to do all short of fun together,,""	2026-06-07 19:39:01.466542+00	recent 1 uploads	2026-06-07 19:39:01.221656+00	2026-06-07 19:39:01.221656+00	t	2026-06-07 19:39:01.466542+00	UCw8hZJ5JqC6lWxhmzD2MLdA	verified
+cff9d29b-d712-4a75-af53-d2a27bb2a2b2	fdbdf485-e255-4085-9277-8190e0022811	youtube	@doyelagro	https://www.youtube.com/channel/UC1PCAYsFbB4ibyxrPlVpl7w	UC1PCAYsFbB4ibyxrPlVpl7w	Doyel Agro	1970000	\N	265005	7101	231	\N	0.0277	45.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	আমি একজন কম্পিউটার ইঞ্জিনিয়ার। বিভিন্ন ইউটিউব ভিডিও দেখে আমি চাকরি বাদ দিয়ে খামার শুরু করছি । বেশির ভাগ ভিডিওতে দেখানো হয় কৃষিকাজ আর খামার করে মাসে লাখ লাখ টাকা ইনকাম করছে। আসলে লাভ হয় না লস হয় তার বাস্তব চিত্র জানতে পারবেন আমার থেকে। আমার এই খামারের ভিডিও দেখতে আমার সাথে থাকুন। ধন্যবাদ।\n\nI'm a software engineer but love to grow my own food.	2026-06-07 19:39:03.441434+00	recent 6 uploads	2026-06-07 19:39:02.695081+00	2026-06-07 19:39:02.695081+00	t	2026-06-07 19:39:03.441434+00	UC1PCAYsFbB4ibyxrPlVpl7w	verified
+2020e29d-453c-4b22-9ab5-4de3565a0737	42e12f8f-04fd-42cd-86e5-5ffbbe47c281	youtube	@aroundmebd	https://www.youtube.com/channel/UCLIqvQVLL1NnfkdDQDebmqw	UCLIqvQVLL1NnfkdDQDebmqw	AroundMeBD	4600000	\N	10913	149	2	\N	0.0139	90.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	AroundMeBD loves doing charity work. We cook a variety of delicious food together with the people of our village after that we had a lot of fun eating together. Besides AroundMeBD love cooking dishes in an unique way that you can understand by watching this channel's video.\n\nAroundMeBD also do different things for the village children.\nIn our village we make some fun toys to further develop their childhood which can also remind you of your childhood memories.\n\nAroundMeBD have also helped the people of the village in their sickness and also helped some people to build their houses. \n\nAroundMeBD basically want to highlight the culture of Bangladesh and some primitive works in front of people all over the world.\n\nPlease like our FB Page: https://www.facebook.com/AroundMeBD \nVisit Our Channel : http://youtube.com/AroundMeBD \nFollow Reddit Account : https://www.reddit.com/user/AroundMeBD\nwebsite: www.aroundmebd.com	2026-06-07 19:39:11.727583+00	recent 6 uploads	2026-06-07 19:39:06.107089+00	2026-06-07 19:39:06.107089+00	t	2026-06-07 19:39:11.727583+00	UCLIqvQVLL1NnfkdDQDebmqw	verified
+a728a7af-52ac-48ae-8fa2-4a27ef06893a	51cdbea5-c7d2-49fe-87ba-db598d4ecac5	youtube	@extremelaunchlover	https://www.youtube.com/channel/UCMU_g6yWnQAf5JtnbmEgeiA	UCMU_g6yWnQAf5JtnbmEgeiA	Extreme Launch Lover	802000	\N	12815	404	4	\N	0.0319	180.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Home of launch enthusiasts and a place of updated & exclusive videos, news, informations & reviews of river transports from the whole of Bangladesh.\n\nEnjoy all passengers ship video in Bangladesh.You can get latest passengers ship video update from us.\n\nIf you have any question about launch time schedule or phone number and any information so please contact with us via-\n\n🅾Facebook Page-Extreme Launch Lover\n\n⭕Facebook Group-Extreme Launch Lover\n\n⭕Email:Extremelaunchlover@gmail.com	2026-06-07 19:39:17.910738+00	recent 6 uploads	2026-06-07 19:39:13.604253+00	2026-06-07 19:39:13.604253+00	t	2026-06-07 19:39:17.910738+00	UCMU_g6yWnQAf5JtnbmEgeiA	verified
+75e4dd43-1d9a-465e-8fc8-e58d0bfc847a	70be3112-3530-4fbd-8ee3-a88acd20ccb9	youtube	@tonniartcraft	https://www.youtube.com/channel/UC2vnvOOE7P5It8dLtliEknw	UC2vnvOOE7P5It8dLtliEknw	Tonni art & craft	3	\N	42	4	2	\N	0.1412	60.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}		2026-06-07 19:39:20.220173+00	recent 2 uploads	2026-06-07 19:39:18.892221+00	2026-06-07 19:39:18.892221+00	t	2026-06-07 19:39:20.220173+00	UC2vnvOOE7P5It8dLtliEknw	verified
+8e153289-0e29-499c-b382-6e5cce43bae6	8127f14d-7fc7-4e47-a3ce-195d54f2f41f	youtube	@farjanadrawingacademy	https://www.youtube.com/channel/UCd3s7BuoOlu4bRJL6RdGWXw	UCd3s7BuoOlu4bRJL6RdGWXw	Farjana Drawing Academy	15600000	\N	50726	842	46	\N	0.0175	36.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Good News!! I’ve recently started an online stationery shop. (Iris Store) Link - https://iris.sellbd.shop\nFacebook page link- https://www.facebook.com/irisonlinestore   \n\nAesthetic stationery and Arts supplies are found in this store. Currently the product shipment system of this shop is available only in Bangladesh.\n\nAbout me:\nIf you're new, hi, my name's Farjana! \nOn this channel I always try to show the easiest way of drawing and Painting. From here you can improve your drawing skills. Hope you enjoy my videos and find them helpful!!\n\nI started uploading drawing video from  Jan-20, 2017    and I have been getting a lot of love❤️ and support 😍\n\nIf you like my videos, Don't forget to subscribe and hit the bell.\n\nYou can also follow me on Instagram and Facebook page\n\n Instagram Link - https://www.instagram.com/farjana_drawing_academy_/\n\nFacebook page Link -  https://www.facebook.com/profile.php?id=100092408100405\nThank you	2026-06-07 19:39:27.529007+00	recent 6 uploads	2026-06-07 19:39:21.162682+00	2026-06-07 19:39:21.162682+00	t	2026-06-07 19:39:27.529007+00	UCd3s7BuoOlu4bRJL6RdGWXw	verified
+3d84c6a0-4417-4a8e-bd8e-3ca6df4584bd	ae9568ff-7a6a-47a8-ac4f-91ec762ef9a3	youtube	@muktaartcraft	https://www.youtube.com/channel/UCIgx6uwERW_H7n8_dJEM8LA	UCIgx6uwERW_H7n8_dJEM8LA	ART and CRAFT	8	\N	12	0	0	\N	0.0556	36.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Welcome to Art & Craft, your go-to destination for all things creative! Dive into a world of imagination and inspiration as we explore various art forms, DIY projects, crafting tutorials, and more. Whether you're a seasoned artist or just starting your creative journey, our channel offers something for everyone. Join us as we unleash our creativity, share handy tips, and embark on exciting crafting adventures. Subscribe now and let's craft something extraordinary together!\n\n#tonniartandcraftstickers, #muktaartandcraft, #artandcraftwithpaper, @Tonniartandcraft, @kakimayhall, @xoxomoppu, @crafteraditi,\n#shorts #diy #art #craft #gift\nhow to make a paper doll house tonni art and craft, how to make easy paper snake for kids fast and easy | paper craft easy | art enhance, how to make craft tonni art and craft,\n\n@artandcraft252,\nart and craft,\nDIY projects,\ncrafting tutorials,\ncreative inspiration,\nhandmade crafts,\t\npainting techniques,\t\ncrafting ideas,\nart tutorials, #artus   \n	2026-06-07 19:39:42.202668+00	recent 6 uploads	2026-06-07 19:39:28.529631+00	2026-06-07 19:39:28.529631+00	t	2026-06-07 19:39:42.202668+00	UCIgx6uwERW_H7n8_dJEM8LA	verified
+3d7bb084-84d6-4059-845c-86ff8bdf894c	440f955d-039d-4db5-8590-35e0a837918c	youtube	@araseasyart	https://www.youtube.com/channel/UCK22ekFS3TCWmz-N4evSBow	UCK22ekFS3TCWmz-N4evSBow	Ara's Easy Art	2100000	\N	171833	\N	\N	\N	0.0000	25.7	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	ASSALAMU WALAIKUM, Everyone! \n\n🌸Welcome To Ara's Easy Art 🎨 - The Fun, Easy Drawing, Educational World of Art, DIY and Origami Ideas 💫 For all Ages!\n\nSubscribe Today, and Let's Draw, Create and Imagine Together with Ara's Easy Art!✨\n\nFor Contact ✉️ 👉\naras.easy.art@gmail.com	2026-06-07 19:39:55.626701+00	recent 6 uploads	2026-06-07 19:39:43.215011+00	2026-06-07 19:39:43.215011+00	t	2026-06-07 19:39:55.626701+00	UCK22ekFS3TCWmz-N4evSBow	verified
+e5b87626-3f95-4904-894e-ddd52f905906	673d48a6-bf94-4d7a-a1f2-851357978fb0	youtube	@selaitutorial	https://www.youtube.com/channel/UCPbYb5PIZeeA4vL60GWzLSQ	UCPbYb5PIZeeA4vL60GWzLSQ	Selai tutorial	2000000	\N	22068	230	1	\N	0.0105	180.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Welcome to Selai Tutorial channel.\nThis channel will offer you of how to sew, how to cut clothes, how to make clothes and get success.\n\nপোশাক মানুষের সৌন্দর্য বাড়ায়,\nআর আমরা পোশাকের সৌন্দর্য বাড়াই!\n\n\nyunuskh500@gmail.com\n\n	2026-06-07 19:40:00.236709+00	recent 6 uploads	2026-06-07 19:39:56.968481+00	2026-06-07 19:39:56.968481+00	t	2026-06-07 19:40:00.236709+00	UCPbYb5PIZeeA4vL60GWzLSQ	verified
+961e386b-83e3-4135-99f0-49d61683b91f	0e8a07c1-ff6d-4394-859f-151f39779107	youtube	@craftbamboo	https://www.youtube.com/channel/UCN1E4_kfYLPGZwNt0bIvuGA	UCN1E4_kfYLPGZwNt0bIvuGA	Bamboo / Shorts	4350000	\N	23545	207	2	\N	0.0089	7.8	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Hello👋 Bamboo Lovers💕\n\nbusiness email: mehedimoderator@gmail.com\n	2026-06-07 19:40:04.685352+00	recent 6 uploads	2026-06-07 19:40:01.378559+00	2026-06-07 19:40:01.378559+00	t	2026-06-07 19:40:04.685352+00	UCN1E4_kfYLPGZwNt0bIvuGA	verified
+9f1fe212-84cb-45aa-ac53-b2eadf583135	6ab37117-0165-49c7-b569-9f2d5b16d0be	youtube	@crazybanglatips	https://www.youtube.com/channel/UCL3veMrRAZW0WX7YwoMKx1Q	UCL3veMrRAZW0WX7YwoMKx1Q	Crazy Bangla Tips	2160000	\N	173448	2137	78	\N	0.0128	0.1	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Hello Guys Welcome To My Channel\nI Am Upload Lifestyle Video Every Week \n	2026-06-07 19:40:28.396114+00	recent 6 uploads	2026-06-07 19:40:05.909454+00	2026-06-07 19:40:05.909454+00	t	2026-06-07 19:40:28.396114+00	UCL3veMrRAZW0WX7YwoMKx1Q	verified
+a04000bc-5f41-4abf-b776-043593e36a68	20ac3692-ee06-4bf2-9c60-554a5b131486	youtube	@pcbuilderbangladesh	https://www.youtube.com/channel/UCBqI6HQbOYCkqWeB3PJpXnQ	UCBqI6HQbOYCkqWeB3PJpXnQ	PC Builder Bangladesh	781000	\N	33403	967	111	\N	0.0323	180.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	PC Builder Bangladesh is the first video based technology  podcast in Bangladesh.\n\nWe create video regarding gaming, tech news, tutorials and pc builds. You can learn about gaming, gaming pc, pc building tutorials and other pc issues. Apart from these we also unbox and review pc components and other tech gadgets. You can join local and international tech gossips as well. \n\nSubscribe and join us over youtube. We are also available on other social handles, feel free to communicate us over those as well. We are tech enthusiasts like you, please help us grow.\n\nWe would love to unbox and review your products.\nFeel free to mail us at the following address.	2026-06-07 19:40:36.525479+00	recent 6 uploads	2026-06-07 19:40:30.101002+00	2026-06-07 19:40:30.101002+00	t	2026-06-07 19:40:36.525479+00	UCBqI6HQbOYCkqWeB3PJpXnQ	verified
+2f581e8f-0a16-4e58-b4f1-514f36306191	7db49e06-546f-47e2-90bb-040f77ae36c2	youtube	@atcandroidtotocompany	https://www.youtube.com/channel/UCMYuF0mNxTgOzr1lS7opIBQ	UCMYuF0mNxTgOzr1lS7opIBQ	ATC Android ToTo Company	2260000	\N	35506	1660	154	\N	0.0511	36.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Android ToTo Company | Pioneering Tech Reviews in Bangla since 2013	2026-06-07 19:40:47.987344+00	recent 6 uploads	2026-06-07 19:40:37.620958+00	2026-06-07 19:40:37.620958+00	t	2026-06-07 19:40:47.987344+00	UCMYuF0mNxTgOzr1lS7opIBQ	verified
+c79b09d6-5424-4f1c-b797-c4d90717e317	88339740-4c5a-4866-8617-b810ddb7b89a	youtube	@hemel360	https://www.youtube.com/channel/UCsWXFpmDDCLzWmSaz2i-U6g	UCsWXFpmDDCLzWmSaz2i-U6g	Hemel 360°	316000	\N	869	12	0	\N	0.0144	180.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	My motive behind creating this channel is to make easy to understand Technology in Bangla.I want each and every individual whoever is interested in technology to be able to understand it in the easily possible way.please SUBSCRIBE to Hemel 360°💓\n\nFor Business Enquiries:\ntoukirahmad@icloud.com\n	2026-06-07 19:40:52.651728+00	recent 6 uploads	2026-06-07 19:40:52.437767+00	2026-06-07 19:40:52.437767+00	t	2026-06-07 19:40:52.651728+00	UCsWXFpmDDCLzWmSaz2i-U6g	verified
+a259b949-2681-482b-a1a0-489eb11fcb18	2b69a960-320d-447f-b598-ee9e8a28185c	youtube	@allgaming	https://www.youtube.com/channel/UCPaDS_iUn2Jnm5KR4SqqO8Q	UCPaDS_iUn2Jnm5KR4SqqO8Q	allgaming	946	\N	211	6	5	\N	0.0513	0.1	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	daily gaming videos so come on hit that subscribe button!\nthanks you so much for the support! hope you will enjoy and share it with your friends! \ngoal 100 subs done - an EPIC video has been done!\nnext goal: 1k subs - an EPIC MYSTERY video, stay tuned for more info !	2026-06-07 19:41:00.878767+00	recent 6 uploads	2026-06-07 19:40:54.53377+00	2026-06-07 19:40:54.53377+00	t	2026-06-07 19:41:00.878767+00	UCPaDS_iUn2Jnm5KR4SqqO8Q	verified
+85e7eb73-5e7c-4880-b08a-cea029bbe2f1	c1b988f2-9e42-4b77-9ed8-247ce8789369	youtube	@nqisik	https://www.youtube.com/channel/UC-CJNuQPALo2Rx8cFgG1sKA	UC-CJNuQPALo2Rx8cFgG1sKA	Nqisik	3990000	\N	474537	12504	45	\N	0.0177	18.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Hey, I'm Nqisik! With every block and adventure, I aim to spread some joy through my Minecraft videos,  I might not be the expert, but I always give it my all to keep you entertained! :)	2026-06-07 19:41:04.198858+00	recent 6 uploads	2026-06-07 19:41:01.906437+00	2026-06-07 19:41:01.906437+00	t	2026-06-07 19:41:04.198858+00	UC-CJNuQPALo2Rx8cFgG1sKA	verified
+4fcaf99e-dd71-4d40-8fac-206bbdf5cd0b	5519f9b5-8d0a-4854-a590-170882420cf0	youtube	@gamingwithtalhaisback	https://www.youtube.com/channel/UCrACBT0_2Pdelym2qAsYP9A	UCrACBT0_2Pdelym2qAsYP9A	Gaming With Talha is Back	7	\N	8	4	1	\N	0.6304	2.2	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}		2026-06-07 19:41:07.776935+00	recent 6 uploads	2026-06-07 19:41:05.507162+00	2026-06-07 19:41:05.507162+00	t	2026-06-07 19:41:07.776935+00	UCrACBT0_2Pdelym2qAsYP9A	verified
+9a17951e-4b50-4a5f-bd88-59bfde4e5ca7	992ac30b-3d68-4c9f-8ac2-f48173323732	youtube	@revenge9t4	https://www.youtube.com/channel/UCxYSQbABheExrzp5tX3PWOg	UCxYSQbABheExrzp5tX3PWOg	REVENGE 9T4	396000	\N	1150788	22625	61	\N	0.0164	6.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	[REVENGE 9T4 From BANGLADESH]\n🎮 Welcome to My channel! I’m Rahul, a passionate Battle Royale gamer. As a professional player, I strive to bring you the best in-game footage. Join the community by hitting that like button, leaving a comment, and subscribing! And don’t forget to click the bell icon 🔔\n\n★INFO:\nIN GAME ID: 2205088378\n\n★Copyright:\nWe allow anyone to make reaction videos, but the video must remain branded under REVENGE 9T4 (with our channel link) in the description box.\n\n★Tags:\n#revenge9t4 #9t4\n	2026-06-07 19:41:14.381502+00	recent 6 uploads	2026-06-07 19:41:08.957113+00	2026-06-07 19:41:08.957113+00	t	2026-06-07 19:41:14.381502+00	UCxYSQbABheExrzp5tX3PWOg	verified
+58dd14ae-e2db-46dd-9f8f-8b279f23aa37	2beeb4ae-b74a-4153-a16b-42be716fa93e	youtube	@gameshole	https://www.youtube.com/channel/UC1GFq_qZP4SC6uczG2uMphw	UC1GFq_qZP4SC6uczG2uMphw	games hole	1560000	\N	5976	56	2	\N	0.0096	2.3	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Welcome to games hole ,\nThis channel is about iOS & Android latest Gameplay Video everyday. \nNew iOS and Android game reviews,\nWe're helping you to discover the best new IOS/Android games. If you want to support our channel, please Subscribe, Like, Comment and Share our videos.\nDON'T FORGET TO SUBSCRIBE DON'T FORGET TO SUBSCRIBE DON'T FORGET TO SUBSCRIBE DON'T FORGET TO SUBSCRIBE DON'T FORGET TO SUBSCRIBE DON'T FORGET TO SUBSCRIBE DON'T FORGET TO SUBSCRIBE DON'T FORGET TO SUBSCRIBEEEEEEEEEEE\n\n\n10K Subscriber May 27,2017\n\n\n100k Subscriber Feb 8, 2018\n\n\n200k Subscriber May 31, 2018\n\n\n3OOK Subscriber Aug 05, 2018\n\n\n400k Subscriber Nov 15,2018\n\n\n500k Subscriber Feb 15,2019\n\n\n600k Subscriber May 5,2019\n\n\n700k Subscriber Oct 01 , 2019\n\n\n800k Subscriber Jan 11 , 2020\n\n\n850k Subscriber Feb 10, 2020\n\n\n900k Subscribe Mar 13, 2020\n\n\n950k Subscriber Apr 15,2020\n\n\n\n1M Subscriber May 15,2020\n\n\n1.1M Subscriber Sep 21,2020\n\n\n1.2 M Subscriber Feb 10,2021\n\n\n1.5 M Subscriber  Feb 2024\n	2026-06-07 19:41:32.932659+00	recent 6 uploads	2026-06-07 19:41:16.246633+00	2026-06-07 19:41:16.246633+00	t	2026-06-07 19:41:32.932659+00	UC1GFq_qZP4SC6uczG2uMphw	verified
+957e27be-a1c9-4086-89c9-d0e6900d4a52	a4e9230c-d1bf-494e-ba4c-13ded0b417ca	youtube	@mdjunaed	https://www.youtube.com/channel/UC-n3BW-K2fsMEN2zJ1ezQuw	UC-n3BW-K2fsMEN2zJ1ezQuw	MD Junaed	5	\N	22	2	2	\N	0.1818	\N	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	the is test channel for tutorial	2026-06-07 19:41:34.982766+00	recent 1 uploads	2026-06-07 19:41:34.790408+00	2026-06-07 19:41:34.790408+00	t	2026-06-07 19:41:34.982766+00	UC-n3BW-K2fsMEN2zJ1ezQuw	verified
+1233436a-c00a-4742-885b-62c08be5e710	f1a4d39f-eb69-427c-98f7-4229eb1957fb	youtube	@ajairaltdoriginals	https://www.youtube.com/channel/UCpvVcqsap0KnJ6epuH5V6cw	UCpvVcqsap0KnJ6epuH5V6cw	The Ajaira LTD.	4660000	\N	549384	21070	1421	\N	0.0409	0.4	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Wasting time is also an art ;)	2026-06-07 19:41:53.545049+00	recent 6 uploads	2026-06-07 19:41:35.932772+00	2026-06-07 19:41:35.932772+00	t	2026-06-07 19:41:53.545049+00	UCpvVcqsap0KnJ6epuH5V6cw	verified
+68d11061-73a3-4041-a005-110235e6dce7	70d4faed-1c19-4481-bc93-41c68f619f52	youtube	@dhrubatv	https://www.youtube.com/channel/UC7VrN38YkMmdr1hFrdaICAA	UC7VrN38YkMmdr1hFrdaICAA	Dhruba TV	8570000	\N	70836	1350	26	\N	0.0194	90.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Premium Bangladeshi Drama Channel	2026-06-07 19:42:00.781822+00	recent 6 uploads	2026-06-07 19:41:55.128296+00	2026-06-07 19:41:55.128296+00	t	2026-06-07 19:42:00.781822+00	UC7VrN38YkMmdr1hFrdaICAA	verified
+2c678de7-fc34-4a9f-a197-752cb651cb1a	d401eb80-d2b4-49ed-8fa1-3db159d000eb	youtube	@againfoysal	https://www.youtube.com/channel/UCjWwwHDKzGETJiBP8dRT19g	UCjWwwHDKzGETJiBP8dRT19g	AGAIN FOYSAL	1	\N	4	1	0	\N	0.2500	\N	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}		2026-06-07 19:42:02.111386+00	recent 1 uploads	2026-06-07 19:42:01.774507+00	2026-06-07 19:42:01.774507+00	t	2026-06-07 19:42:02.111386+00	UCjWwwHDKzGETJiBP8dRT19g	verified
+c0cf1e90-f81e-4a88-b113-47accfac0db3	ee47630d-81c0-4921-a625-c5e461f2080a	youtube	@tawhidafridimytv	https://www.youtube.com/channel/UCEO0rIuBz8Dc8p7PpGE26ZQ	UCEO0rIuBz8Dc8p7PpGE26ZQ	TAWHID AFRIDI	6270000	\N	3591247	137344	4764	\N	0.0332	1.6	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	 Step into a world of boundless laughter and captivating vlogs at  tawhidafridi  Here, a vibrant cast of characters awaits, each brimming with witty punchlines and an endless supply of comedic antics.\nOur channel is your daily prescription for unadulterated joy. With a kaleidoscope of characters that never fail to hit the mark, we're dedicated to being your daily source of happiness. Whether it's a hilarious sketch, a heartwarming vlog, or a side-splitting adventure, we're committed to spreading smiles and keeping your spirits soaring.So hit that subscribe button and brace yourself for a daily dose of happiness that's tailor-made just for you.\n\n\n\n\n\n\n	2026-06-07 19:42:18.997734+00	recent 6 uploads	2026-06-07 19:42:03.121323+00	2026-06-07 19:42:03.121323+00	t	2026-06-07 19:42:18.997734+00	UCEO0rIuBz8Dc8p7PpGE26ZQ	verified
+524d7e21-c719-468e-bea3-1dbd1f11e1c0	124a6af3-80b6-4d3e-813f-2feb41ae5139	youtube	@funnyday	https://www.youtube.com/channel/UCIp0LvSwoUhBoZr488oW6-w	UCIp0LvSwoUhBoZr488oW6-w	TikTok vibes	168	\N	15	6	1	\N	0.4176	0.2	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Like live 	2026-06-07 19:42:25.603071+00	recent 6 uploads	2026-06-07 19:42:25.173318+00	2026-06-07 19:42:25.173318+00	t	2026-06-07 19:42:25.603071+00	UCIp0LvSwoUhBoZr488oW6-w	verified
+81dbd66c-5762-4d0d-b182-4a56daf723c7	06ebd671-f79b-41e2-9f49-eb7a6430347e	youtube	@advancesearchisback	https://www.youtube.com/channel/UCKYbOlLa_JZVNAyDXQ2p2Lg	UCKYbOlLa_JZVNAyDXQ2p2Lg	Advance Search is Back	8290000	\N	496468	3605	1	\N	0.0073	22.5	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Hi, I'm Yasin Arafat.\nI create engaging YouTube Shorts focused on fascinating facts and the latest trending topics. With my unique voiceovers and a strong sense of what's viral, I turn everyday curiosity into powerful, short-form content that informs and entertains a global audience.\nMy mission is to spark interest and deliver value—one short at a time.\n\n\nInfo -	2026-06-07 19:42:29.026263+00	recent 6 uploads	2026-06-07 19:42:26.690348+00	2026-06-07 19:42:26.690348+00	t	2026-06-07 19:42:29.026263+00	UCKYbOlLa_JZVNAyDXQ2p2Lg	verified
+f51da714-f751-4b05-8b2e-9b6ea5ca9a17	a55751a8-7f75-472a-b660-fc89d4158622	youtube	@zanzamin	https://www.youtube.com/channel/UCLTl0LbZozaMbRYEc6_SgfA	UCLTl0LbZozaMbRYEc6_SgfA	Zan Zamin	4360000	\N	1182464	7513	548	\N	0.0068	5.3	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}		2026-06-07 19:42:45.839754+00	recent 6 uploads	2026-06-07 19:42:30.333828+00	2026-06-07 19:42:30.333828+00	t	2026-06-07 19:42:45.839754+00	UCLTl0LbZozaMbRYEc6_SgfA	verified
+1b8f17b5-de47-418e-a63e-fde54a707678	8d823b4f-81a4-4215-a245-68d4ce84dbc2	youtube	@mrtripler	https://www.youtube.com/channel/UCx8uvG6fu2ocH6zOX9dkkSg	UCx8uvG6fu2ocH6zOX9dkkSg	Mr. Triple R	6860000	\N	227158	11727	1092	\N	0.0564	36.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	What's Up Guys, I'm Mr. Triple R. \n\nI'm gonna do Gaming Video And  Live Stream.\n\nMy Goal Is To Make You Guys Smile Every Single Day. :)\n\nPeace💚\n\n\nMail Me Here For Business Purpose :\n\ntriplershort@gmail.com	2026-06-07 19:43:03.7138+00	recent 6 uploads	2026-06-07 19:42:47.257116+00	2026-06-07 19:42:47.257116+00	t	2026-06-07 19:43:03.7138+00	UCx8uvG6fu2ocH6zOX9dkkSg	verified
+af9b2172-b96c-4e02-96e5-52b18fface17	7bd7f363-5ead-45f6-9a82-0c9e5e6f0663	youtube	@sagorbhuyan	https://www.youtube.com/channel/UC0JttpauH-JoTarmBtL-Ufw	UC0JttpauH-JoTarmBtL-Ufw	Sagor Bhuyan	5210000	\N	748680	3414	5	\N	0.0046	36.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	This Sagor Bhuyan channel is all about enjoying life and making people laugh. We do this for our own enjoyment and the laughs of other people. We make funny, prank, comedy for this channel.\n \nThumbs up 👍👍 If You Enjoyed This Video,\nDon't forget to SUBSCRIBE and Turning ON Notifications 🔔 for Weekly Videos.\n\n\nThanks for watching and support my channel subscribe like and share video.  	2026-06-07 19:43:16.211424+00	recent 6 uploads	2026-06-07 19:43:04.838779+00	2026-06-07 19:43:04.838779+00	t	2026-06-07 19:43:16.211424+00	UC0JttpauH-JoTarmBtL-Ufw	verified
+affd120a-66bf-49bc-a2e2-d040eab2448f	402e84bc-ea89-4151-bd85-c3705aa44c62	youtube	@10msmain	https://www.youtube.com/channel/UCL89KKkLs0tZKld-iIS3NGw	UCL89KKkLs0tZKld-iIS3NGw	10 Minute School	3510000	\N	2675	50	5	\N	0.0205	10.6	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	আসসালামু আলাইকুম! স্কিল শেখার সেরা প্ল্যাটফর্ম টেন মিনিট স্কুলে আপনাকে স্বাগতম! আপনার স্কিল ডেভেলপমেন্টের যাত্রা শুরু করুন আমাদের সাথেই। \n\nটেন মিনিট স্কুলে বিভিন্ন স্কিলস কোর্সের পাশাপাশি আপনি একদম ফ্রি-তে প্রফেশনালদের থেকে সরাসরি দিক-নির্দেশনা, ভিডিও টিউটোরিয়ালের মাধ্যমে স্কিল ট্রেনিং এবং এমন সব টিপস পাবেন যা আপনাকে ক্যারিয়ারে এগিয়ে থাকতে সহায়তা করবে। \n\nআমাদের স্কিলস কোর্স সম্পর্কে বিস্তারিত জানতে এবং কোর্সগুলিতে যুক্ত হয়ে ভবিষ্যৎ সাফল্যের জন্য প্রস্তুতি নিতে আমাদের ওয়েবসাইটে ভিজিট করুন: www.10ms.com অথবা কল করুন 16910 নম্বরে!\n	2026-06-07 19:43:52.607541+00	recent 6 uploads	2026-06-07 19:37:16.193851+00	2026-06-07 19:37:16.193851+00	t	2026-06-07 19:43:52.607541+00	UCL89KKkLs0tZKld-iIS3NGw	verified
+86858817-acd4-48e7-90e4-82b0b49fd22f	e81ece61-8eef-4679-9f4c-3df3f93c9397	youtube	@shykhseraj	https://www.youtube.com/channel/UCg2xdE9HQt7WD9F7RYhJ3cg	UCg2xdE9HQt7WD9F7RYhJ3cg	Shykh Seraj	3640000	\N	193754	2501	124	\N	0.0135	9.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	\nShykh Seraj's influence transcends the traditional boundaries of journalism; he stands as a beacon of rural empowerment, embodying the spirit and struggles of Bangladesh's agrarian heartland. Seraj has become the voice of the voiceless, amplifying the stories of farmers and rural communities, casting a spotlight on the lifeblood of the nation's economy—agriculture.\nHis reportage is not merely an exercise in information delivery but a compassionate narrative woven with empathy and deep-rooted respect for the soil and the hands that till it. His broadcasts have become a lifeline, where the challenges of agriculture meet the promise of change. Shykh Seraj's legacy will be written not just in words but in the lives transformed by his unwavering dedication. His work stands as a testament to the power of storytelling with a purpose, making him an emblem of hope for the future of rural Bangladesh. These videos are not just stories, they narrate the soil and people of Bangladesh. \n	2026-06-07 19:44:40.340093+00	recent 6 uploads	2026-06-07 19:43:53.68621+00	2026-06-07 19:43:53.68621+00	t	2026-06-07 19:44:40.340093+00	UCg2xdE9HQt7WD9F7RYhJ3cg	verified
+7adc3bff-3ef1-4df0-9feb-fce7d1bbf6fd	dfe87fc4-207a-4ddf-8252-9885cc4eae50	youtube	@mayajaalbangla	https://www.youtube.com/channel/UCfixIpf6Z09QH-vZT-mpgZg	UCfixIpf6Z09QH-vZT-mpgZg	মায়াজাল	11400000	\N	233484	4660	127	\N	0.0205	6.9	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Hi There,\nThis is a Most Uncommon channel which provides Mysteries, Amazing, top 10, top 5 Types of Videos regularly.  We provide our best. \nWe regularly upload video . If you have any problem or request , than tell us , will try to help you . So stay tuned.	2026-06-07 19:44:56.116215+00	recent 6 uploads	2026-06-07 19:44:41.420051+00	2026-06-07 19:44:41.420051+00	t	2026-06-07 19:44:56.116215+00	UCfixIpf6Z09QH-vZT-mpgZg	verified
+a1643dda-4789-48ab-9b01-01c50615c0f4	cdcaf960-a659-45b9-a53f-4255717ab2e8	youtube	@kutibari	https://www.youtube.com/channel/UCXylA9BrLQzaqCR0wNH_nwQ	UCXylA9BrLQzaqCR0wNH_nwQ	Kuti Bari	3980000	\N	8729	366	28	\N	0.0452	9.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	আস্সালামুআলাইকুম hi viewer, কুটি বাড়ি আপনাদের জন্য নিয়ে এলো এক দারুণ সুখবর, অনেকেই অনুরোধ করেছিলেন আমাদের কাজ গুলো শেখানোর জন্য so তাদের কথা মাথায় রেখে আমরা ইউটিউবে একটি চ্যানেল খুলেছি Kuti Bari  নামেই যেখানে আমরা আমাদের বিভিন্ন কাজের ভিডিও দেখাব যেমন রিবন ফ্লাওয়ার, পেপার ফ্লাওয়ার, শোপিস, গায়ে হলুদের গহনা, পুঁথির গহনা ইত্যাদি। আশা করি আপনারা আমাদের সাথেই থাকবেন। আমাদের কাজগুলো পর্যায়ক্রমে দেখে যেতে অবশ্যই আমাদের চ্যানেলটি সাবসক্রাইব করুন, আর লাইক কমেন্ট এবং শেয়ার করে আমাদের সাথেই থাকুন।	2026-06-07 19:45:20.736705+00	recent 6 uploads	2026-06-07 19:44:57.277696+00	2026-06-07 19:44:57.277696+00	t	2026-06-07 19:45:20.736705+00	UCXylA9BrLQzaqCR0wNH_nwQ	verified
+7942444c-6668-48d4-8a62-97f1462f523a	8696151a-53f5-4734-9085-ecb8f8246f01	youtube	@banglalecture	https://www.youtube.com/channel/UCb2jLRugGn8Qgmeg7HthVog	UCb2jLRugGn8Qgmeg7HthVog	Bangla Lecture	1390000	\N	2279	29	0	\N	0.0127	180.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	As-salamu alaikum, You Can Watch Here: bangla lecture, bangla waz, bangla mahfil, islamic lecture, jumar khutba, islamic jalsha, waz, new bangla waz, abdur razzak bin yousuf, abdur razzak bin yousuf waz, abdullah bin abdur razzak, abdullah bin abdur razzak new waz, mujaffor bin mohsin, amanullah madani, dr mufti imam hossain, mufti kazi ibrahim, bashar bin hayat ali, rofiqul islam bin sayed and More.....\n\n	2026-06-07 19:45:46.453+00	recent 6 uploads	2026-06-07 19:45:22.740134+00	2026-06-07 19:45:22.740134+00	t	2026-06-07 19:45:46.453+00	UCb2jLRugGn8Qgmeg7HthVog	verified
+01d67b0b-bc43-470e-a3e1-69c8d413ba88	e80894b5-faba-4bc3-8c4a-f047cea47924	youtube	@drawingfantasy	https://www.youtube.com/channel/UCJOtvXASihygTaMnNAz5wSA	UCJOtvXASihygTaMnNAz5wSA	Drawing Fantasy	982000	\N	19528	230	9	\N	0.0121	60.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	I Do What You Want to See	2026-06-07 19:45:50.113906+00	recent 6 uploads	2026-06-07 19:45:47.802522+00	2026-06-07 19:45:47.802522+00	t	2026-06-07 19:45:50.113906+00	UCJOtvXASihygTaMnNAz5wSA	verified
+a7365f4c-0f18-4a01-90f5-4175a6e0dd33	0ee9f78b-8c67-4fb4-a977-1e0c571a617e	youtube	@alheraislamiccenter	https://www.youtube.com/channel/UCWgry3lrl5Cf4d1Vn06l3xA	UCWgry3lrl5Cf4d1Vn06l3xA	AL HERA ISLAMIC CENTER	4830000	\N	5597	203	24	\N	0.0406	180.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Welcome to Al Hera Islamic Center!\n\nWe are dedicated to promoting a deeper understanding of Islam and fostering a vibrant community through knowledge and spirituality. Our Facebook page and YouTube channel feature enlightening speeches from esteemed Islamic scholars, along with captivating Waz Mahfil videos designed to inspire, educate, and uplift hearts. We also provide videos of Quran recitation by international qaris.\n\nAt Al Hera Islamic Center, we believe in the power of faith to bring people together. Our mission is to share authentic Islamic teachings, encourage thoughtful discussions, and provide meaningful resources for personal growth and community support.\n\nWe explore the beauty of Islam, celebrate our shared values, and cultivate a warm, supportive environment for everyone.\n\nFollow us on Facebook and subscribe to our YouTube channel to stay connected and engaged with our latest content.\n\nTogether, let’s illuminate the path of knowledge and faith.\n	2026-06-07 19:46:29.793825+00	recent 6 uploads	2026-06-07 19:45:52.697652+00	2026-06-07 19:45:52.697652+00	t	2026-06-07 19:46:29.793825+00	UCWgry3lrl5Cf4d1Vn06l3xA	verified
+34498c43-24e1-4de7-b925-de13ac228ebf	65b00a73-b334-4571-8dbf-ace2a42a581f	youtube	@rimedia	https://www.youtube.com/channel/UCjFlLT2A4Ch1JhTHKpdOdCA	UCjFlLT2A4Ch1JhTHKpdOdCA	RI media	817	\N	98	4	1	\N	0.0323	0.4	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	আসসালামু আলাইকুম, RI media এ আপনাকে স্বাগতম, নিত্য নতুন ইসলামী সংঙ্গীত, ওয়াজ, মাদ্রাসার ছাত্রদের বিভিন্ন প্রর্দশনী,ও বিভিন্ন ক্বারীদের তেলাওয়াত পেতে আমার এই চ্যানেলটিকে সাবস্ক্রাইব করুন,এবং চ্যানেলটির ভিডিওগুলোতে লাইক, কমেন্ট,ও বেশি বেশি শেয়ার করে সবাইকে দেখার সুযোগ করে দিন,,,ধন্যবাদ,,	2026-06-07 19:47:08.621975+00	recent 6 uploads	2026-06-07 19:46:30.831568+00	2026-06-07 19:46:30.831568+00	t	2026-06-07 19:47:08.621975+00	UCjFlLT2A4Ch1JhTHKpdOdCA	verified
+f2372c3e-7119-44c1-95ef-5baaca5846dc	1c494a0b-d1c1-4492-968a-b67391d7f271	youtube	@bcbtigercricket	https://www.youtube.com/channel/UC0gsMYK1dqQ5KqOQfavVNkg	UC0gsMYK1dqQ5KqOQfavVNkg	Bangladesh Cricket : The Tigers	1240000	\N	1315	89	4	\N	0.0711	180.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Bangladesh Cricket : The Tigers is the Official YouTube channel of the Bangladesh Cricket Board (BCB) and the Cricket Team.\nBangladesh Cricket Board (BCB) is the governing body of cricket in Bangladesh. It is recognized under the National Sports Council (NSC) Act 1974, having its Head Office in Sher-e-Bangla National Cricket Stadium, Dhaka 1216, Bangladesh.\n\nThe Bangladesh national cricket team, known as The Tigers, is the national cricket team representing Bangladesh. The team is administered by the Bangladesh Cricket Board (BCB).\n\nOur website and social media links :\nWebsite: www.tigercricket.com.bd\nFacebook: https://www.facebook.com/bcbtigercricket\nTwitter: https://twitter.com/BCBtigers\nInstagram: https://www.instagram.com/bangladeshtigers\n\n	2026-06-07 19:47:22.28134+00	recent 6 uploads	2026-06-07 19:47:10.819466+00	2026-06-07 19:47:10.819466+00	t	2026-06-07 19:47:22.28134+00	UC0gsMYK1dqQ5KqOQfavVNkg	verified
+c49db0ba-7a73-4136-b0b1-7cb03ef3bdb1	256108ed-3a83-4dfa-8e94-075938f15d08	youtube	@somoysports	https://www.youtube.com/channel/UC-MxP5JHqHDhIYzryBdPkUA	UC-MxP5JHqHDhIYzryBdPkUA	SOMOY SPORTS	971000	\N	319	22	2	\N	0.0720	180.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	"SOMOY SPORTS" is the Based on Sports Content.  \n\n"SOMOY TV" is the Bangladesh Government Approved Most Popular Reliable News Source and Leading 24/7 News Based TV Channel in Bangladesh by Company Name : "SOMOY Media Limited".\n\nWe are using Multi-screening Digital Technology where Audience can watch 'SOMOY TV'  through Satellite Feed, Live Streaming, Website, any kind of Mobile Device, OTT, Smart TV etc.  \n\nSomoy TV has the sole rights of all contents and it does not give permission to any business entity or individual to use these contents except ‍SOMOY TV (SOMOY Media Limited).\n\nThis Channel is the Based on News and Current Affairs. The uploaded all contents are Made by our own team. Also Sometimes We are using some Third-Party materials where we have the specific authorization and permission to use this on YouTube.\n\nWebsite: http://www.somoynews.tv\nFacebook: http://www.facebook.com/somoynews.tv\nTwitter: http://www.twitter.com/somoytv	2026-06-07 19:47:55.404911+00	recent 6 uploads	2026-06-07 19:47:26.551686+00	2026-06-07 19:47:26.551686+00	t	2026-06-07 19:47:55.404911+00	UC-MxP5JHqHDhIYzryBdPkUA	verified
+e5561899-24e7-4400-b9ba-008375f6451b	04de1faa-1765-4a12-99f8-caf903567f21	youtube	@onfield	https://www.youtube.com/channel/UC9vHEbOxGrr2Z65tim-QsjQ	UC9vHEbOxGrr2Z65tim-QsjQ	ON FIELD	1060000	\N	8260	438	28	\N	0.0564	180.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	This is official youtube channel of 'ON FIELD'\n\n\n#onfield #on_field  #onfield_sami  #অনফিল্ড   #sami_onfield #onfield_sami  #Syedsami  #shakib75 #Tamim  #mushfiq  #mashrafespeech  #viral  #tranding  #headshot #bangladeshTeam #ipl #ipl2024  #iplmustafiz2024  #mustafiz  #thalapathy  #thala  #msdhoni   #ms   #msdhoni  #wistlepodu  #csk  #chennai  #chennaisuperkings  #chennaicricket   #dhoni  #dhonicaptaincy  #captaincool  #captaincoolstatus  #indianpremierleague  #mumbai  #mumbaiindians  #rcb  #rcbfans  #cskvskkr #mahi #thalaforareason #bangladeshvszimbabwe #zimbabwe #zimbabwecricket #t20worldcup #cricketworldcup #t20worldcup2024 \n	2026-06-07 19:47:57.234452+00	recent 6 uploads	2026-06-07 19:47:57.15661+00	2026-06-07 19:47:57.15661+00	t	2026-06-07 19:47:57.234452+00	UC9vHEbOxGrr2Z65tim-QsjQ	verified
+ffe64061-dedf-41af-b58f-5ca11ddb0883	f3721816-01b6-4194-bf8c-c20e10a31fa4	youtube	@futbalgamerz	https://www.youtube.com/channel/UCj5fjg5xArF1WEaTmSJPE4Q	UCj5fjg5xArF1WEaTmSJPE4Q	Futbalgamerz	1500000	\N	110088	1627	11	\N	0.0149	8.2	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Hello my channel name is futbalgamerz I upload football Shorts for entertainment thanks for visiting.\n	2026-06-07 19:47:58.483434+00	recent 6 uploads	2026-06-07 19:47:58.276914+00	2026-06-07 19:47:58.276914+00	t	2026-06-07 19:47:58.483434+00	UCj5fjg5xArF1WEaTmSJPE4Q	verified
+5c164c24-f788-41fe-a756-c567fd789657	3554653a-9f16-4cd3-92fa-1720b5d9f82e	youtube	@bdsportsnetwork	https://www.youtube.com/channel/UC9mK0AEBLKZlwLJhr8d9XLQ	UC9mK0AEBLKZlwLJhr8d9XLQ	BD Sports Network	872000	\N	797	7	0	\N	0.0092	4.4	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	BD Sports network Brings you All latest News About Sports ( খেলার খবর )\n- Stay Tune With us and Subscribe.\n\nOur Vision:\n● Providing best international cricket news\n● Delivering daily 'Major' sports updates\n● Providing Entertainment to our subscribers\n● Promoting the global game\n\nIf you have any copyright issue with our uploaded videos, please contact us to avoid the conflict.\n\n	2026-06-07 19:48:29.524846+00	recent 6 uploads	2026-06-07 19:47:59.970508+00	2026-06-07 19:47:59.970508+00	t	2026-06-07 19:48:29.524846+00	UC9mK0AEBLKZlwLJhr8d9XLQ	verified
+87f6dffc-68d2-4bae-be68-817fa74d17be	dfd20482-0e61-44f1-bd68-d501e4f20a31	youtube	@manikmiahofficial	https://www.youtube.com/channel/UCoa44uscojUYMgEgd9yx3bg	UCoa44uscojUYMgEgd9yx3bg	Manik Miah Official	1830000	\N	21940	1078	13	\N	0.0498	180.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Manik Miah   is a Bangladeshi Tiktok Star, Singer,Model,And Actor But he Lives in Saudi Arabia. He is best known for Tiktok videos. \nManik Miah is a digital content creator on Tiktok, YouTube, Facebook and Instagram who was ( Born – 15 January 1993 ) in Tangail, Bangladesh. He makes travel vlogs, daily life vlogs, cinematic, etc. \nManik Miah is a famous Tiktoker in Bangladesh. He started his Tiktok journey at an young age. Manik Miah join YouTube on May 2019. His videos get huge views on social platforms. Manik Miah is available on TikTok with his username (@manikmia620) . He has 362.8M Likes and 10M Followers on Tiktok. Exclusively managed by glee Digital. The TikTok influencer Manik Miah has actually gained a remarkable following of 10 million. Manik Miah is based in Bangladesh. The TikTok influencer Manik Miah has actually gained a remarkable following of 1.45 million. Manik Miah is based in Bangladesh.\nemail; business.manikmiah@gmail.com \n	2026-06-07 19:48:35.53705+00	recent 6 uploads	2026-06-07 19:48:31.193713+00	2026-06-07 19:48:31.193713+00	t	2026-06-07 19:48:35.53705+00	UCoa44uscojUYMgEgd9yx3bg	verified
+ab24a889-f1b1-4547-9542-cc1cbfed03ec	5d29465d-d338-4193-948d-429d7e88fdbc	youtube	@rituhossain	https://www.youtube.com/channel/UC6RIbno7CCvCfG1T-avhVQA	UC6RIbno7CCvCfG1T-avhVQA	Ritu Hossain	5660000	\N	1066308	31212	786	\N	0.0300	1.4	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Hey Guys My Name Is Ritu Hossain . I'm New Vlogger . Keep Supporting Me 😭\n\nDm for business enquiries or paid collaboration :\nteamrakibhossain@gmail.com\n\n\n	2026-06-07 19:48:52.078044+00	recent 6 uploads	2026-06-07 19:48:36.615608+00	2026-06-07 19:48:36.615608+00	t	2026-06-07 19:48:52.078044+00	UC6RIbno7CCvCfG1T-avhVQA	verified
+b4830f6c-88e4-4a0f-8abf-5cf5799815b9	00d0bcc7-6a1c-4812-aa5f-1b9809a0c0bb	youtube	@soniyaakterrima	https://www.youtube.com/channel/UChNOLxbaMYVLsDBYOvwBaig	UChNOLxbaMYVLsDBYOvwBaig	Soniya Akter Rima	2400000	\N	211905	2648	5	\N	0.0125	180.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	always try to do something soniya akter rima , sonia akter rima	2026-06-07 19:48:58.798575+00	recent 6 uploads	2026-06-07 19:48:53.369169+00	2026-06-07 19:48:53.369169+00	t	2026-06-07 19:48:58.798575+00	UChNOLxbaMYVLsDBYOvwBaig	verified
+04532642-39cd-4f44-9514-9f7a5935f745	b1d9dc23-3cc2-435d-bfa4-f896f0557f66	youtube	@oishratjahaneity	https://www.youtube.com/channel/UC2O5a0f9CTvoNPAgs_MozLg	UC2O5a0f9CTvoNPAgs_MozLg	Oishrat Jahan Eity	1760000	\N	312038	8308	123	\N	0.0270	22.5	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Fashion Model, Influencer and Vlogger\n	2026-06-07 19:49:04.3836+00	recent 6 uploads	2026-06-07 19:48:59.93103+00	2026-06-07 19:48:59.93103+00	t	2026-06-07 19:49:04.3836+00	UC2O5a0f9CTvoNPAgs_MozLg	verified
+4c8de060-3e5f-4ecd-aa3e-7879eb103526	f63dc656-0ef8-4c08-baba-436df84a617f	youtube	@sayanofficial	https://www.youtube.com/channel/UCoD0Gc0-de_k06QVwvsGqQA	UCoD0Gc0-de_k06QVwvsGqQA	Макс Саян	2	\N	76	1	1	\N	0.0262	90.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Хип-Хоп исполнитель.	2026-06-07 19:49:09.770752+00	recent 3 uploads	2026-06-07 19:49:05.396445+00	2026-06-07 19:49:05.396445+00	t	2026-06-07 19:49:09.770752+00	UCoD0Gc0-de_k06QVwvsGqQA	verified
+955fa9f5-a2e1-4c09-82b2-3fcc483efcde	9b048e95-66d5-4413-a571-28874e9cd3a8	youtube	@apubiswasofficial	https://www.youtube.com/channel/UCWVVHR0k-tbZksrSbMUr8jA	UCWVVHR0k-tbZksrSbMUr8jA	Apu Biswas official 	3	\N	280	\N	0	\N	0.0000	\N	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}		2026-06-07 19:49:11.328001+00	recent 1 uploads	2026-06-07 19:49:11.131401+00	2026-06-07 19:49:11.131401+00	t	2026-06-07 19:49:11.328001+00	UCWVVHR0k-tbZksrSbMUr8jA	verified
+83a2b5bd-7e8b-4632-9227-c98259cb9360	cbfd8491-a181-4af1-ab9c-fd84549d38f5	youtube	@dishamoni	https://www.youtube.com/channel/UCWbp32NpXcLe7VfdGLVexyA	UCWbp32NpXcLe7VfdGLVexyA	dishamoni	28	\N	357	4	1	\N	0.0140	\N	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}		2026-06-07 19:49:13.760473+00	recent 1 uploads	2026-06-07 19:49:12.504604+00	2026-06-07 19:49:12.504604+00	t	2026-06-07 19:49:13.760473+00	UCWbp32NpXcLe7VfdGLVexyA	verified
+c6d6789d-98f2-408f-a352-a80da9a8180c	bf84b6e3-379c-4631-b65f-a94c1171b30f	youtube	@ffeditz100k	https://www.youtube.com/channel/UCialTRjTzMFPpvnRoEUAcDA	UCialTRjTzMFPpvnRoEUAcDA	M S STAR DADA	10	\N	17	8	1	\N	0.5000	60.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	TAG SONGS LOVER	2026-06-07 19:49:17.279454+00	recent 2 uploads	2026-06-07 19:49:14.762594+00	2026-06-07 19:49:14.762594+00	t	2026-06-07 19:49:17.279454+00	UCialTRjTzMFPpvnRoEUAcDA	verified
+01978df3-643d-468c-bf14-55ec219ca7ca	b5bb4312-fb62-49ff-8598-991329403d99	youtube	@meowphorius	https://www.youtube.com/channel/UCmSu6aPS3LKmf-5MrTr3TRg	UCmSu6aPS3LKmf-5MrTr3TRg	Meowphorius 	863000	\N	42126	656	9	\N	0.0158	11.3	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	😻 Your daily dose of kitten videos! 😻\n\nWe share the tiniest, funniest, quirkiest, clumsiest, and most adorable kittens being their hilarious selves. From their first wobbly steps to epic nap fails, our videos capture the cutest cat moments from around the globe. 🐱🌍\n\nThis is your go-to place for laughter, cuteness, and a guaranteed smile every day. 💖\n\n👉 Subscribe for a Meow so you never miss a purr! 🐾	2026-06-07 19:49:21.914343+00	recent 6 uploads	2026-06-07 19:49:18.484553+00	2026-06-07 19:49:18.484553+00	t	2026-06-07 19:49:21.914343+00	UCmSu6aPS3LKmf-5MrTr3TRg	verified
+1c61e50f-6c20-424d-afda-a8cc22f9c2e3	bb4e9bb0-aac2-4a68-ac59-0633df03fc3e	youtube	@naturetunestudio	https://www.youtube.com/channel/UCWCFouNl0KLaaymHdqFyehg	UCWCFouNl0KLaaymHdqFyehg	Nature Tune Studio	396000	\N	679	12	4	\N	0.0236	21.4	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Nature Tune Studio is an independent music label and creative media platform dedicated to cinematic storytelling through music and visuals.\n\nWe publish original cinematic soundtracks, epic orchestral compositions, ambient music, emotional instrumentals, and visually captivating music videos crafted for audiences around the world.\n\nOur vision is to create immersive audio-visual experiences that inspire imagination, emotion, and creativity. From powerful cinematic scores to peaceful atmospheric soundscapes, every release is designed to take listeners on a unique journey.\n\n🎵 Original Music Releases\n🎬 Cinematic Music Videos\n🌍 Inspiring Visual Experiences\n🎼 Epic, Ambient & Instrumental Soundtracks\n\nFor licensing, collaborations, and business inquiries:\n\n📧 Email: \n\n© Nature Tune Studio. All Rights Reserved.\n	2026-06-07 19:49:54.74365+00	recent 5 uploads	2026-06-07 19:49:23.120564+00	2026-06-07 19:49:23.120564+00	t	2026-06-07 19:49:54.74365+00	UCWCFouNl0KLaaymHdqFyehg	verified
+ef4297fd-17d2-414c-b71c-a3414be7e2e5	7e228acf-acea-45e0-935f-90473226a8ad	youtube	@cokestudiobangla	https://www.youtube.com/channel/UCIB65_E_7XEScU2NB135wDw	UCIB65_E_7XEScU2NB135wDw	Coke Studio Bangla	4670000	\N	55678	1375	20	\N	0.0250	25.7	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Coke Studio Bangla brings the musical magic of Coke Studio to Bangla Music. Coke Studio Bangla pays ode to the richness of Bangladeshi Music, while paves the way for global sound and musicians to pave the way to a richer Bangladeshi Music. Coke Studio Bangla bridges the global sound to native treasures to showcase how tradition and modernity beautifully share a common ground and thus deliver REAL MAGIC.	2026-06-07 19:50:00.342463+00	recent 6 uploads	2026-06-07 19:49:55.970107+00	2026-06-07 19:49:55.970107+00	t	2026-06-07 19:50:00.342463+00	UCIB65_E_7XEScU2NB135wDw	verified
+00ce2a52-185c-4804-bec7-08381ead1ad9	9a5569db-64a0-4a1a-a58d-cc5a1a5abd67	youtube	@pritomhasan	https://www.youtube.com/channel/UCHbYKM5gX8zQu4KlnhidraA	UCHbYKM5gX8zQu4KlnhidraA	Pritom Hasan	607000	\N	28237	440	10	\N	0.0159	45.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	One Man Band	2026-06-07 19:50:05.665263+00	recent 6 uploads	2026-06-07 19:50:01.344918+00	2026-06-07 19:50:01.344918+00	t	2026-06-07 19:50:05.665263+00	UCHbYKM5gX8zQu4KlnhidraA	verified
+95e497c3-f885-495c-83e3-627119aaf502	a6e4763a-cb89-4031-b637-e93bd82863da	youtube	@sathikhan	https://www.youtube.com/channel/UCNGTnyFxqANiDXf52kOZKkQ	UCNGTnyFxqANiDXf52kOZKkQ	Sathi Khan	1450000	\N	17417	346	10	\N	0.0204	90.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Official YouTube channel of the Bangladeshi singer Sathi Khan	2026-06-07 19:50:09.330023+00	recent 6 uploads	2026-06-07 19:50:07.053742+00	2026-06-07 19:50:07.053742+00	t	2026-06-07 19:50:09.330023+00	UCNGTnyFxqANiDXf52kOZKkQ	verified
+6aa97ba4-bb90-4263-a5e0-65d843a1c059	a1a9f6c2-63ae-4b1c-a4c1-8ccd98e8e7a0	youtube	@habibwahid	https://www.youtube.com/channel/UCGXtJXxO2SLgZED78juxhOQ	UCGXtJXxO2SLgZED78juxhOQ	Habib Wahid	18	\N	71	1	0	\N	0.0141	\N	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}		2026-06-07 19:50:11.850901+00	recent 1 uploads	2026-06-07 19:50:10.474293+00	2026-06-07 19:50:10.474293+00	t	2026-06-07 19:50:11.850901+00	UCGXtJXxO2SLgZED78juxhOQ	verified
+4136186e-47ca-40ff-b0c6-102a031575b7	e1b07220-c97e-4673-8939-77921b506fd8	youtube	@prothomalo	https://www.youtube.com/channel/UCeG7m5-AJ4I0H4EIleIty4Q	UCeG7m5-AJ4I0H4EIleIty4Q	Prothom Alo	5840000	\N	5234	66	9	\N	0.0142	180.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	It's the official YouTube channel of Prothom Alo. Prothom Alo (Owned by Mediastar Limited) is considered as the largest & most popular newspaper in Bangladesh based on circulation, pageviews, and unique Visits. Prothom Alo has a readership from 200 countries around the world.\nProthoma Prokashon (Book Publisher), Protichinta (Quarterly Magazine), Kishor Alo, Bigganchinta, Prothom Alo Trust, Prothom Alo Jobs(Job Site), and ABC Radio are other concerns of Prothom Alo.\n\n#prothomalo #prothomalonews #প্রথমআলো \n	2026-06-07 19:50:43.168401+00	recent 6 uploads	2026-06-07 19:50:14.219716+00	2026-06-07 19:50:14.219716+00	t	2026-06-07 19:50:43.168401+00	UCeG7m5-AJ4I0H4EIleIty4Q	verified
+634ff32c-8a7e-4ebe-8cc2-4704dfb20969	54be4fe8-2a6a-4ee3-b50a-73984b4c4107	youtube	@thebusinessstandard	https://www.youtube.com/channel/UCUNEzmQ3zcifrhn0HwCgjYg	UCUNEzmQ3zcifrhn0HwCgjYg	The Business Standard	2550000	\N	1123	25	2	\N	0.0246	180.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	The Business Standard is a news platform that operates in both online and print versions. It is owned by The Horizon Media and Publication Ltd based in Dhaka, Bangladesh.\n\nWith the goal to promote good governance and best practices in business and economy, the Business Standard puts an extra emphasis on business news. However, it also covers general news, sports, features and entertainment.\n\nPowered by a group of experienced journalists, The Business Standard emphasizes on visual storytelling to help readers decipher the most complicated issues.\n\nThe platform is also provides selective international news and analysis from Bloomberg, Project Syndicate, Foreign Policy, Hindustan Times, Mint, Digit and Reuters.\n\nFacebook - https://www.facebook.com/tbsnews.net \nInstagram - https://www.instagram.com/thebusinessstandard \nTwitter - https://twitter.com/tbsnewsbd\nPinterest - https://www.pinterest.com/tbsnews \nLinkedin - https://bd.linkedin.com/company/the-business-standard\n	2026-06-07 19:51:25.682437+00	recent 6 uploads	2026-06-07 19:50:47.959663+00	2026-06-07 19:50:47.959663+00	t	2026-06-07 19:51:25.682437+00	UCUNEzmQ3zcifrhn0HwCgjYg	verified
+ed47a122-9805-4a77-ae98-208e9efff4f5	febc4b03-1599-4de7-baa4-2302d25588f5	youtube	@kikenokivabe	https://www.youtube.com/channel/UCzZ093TqE7l9mBfVUwT3Zyg	UCzZ093TqE7l9mBfVUwT3Zyg	Ki Keno Kivabe	4340000	\N	78287	2486	173	\N	0.0340	8.2	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	প্রতিদিন আমাদের মাথায় অসংখ্য প্রশ্ন ঘুরতে থাকে। কিছু প্রশ্ন শুধুই কৌতুহল, আর কিছু প্রশ্নের উত্তর জানাটা আমাদের খুব জরুরী। কি কেন কিভাবে টিম মনে করে অজানাকে জানার ইচ্ছেটাই সবচেয়ে গুরুত্বপূর্ণ।\n\nমনের সকল জিজ্ঞাসা আর কৌতুহল মেটাতে অজানাকে জানার যাত্রায় আমাদের সঙ্গী হতে পারেন আপনিও।\n\n💡 সাবস্ক্রাইব করুন\nঅজানাকে জানার যাত্রা শুরু হোক এখনই.. .. ..	2026-06-07 19:52:18.713659+00	recent 6 uploads	2026-06-07 19:51:26.757358+00	2026-06-07 19:51:26.757358+00	t	2026-06-07 19:52:18.713659+00	UCzZ093TqE7l9mBfVUwT3Zyg	verified
+fb6a5492-f9b7-4869-9bed-7ba0570b0461	6c8ba08c-b3b9-4d66-adfe-83ceeeb0c8ed	youtube	@chorkiofficial	https://www.youtube.com/channel/UCot6_4CL7KESSNiDcjeBFCw	UCot6_4CL7KESSNiDcjeBFCw	Chorki	2940000	\N	347445	13465	1128	\N	0.0420	20.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Chorki is a popular streaming platform in Bangladesh that has taken the Bengali entertainment industry by storm since its inception in July 2021. It offers a wide range of content, including original movies, series, and short films. The service is available on a variety of devices, including smartphones, tablets, laptops, and smart TVs. Chorki has captivated audiences in 194 countries and has become a favorite among Bengali-speaking viewers, earning their admiration on a global scale.	2026-06-07 19:52:46.422474+00	recent 6 uploads	2026-06-07 19:52:31.068476+00	2026-06-07 19:52:31.068476+00	t	2026-06-07 19:52:46.422474+00	UCot6_4CL7KESSNiDcjeBFCw	verified
+c8e2c717-efaa-45df-a681-74ee2893f49f	fbc0dd5f-da85-49b0-a8c8-4a1b7d4c37f9	youtube	@masmediainfo	https://www.youtube.com/channel/UCdy6La3RQJWMRE-V4FZusYQ	UCdy6La3RQJWMRE-V4FZusYQ	masmediainfo	0	\N	104	0	0	\N	0.0000	1.2	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}		2026-06-07 19:52:49.817684+00	recent 6 uploads	2026-06-07 19:52:47.443304+00	2026-06-07 19:52:47.443304+00	t	2026-06-07 19:52:49.817684+00	UCdy6La3RQJWMRE-V4FZusYQ	verified
+45114f9a-7144-4ca4-a836-fd0ad4c454ce	96bf2ef8-0a71-4358-88fb-db2e2f5639ba	youtube	@maasrangakids	https://www.youtube.com/channel/UCQ4loccrvAKkS0qfckC-hqQ	UCQ4loccrvAKkS0qfckC-hqQ	Maasranga Kids	5150000	\N	2964	28	0	\N	0.0094	180.0	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Maasranga Television, a Member of Square Group, is a leading satellite television channel in Bangladesh. Since its inception on July 30, 2011 as a mixed TV channel; Maasranga Television is broadcasting accurate, time-honored, and credible news from home and abroad along with exciting and inspiring entertainment for the whole family.\n\nHigh-quality drama, serials, films, musical, educational and entertaining programs for children, programs on women issues, comedy shows, documentaries, talk shows on current affairs, business and sports shows, Live events, and news covering the whole world are aired around the clock from Maasranga Television. We thoughtfully cater to the entertainment, information, and learning needs of men, women, and children by dedicating specific time slots.\n\nOur programs are available in different parts of Asia, Australia, Africa, Europe, and the USA. Maasranga TV has already won the hearts and minds of millions of people both at home and across the world.\n	2026-06-07 19:53:08.584619+00	recent 6 uploads	2026-06-07 19:52:51.798181+00	2026-06-07 19:52:51.798181+00	t	2026-06-07 19:53:08.584619+00	UCQ4loccrvAKkS0qfckC-hqQ	verified
+5d08a582-9a24-4417-b4ed-ac0d9e39c9af	361df2c2-5c4b-4bcb-bc9f-343dc90a040e	instagram	mehazabien	https://www.instagram.com/mehazabien	245194425	Mehazabien Chowdhury	5795184	1139	165020	26893	209	\N	0.0047	1.6	t	\N	f	t	BD	\N	\N	\N	\N	\N	{bn}	Otrovert from 🇧🇩\nTiktok ⬇️	2026-06-07 20:26:29.644144+00	recent 102 posts	2026-06-07 20:25:32.548085+00	2026-06-07 20:25:32.548085+00	t	2026-06-07 20:26:29.644144+00	245194425	verified
+297053ce-a99e-442d-bc86-f3a103a1a594	dcffd160-6941-45de-9b90-a93c869dc616	instagram	bidya_mim	https://www.instagram.com/bidya_mim	480437758	Bidya Sinha Saha MiM	3843009	230	72375	11531	87	\N	0.0030	2.1	t	\N	f	t	BD	\N	\N	\N	\N	\N	{bn}	An actress 🇧🇩 \nGoodwill ambassador of @unicefbangladesh	2026-06-07 20:27:05.083837+00	recent 102 posts	2026-06-07 20:27:05.081743+00	2026-06-07 20:27:05.081743+00	t	2026-06-07 20:27:05.083837+00	480437758	verified
+656bfad6-eb6c-4562-93bb-6045c020a099	4068df14-4f1a-40a8-83a1-2ac0a433b907	instagram	sabla.babla	https://www.instagram.com/sabla.babla	5548295740	Sabila Nur (সাবিলা নূর)	3401536	1104	89794	14306	169	\N	0.0043	1.9	t	\N	f	t	BD	\N	\N	\N	\N	\N	{bn}	✦ INFJ, space bound, and permanently in transit between galaxies no one else can see 🚀 ✦	2026-06-07 20:27:47.499249+00	recent 102 posts	2026-06-07 20:27:47.497012+00	2026-06-07 20:27:47.497012+00	t	2026-06-07 20:27:47.499249+00	5548295740	verified
+10f4c45b-5f53-4b1b-a3a9-2f5ef1fa49e5	58844295-1d58-4cfe-a1da-1f9cdb66611d	instagram	therealpurnima	https://www.instagram.com/therealpurnima	1766629488	𝒫𝓊𝓇𝓃𝒾𝓂𝒶 ✨	3235771	293	25938	8703	142	\N	0.0027	1.1	t	\N	f	t	BD	\N	\N	\N	\N	\N	{bn}	👉🏼 ✈️Love to travel 🧳\n👉🏼 🍱🍲🍨 foodie 🫒🥑\n👉🏼 witty 😉\n👉🏼 yellow 🟡& green 🟢lover \n👉🏼 super mommy 💁🏻‍♀️\nDhaka Bangladesh 🇧🇩📍	2026-06-07 20:28:07.916985+00	recent 102 posts	2026-06-07 20:28:07.914847+00	2026-06-07 20:28:07.914847+00	t	2026-06-07 20:28:07.916985+00	1766629488	verified
+34e82eff-1b09-4ebe-a19b-89cbd5ff19e4	5b495b03-38e5-47c6-99cd-9f0c21158fd4	instagram	bangladeshtigers	https://www.instagram.com/bangladeshtigers	3067520555	Bangladesh Cricket : Tigers	2741339	42	14308	1952	12	\N	0.0007	2.5	t	\N	f	t	BD	\N	\N	\N	\N	\N	{en}	Official Instagram of Bangladesh Cricket. \n#RiseOfTheTigers	2026-06-07 20:28:36.503285+00	recent 102 posts	2026-06-07 20:28:36.501125+00	2026-06-07 20:28:36.501125+00	t	2026-06-07 20:28:36.503285+00	3067520555	verified
+b7e8b4cb-65ed-4700-9639-390db28ba155	dfd6c24b-b5b4-4f41-a90d-85ade89f3443	instagram	aymansadiq10	https://www.instagram.com/aymansadiq10	2344089597	Ayman Sadiq	2076506	489	46244	10461	107	\N	0.0051	1.7	t	\N	f	t	BD	\N	\N	\N	\N	\N	{bn}	Teacher | Author | Entrepreneur\n📚 Teaching 3M+ students daily @10ms_insta\n👑 Queen’s Young Leader\n🎖️ Forbes 30 Under 30\n👇 Free Groups of Your Class	2026-06-07 20:28:54.86028+00	recent 95 posts	2026-06-07 20:28:54.858262+00	2026-06-07 20:28:54.858262+00	t	2026-06-07 20:28:54.86028+00	2344089597	verified
+c71217ae-141b-4940-aa86-e4570513c719	18b79944-fd4c-4aae-a716-ce799c8dd8a2	instagram	taskintazim	https://www.instagram.com/taskintazim	1723318485	Taskin Ahmed Tazim	1979161	132	50091	10236	69	\N	0.0052	1.9	t	\N	f	t	BD	\N	\N	\N	\N	\N	{bn}	Athlete	2026-06-07 20:30:05.601359+00	recent 102 posts	2026-06-07 20:30:05.599271+00	2026-06-07 20:30:05.599271+00	t	2026-06-07 20:30:05.601359+00	1723318485	verified
+e8031180-a80f-423e-852d-cd3083ff8837	9dc3097f-caba-4e35-afa2-f473d9ac0337	instagram	mustafizur_90	https://www.instagram.com/mustafizur_90	2107890556	Mustafizur Rahman	1663117	93	98712	44698	622	\N	0.0273	2.9	t	\N	f	t	BD	\N	\N	\N	\N	\N	{en}	Professional cricketer, Playing cricket for Bangladesh. Proud to be a Bangladeshi. 🇧🇩\nFor queries: mustafiz.ninety@gmail.com	2026-06-07 20:30:36.252664+00	recent 18 posts	2026-06-07 20:30:36.25088+00	2026-06-07 20:30:36.25088+00	t	2026-06-07 20:30:36.252664+00	2107890556	verified
+e6a357dd-13c1-46f7-a066-0bd6023a6a5c	1e11af50-b4c1-46aa-942d-88bc0581ee8e	instagram	t.sunehra	https://www.instagram.com/t.sunehra	7800023147	Sunehra Tasnim	1988004	1852	338868	79487	502	\N	0.0402	1.6	t	\N	f	t	BD	\N	\N	\N	\N	\N	{en}	smoller, stronger, sharper 🇧🇩                                      📩:sunehratasnim18@gmail.com	2026-06-07 20:31:02.486644+00	recent 102 posts	2026-06-07 20:31:02.485081+00	2026-06-07 20:31:02.485081+00	t	2026-06-07 20:31:02.486644+00	7800023147	verified
+9db05056-b07e-425d-afad-4ac66b5794f7	766ada28-1457-4625-8437-9a96fa614d65	instagram	mohammad_mahmudullah	https://www.instagram.com/mohammad_mahmudullah	3244854552	Mahmudullah Riyad	1115121	14	26026	5602	54	\N	0.0051	1.1	t	\N	f	t	BD	\N	\N	\N	\N	\N	{bn}	Being a proud Bangladeshi. #MR30	2026-06-07 20:31:27.218082+00	recent 81 posts	2026-06-07 20:31:27.216287+00	2026-06-07 20:31:27.216287+00	t	2026-06-07 20:31:27.218082+00	3244854552	verified
+a0f29ef2-b091-4ce6-abe1-7be69becd19f	668d8f17-a74e-4200-80a2-668ad6ae2817	tiktok	tawhidafridi121	https://www.tiktok.com/@tawhidafridi121	6529904660445139983	Tawhid Afridi	4700000	14	2349217	116600	2816	1134	0.0256	1.9	t	\N	f	t	BD	\N	\N	\N	\N	\N	{bn}	King Is Always King\nYoutuber 🇧🇩	2026-06-07 20:31:36.83278+00	recent 6 posts	2026-06-07 20:31:28.278762+00	2026-06-07 20:31:28.278762+00	t	2026-06-07 20:31:36.83278+00	6529904660445139983	verified
+a4128036-7980-4eac-9409-2c2eb570d437	69328474-b706-4cb0-b7c3-6996d4a95946	tiktok	sakib_al_hasan2	https://www.tiktok.com/@sakib_al_hasan2	7172877019881358341	Sakib Al Hasan	11	14	\N	\N	\N	\N	\N	\N	t	\N	f	f	BD	\N	\N	\N	\N	\N	{en}	\N	2026-06-07 20:31:47.899042+00	recent 0 posts	2026-06-07 20:31:47.897584+00	2026-06-07 20:31:47.897584+00	t	2026-06-07 20:31:47.899042+00	7172877019881358341	verified
+f43daf54-e8d2-45a2-b423-a4c21d6fb145	2ffc3a98-89a2-40a2-ad1e-26f5ae391c1a	tiktok	rakib_hossain_vlogs	https://www.tiktok.com/@rakib_hossain_vlogs	6538797688345859072	Rakib Hossain	4100000	74	740000	32559	945	519	0.0083	7.5	t	\N	f	t	BD	\N	\N	\N	\N	\N	{bn}	YouTuber (20M+ Subscribers)\nI Love My Fans\nBangladeshi LifeStyle Vlogger	2026-06-07 20:32:14.093662+00	recent 6 posts	2026-06-07 20:32:14.091701+00	2026-06-07 20:32:14.091701+00	t	2026-06-07 20:32:14.093662+00	6538797688345859072	verified
+e4ec2d7c-e256-4710-b8c0-5fe18faace81	9adfcea6-cb9a-4c50-af83-656afe19e890	tiktok	rezaandpuja	https://www.tiktok.com/@rezaandpuja	6799049677062226950	Reza & Puja Khan	1600000	414	390133	19602	80	6096	0.0161	8.2	t	\N	f	f	BD	\N	\N	\N	\N	\N	{en}	📧: partnerships@rezaandpuja.com	2026-06-07 20:32:55.716899+00	recent 6 posts	2026-06-07 20:32:55.714901+00	2026-06-07 20:32:55.714901+00	t	2026-06-07 20:32:55.716899+00	6799049677062226950	verified
+e1179407-89f7-4f45-a6fb-3f52b9697c72	361323ff-e0a5-4bf7-a0e1-eeeb381b1b14	tiktok	tuhinvaia01official	https://www.tiktok.com/@tuhinvaia01official	7287217441690797058	voice🤭🤭🥀 fo Tuhin 🤫	487	236	160	15	2	0	0.0359	3.1	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	🥀🥀😎একাই একশ 😎🥀🥀	2026-06-07 20:33:04.583683+00	recent 6 posts	2026-06-07 20:33:04.581566+00	2026-06-07 20:33:04.581566+00	t	2026-06-07 20:33:04.583683+00	7287217441690797058	verified
+8fd5d0e8-cf98-4bc6-8c3b-3ad97a9d7422	8724cd98-6837-4fb0-85f8-ad0adff0ae6a	tiktok	mr_mehedi_05	https://www.tiktok.com/@mr_mehedi_05	6780631316293256198	♥mehedi hasan♥	943100	105	2717475	286553	1686	1689	0.3074	0.1	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	Exclusively managed by glee Digital\n🕋Muslim🕋\n🇧🇩~Bangladeshi~🇧🇩\nFb\n👇	2026-06-07 20:33:13.975728+00	recent 6 posts	2026-06-07 20:33:13.973677+00	2026-06-07 20:33:13.973677+00	t	2026-06-07 20:33:13.975728+00	6780631316293256198	verified
+d8145471-17b9-4c47-948b-8cb54f13f6d2	c3708c3c-41d5-4e93-a297-8112133b2cda	tiktok	rafi.bhaiyu	https://www.tiktok.com/@rafi.bhaiyu	181455886291222528	Ra Fi 🇧🇩	2000000	89	200105	4530	65	73	0.0023	20.0	t	\N	f	t	BD	\N	\N	\N	\N	\N	{bn}	• Youtube : Rafi Bhaiyu •\n• Insta : rafi.bhaiyu •\n• rafisaifulislam@gmail.com •	2026-06-07 20:33:59.305593+00	recent 6 posts	2026-06-07 20:33:59.303941+00	2026-06-07 20:33:59.303941+00	t	2026-06-07 20:33:59.305593+00	181455886291222528	verified
+e5acb463-90e2-46c2-99eb-5b5f425bf20b	5e41b0f3-ce73-4601-9508-34aafcd45039	tiktok	rsfahimchowdhury	https://www.tiktok.com/@rsfahimchowdhury	7091527227556660230	I M T I A Z ❤️‍🩹 K🤟	1095	156	306	112	1	1	0.1041	16.4	t	\N	f	f	BD	\N	\N	\N	\N	\N	{bn}	আসসালামু আলাইকুম সবাইকে বলছি সাপোর্ট করলে সাপোর্ট পাবেন আর ফলো দিলে ফলো ব্যাক পাবেন ইনশাল্লাহ	2026-06-07 20:34:07.383098+00	recent 6 posts	2026-06-07 20:34:07.3816+00	2026-06-07 20:34:07.3816+00	t	2026-06-07 20:34:07.383098+00	7091527227556660230	verified
+0042e425-e90f-4406-9e6e-e22d73472d05	85bb9525-c119-40ad-a32c-33efab808e63	tiktok	theshakibkhan_	https://www.tiktok.com/@theshakibkhan_	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	t	\N	f	f	BD	\N	\N	\N	\N	\N	{en}	\N	2026-06-07 20:34:12.778096+00	recent 1 posts	2026-06-07 20:34:12.776364+00	2026-06-07 20:34:12.776364+00	t	2026-06-07 20:34:12.778096+00	theshakibkhan_	verified
+1df3f9d0-8586-42b5-ad2e-82ea08ae62cd	a3d360a0-922f-4c06-8104-6c1af88ef38d	tiktok	safieahafizretu	https://www.tiktok.com/@safieahafizretu	6794733055573246982	Safiea Hafiz Retu	887800	26	377117	28062	294	101	0.0321	16.4	t	\N	f	t	BD	\N	\N	\N	\N	\N	{en}	🥰Allahamdurillah For Everything 🥰\n❤️Any Promotion Massage On Instagram\n⬇️Fb⬇️	2026-06-07 20:34:31.866155+00	recent 6 posts	2026-06-07 20:34:31.864588+00	2026-06-07 20:34:31.864588+00	t	2026-06-07 20:34:31.866155+00	6794733055573246982	verified
+\.
+
+
+--
+-- Data for Name: languages; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.languages (code, name, native_name, is_active) FROM stdin;
+bn	Bengali	বাংলা	t
+en	English	English	t
+ar	Arabic	العربية	t
+hi	Hindi	हिन्दी	t
+ur	Urdu	اردو	t
+\.
+
+
+--
+-- Data for Name: niches; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.niches (id, name, slug, description, parent_id, sort_order, is_active, created_at) FROM stdin;
+1	Technology	technology	\N	\N	1	t	2026-06-07 19:11:45.346109+00
+2	Gaming	gaming	\N	\N	2	t	2026-06-07 19:11:45.346109+00
+3	Fashion	fashion	\N	\N	3	t	2026-06-07 19:11:45.346109+00
+4	Beauty	beauty	\N	\N	4	t	2026-06-07 19:11:45.346109+00
+5	Food	food	\N	\N	5	t	2026-06-07 19:11:45.346109+00
+6	Travel	travel	\N	\N	6	t	2026-06-07 19:11:45.346109+00
+7	Lifestyle	lifestyle	\N	\N	7	t	2026-06-07 19:11:45.346109+00
+8	Education	education	\N	\N	8	t	2026-06-07 19:11:45.346109+00
+9	Finance	finance	\N	\N	9	t	2026-06-07 19:11:45.346109+00
+10	Fitness	fitness	\N	\N	10	t	2026-06-07 19:11:45.346109+00
+11	Parenting	parenting	\N	\N	11	t	2026-06-07 19:11:45.346109+00
+12	Entertainment	entertainment	\N	\N	12	t	2026-06-07 19:11:45.346109+00
+13	News	news	\N	\N	13	t	2026-06-07 19:11:45.346109+00
+14	Other	other	\N	\N	14	t	2026-06-07 19:11:45.346109+00
+19	Comedy	comedy	\N	\N	0	t	2026-06-07 19:37:16.188472+00
+\.
+
+
+--
+-- Data for Name: reviews; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.reviews (id, application_id, reviewer_brand_id, reviewer_creator_id, reviewee_brand_id, reviewee_creator_id, rating, review_text, is_public, created_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: cohesiq
+--
+
+COPY public.users (id, email, password_hash, role, is_active, is_email_verified, last_login_at, created_at, updated_at, deleted_at, clerk_id) FROM stdin;
+51f4f602-e604-4f47-bda0-9c9522bd8b9d	real_youtube_ssfoodchallenge@test.com	\N	creator	t	t	\N	2026-06-07 19:38:54.551262+00	2026-06-07 19:38:54.551262+00	\N	seed_real_youtube_ssfoodchallenge
+465d4838-61ab-4b28-8060-f6eef75165ea	real_youtube_ssfoodchallengejunior@test.com	\N	creator	t	t	\N	2026-06-07 19:38:58.045159+00	2026-06-07 19:38:58.045159+00	\N	seed_real_youtube_ssfoodchallengejunior
+ec8ad189-5181-4e18-b817-1fe8170f075d	real_youtube_nobabicouple@test.com	\N	creator	t	t	\N	2026-06-07 19:38:59.888318+00	2026-06-07 19:38:59.888318+00	\N	seed_real_youtube_nobabicouple
+fb7da1f8-7224-4f64-8f41-078e939c11c3	real_youtube_wazihasvlog@test.com	\N	creator	t	t	\N	2026-06-07 19:39:01.221656+00	2026-06-07 19:39:01.221656+00	\N	seed_real_youtube_wazihasvlog
+2d4183d8-df9a-48e0-9155-c7c81ba386a8	real_youtube_doyelagro@test.com	\N	creator	t	t	\N	2026-06-07 19:39:02.695081+00	2026-06-07 19:39:02.695081+00	\N	seed_real_youtube_doyelagro
+45ad41e2-c48c-47e4-9849-231350fdf898	real_youtube_aroundmebd@test.com	\N	creator	t	t	\N	2026-06-07 19:39:06.107089+00	2026-06-07 19:39:06.107089+00	\N	seed_real_youtube_aroundmebd
+62ff254d-dd0b-4250-8962-0fcbd597251e	real_youtube_extremelaunchlover@test.com	\N	creator	t	t	\N	2026-06-07 19:39:13.604253+00	2026-06-07 19:39:13.604253+00	\N	seed_real_youtube_extremelaunchlover
+21540e38-ce0d-4a5c-b593-0ff3eecf71cc	real_youtube_tonniartcraft@test.com	\N	creator	t	t	\N	2026-06-07 19:39:18.892221+00	2026-06-07 19:39:18.892221+00	\N	seed_real_youtube_tonniartcraft
+64fc6c13-3546-4a00-bcdc-06a480abfc7b	real_youtube_farjanadrawingacademy@test.com	\N	creator	t	t	\N	2026-06-07 19:39:21.162682+00	2026-06-07 19:39:21.162682+00	\N	seed_real_youtube_farjanadrawingacademy
+f8755e6a-d631-4ef6-8a3d-b67ee736c113	real_youtube_muktaartcraft@test.com	\N	creator	t	t	\N	2026-06-07 19:39:28.529631+00	2026-06-07 19:39:28.529631+00	\N	seed_real_youtube_muktaartcraft
+91cecd1a-82ec-45e3-a6c3-5827f09a4357	real_youtube_araseasyart@test.com	\N	creator	t	t	\N	2026-06-07 19:39:43.215011+00	2026-06-07 19:39:43.215011+00	\N	seed_real_youtube_araseasyart
+84f5700d-efde-491e-ad9c-034aa68ec777	real_youtube_selaitutorial@test.com	\N	creator	t	t	\N	2026-06-07 19:39:56.968481+00	2026-06-07 19:39:56.968481+00	\N	seed_real_youtube_selaitutorial
+fc4b005a-3d9c-469a-bdfd-fae14f956a2e	real_youtube_craftbamboo@test.com	\N	creator	t	t	\N	2026-06-07 19:40:01.378559+00	2026-06-07 19:40:01.378559+00	\N	seed_real_youtube_craftbamboo
+e8fcc0fd-9b36-48d1-a9d1-32c9929a47f3	real_youtube_crazybanglatips@test.com	\N	creator	t	t	\N	2026-06-07 19:40:05.909454+00	2026-06-07 19:40:05.909454+00	\N	seed_real_youtube_crazybanglatips
+5641267d-a62d-4824-9919-7e9294e181b9	real_youtube_pcbuilderbangladesh@test.com	\N	creator	t	t	\N	2026-06-07 19:40:30.101002+00	2026-06-07 19:40:30.101002+00	\N	seed_real_youtube_pcbuilderbangladesh
+6f0be408-84c0-4b34-85e2-f403d5ce0aee	real_youtube_atcandroidtotocompany@test.com	\N	creator	t	t	\N	2026-06-07 19:40:37.620958+00	2026-06-07 19:40:37.620958+00	\N	seed_real_youtube_atcandroidtotocompany
+3fa708fc-5a75-4b65-97b3-ee3d9c5f4734	real_youtube_hemel360@test.com	\N	creator	t	t	\N	2026-06-07 19:40:52.437767+00	2026-06-07 19:40:52.437767+00	\N	seed_real_youtube_hemel360
+77d90c43-0c9e-4a5d-bbc0-744758a54216	real_youtube_allgaming@test.com	\N	creator	t	t	\N	2026-06-07 19:40:54.53377+00	2026-06-07 19:40:54.53377+00	\N	seed_real_youtube_allgaming
+b50c7236-f149-4ff5-b252-8b45ec0c814e	real_youtube_nqisik@test.com	\N	creator	t	t	\N	2026-06-07 19:41:01.906437+00	2026-06-07 19:41:01.906437+00	\N	seed_real_youtube_nqisik
+58cddefc-9381-4bd4-ae39-5ee636c60caa	real_youtube_gamingwithtalhaisback@test.com	\N	creator	t	t	\N	2026-06-07 19:41:05.507162+00	2026-06-07 19:41:05.507162+00	\N	seed_real_youtube_gamingwithtalhaisback
+cdc987c8-4d54-44de-b88d-520a74c655f3	real_youtube_revenge9t4@test.com	\N	creator	t	t	\N	2026-06-07 19:41:08.957113+00	2026-06-07 19:41:08.957113+00	\N	seed_real_youtube_revenge9t4
+ba390260-8102-4f5e-b236-931217ca2b65	real_youtube_gameshole@test.com	\N	creator	t	t	\N	2026-06-07 19:41:16.246633+00	2026-06-07 19:41:16.246633+00	\N	seed_real_youtube_gameshole
+cdb12ea4-bc45-4bf0-a5fe-00b8d2eba7a4	real_youtube_mdjunaed@test.com	\N	creator	t	t	\N	2026-06-07 19:41:34.790408+00	2026-06-07 19:41:34.790408+00	\N	seed_real_youtube_mdjunaed
+844843f1-c9d3-4aa1-b90e-183a0acbe845	real_youtube_ajairaltdoriginals@test.com	\N	creator	t	t	\N	2026-06-07 19:41:35.932772+00	2026-06-07 19:41:35.932772+00	\N	seed_real_youtube_ajairaltdoriginals
+d57b5342-8f26-4cfa-a3ea-36a6f3d85fbb	real_youtube_dhrubatv@test.com	\N	creator	t	t	\N	2026-06-07 19:41:55.128296+00	2026-06-07 19:41:55.128296+00	\N	seed_real_youtube_dhrubatv
+5ec8bef3-9f43-486e-8c38-d3a47b430173	real_youtube_againfoysal@test.com	\N	creator	t	t	\N	2026-06-07 19:42:01.774507+00	2026-06-07 19:42:01.774507+00	\N	seed_real_youtube_againfoysal
+a84db67d-c925-4cf4-8710-01af78c1aebc	real_youtube_tawhidafridimytv@test.com	\N	creator	t	t	\N	2026-06-07 19:42:03.121323+00	2026-06-07 19:42:03.121323+00	\N	seed_real_youtube_tawhidafridimytv
+715a10ce-9bdd-43ed-b161-7f2ec6996bbf	real_youtube_funnyday@test.com	\N	creator	t	t	\N	2026-06-07 19:42:25.173318+00	2026-06-07 19:42:25.173318+00	\N	seed_real_youtube_funnyday
+ce9351ed-0134-41e8-939e-678628af1414	real_youtube_advancesearchisback@test.com	\N	creator	t	t	\N	2026-06-07 19:42:26.690348+00	2026-06-07 19:42:26.690348+00	\N	seed_real_youtube_advancesearchisback
+16ccb096-15c8-47ae-822d-0c006899c399	real_youtube_zanzamin@test.com	\N	creator	t	t	\N	2026-06-07 19:42:30.333828+00	2026-06-07 19:42:30.333828+00	\N	seed_real_youtube_zanzamin
+7bb0bdd2-555b-43ac-8921-41e38d6f3f09	real_youtube_mrtripler@test.com	\N	creator	t	t	\N	2026-06-07 19:42:47.257116+00	2026-06-07 19:42:47.257116+00	\N	seed_real_youtube_mrtripler
+393dab13-5d60-4a46-8297-c821321e3869	real_youtube_sagorbhuyan@test.com	\N	creator	t	t	\N	2026-06-07 19:43:04.838779+00	2026-06-07 19:43:04.838779+00	\N	seed_real_youtube_sagorbhuyan
+389a810f-831e-4ba7-b4a3-6ac428263529	real_youtube_10msmain@test.com	\N	creator	t	t	\N	2026-06-07 19:37:16.193851+00	2026-06-07 19:37:16.193851+00	\N	seed_real_youtube_10msmain
+90425878-f2f7-4086-8b3f-e634eaa47c04	real_youtube_shykhseraj@test.com	\N	creator	t	t	\N	2026-06-07 19:43:53.68621+00	2026-06-07 19:43:53.68621+00	\N	seed_real_youtube_shykhseraj
+197b9d66-0746-432a-90c4-27f2fdcbf122	real_youtube_mayajaalbangla@test.com	\N	creator	t	t	\N	2026-06-07 19:44:41.420051+00	2026-06-07 19:44:41.420051+00	\N	seed_real_youtube_mayajaalbangla
+c9b5f995-356b-4951-b223-9c15e60277ab	real_youtube_kutibari@test.com	\N	creator	t	t	\N	2026-06-07 19:44:57.277696+00	2026-06-07 19:44:57.277696+00	\N	seed_real_youtube_kutibari
+4566be59-50cf-4210-8530-61a0513799ea	real_youtube_banglalecture@test.com	\N	creator	t	t	\N	2026-06-07 19:45:22.740134+00	2026-06-07 19:45:22.740134+00	\N	seed_real_youtube_banglalecture
+bea844c7-7a02-41ff-8526-9d2afe838483	real_youtube_drawingfantasy@test.com	\N	creator	t	t	\N	2026-06-07 19:45:47.802522+00	2026-06-07 19:45:47.802522+00	\N	seed_real_youtube_drawingfantasy
+759dd5be-451a-42aa-8b3e-38df7b9a37aa	real_youtube_alheraislamiccenter@test.com	\N	creator	t	t	\N	2026-06-07 19:45:52.697652+00	2026-06-07 19:45:52.697652+00	\N	seed_real_youtube_alheraislamiccenter
+61ddb7f3-afa8-4c16-8e06-b92b0f2bdc1a	real_youtube_rimedia@test.com	\N	creator	t	t	\N	2026-06-07 19:46:30.831568+00	2026-06-07 19:46:30.831568+00	\N	seed_real_youtube_rimedia
+e8329d30-d94e-46a5-9120-af0982a00a05	real_youtube_bcbtigercricket@test.com	\N	creator	t	t	\N	2026-06-07 19:47:10.819466+00	2026-06-07 19:47:10.819466+00	\N	seed_real_youtube_bcbtigercricket
+d425d9ab-fe49-4edc-aaf2-27df06a3d015	real_youtube_somoysports@test.com	\N	creator	t	t	\N	2026-06-07 19:47:26.551686+00	2026-06-07 19:47:26.551686+00	\N	seed_real_youtube_somoysports
+95381acc-9847-4bd5-aa67-1c1411caa8bc	real_youtube_onfield@test.com	\N	creator	t	t	\N	2026-06-07 19:47:57.15661+00	2026-06-07 19:47:57.15661+00	\N	seed_real_youtube_onfield
+d8462b4a-3d5d-4a61-8ade-4fac993da9cd	real_youtube_futbalgamerz@test.com	\N	creator	t	t	\N	2026-06-07 19:47:58.276914+00	2026-06-07 19:47:58.276914+00	\N	seed_real_youtube_futbalgamerz
+1168e9bb-13dd-4e28-af52-a98623f1c5b7	real_youtube_bdsportsnetwork@test.com	\N	creator	t	t	\N	2026-06-07 19:47:59.970508+00	2026-06-07 19:47:59.970508+00	\N	seed_real_youtube_bdsportsnetwork
+9e551dac-b854-4a87-8846-bdda3135fe2f	real_youtube_manikmiahofficial@test.com	\N	creator	t	t	\N	2026-06-07 19:48:31.193713+00	2026-06-07 19:48:31.193713+00	\N	seed_real_youtube_manikmiahofficial
+0f4d22bf-c6e3-4970-9568-e8e2af05b9d4	real_youtube_rituhossain@test.com	\N	creator	t	t	\N	2026-06-07 19:48:36.615608+00	2026-06-07 19:48:36.615608+00	\N	seed_real_youtube_rituhossain
+f725e70f-0973-4547-b9dc-7339cf6e3eba	real_youtube_soniyaakterrima@test.com	\N	creator	t	t	\N	2026-06-07 19:48:53.369169+00	2026-06-07 19:48:53.369169+00	\N	seed_real_youtube_soniyaakterrima
+bb6993f2-4004-4584-b3f2-6b94fcdaa010	real_youtube_oishratjahaneity@test.com	\N	creator	t	t	\N	2026-06-07 19:48:59.93103+00	2026-06-07 19:48:59.93103+00	\N	seed_real_youtube_oishratjahaneity
+7942b727-cd12-4f9c-92c5-fa765770237b	real_youtube_sayanofficial@test.com	\N	creator	t	t	\N	2026-06-07 19:49:05.396445+00	2026-06-07 19:49:05.396445+00	\N	seed_real_youtube_sayanofficial
+80b1f8f8-4d4f-43a6-bd12-45534ac1a1a9	real_youtube_apubiswasofficial@test.com	\N	creator	t	t	\N	2026-06-07 19:49:11.131401+00	2026-06-07 19:49:11.131401+00	\N	seed_real_youtube_apubiswasofficial
+ea4b22b8-2dfd-4de2-95d1-a198027a0785	real_youtube_dishamoni@test.com	\N	creator	t	t	\N	2026-06-07 19:49:12.504604+00	2026-06-07 19:49:12.504604+00	\N	seed_real_youtube_dishamoni
+1b251e79-f8f7-44ab-b32f-d91af78ed2a7	real_youtube_ffeditz100k@test.com	\N	creator	t	t	\N	2026-06-07 19:49:14.762594+00	2026-06-07 19:49:14.762594+00	\N	seed_real_youtube_ffeditz100k
+3bac966a-28c4-4d87-b944-c555d164f91a	real_youtube_meowphorius@test.com	\N	creator	t	t	\N	2026-06-07 19:49:18.484553+00	2026-06-07 19:49:18.484553+00	\N	seed_real_youtube_meowphorius
+e7811e0d-eae7-4cae-89b2-a1d876d9ea49	real_youtube_comedyanimalsbd@test.com	\N	creator	t	t	\N	2026-06-07 19:49:23.120564+00	2026-06-07 19:49:23.120564+00	\N	seed_real_youtube_comedyanimalsbd
+1851d727-ca50-40fa-b371-702d37d959d3	real_youtube_cokestudiobangla@test.com	\N	creator	t	t	\N	2026-06-07 19:49:55.970107+00	2026-06-07 19:49:55.970107+00	\N	seed_real_youtube_cokestudiobangla
+f6e71317-1bae-4761-b52c-aa6a618cd7f5	real_youtube_pritomhasan@test.com	\N	creator	t	t	\N	2026-06-07 19:50:01.344918+00	2026-06-07 19:50:01.344918+00	\N	seed_real_youtube_pritomhasan
+b08bcb89-7961-47a7-8ca3-7dbb9d785518	real_youtube_sathikhan@test.com	\N	creator	t	t	\N	2026-06-07 19:50:07.053742+00	2026-06-07 19:50:07.053742+00	\N	seed_real_youtube_sathikhan
+091f6405-7ade-49c1-a42b-587a682e888a	real_youtube_habibwahid@test.com	\N	creator	t	t	\N	2026-06-07 19:50:10.474293+00	2026-06-07 19:50:10.474293+00	\N	seed_real_youtube_habibwahid
+bc552d81-57a5-4305-ae78-065da02c92ec	real_youtube_prothomalo@test.com	\N	creator	t	t	\N	2026-06-07 19:50:14.219716+00	2026-06-07 19:50:14.219716+00	\N	seed_real_youtube_prothomalo
+12e478e8-58a6-4fcc-b2ff-4a28f7163a92	real_youtube_thebusinessstandard@test.com	\N	creator	t	t	\N	2026-06-07 19:50:47.959663+00	2026-06-07 19:50:47.959663+00	\N	seed_real_youtube_thebusinessstandard
+78d0b5af-5cb2-41f6-8cc8-d6b6e0817501	real_youtube_kikenokivabe@test.com	\N	creator	t	t	\N	2026-06-07 19:51:26.757358+00	2026-06-07 19:51:26.757358+00	\N	seed_real_youtube_kikenokivabe
+628f626f-a8c9-43f7-90f5-3a9c6fff1d08	real_youtube_chorkiofficial@test.com	\N	creator	t	t	\N	2026-06-07 19:52:31.068476+00	2026-06-07 19:52:31.068476+00	\N	seed_real_youtube_chorkiofficial
+2741df37-6600-4636-b332-95fc6ce425f4	real_youtube_masmediainfo@test.com	\N	creator	t	t	\N	2026-06-07 19:52:47.443304+00	2026-06-07 19:52:47.443304+00	\N	seed_real_youtube_masmediainfo
+a07c506b-3e40-4e5f-8209-e17a9dece216	real_youtube_maasrangakids@test.com	\N	creator	t	t	\N	2026-06-07 19:52:51.798181+00	2026-06-07 19:52:51.798181+00	\N	seed_real_youtube_maasrangakids
+fde262b6-ec7c-4dcc-9dbf-08c4c19c7fc9	user_3EoAvI9BVX1ccfZ85JNXWDGhRqN@placeholder.local	\N	creator	t	t	\N	2026-06-07 19:54:09.797852+00	2026-06-07 19:54:09.797852+00	\N	user_3EoAvI9BVX1ccfZ85JNXWDGhRqN
+b523277c-e45e-47f7-a70c-64803cb77824	user_3En7pOSWgBhuMulmYRuKCXhHUFq@placeholder.local	\N	creator	t	t	\N	2026-06-07 19:54:30.564417+00	2026-06-07 19:54:30.564417+00	\N	user_3En7pOSWgBhuMulmYRuKCXhHUFq
+ce4b6bc7-032c-4ea0-80aa-95f057712e7e	user_3EkHA4R66gqxJSkLOxUdgZ63IHB@placeholder.local	\N	brand	t	t	\N	2026-06-07 20:09:30.531354+00	2026-06-07 20:10:51.07799+00	\N	user_3EkHA4R66gqxJSkLOxUdgZ63IHB
+a8b805e8-70c9-44a8-a173-0c0b6c2b1491	real_instagram_instagram_mehazabien@test.com	\N	creator	t	t	\N	2026-06-07 20:25:32.548085+00	2026-06-07 20:25:32.548085+00	\N	seed_real_instagram_instagram_mehazabien
+b57ed987-d1bd-4dd7-a992-5c8d04ce9e6c	real_instagram_instagram_bidya_mim@test.com	\N	creator	t	t	\N	2026-06-07 20:27:05.081743+00	2026-06-07 20:27:05.081743+00	\N	seed_real_instagram_instagram_bidya_mim
+6111262d-0692-4a19-bb64-4558acf3419a	real_instagram_instagram_sabla_babla@test.com	\N	creator	t	t	\N	2026-06-07 20:27:47.497012+00	2026-06-07 20:27:47.497012+00	\N	seed_real_instagram_instagram_sabla_babla
+53025914-fa8f-42b7-a8cb-ffb0898dc884	real_instagram_instagram_therealpurnima@test.com	\N	creator	t	t	\N	2026-06-07 20:28:07.914847+00	2026-06-07 20:28:07.914847+00	\N	seed_real_instagram_instagram_therealpurnima
+34245b80-48d4-4553-8f0e-285d64dba9b0	real_instagram_instagram_bangladeshtigers@test.com	\N	creator	t	t	\N	2026-06-07 20:28:36.501125+00	2026-06-07 20:28:36.501125+00	\N	seed_real_instagram_instagram_bangladeshtigers
+f9845c4e-15b6-453e-ad38-71e26050ee90	real_instagram_instagram_aymansadiq10@test.com	\N	creator	t	t	\N	2026-06-07 20:28:54.858262+00	2026-06-07 20:28:54.858262+00	\N	seed_real_instagram_instagram_aymansadiq10
+c28c703e-f183-4d4b-a258-875376bfa4b3	real_instagram_instagram_taskintazim@test.com	\N	creator	t	t	\N	2026-06-07 20:30:05.599271+00	2026-06-07 20:30:05.599271+00	\N	seed_real_instagram_instagram_taskintazim
+f9e67eb8-f0cc-4587-a9d9-3dc8710c77e5	real_instagram_instagram_mustafizur_90@test.com	\N	creator	t	t	\N	2026-06-07 20:30:36.25088+00	2026-06-07 20:30:36.25088+00	\N	seed_real_instagram_instagram_mustafizur_90
+9dfed8a5-5b82-4c62-b5ba-18867bb0eadf	real_instagram_instagram_t_sunehra@test.com	\N	creator	t	t	\N	2026-06-07 20:31:02.485081+00	2026-06-07 20:31:02.485081+00	\N	seed_real_instagram_instagram_t_sunehra
+c884fe37-0f43-480e-a74e-a03364f83746	real_instagram_instagram_mohammad_mahmudullah@test.com	\N	creator	t	t	\N	2026-06-07 20:31:27.216287+00	2026-06-07 20:31:27.216287+00	\N	seed_real_instagram_instagram_mohammad_mahmudullah
+e15723c1-61b7-4d38-bfa5-89124d0a151d	real_tiktok_tiktok_tawhidafridi121@test.com	\N	creator	t	t	\N	2026-06-07 20:31:28.278762+00	2026-06-07 20:31:28.278762+00	\N	seed_real_tiktok_tiktok_tawhidafridi121
+bd39d263-9e81-4db5-b7ca-3c91d48fb60d	real_tiktok_tiktok_sakib_al_hasan2@test.com	\N	creator	t	t	\N	2026-06-07 20:31:47.897584+00	2026-06-07 20:31:47.897584+00	\N	seed_real_tiktok_tiktok_sakib_al_hasan2
+2af6444d-4b90-48e0-8c59-396528ac0277	real_tiktok_tiktok_rakib_hossain_vlogs@test.com	\N	creator	t	t	\N	2026-06-07 20:32:14.091701+00	2026-06-07 20:32:14.091701+00	\N	seed_real_tiktok_tiktok_rakib_hossain_vlogs
+cb90f3a4-3574-4578-951b-a99df9ddbebb	real_tiktok_tiktok_rezaandpuja@test.com	\N	creator	t	t	\N	2026-06-07 20:32:55.714901+00	2026-06-07 20:32:55.714901+00	\N	seed_real_tiktok_tiktok_rezaandpuja
+f91a7442-45fb-4dd3-9123-35a9160a35f2	real_tiktok_tiktok_tuhinvaia01official@test.com	\N	creator	t	t	\N	2026-06-07 20:33:04.581566+00	2026-06-07 20:33:04.581566+00	\N	seed_real_tiktok_tiktok_tuhinvaia01official
+695254e1-565b-40c1-a4c7-5af903daae22	real_tiktok_tiktok_mr_mehedi_05@test.com	\N	creator	t	t	\N	2026-06-07 20:33:13.973677+00	2026-06-07 20:33:13.973677+00	\N	seed_real_tiktok_tiktok_mr_mehedi_05
+da3a42a0-e308-43f7-9795-c5f7bbb30278	real_tiktok_tiktok_rafi_bhaiyu@test.com	\N	creator	t	t	\N	2026-06-07 20:33:59.303941+00	2026-06-07 20:33:59.303941+00	\N	seed_real_tiktok_tiktok_rafi_bhaiyu
+8272b588-5092-43c3-b8e5-352a887766fa	real_tiktok_tiktok_rsfahimchowdhury@test.com	\N	creator	t	t	\N	2026-06-07 20:34:07.3816+00	2026-06-07 20:34:07.3816+00	\N	seed_real_tiktok_tiktok_rsfahimchowdhury
+a66f6b1d-e82b-4b4c-a99f-e0892343bdc2	real_tiktok_tiktok_theshakibkhan@test.com	\N	creator	t	t	\N	2026-06-07 20:34:12.776364+00	2026-06-07 20:34:12.776364+00	\N	seed_real_tiktok_tiktok_theshakibkhan
+aed4e407-eedc-4bcd-b14d-1b70eea63608	real_tiktok_tiktok_safieahafizretu@test.com	\N	creator	t	t	\N	2026-06-07 20:34:31.864588+00	2026-06-07 20:34:31.864588+00	\N	seed_real_tiktok_tiktok_safieahafizretu
+\.
+
+
+--
+-- Name: niches_id_seq; Type: SEQUENCE SET; Schema: public; Owner: cohesiq
+--
+
+SELECT pg_catalog.setval('public.niches_id_seq', 58, true);
+
+
+--
+-- Name: ai_match_scores ai_match_scores_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.ai_match_scores
+    ADD CONSTRAINT ai_match_scores_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.alembic_version
+    ADD CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num);
+
+
+--
+-- Name: brand_profiles brand_profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.brand_profiles
+    ADD CONSTRAINT brand_profiles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: brand_profiles brand_profiles_user_id_key; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.brand_profiles
+    ADD CONSTRAINT brand_profiles_user_id_key UNIQUE (user_id);
+
+
+--
+-- Name: campaign_applications campaign_applications_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.campaign_applications
+    ADD CONSTRAINT campaign_applications_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: campaign_deliverable_requirements campaign_deliverable_requirements_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.campaign_deliverable_requirements
+    ADD CONSTRAINT campaign_deliverable_requirements_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: campaign_language_targets campaign_language_targets_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.campaign_language_targets
+    ADD CONSTRAINT campaign_language_targets_pkey PRIMARY KEY (campaign_id, language_code);
+
+
+--
+-- Name: campaign_niche_targets campaign_niche_targets_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.campaign_niche_targets
+    ADD CONSTRAINT campaign_niche_targets_pkey PRIMARY KEY (campaign_id, niche_id);
+
+
+--
+-- Name: campaigns campaigns_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.campaigns
+    ADD CONSTRAINT campaigns_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: contracts contracts_application_id_key; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.contracts
+    ADD CONSTRAINT contracts_application_id_key UNIQUE (application_id);
+
+
+--
+-- Name: contracts contracts_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.contracts
+    ADD CONSTRAINT contracts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: creator_collaboration_history creator_collaboration_history_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_collaboration_history
+    ADD CONSTRAINT creator_collaboration_history_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: creator_languages creator_languages_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_languages
+    ADD CONSTRAINT creator_languages_pkey PRIMARY KEY (creator_id, language_code);
+
+
+--
+-- Name: creator_niches creator_niches_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_niches
+    ADD CONSTRAINT creator_niches_pkey PRIMARY KEY (creator_id, niche_id);
+
+
+--
+-- Name: creator_portfolio_items creator_portfolio_items_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_portfolio_items
+    ADD CONSTRAINT creator_portfolio_items_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: creator_profiles creator_profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_profiles
+    ADD CONSTRAINT creator_profiles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: creator_profiles creator_profiles_user_id_key; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_profiles
+    ADD CONSTRAINT creator_profiles_user_id_key UNIQUE (user_id);
+
+
+--
+-- Name: creator_rate_cards creator_rate_cards_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_rate_cards
+    ADD CONSTRAINT creator_rate_cards_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: creator_social_profiles creator_social_profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_social_profiles
+    ADD CONSTRAINT creator_social_profiles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: languages languages_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.languages
+    ADD CONSTRAINT languages_pkey PRIMARY KEY (code);
+
+
+--
+-- Name: niches niches_name_key; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.niches
+    ADD CONSTRAINT niches_name_key UNIQUE (name);
+
+
+--
+-- Name: niches niches_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.niches
+    ADD CONSTRAINT niches_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: niches niches_slug_key; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.niches
+    ADD CONSTRAINT niches_slug_key UNIQUE (slug);
+
+
+--
+-- Name: reviews reviews_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ai_match_scores uq_campaign_creator_match; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.ai_match_scores
+    ADD CONSTRAINT uq_campaign_creator_match UNIQUE (campaign_id, creator_id);
+
+
+--
+-- Name: creator_social_profiles uq_social_creator_platform; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_social_profiles
+    ADD CONSTRAINT uq_social_creator_platform UNIQUE (creator_id, platform);
+
+
+--
+-- Name: users users_clerk_id_key; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_clerk_id_key UNIQUE (clerk_id);
+
+
+--
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_email_key UNIQUE (email);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: idx_brand_profiles_brand_category; Type: INDEX; Schema: public; Owner: cohesiq
+--
+
+CREATE INDEX idx_brand_profiles_brand_category ON public.brand_profiles USING btree (brand_category);
+
+
+--
+-- Name: idx_campaigns_brand_category; Type: INDEX; Schema: public; Owner: cohesiq
+--
+
+CREATE INDEX idx_campaigns_brand_category ON public.campaigns USING btree (brand_category);
+
+
+--
+-- Name: ix_contracts_brand_id; Type: INDEX; Schema: public; Owner: cohesiq
+--
+
+CREATE INDEX ix_contracts_brand_id ON public.contracts USING btree (brand_id);
+
+
+--
+-- Name: ix_contracts_creator_id; Type: INDEX; Schema: public; Owner: cohesiq
+--
+
+CREATE INDEX ix_contracts_creator_id ON public.contracts USING btree (creator_id);
+
+
+--
+-- Name: ix_contracts_status; Type: INDEX; Schema: public; Owner: cohesiq
+--
+
+CREATE INDEX ix_contracts_status ON public.contracts USING btree (status);
+
+
+--
+-- Name: ai_match_scores ai_match_scores_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.ai_match_scores
+    ADD CONSTRAINT ai_match_scores_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id) ON DELETE CASCADE;
+
+
+--
+-- Name: ai_match_scores ai_match_scores_creator_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.ai_match_scores
+    ADD CONSTRAINT ai_match_scores_creator_id_fkey FOREIGN KEY (creator_id) REFERENCES public.creator_profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: brand_profiles brand_profiles_niche_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.brand_profiles
+    ADD CONSTRAINT brand_profiles_niche_id_fkey FOREIGN KEY (niche_id) REFERENCES public.niches(id) ON DELETE SET NULL;
+
+
+--
+-- Name: brand_profiles brand_profiles_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.brand_profiles
+    ADD CONSTRAINT brand_profiles_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: campaign_applications campaign_applications_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.campaign_applications
+    ADD CONSTRAINT campaign_applications_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id) ON DELETE CASCADE;
+
+
+--
+-- Name: campaign_applications campaign_applications_creator_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.campaign_applications
+    ADD CONSTRAINT campaign_applications_creator_id_fkey FOREIGN KEY (creator_id) REFERENCES public.creator_profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: campaign_deliverable_requirements campaign_deliverable_requirements_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.campaign_deliverable_requirements
+    ADD CONSTRAINT campaign_deliverable_requirements_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id) ON DELETE CASCADE;
+
+
+--
+-- Name: campaign_language_targets campaign_language_targets_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.campaign_language_targets
+    ADD CONSTRAINT campaign_language_targets_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id) ON DELETE CASCADE;
+
+
+--
+-- Name: campaign_language_targets campaign_language_targets_language_code_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.campaign_language_targets
+    ADD CONSTRAINT campaign_language_targets_language_code_fkey FOREIGN KEY (language_code) REFERENCES public.languages(code) ON DELETE CASCADE;
+
+
+--
+-- Name: campaign_niche_targets campaign_niche_targets_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.campaign_niche_targets
+    ADD CONSTRAINT campaign_niche_targets_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id) ON DELETE CASCADE;
+
+
+--
+-- Name: campaign_niche_targets campaign_niche_targets_niche_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.campaign_niche_targets
+    ADD CONSTRAINT campaign_niche_targets_niche_id_fkey FOREIGN KEY (niche_id) REFERENCES public.niches(id) ON DELETE CASCADE;
+
+
+--
+-- Name: campaigns campaigns_brand_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.campaigns
+    ADD CONSTRAINT campaigns_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brand_profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: campaigns campaigns_primary_niche_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.campaigns
+    ADD CONSTRAINT campaigns_primary_niche_id_fkey FOREIGN KEY (primary_niche_id) REFERENCES public.niches(id) ON DELETE SET NULL;
+
+
+--
+-- Name: contracts contracts_application_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.contracts
+    ADD CONSTRAINT contracts_application_id_fkey FOREIGN KEY (application_id) REFERENCES public.campaign_applications(id) ON DELETE CASCADE;
+
+
+--
+-- Name: contracts contracts_brand_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.contracts
+    ADD CONSTRAINT contracts_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brand_profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: contracts contracts_creator_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.contracts
+    ADD CONSTRAINT contracts_creator_id_fkey FOREIGN KEY (creator_id) REFERENCES public.creator_profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: creator_collaboration_history creator_collaboration_history_creator_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_collaboration_history
+    ADD CONSTRAINT creator_collaboration_history_creator_id_fkey FOREIGN KEY (creator_id) REFERENCES public.creator_profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: creator_collaboration_history creator_collaboration_history_niche_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_collaboration_history
+    ADD CONSTRAINT creator_collaboration_history_niche_id_fkey FOREIGN KEY (niche_id) REFERENCES public.niches(id) ON DELETE SET NULL;
+
+
+--
+-- Name: creator_languages creator_languages_creator_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_languages
+    ADD CONSTRAINT creator_languages_creator_id_fkey FOREIGN KEY (creator_id) REFERENCES public.creator_profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: creator_languages creator_languages_language_code_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_languages
+    ADD CONSTRAINT creator_languages_language_code_fkey FOREIGN KEY (language_code) REFERENCES public.languages(code) ON DELETE CASCADE;
+
+
+--
+-- Name: creator_niches creator_niches_creator_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_niches
+    ADD CONSTRAINT creator_niches_creator_id_fkey FOREIGN KEY (creator_id) REFERENCES public.creator_profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: creator_niches creator_niches_niche_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_niches
+    ADD CONSTRAINT creator_niches_niche_id_fkey FOREIGN KEY (niche_id) REFERENCES public.niches(id) ON DELETE CASCADE;
+
+
+--
+-- Name: creator_portfolio_items creator_portfolio_items_creator_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_portfolio_items
+    ADD CONSTRAINT creator_portfolio_items_creator_id_fkey FOREIGN KEY (creator_id) REFERENCES public.creator_profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: creator_portfolio_items creator_portfolio_items_niche_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_portfolio_items
+    ADD CONSTRAINT creator_portfolio_items_niche_id_fkey FOREIGN KEY (niche_id) REFERENCES public.niches(id) ON DELETE SET NULL;
+
+
+--
+-- Name: creator_profiles creator_profiles_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_profiles
+    ADD CONSTRAINT creator_profiles_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: creator_rate_cards creator_rate_cards_creator_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_rate_cards
+    ADD CONSTRAINT creator_rate_cards_creator_id_fkey FOREIGN KEY (creator_id) REFERENCES public.creator_profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: creator_social_profiles creator_social_profiles_creator_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_social_profiles
+    ADD CONSTRAINT creator_social_profiles_creator_id_fkey FOREIGN KEY (creator_id) REFERENCES public.creator_profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: creator_collaboration_history fk_collab_history_brand; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.creator_collaboration_history
+    ADD CONSTRAINT fk_collab_history_brand FOREIGN KEY (brand_id) REFERENCES public.brand_profiles(id) ON DELETE SET NULL;
+
+
+--
+-- Name: reviews reviews_application_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_application_id_fkey FOREIGN KEY (application_id) REFERENCES public.campaign_applications(id) ON DELETE CASCADE;
+
+
+--
+-- Name: reviews reviews_reviewee_brand_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_reviewee_brand_id_fkey FOREIGN KEY (reviewee_brand_id) REFERENCES public.brand_profiles(id) ON DELETE SET NULL;
+
+
+--
+-- Name: reviews reviews_reviewee_creator_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_reviewee_creator_id_fkey FOREIGN KEY (reviewee_creator_id) REFERENCES public.creator_profiles(id) ON DELETE SET NULL;
+
+
+--
+-- Name: reviews reviews_reviewer_brand_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_reviewer_brand_id_fkey FOREIGN KEY (reviewer_brand_id) REFERENCES public.brand_profiles(id) ON DELETE SET NULL;
+
+
+--
+-- Name: reviews reviews_reviewer_creator_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: cohesiq
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_reviewer_creator_id_fkey FOREIGN KEY (reviewer_creator_id) REFERENCES public.creator_profiles(id) ON DELETE SET NULL;
+
+
+--
+-- PostgreSQL database dump complete
+--
+
+\unrestrict KoAohlDhaOLs9ydBVB2fIif0LFnLY2ByHgb8MFQKPEexkefWAupV9rhJP5Nefyo
+

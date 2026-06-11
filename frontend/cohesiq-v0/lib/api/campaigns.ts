@@ -16,6 +16,7 @@ export const NICHE_MAP: Record<number, string> = {
   12: "entertainment",
   13: "news",
   14: "other",
+  19: "comedy",
 };
 
 let brandsCache: Record<string, any> = {};
@@ -39,6 +40,16 @@ async function resolveBrand(brandId: string): Promise<any> {
 async function mapCampaignResponse(c: any): Promise<Campaign> {
   const primaryNicheName = c.primary_niche_id ? NICHE_MAP[c.primary_niche_id] || `Niche ${c.primary_niche_id}` : "general";
   const brandData = await resolveBrand(c.brand_id);
+  const deliverables = c.deliverable_requirements
+    ? c.deliverable_requirements.map((req: any) => ({
+        id: req.id,
+        platform: req.platform,
+        deliverable_type: req.deliverable_type,
+        deliverable_code: req.deliverable_code,
+        quantity: req.quantity,
+        notes: req.notes,
+      }))
+    : [];
 
   return {
     ...c,
@@ -52,6 +63,7 @@ async function mapCampaignResponse(c: any): Promise<Campaign> {
     },
     title: c.title,
     description: c.description,
+    brand_category: c.brand_category || brandData.brand_category || undefined,
     primary_niche: primaryNicheName,
     required_platforms: c.required_platforms,
     budget_per_creator_min: c.budget_per_creator_min || 0,
@@ -59,6 +71,7 @@ async function mapCampaignResponse(c: any): Promise<Campaign> {
     application_deadline: c.application_deadline ? new Date(c.application_deadline).toISOString() : "",
     status: c.status as CampaignStatus,
     application_count: 0,
+    deliverables,
   } as Campaign; // Typecast because UI expects application_count and some other optionals
 }
 
@@ -78,7 +91,12 @@ function mapCreatorFromRaw(c: any) {
     niches: c.niches ? c.niches.map((n: any) => NICHE_MAP[n.niche_id] || `Niche ${n.niche_id}`) : [],
     languages: c.languages ? c.languages.map((l: any) => l.language_code) : [],
     social_profiles: c.social_profiles || [],
-    rate_cards: c.rate_cards || [],
+    rate_cards: c.rate_cards ? c.rate_cards.map((card: any) => ({
+      ...card,
+      deliverable_code: card.deliverable_code,
+      suggested_price_bdt: card.suggested_price_bdt,
+    })) : [],
+    portfolio_items: c.portfolio_items || [],
     is_available: c.is_available ?? true,
     total_collaborations: c.total_collaborations ?? 0,
     average_rating: c.average_rating ? Number(c.average_rating) : undefined,
@@ -95,6 +113,9 @@ function mapMatchScore(m: any): AIMatchScore {
     score_engagement: m.score_engagement,
     score_budget: m.score_budget,
     score_language: m.score_language,
+    score_platform: m.score_platform,
+    score_recency: m.score_recency,
+    score_semantic: m.score_semantic,
     score_total: m.score_total,
     rationale: m.rationale,
     generated_at: m.generated_at,
@@ -175,7 +196,7 @@ export async function getCampaignMatches(campaignId: string, token: string): Pro
 }
 
 export async function createCampaign(data: any, token: string): Promise<Campaign> {
-  const result = await fetchApi<any>("/campaigns/", {
+  const result = await fetchApi<any>("/campaigns", {
     method: "POST",
     body: JSON.stringify(data),
     token,
@@ -189,6 +210,111 @@ export async function inviteCreatorToCampaign(campaignId: string, creatorId: str
     body: JSON.stringify({ creator_id: creatorId, brand_notes: brandNotes }),
     token,
   });
+}
+
+// ── Shortlist / Offer / Negotiation ────────────────────────────────────────
+
+export async function addToShortlist(
+  campaignId: string,
+  creatorId: string,
+  note: string | undefined,
+  token: string,
+): Promise<any> {
+  return fetchApi<any>(`/campaigns/${campaignId}/shortlist`, {
+    method: "POST",
+    body: JSON.stringify({ creator_id: creatorId, note }),
+    token,
+  });
+}
+
+export interface OfferPayload {
+  contract_type: string;
+  payment_structure?: string;
+  payment_amount_bdt?: number;
+  payment_schedule?: string;
+  non_cash_compensation?: string;
+  has_product_transfer?: boolean;
+  product_disposition?: string;
+  deliverable_notes?: string;
+  deliverables?: { requirement_id: string; quantity: number; notes?: string }[];
+  exclusivity_days?: number;
+  usage_rights_days?: number;
+  max_revision_rounds?: number;
+  kill_fee_percentage?: number;
+  message?: string;
+}
+
+export async function sendOffer(
+  campaignId: string,
+  applicationId: string,
+  payload: OfferPayload,
+  token: string,
+): Promise<any> {
+  return fetchApi<any>(`/campaigns/${campaignId}/applications/${applicationId}/offer`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+    token,
+  });
+}
+
+export interface CounterPayload {
+  message?: string;
+  proposed_rate?: number;
+  proposed_terms?: Record<string, unknown>;
+}
+
+export async function counterOffer(
+  campaignId: string,
+  applicationId: string,
+  payload: CounterPayload,
+  token: string,
+): Promise<any> {
+  return fetchApi<any>(`/campaigns/${campaignId}/applications/${applicationId}/negotiate`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+    token,
+  });
+}
+
+export async function acceptOffer(
+  campaignId: string,
+  applicationId: string,
+  message: string | undefined,
+  token: string,
+): Promise<any> {
+  return fetchApi<any>(`/campaigns/${campaignId}/applications/${applicationId}/offer/accept`, {
+    method: "POST",
+    body: JSON.stringify({ message }),
+    token,
+  });
+}
+
+export async function declineOffer(
+  campaignId: string,
+  applicationId: string,
+  reason: string | undefined,
+  token: string,
+): Promise<any> {
+  return fetchApi<any>(`/campaigns/${campaignId}/applications/${applicationId}/offer/decline`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+    token,
+  });
+}
+
+export async function getNegotiationThread(
+  campaignId: string,
+  applicationId: string,
+  token: string,
+): Promise<any[]> {
+  try {
+    return await fetchApi<any[]>(
+      `/campaigns/${campaignId}/applications/${applicationId}/negotiation`,
+      { token },
+    );
+  } catch {
+    return [];
+  }
 }
 
 export async function respondToInvitation(campaignId: string, applicationId: string, action: "accept" | "decline", proposalText: string | undefined, proposedRate: number | undefined, token: string): Promise<any> {

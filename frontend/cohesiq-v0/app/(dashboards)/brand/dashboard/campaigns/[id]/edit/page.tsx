@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { getCampaignById, updateCampaign, NICHE_MAP } from "@/lib/api/campaigns";
+import { BRAND_CATEGORIES } from "@/lib/brand-categories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,33 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { PlatformBadge } from "@/components/shared/PlatformBadge";
+import { cn } from "@/lib/utils";
+import { DELIVERABLE_DEFINITIONS } from "@/lib/deliverables";
+import { fetchApi } from "@/lib/api/client";
+import type { DeliverableCode, PlatformType } from "@/lib/types";
+
+const CAMPAIGN_PLATFORMS: { value: PlatformType; label: string }[] = [
+  { value: "youtube", label: "YouTube" },
+  { value: "instagram", label: "Instagram" },
+  { value: "tiktok", label: "TikTok" },
+  { value: "facebook", label: "Facebook" },
+  { value: "linkedin", label: "LinkedIn" },
+];
+
+const CAMPAIGN_DELIVERABLES_BY_PLATFORM: Partial<Record<PlatformType, DeliverableCode[]>> = {
+  youtube: ["youtube_live", "youtube_short", "youtube_video"],
+  instagram: ["instagram_live", "instagram_feed", "instagram_reel", "instagram_story"],
+  tiktok: ["tiktok_live", "tiktok_story", "tiktok_video"],
+};
+
+type DeliverableFormState = Partial<Record<DeliverableCode, { selected: boolean; quantity: string; notes: string }>>;
+
+function initialDeliverableState(): DeliverableFormState {
+  return {
+    youtube_video: { selected: true, quantity: "1", notes: "" },
+  };
+}
 
 export default function EditCampaignPage() {
   const router = useRouter();
@@ -24,6 +52,7 @@ export default function EditCampaignPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [roleReady, setRoleReady] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -33,24 +62,56 @@ export default function EditCampaignPage() {
     creator_min_followers: "",
     number_of_creators: "",
     primary_niche_id: "",
+    brand_category: "",
     application_deadline: "",
     hashtags: "",
     tracking_notes: "",
+    required_platforms: ["youtube"] as PlatformType[],
     kpi_reach: "",
     kpi_engagement_rate: "",
     kpi_conversions: "",
     kpi_roi_target: "",
   });
+  const [deliverableState, setDeliverableState] = useState<DeliverableFormState>(initialDeliverableState);
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn) return;
+    if (!isLoaded) return;
 
     async function loadCampaign() {
       setIsLoading(true);
       try {
+        if (!isSignedIn) {
+          router.replace("/onboarding");
+          return;
+        }
+        const token = await getToken();
+        if (!token) {
+          router.replace("/onboarding");
+          return;
+        }
+        const me = await fetchApi<{ role?: string }>("/auth/me", { token });
+        if (me.role !== "brand") {
+          setError("Campaigns can only be edited from a brand account.");
+          router.replace(me.role === "creator" ? "/creator/dashboard" : "/onboarding");
+          return;
+        }
         const campaignData = await getCampaignById(id);
         if (campaignData) {
           const kpi = (campaignData as any).kpi_targets;
+          const nextDeliverableState: DeliverableFormState = {};
+          (campaignData.deliverables ?? []).forEach((deliverable) => {
+            if (!deliverable.deliverable_code) {
+              return;
+            }
+            nextDeliverableState[deliverable.deliverable_code] = {
+              selected: true,
+              quantity: String(deliverable.quantity ?? 1),
+              notes: deliverable.notes || "",
+            };
+          });
+          if (Object.keys(nextDeliverableState).length === 0) {
+            nextDeliverableState.youtube_video = { selected: true, quantity: "1", notes: "" };
+          }
           setFormData({
             title: campaignData.title,
             description: campaignData.description || "",
@@ -59,25 +120,33 @@ export default function EditCampaignPage() {
             creator_min_followers: campaignData.creator_min_followers ? campaignData.creator_min_followers.toString() : "",
             number_of_creators: (campaignData as any).number_of_creators ? (campaignData as any).number_of_creators.toString() : "",
             primary_niche_id: (campaignData as any).primary_niche_id ? (campaignData as any).primary_niche_id.toString() : "",
+            brand_category: campaignData.brand_category || "",
             application_deadline: campaignData.application_deadline ? campaignData.application_deadline.split('T')[0] : "",
             hashtags: ((campaignData as any).hashtags ?? []).join(", "),
             tracking_notes: (campaignData as any).tracking_notes || "",
+            required_platforms: ((campaignData.required_platforms?.length ? campaignData.required_platforms : ["youtube"]) as PlatformType[]),
             kpi_reach: kpi?.reach != null ? String(kpi.reach) : "",
             kpi_engagement_rate: kpi?.engagement_rate != null ? String(kpi.engagement_rate) : "",
             kpi_conversions: kpi?.conversions != null ? String(kpi.conversions) : "",
             kpi_roi_target: kpi?.roi_target != null ? String(kpi.roi_target) : "",
           });
+          setDeliverableState(nextDeliverableState);
+          setRoleReady(true);
+        } else {
+          setError("Campaign not found.");
+          setRoleReady(true);
         }
       } catch (err) {
         console.error("Failed to load campaign:", err);
         setError("Failed to load campaign data.");
+        setRoleReady(true);
       } finally {
         setIsLoading(false);
       }
     }
     
     loadCampaign();
-  }, [id, isLoaded, isSignedIn]);
+  }, [id, isLoaded, isSignedIn, getToken, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,6 +187,38 @@ export default function EditCampaignPage() {
         return;
       }
     }
+    if (formData.required_platforms.length === 0) {
+      setError("Select at least one required platform.");
+      return;
+    }
+    if (!roleReady) {
+      setError("Please wait while we verify brand access.");
+      return;
+    }
+    const selectedDeliverables = Object.entries(deliverableState)
+      .filter(([, value]) => value?.selected)
+      .map(([code, value]) => {
+        const definition = DELIVERABLE_DEFINITIONS[code as DeliverableCode];
+        return {
+          code: code as DeliverableCode,
+          definition,
+          quantity: parseInt(value?.quantity || "1", 10),
+          notes: value?.notes.trim(),
+        };
+      })
+      .filter(item => item.definition && formData.required_platforms.includes(item.definition.platform));
+    const supportedPlatforms = formData.required_platforms.filter(platform => CAMPAIGN_DELIVERABLES_BY_PLATFORM[platform]?.length);
+    const missingDeliverablePlatform = supportedPlatforms.find(
+      platform => !selectedDeliverables.some(item => item.definition.platform === platform)
+    );
+    if (missingDeliverablePlatform) {
+      setError(`Select at least one ${CAMPAIGN_PLATFORMS.find(platform => platform.value === missingDeliverablePlatform)?.label || missingDeliverablePlatform} deliverable.`);
+      return;
+    }
+    if (selectedDeliverables.some(item => isNaN(item.quantity) || item.quantity < 1)) {
+      setError("Deliverable quantities must be at least 1.");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -140,12 +241,21 @@ export default function EditCampaignPage() {
         creator_min_followers: minFollowers,
         number_of_creators: numCreators,
         primary_niche_id: formData.primary_niche_id ? parseInt(formData.primary_niche_id, 10) : undefined,
+        brand_category: formData.brand_category || null,
+        required_platforms: formData.required_platforms,
         application_deadline: formData.application_deadline || null,
         hashtags: formData.hashtags
           ? formData.hashtags.split(",").map(h => h.trim()).filter(Boolean)
           : [],
         tracking_notes: formData.tracking_notes || null,
         kpi_targets: hasKpi ? kpiTargets : null,
+        deliverable_requirements: selectedDeliverables.map(item => ({
+          platform: item.definition.platform,
+          deliverable_type: item.definition.legacyType,
+          deliverable_code: item.code,
+          quantity: item.quantity,
+          notes: item.notes || undefined,
+        })),
       };
 
       const updatedCampaign = await updateCampaign(id, payload, token);
@@ -175,13 +285,68 @@ export default function EditCampaignPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !roleReady) {
     return (
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
+
+  const togglePlatform = (platform: PlatformType) => {
+    setFormData(prev => {
+      const selected = prev.required_platforms.includes(platform);
+      return {
+        ...prev,
+        required_platforms: selected
+          ? prev.required_platforms.filter(item => item !== platform)
+          : [...prev.required_platforms, platform],
+      };
+    });
+
+    if (!formData.required_platforms.includes(platform)) {
+      const platformDeliverables = CAMPAIGN_DELIVERABLES_BY_PLATFORM[platform] || [];
+      const hasSelectedDeliverable = platformDeliverables.some(code => deliverableState[code]?.selected);
+      if (!hasSelectedDeliverable && platformDeliverables[0]) {
+        setDeliverableState(current => ({
+          ...current,
+          [platformDeliverables[0]]: {
+            selected: true,
+            quantity: current[platformDeliverables[0]]?.quantity || "1",
+            notes: current[platformDeliverables[0]]?.notes || "",
+          },
+        }));
+      }
+    }
+  };
+
+  const toggleDeliverable = (code: DeliverableCode) => {
+    setDeliverableState(prev => {
+      const current = prev[code] || { selected: false, quantity: "1", notes: "" };
+      return {
+        ...prev,
+        [code]: {
+          ...current,
+          selected: !current.selected,
+        },
+      };
+    });
+  };
+
+  const updateDeliverable = (code: DeliverableCode, updates: Partial<{ quantity: string; notes: string }>) => {
+    setDeliverableState(prev => {
+      const current = prev[code] || { selected: false, quantity: "1", notes: "" };
+      return {
+        ...prev,
+        [code]: {
+          ...current,
+          ...updates,
+        },
+      };
+    });
+  };
+
+  const selectedSupportedPlatforms = formData.required_platforms.filter(platform => CAMPAIGN_DELIVERABLES_BY_PLATFORM[platform]?.length);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
@@ -257,6 +422,28 @@ export default function EditCampaignPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="brand_category">Product Category</Label>
+              <Select
+                value={formData.brand_category}
+                onValueChange={(value) => setFormData({ ...formData, brand_category: value })}
+              >
+                <SelectTrigger id="brand_category">
+                  <SelectValue placeholder="Use brand default or select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BRAND_CATEGORIES.map((category) => (
+                    <SelectItem key={category.value} value={category.value}>
+                      {category.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Used for competitor conflict checks. Match this to what the campaign is selling.
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -364,6 +551,112 @@ export default function EditCampaignPage() {
             <CardDescription>Set your expectations for creators.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Required Platforms</Label>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {CAMPAIGN_PLATFORMS.map(platform => {
+                  const isSelected = formData.required_platforms.includes(platform.value);
+                  return (
+                    <button
+                      key={platform.value}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => togglePlatform(platform.value)}
+                      className={cn(
+                        "flex items-center gap-2 rounded-lg border p-3 text-left transition-colors",
+                        isSelected
+                          ? "border-primary bg-primary/5 ring-1 ring-primary"
+                          : "border-border hover:border-muted-foreground/50 hover:bg-muted/30"
+                      )}
+                    >
+                      <PlatformBadge platform={platform.value} />
+                      <span className="text-sm font-medium">{platform.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Matching only considers creators with at least one selected platform.
+              </p>
+            </div>
+
+            {selectedSupportedPlatforms.length > 0 && (
+              <div className="space-y-4">
+                <div>
+                  <Label>Content Deliverables</Label>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    These values are loaded from the database and feed the new matching and pricing logic.
+                  </p>
+                </div>
+                <div className="space-y-4">
+                  {selectedSupportedPlatforms.map(platform => (
+                    <div key={platform} className="rounded-lg border border-border bg-muted/20 p-4">
+                      <div className="mb-3 flex items-center gap-2">
+                        <PlatformBadge platform={platform} />
+                        <span className="text-sm font-semibold">
+                          {CAMPAIGN_PLATFORMS.find(option => option.value === platform)?.label}
+                        </span>
+                      </div>
+                      <div className="grid gap-3">
+                        {(CAMPAIGN_DELIVERABLES_BY_PLATFORM[platform] || []).map(code => {
+                          const definition = DELIVERABLE_DEFINITIONS[code];
+                          const value = deliverableState[code] || { selected: false, quantity: "1", notes: "" };
+                          return (
+                            <div
+                              key={code}
+                              className={cn(
+                                "grid gap-3 rounded-lg border p-3 transition-colors sm:grid-cols-[minmax(0,1fr)_96px]",
+                                value.selected ? "border-primary bg-primary/5" : "border-border bg-background"
+                              )}
+                            >
+                              <button
+                                type="button"
+                                aria-pressed={value.selected}
+                                onClick={() => toggleDeliverable(code)}
+                                className="flex min-w-0 items-center gap-3 text-left"
+                              >
+                                <span className={cn(
+                                  "flex h-4 w-4 shrink-0 rounded border-2",
+                                  value.selected ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                )} />
+                                <span className="min-w-0">
+                                  <span className="block text-sm font-semibold text-foreground">{definition.label}</span>
+                                  <span className="block text-xs text-muted-foreground">
+                                    Exact format loaded from the database.
+                                  </span>
+                                </span>
+                              </button>
+                              <div className="space-y-1.5">
+                                <Label htmlFor={`qty-${code}`} className="text-xs text-muted-foreground">Qty</Label>
+                                <Input
+                                  id={`qty-${code}`}
+                                  type="number"
+                                  min="1"
+                                  disabled={!value.selected}
+                                  value={value.quantity}
+                                  onChange={(event) => updateDeliverable(code, { quantity: event.target.value })}
+                                />
+                              </div>
+                              <div className="sm:col-span-2">
+                                <Label htmlFor={`notes-${code}`} className="sr-only">Notes for {definition.label}</Label>
+                                <Input
+                                  id={`notes-${code}`}
+                                  disabled={!value.selected}
+                                  value={value.notes}
+                                  onChange={(event) => updateDeliverable(code, { notes: event.target.value })}
+                                  placeholder={`Optional notes for ${definition.label.toLowerCase()}`}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="budget">Max Budget per Creator (BDT)</Label>
@@ -416,7 +709,7 @@ export default function EditCampaignPage() {
 
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting || !roleReady}>
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Save Changes
           </Button>

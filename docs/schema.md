@@ -47,21 +47,42 @@ always NULL depending on who is reviewing. Clean, indexable, joinable.
 ```
 users
   ├── creator_profiles          (1:1)
-  │     ├── creator_social_profiles   (1:many — one per platform)
-  │     ├── creator_niches            (many:many with niches)
-  │     ├── creator_languages         (1:many)
-  │     ├── creator_rate_cards        (1:many)
-  │     └── creator_portfolio_items   (1:many — sample content URLs)
+  │     ├── creator_social_profiles      (1:many — one per platform)
+  │     ├── creator_niches               (many:many with niches)
+  │     ├── creator_languages            (1:many)
+  │     ├── creator_rate_cards           (1:many)
+  │     ├── creator_portfolio_items      (1:many — sample content URLs)
+  │     └── creator_collaboration_history (1:many — past brand work)
   │
   └── brand_profiles            (1:1)
         └── campaigns           (1:many)
+              ├── campaign_niche_targets        (many:many with niches)
+              ├── campaign_language_targets     (many:many with languages)
+              ├── campaign_deliverable_requirements (1:many)
+              ├── campaign_application_questions (1:many — gatekeeper)
+              ├── campaign_acknowledgments      (1:many — gatekeeper)
               └── campaign_applications  (many:many with creator_profiles)
-                    └── reviews          (1:many — after completion)
+                    ├── campaign_application_answers          (1:many)
+                    ├── campaign_application_acknowledgments  (1:many)
+                    ├── negotiation_turns      (1:many — offer/counter thread)
+                    ├── reviews                (1:many — after completion)
+                    └── contracts              (1:1 — created at offer time)
+                          ├── contract_deliverables          (1:many — per-creator subset)
+                          └── live_content_metric_snapshots  (1:many — performance over time)
+
+-- AI / cross-domain --
+ai_match_scores  (one row per campaign×creator ranked match)
 
 -- Shared lookup tables --
-niches       (referenced by creator_niches + campaign_niche_targets)
+niches       (referenced by creator_niches + campaign_niche_targets + brand_profiles + portfolio/history)
 languages    (referenced by creator_languages + campaign_language_targets)
 ```
+
+> **Migration head: `0022`** (`0022_offer_contract_deliverables_negotiation`). The numbered chain
+> `0001 → 0022` plus three hash-revision migrations in history
+> (`53f8d9a8a155` ai_match_scores, `959ef947cd0f` campaign visibility + invitation statuses,
+> `fd300ea6267e` archived campaign status) make up the full schema. Storage is **relational-only
+> PostgreSQL 16** — no pgvector / Neo4j / Redis / TimescaleDB.
 
 ---
 
@@ -104,6 +125,7 @@ CREATE TYPE campaign_status AS ENUM (
 CREATE TYPE application_status AS ENUM (
     'pending',      -- creator applied, brand hasn't responded
     'shortlisted',  -- brand interested, not final
+    'pending_agreement', -- brand selected creator and sent final terms
     'accepted',     -- brand confirmed this creator
     'rejected',     -- brand passed
     'withdrawn',    -- creator pulled out
@@ -402,8 +424,10 @@ CREATE TABLE creator_rate_cards (
     creator_id        UUID NOT NULL REFERENCES creator_profiles(id) ON DELETE CASCADE,
     platform          platform_type NOT NULL,
     deliverable_type  deliverable_type NOT NULL,
+    deliverable_code  VARCHAR(50),             -- canonical deliverable code (migration 0019)
 
     price_bdt         INTEGER NOT NULL,        -- Price in BDT (Bangladeshi Taka)
+    suggested_price_bdt INTEGER,               -- System-suggested benchmark price
     price_usd         INTEGER,                 -- Optional USD equivalent
     includes          TEXT,                    -- What's included: "1 video, 2 revisions, 30-day exclusivity"
     excludes          TEXT,                    -- What's NOT included
@@ -503,6 +527,7 @@ CREATE TABLE brand_profiles (
 
     -- Business details
     niche_id         INTEGER REFERENCES niches(id) ON DELETE SET NULL,
+    brand_category   VARCHAR(50),             -- Product category for competitor checks, e.g. edtech/stationery
     company_size     VARCHAR(20) CHECK (company_size IN (
                          'individual',         -- Sole proprietor / freelancer
                          'small',              -- 2-20 employees
@@ -530,6 +555,7 @@ CREATE TABLE brand_profiles (
 
 CREATE INDEX idx_brand_profiles_user  ON brand_profiles(user_id);
 CREATE INDEX idx_brand_profiles_niche ON brand_profiles(niche_id);
+CREATE INDEX idx_brand_profiles_brand_category ON brand_profiles(brand_category);
 ```
 
 ---
@@ -551,6 +577,7 @@ CREATE TABLE campaigns (
     -- Targeting: niche
     -- Primary niche stored here. Additional niches in campaign_niche_targets table.
     primary_niche_id INTEGER REFERENCES niches(id) ON DELETE SET NULL,
+    brand_category   VARCHAR(50),            -- Product category; defaults from brand profile when omitted
 
     -- Targeting: platform
     -- Which platforms the brand wants content on
@@ -590,6 +617,7 @@ CREATE TABLE campaigns (
 CREATE INDEX idx_campaigns_brand       ON campaigns(brand_id);
 CREATE INDEX idx_campaigns_status      ON campaigns(status);
 CREATE INDEX idx_campaigns_primary_niche ON campaigns(primary_niche_id);
+CREATE INDEX idx_campaigns_brand_category ON campaigns(brand_category);
 CREATE INDEX idx_campaigns_budget      ON campaigns(budget_per_creator_max);
 ```
 
@@ -629,11 +657,40 @@ CREATE TABLE campaign_deliverable_requirements (
     campaign_id       UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
     platform          platform_type NOT NULL,
     deliverable_type  deliverable_type NOT NULL,
+    deliverable_code  VARCHAR(50),             -- canonical deliverable code (migration 0019)
     quantity          SMALLINT DEFAULT 1,      -- How many of this deliverable
     notes             TEXT                     -- Specific requirements (length, format, etc.)
 );
 
 CREATE INDEX idx_deliverable_req_campaign ON campaign_deliverable_requirements(campaign_id);
+```
+
+---
+
+## Step 6.5: Campaign Application Gatekeeper
+
+```sql
+-- Brand-defined screening questions. Max 5 questions enforced by service layer.
+CREATE TABLE campaign_application_questions (
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    campaign_id    UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+    question_text  TEXT NOT NULL,
+    question_type  VARCHAR(20) NOT NULL DEFAULT 'text'
+                   CHECK (question_type IN ('text', 'single_choice', 'multi_choice')),
+    options_json   JSONB,
+    is_required    BOOLEAN DEFAULT TRUE,
+    sort_order     SMALLINT DEFAULT 0,
+    created_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE campaign_acknowledgments (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    campaign_id     UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+    statement_text  TEXT NOT NULL,
+    is_required     BOOLEAN DEFAULT TRUE,
+    sort_order      SMALLINT DEFAULT 0,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
 ```
 
 ---
@@ -677,6 +734,25 @@ CREATE TABLE campaign_applications (
 CREATE INDEX idx_applications_campaign ON campaign_applications(campaign_id);
 CREATE INDEX idx_applications_creator  ON campaign_applications(creator_id);
 CREATE INDEX idx_applications_status   ON campaign_applications(status);
+
+-- Creator answers and accepted legal/campaign acknowledgments.
+CREATE TABLE campaign_application_answers (
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    application_id      UUID NOT NULL REFERENCES campaign_applications(id) ON DELETE CASCADE,
+    question_id         UUID NOT NULL REFERENCES campaign_application_questions(id) ON DELETE CASCADE,
+    answer_text         TEXT,
+    answer_options_json JSONB,
+    created_at          TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(application_id, question_id)
+);
+
+CREATE TABLE campaign_application_acknowledgments (
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    application_id     UUID NOT NULL REFERENCES campaign_applications(id) ON DELETE CASCADE,
+    acknowledgment_id  UUID NOT NULL REFERENCES campaign_acknowledgments(id) ON DELETE CASCADE,
+    accepted_at        TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(application_id, acknowledgment_id)
+);
 ```
 
 ---
@@ -769,9 +845,19 @@ brand_profiles (1) ──── (many) campaigns
 campaigns (1) ────────── (many) campaign_niche_targets      [junction with niches]
 campaigns (1) ────────── (many) campaign_language_targets   [junction with languages]
 campaigns (1) ────────── (many) campaign_deliverable_requirements
+campaigns (1) ────────── (many) campaign_application_questions   [gatekeeper]
+campaigns (1) ────────── (many) campaign_acknowledgments         [gatekeeper]
 campaigns (1) ────────── (many) campaign_applications
+campaigns (1) ────────── (many) ai_match_scores             [AI ranked matches]
 
+campaign_applications (1) ── (many) campaign_application_answers
+campaign_applications (1) ── (many) campaign_application_acknowledgments
+campaign_applications (1) ── (many) negotiation_turns        [offer/counter thread]
 campaign_applications (1) ── (many) reviews
+campaign_applications (1) ── (1)    contracts                [created at offer time]
+
+contracts (1) ── (many) contract_deliverables               [per-creator deliverable subset]
+contracts (1) ── (many) live_content_metric_snapshots       [performance over time]
 
 niches    (1) ── (many) creator_niches
 niches    (1) ── (many) campaign_niche_targets
@@ -830,7 +916,7 @@ CREATE TABLE contracts (
     contract_type           contract_type NOT NULL,
     status                  contract_status NOT NULL DEFAULT 'active',
     -- Payment clause
-    payment_structure       VARCHAR(20) NOT NULL DEFAULT 'none',   -- 'flat_fee' | 'none'
+    payment_structure       VARCHAR(20) NOT NULL DEFAULT 'none',   -- 'flat_fee' | 'non_cash' | 'none' (non_cash added migration 0022)
     payment_amount_bdt      INTEGER,
     payment_schedule        payment_schedule_type,
     -- Product transfer clause (product_seeding only)
@@ -838,6 +924,7 @@ CREATE TABLE contracts (
     product_disposition     product_disposition_type,
     -- Deliverable clause
     deliverable_notes       TEXT,
+    non_cash_compensation   TEXT,  -- migration 0022: free product / SaaS access / affiliate value when payment_structure='non_cash'
     -- Exclusivity clause
     exclusivity_days        SMALLINT,
     usage_rights_days       SMALLINT,
@@ -866,6 +953,34 @@ CREATE INDEX ix_contracts_creator_id ON contracts(creator_id);
 CREATE INDEX ix_contracts_status     ON contracts(status);
 ```
 
+### `live_content_metric_snapshots` — live post performance tracking (migration `0021_live_content_metric_snapshots`)
+```sql
+-- Time-series performance snapshots for approved creator content.
+-- v1 attaches snapshots directly to contracts because contracts already own live_post_url.
+-- Future platform sync jobs can write into the same table.
+
+CREATE TABLE live_content_metric_snapshots (
+    id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    contract_id            UUID NOT NULL REFERENCES contracts(id) ON DELETE CASCADE,
+    platform               VARCHAR(30),
+    captured_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+    views                  INTEGER NOT NULL DEFAULT 0 CHECK (views >= 0),
+    impressions            INTEGER NOT NULL DEFAULT 0 CHECK (impressions >= 0),
+    likes                  INTEGER NOT NULL DEFAULT 0 CHECK (likes >= 0),
+    comments               INTEGER NOT NULL DEFAULT 0 CHECK (comments >= 0),
+    shares                 INTEGER NOT NULL DEFAULT 0 CHECK (shares >= 0),
+    saves                  INTEGER NOT NULL DEFAULT 0 CHECK (saves >= 0),
+    engagement_rate        FLOAT NOT NULL DEFAULT 0,
+    estimated_revenue_bdt  INTEGER NOT NULL DEFAULT 0,
+    revenue_basis          VARCHAR(80),
+    source                 VARCHAR(30) NOT NULL DEFAULT 'manual',
+    created_at             TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_live_metric_snapshots_contract_time
+    ON live_content_metric_snapshots(contract_id, captured_at);
+```
+
 ### `ai_match_scores` — AI matching results (migrations `53f8d9a8a155`, `0014_add_platform_recency_semantic_to_match_scores`)
 ```sql
 -- Live table. One row per (campaign, creator) ranked match.
@@ -888,9 +1003,53 @@ CREATE TABLE ai_match_scores (
 );
 ```
 
+### `contract_deliverables` — per-creator deliverable subset (migration `0022_offer_contract_deliverables_negotiation`)
+```sql
+-- A brand may take a few creators across platforms and want only a PORTION of the
+-- campaign's deliverables from a specific creator. Chosen at offer time; one row per
+-- (contract, campaign deliverable requirement) with a per-creator quantity override.
+CREATE TABLE contract_deliverables (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    contract_id     UUID NOT NULL REFERENCES contracts(id) ON DELETE CASCADE,
+    requirement_id  UUID NOT NULL REFERENCES campaign_deliverable_requirements(id) ON DELETE CASCADE,
+    quantity        SMALLINT NOT NULL DEFAULT 1,
+    notes           TEXT,
+    UNIQUE(contract_id, requirement_id)
+);
+```
+
+### `negotiation_turns` — multi-turn offer/counter-offer thread (migration `0022_offer_contract_deliverables_negotiation`)
+```sql
+-- One turn per offer/counter in the bilateral negotiation for an application.
+-- The brand opens with an offer (also creates the drafted contract); either party may
+-- counter; either party may accept the OTHER party's latest 'proposed' turn — which
+-- flips the contract to 'active' and the application to 'accepted'.
+CREATE TABLE negotiation_turns (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    application_id  UUID NOT NULL REFERENCES campaign_applications(id) ON DELETE CASCADE,
+    author_role     VARCHAR(10) NOT NULL CHECK (author_role IN ('brand','creator')),
+    status          VARCHAR(12) NOT NULL DEFAULT 'proposed',  -- 'proposed' | 'accepted' | 'superseded'
+    message         TEXT,
+    proposed_rate   INTEGER,
+    proposed_terms  JSONB,          -- snapshot of clause deltas for this turn
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_negotiation_turns_application_time
+    ON negotiation_turns(application_id, created_at);
+```
+
+> **Offer-time contract creation (migration 0022 behaviour change).** A `contracts` row is now
+> created when the brand **sends an offer** (status `drafted`), not when the application reaches
+> `accepted`. Accepting the final offer flips it to `active`. The legacy
+> `POST …/applications/{id}/contract` endpoint (accepted-only) still exists; the new flow uses
+> `POST …/applications/{id}/offer` + `…/negotiate` + `…/offer/accept|decline`.
+
 ### `campaign_status` — extra states (migrations `959ef947cd0f`, `fd300ea6267e`)
 `campaign_visibility` plus `archived` were added to the campaign lifecycle; `application_status`
-gained `invited` / `declined` for brand-initiated invitations.
+gained `invited` / `declined` for brand-initiated invitations. In the offer flow, `invited`
+means **an offer was sent**, `pending_agreement` means **negotiation is in progress**, and
+`shortlisted` is an independent pre-offer pool (filled from AI matches or Find Creators in any
+campaign status, including draft).
 
 ### YouTube ingestion
 `app/youtube/` is a **read-only public-API client**; it does not persist. The creator domain exposes

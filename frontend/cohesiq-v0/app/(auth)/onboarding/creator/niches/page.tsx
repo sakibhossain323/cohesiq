@@ -2,10 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { useOnboarding } from '@/components/providers/OnboardingProvider';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const NICHES = [
@@ -28,13 +26,13 @@ const NICHES = [
 export default function NichesStep() {
   const router = useRouter();
   const { data, updateData } = useOnboarding();
-  
+
   const [primaryNiche, setPrimaryNiche] = useState<string>(data.creatorNiches.primary?.toString() || '');
   const [subNiches, setSubNiches] = useState<number[]>(data.creatorNiches.sub);
 
   const toggleSubNiche = (nicheId: number) => {
-    setSubNiches((prev) => 
-      prev.includes(nicheId) 
+    setSubNiches((prev) =>
+      prev.includes(nicheId)
         ? prev.filter((id) => id !== nicheId)
         : [...prev, nicheId].slice(0, 3) // max 3 sub-niches
     );
@@ -43,7 +41,7 @@ export default function NichesStep() {
   const handleNext = () => {
     updateData('creatorNiches', {
       primary: parseInt(primaryNiche),
-      sub: subNiches
+      sub: subNiches,
     });
     router.push('/onboarding/creator/platforms');
   };
@@ -53,19 +51,22 @@ export default function NichesStep() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold">Select your niches</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          What topics do you create content about?
+    <>
+      <div className="ob-stage-head">
+        <span className="ob-stage-step">Step 02 · Your niches</span>
+        <h2 className="ob-stage-title">What do you create?</h2>
+        <p className="ob-stage-sub">
+          Niches power our matching engine — they decide which campaigns surface for you.
         </p>
       </div>
 
-      <div className="space-y-6">
-        <div className="space-y-3">
-          <Label htmlFor="primaryNiche">Primary Niche *</Label>
+      <div className="ob-form">
+        <div className="ob-field">
+          <label htmlFor="primaryNiche" className="ob-label">
+            Primary niche <span className="req">*</span>
+          </label>
           <Select value={primaryNiche} onValueChange={setPrimaryNiche} required>
-            <SelectTrigger id="primaryNiche">
+            <SelectTrigger id="primaryNiche" className="ob-control w-full">
               <SelectValue placeholder="Select your main niche" />
             </SelectTrigger>
             <SelectContent>
@@ -78,37 +79,42 @@ export default function NichesStep() {
           </Select>
         </div>
 
-        <div className="space-y-3">
-          <Label>Sub-Niches (Select up to 3)</Label>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {NICHES.filter((n) => n.id.toString() !== primaryNiche).map((niche) => (
-              <div key={niche.id} className="flex items-center space-x-2">
-                <Checkbox 
-                  id={`niche-${niche.id}`}
-                  checked={subNiches.includes(niche.id)}
-                  onCheckedChange={() => toggleSubNiche(niche.id)}
-                  disabled={!subNiches.includes(niche.id) && subNiches.length >= 3}
-                />
-                <label
-                  htmlFor={`niche-${niche.id}`}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        <div className="ob-field">
+          <label className="ob-label">
+            Sub-niches
+            <span className="opt">{subNiches.length}/3 selected</span>
+          </label>
+          <div className="ob-chips">
+            {NICHES.filter((n) => n.id.toString() !== primaryNiche).map((niche) => {
+              const selected = subNiches.includes(niche.id);
+              const locked = !selected && subNiches.length >= 3;
+              return (
+                <button
+                  key={niche.id}
+                  type="button"
+                  className="ob-chip"
+                  aria-pressed={selected}
+                  disabled={locked}
+                  onClick={() => toggleSubNiche(niche.id)}
                 >
+                  <Check className="chk" strokeWidth={3} />
                   {niche.name}
-                </label>
-              </div>
-            ))}
+                </button>
+              );
+            })}
           </div>
+          <span className="ob-hint">Pick up to three areas you also cover.</span>
         </div>
       </div>
 
-      <div className="flex justify-between pt-4">
-        <Button variant="outline" onClick={handleBack}>
-          Back
-        </Button>
-        <Button onClick={handleNext} disabled={!primaryNiche}>
-          Next Step
-        </Button>
+      <div className="ob-actions">
+        <button type="button" className="btn btn-ghost" onClick={handleBack}>
+          <ArrowLeft className="ico" /> Back
+        </button>
+        <button type="button" className="btn btn-secondary" onClick={handleNext} disabled={!primaryNiche}>
+          Next step <ArrowRight className="ico arrow" />
+        </button>
       </div>
-    </div>
+    </>
   );
 }

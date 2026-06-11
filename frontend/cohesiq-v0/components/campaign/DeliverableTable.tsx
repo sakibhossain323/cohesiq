@@ -6,23 +6,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getDeliverableLabel } from "@/lib/deliverables";
 import { PlatformBadge, getPlatformLabel } from "@/components/shared/PlatformBadge";
-import type { CampaignDeliverable, DeliverableType } from "@/lib/types";
+import type { CampaignDeliverable } from "@/lib/types";
 
 interface DeliverableTableProps {
   deliverables: CampaignDeliverable[];
 }
-
-const deliverableLabels: Record<DeliverableType, string> = {
-  dedicated_video: "Dedicated Video",
-  integrated_mention: "Integrated Mention",
-  short_video: "Short Video",
-  photo_post: "Photo Post",
-  story: "Story",
-  live_stream: "Live Stream",
-  blog_post: "Blog Post",
-  other: "Other",
-};
 
 export function DeliverableTable({ deliverables }: DeliverableTableProps) {
   if (deliverables.length === 0) {
@@ -45,7 +35,7 @@ export function DeliverableTable({ deliverables }: DeliverableTableProps) {
         </TableHeader>
         <TableBody>
           {deliverables.map((deliverable, index) => (
-            <TableRow key={index}>
+            <TableRow key={deliverable.id ?? `${deliverable.platform}-${deliverable.deliverable_code ?? deliverable.deliverable_type}-${index}`}>
               <TableCell>
                 <div className="flex items-center gap-2">
                   <PlatformBadge platform={deliverable.platform} />
@@ -53,7 +43,7 @@ export function DeliverableTable({ deliverables }: DeliverableTableProps) {
                 </div>
               </TableCell>
               <TableCell>
-                <span className="text-sm">{deliverableLabels[deliverable.deliverable_type]}</span>
+                <span className="text-sm">{getDeliverableLabel(deliverable.platform, deliverable.deliverable_code, deliverable.deliverable_type)}</span>
               </TableCell>
               <TableCell className="text-right">
                 <span className="font-semibold">{deliverable.quantity}</span>

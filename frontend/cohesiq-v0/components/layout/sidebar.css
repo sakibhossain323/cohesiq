@@ -1,0 +1,204 @@
+/* ============================================================
+   SIDEBAR — editorial design layer
+   All values use design-system tokens from globals.css.
+   No hex literals.
+   ============================================================ */
+
+/* ── Surface: background + atmospheric layers ────────────── */
+
+[data-sidebar="sidebar"] {
+  position: relative;
+  overflow: hidden;
+  background: var(--sidebar);
+  /* Soften the right-edge border */
+  --sidebar-border: var(--color-border-subtle);
+}
+
+/* Dotted grid texture — masked to top-right quadrant */
+[data-sidebar="sidebar"]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    color-mix(in oklab, var(--brand-primary) 18%, transparent) 1px,
+    transparent 0
+  );
+  background-size: 24px 24px;
+  opacity: 0.28;
+  mask-image: radial-gradient(65% 55% at 100% 0%, black 0%, transparent 80%);
+}
+
+/* Top-to-bottom purple wash gradient */
+[data-sidebar="sidebar"]::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 220px;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--wash-primary) 0%, transparent 100%);
+}
+
+/* All slot children must sit above the two decoration layers */
+[data-sidebar="header"],
+[data-sidebar="content"],
+[data-sidebar="footer"] {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Logo header area ────────────────────────────────────── */
+
+.sb-logo-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-4);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+.sb-logo-link:hover { opacity: 0.85; }
+
+.sb-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+.sb-logo-link:hover .sb-mark {
+  transform: translateY(-1px);
+}
+
+.sb-wordmark {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-xl);
+  letter-spacing: -0.025em;
+  color: var(--sidebar-foreground);
+  line-height: 1;
+}
+
+/* ── Collapsed logo: center the tile, hide wordmark ─────── */
+/* (wordmark hidden via group-data-[collapsible=icon]:hidden in JSX) */
+
+[data-collapsible="icon"] .sb-logo-link {
+  padding: var(--space-2);
+  justify-content: center;
+  gap: 0;
+}
+
+/* ── Section eyebrow label ───────────────────────────────── */
+
+.sb-section-label {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sidebar-foreground);
+  opacity: 0.35;
+  padding: var(--space-4) var(--space-1) var(--space-1);
+}
+
+/* Collapsed: hard-remove the label so the rail isn't polluted */
+[data-collapsible="icon"] .sb-section-label {
+  display: none;
+}
+
+/* ── Nav menu buttons ────────────────────────────────────── */
+
+[data-sidebar="menu-button"] {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+/* Active item — heavier type + left accent bar */
+[data-sidebar="menu-button"][data-active="true"] {
+  position: relative;
+  font-weight: 600;
+  font-family: var(--font-display);
+}
+[data-sidebar="menu-button"][data-active="true"]::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 18%;
+  height: 64%;
+  width: 3px;
+  background: var(--sidebar-primary);
+  border-radius: 0 3px 3px 0;
+}
+
+/* Collapsed: remove the left bar — icon highlight handles it */
+[data-collapsible="icon"] [data-sidebar="menu-button"][data-active="true"]::before {
+  display: none;
+}
+
+/* ── Footer user row ─────────────────────────────────────── */
+
+.sb-user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2);
+  width: 100%;
+  transition: background 0.15s ease;
+  cursor: default;
+}
+.sb-user:hover { background: var(--sidebar-accent); }
+
+.sb-user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.sb-user-name {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--sidebar-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+.sb-user-sub {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--sidebar-foreground);
+  opacity: 0.45;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Collapsed footer: center the avatar */
+[data-collapsible="icon"] .sb-user {
+  justify-content: center;
+  gap: 0;
+  padding: var(--space-2);
+}
+
+/* ── SidebarInset topbar ─────────────────────────────────── */
+
+.sb-topbar {
+  background: transparent;
+  border-bottom: 1px solid var(--color-border-subtle);
+  min-height: 52px;
+}
+
+.sb-trigger {
+  opacity: 0.55;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+.sb-trigger:hover {
+  opacity: 1;
+}

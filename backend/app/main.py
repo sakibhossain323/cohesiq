@@ -5,6 +5,7 @@ app = FastAPI(
     title="Cohesiq API",
     description="Influencer Matching Platform — Phase 1",
     version="0.1.0",
+    redirect_slashes=False,
 )
 
 # Allow all origins in development; restrict in production
@@ -34,6 +35,9 @@ app.include_router(creators_router, prefix="/creators", tags=["creators"])
 app.include_router(brands_router, prefix="/brands", tags=["brands"])
 app.include_router(campaigns_router, prefix="/campaigns", tags=["campaigns"])
 app.include_router(youtube_router, prefix="/youtube", tags=["youtube"])
+
+from app.admin.router import router as admin_router
+app.include_router(admin_router, prefix="/admin", tags=["admin"])
 
 from app.webhooks.router import router as webhooks_router  # noqa: E402
 app.include_router(webhooks_router, prefix="/webhooks", tags=["webhooks"])

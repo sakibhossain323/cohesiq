@@ -1,5 +1,55 @@
 # Tasks — Sakib (Brand & Creator Marketplace · Campaign Workflow · UI)
 
+> ## Admin Panel (Phase F + G) — status as of 2026-06-09
+>
+> **Runbook + security model: [`admin-panel.md`](admin-panel.md)**
+>
+> Phases A–E below are all `[x]` complete — historical record only.
+>
+> ### Phase F — Base admin panel ✅ All done
+>
+> | # | Task | Status |
+> |---|---|---|
+> | F00 | Set Clerk `publicMetadata.role='admin'` (manual) | `[x]` |
+> | F01 | `require_admin` FastAPI dependency | `[x]` |
+> | F02 | Admin Python package | `[x]` |
+> | F03 | Admin Pydantic schemas (`AdminStats`, `AdminUserOut`, `AdminCampaignOut`, `AdminReviewOut`, `Paginated[T]`) | `[x]` |
+> | F04 | Admin service (stats, list users/campaigns/reviews with COUNT) | `[x]` |
+> | F05 | Admin router (all endpoints gated by `require_admin`) | `[x]` |
+> | F06 | Register `/admin` router in `main.py` | `[x]` |
+> | F07 | Middleware admin gate in `proxy.ts` + admin redirect fix in `onboarding/page.tsx` | `[x]` |
+> | F08 | `lib/api/admin.ts` — typed API client with `Paginated<T>` | `[x]` |
+> | F09 | Admin layout reusing `DashboardLayout` (sidebar + Clerk UserButton) | `[x]` |
+> | F10 | Dashboard stats page (`/admin`) — 6 overview cards + 2 activity cards | `[x]` |
+> | F11 | Users page — table + `UserFilterBar` (search, role, is_active) + suspend/unsuspend | `[x]` |
+> | F12 | Campaigns page — table + `CampaignFilterBar` (status, visibility) + status override | `[x]` |
+> | F13 | Reviews page — table + delete action (`/admin/reviews`) | `[x]` |
+>
+> ### Phase G — Moderation & pagination ✅ All done
+>
+> | # | Task | Status |
+> |---|---|---|
+> | G01 | `entrypoint.sh` — auto-run `alembic upgrade head` on backend container start (prevents DB/ORM drift) | `[x]` |
+> | G02 | Pagination backend — `Paginated[T]` generic schema; service returns `(items, total)` tuples; router uses `?page=N`, page size 20 | `[x]` |
+> | G03 | Pagination frontend — `AdminPaginationBar` client component (prev/next/ellipsis, preserves filter params); all three admin pages (`users`, `campaigns`, `reviews`) wired | `[x]` |
+> | G04 | Fixed `CampaignApplication.applied_at` bug in stats endpoint (`created_at` does not exist on that model) | `[x]` |
+>
+> ### Phase H — Partial complete (2026-06-09)
+>
+> | # | Task | Status |
+> |---|---|---|
+> | H-S01 | `DELETE /admin/users/{user_id}` with full PostgreSQL CASCADE + self-delete guard | `[x]` |
+> | H-S02 | `AdminUserOut` — `clerk_id` + `has_profile` fields | `[x]` |
+> | H-S03 | Users table — Clerk ID column, Profile status badge, Delete button with confirm | `[x]` |
+> | H-S04 | Hydration mismatch fix — pinned `toLocaleDateString` to `en-US / UTC` across admin components | `[x]` |
+> | H-S05 | `ResetOnboardingButton` — `session.reload()` before navigation fixes stale JWT redirect loop | `[x]` |
+> | H01 | Admin chat interface | Anthropic API + `tool_use` in browser; no MCP needed for frontend |
+> | H02 | MCP server for DB insights | Python FastAPI-based SSE MCP sharing backend dependencies; deferred pending decision |
+> | H03 | Applications oversight | Not a priority yet; basic stats visible on dashboard |
+> | H04 | RAG / GraphRAG for score-maxing | Navid's domain; requires pgvector/Neo4j (Phase-E layers) |
+
+---
+
 Derived from `docs/plan.md` (the unified plan). Source of truth chain:
 `requirements.md` → `srs.md` → `plan.md` → this file.
 
@@ -180,3 +230,39 @@ ingestion, the matching engine internals, semantic/LLM services, and seeding (`t
 [x] E14 Collaborations page update — "Active Contracts" tab replaced with a banner linking to `/creator/dashboard/contracts`; accepted applications still listed below.
 
 [x] E15 Cleanup — `campaign_type` removed from all frontend state/payload/display (wizard, edit form, campaigns list table, campaign detail); `getCampaignFee` import removed; `docs/plan.md` D12 + §3.1 updated; `docs/schema.md` contracts table documented.
+
+---
+
+## Infra & Auth Fixes (2026-06-09 session)
+
+> Cross-cutting changes that don't belong to a single feature phase.
+
+[x] I01 Seeding overhaul — `db/snapshots/2026-06-09.sql` (data-only, `--disable-triggers`, excludes `alembic_version`); `db/seed.sql` symlink to latest snapshot; `reset_db.py` made schema-agnostic (discovers all tables at runtime, never touches `alembic_version`); `docs/seeding.md` created; `README.md` + `CLAUDE.md` updated. Old Tavily/Groq scripts (`generate_seed_data.py`, `seed_db.py`) marked deprecated.
+
+[x] I02 `CLERK_SECRET_KEY` wired into backend container — `docker-compose.yml` now uses `env_file: ./backend/.env` so all Clerk keys reach the backend. Added `clerk_secret_key` field to `app/config.py` Settings.
+
+[x] I03 Lazy-create user fix — `get_current_user` in `common/dependencies.py` now calls `GET https://api.clerk.com/v1/users/{clerk_id}` when creating a fallback DB row, fetching the real email and role instead of generating `{clerk_id}@placeholder.local`. Falls back to placeholder only if Clerk API is unreachable.
+
+[x] I04 `ResetOnboardingButton` stale-JWT fix — replaced `router.push` + `router.refresh` with `await session.reload()` (Clerk `useSession`) then `window.location.href`. Forces a fresh JWT before middleware runs, preventing the `onboardingComplete: true` guard from bouncing the user back to the dashboard. Also eliminated the stuck "Resetting…" state caused by `setIsResetting(false)` never being called on the success path.
+
+---
+
+## Offer-driven campaign flow (2026-06-10 session) — plan §3 D14
+
+> Reworked the post-creation flow into: draft → **launch** → **shortlist** (independent) → **offer** (terms travel with the offer) → **multi-turn negotiation** → accept → contract active. Backend migration `0022`.
+
+[x] O01 Backend models + migration `0022` — `ContractDeliverable` (per-creator deliverable subset), `NegotiationTurn` (offer/counter thread), `Contract.non_cash_compensation`, `payment_structure='non_cash'`; `CampaignApplication.contract` gains `cascade="all, delete-orphan"` (ORM delete no longer NULLs `contracts.application_id`).
+
+[x] O02 Backend services + guards — `add_to_shortlist` (no active needed; revives terminal apps so a rejected creator can be re-shortlisted), `send_offer` (active-gated; creates `drafted` contract + first turn), `counter_offer` (turn-ownership guard), `accept_offer` (capacity guard → contract `active`), `decline_offer`, `list_negotiation_turns`. Endpoints: `…/shortlist`, `…/offer`, `…/negotiate`, `…/offer/accept|decline`, `…/negotiation`. Verified end-to-end against the DB (draft-gate, offer, two counters, not-your-turn, accept, re-shortlist-after-decline, ORM cascade cleanup).
+
+[x] O03 Launch + Refresh — `CampaignDetailClient`: prominent **Launch Campaign** button when `status==='draft'` (draft→active via existing `updateCampaignStatusAction`); header **Refresh** button (`router.refresh()`) for multi-tenant freshness.
+
+[x] O04 Shortlist split (replaces "Invite to Campaign") — `InviteModal` → **Add to Shortlist** via new `shortlistAction` server action with toast + auto-close (fixes the no-toast / modal-stays-open bug); `MatchesClient` per-card action → **Add to Shortlist**.
+
+[x] O05 Offer modal — `OfferModal.tsx` (evolved from `ContractCreateModal`, now deleted): two engagement types only (Branded promotion / Product review — talent_engagement hidden), structured per-creator deliverable selection from the campaign's requirements, compensation = flat_fee / **non_cash** (with "what the creator receives") / none. Submits via `sendOfferAction`.
+
+[x] O06 Pipeline redesign — lanes **Shortlist | Offered | Negotiating | Accepted**; public applicants land in Shortlist badged "Applied"; `ApplicationDrawer` repurposed (Send Offer gated on active + remove/decline); badges relabeled (`invited`→Offered, `pending`→Applied, `pending_agreement`→Negotiating).
+
+[x] O07 Negotiation thread — `components/negotiation/NegotiationDrawer.tsx` (shared brand + creator): offer/counter history + Accept/Counter/Decline. Creator side wired into `CollaborationsClient` (new **Offers** tab) with creator `acceptOfferAction`/`negotiateAction`/`declineOfferAction`.
+
+[x] O08 Docs — `docs/schema.md` (contract_deliverables, negotiation_turns, non_cash_compensation, offer-time contract note), `docs/plan.md` §3 D14, this file.

@@ -15,6 +15,7 @@ from app.creators.schemas import (
     CreatorProfileUpdate,
     PortfolioItemCreate,
     PortfolioItemOut,
+    PublicSocialEnrichmentRequest,
     RateCardCreate,
     RateCardOut,
     RateCardUpdate,
@@ -41,6 +42,7 @@ def _require_own_profile(creator_id: uuid.UUID, current_user: User) -> None:
 @router.get("/", response_model=List[CreatorProfileOut])
 async def list_creators(
     db: Annotated[AsyncSession, Depends(get_db)],
+    search: Optional[str] = Query(None),
     niche: Optional[int] = Query(None),
     platform: Optional[str] = Query(None),
     min_followers: Optional[int] = Query(None),
@@ -49,11 +51,13 @@ async def list_creators(
     city: Optional[str] = Query(None),
     is_available: Optional[bool] = Query(None),
     max_rate: Optional[int] = Query(None),
+    sort_by: str = Query("followers_desc"),
     limit: int = Query(20, le=100),
     offset: int = Query(0),
 ):
     """Browse creators with optional filters."""
     filters = CreatorFilters(
+        search=search,
         niche=niche,
         platform=platform,
         min_followers=min_followers,
@@ -62,6 +66,7 @@ async def list_creators(
         city=city,
         is_available=is_available,
         max_rate=max_rate,
+        sort_by=sort_by,
         limit=limit,
         offset=offset,
     )
@@ -143,6 +148,44 @@ async def enrich_youtube_platform(
         creator_id,
         channel_ref=data.channel_ref,
         recent_video_limit=data.recent_video_limit,
+    )
+
+
+@router.post("/{creator_id}/platforms/instagram/enrich", response_model=SocialProfileOut)
+async def enrich_instagram_platform(
+    creator_id: uuid.UUID,
+    data: PublicSocialEnrichmentRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    creator = await service.get_creator(db, creator_id)
+    if not creator or creator.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not your profile")
+    return await service.enrich_public_social_profile(
+        db,
+        creator_id,
+        platform="instagram",
+        profile_ref=data.profile_ref,
+        recent_post_limit=data.recent_post_limit,
+    )
+
+
+@router.post("/{creator_id}/platforms/tiktok/enrich", response_model=SocialProfileOut)
+async def enrich_tiktok_platform(
+    creator_id: uuid.UUID,
+    data: PublicSocialEnrichmentRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    creator = await service.get_creator(db, creator_id)
+    if not creator or creator.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not your profile")
+    return await service.enrich_public_social_profile(
+        db,
+        creator_id,
+        platform="tiktok",
+        profile_ref=data.profile_ref,
+        recent_post_limit=data.recent_post_limit,
     )
 
 

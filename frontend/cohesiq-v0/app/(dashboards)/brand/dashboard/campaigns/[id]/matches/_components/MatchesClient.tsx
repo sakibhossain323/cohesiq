@@ -1,29 +1,32 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ElementType } from "react";
 import Link from "next/link";
-import { runMatchingAction } from "../../_actions/campaign-actions";
+import { shortlistAction, runMatchingAction } from "../../_actions/campaign-actions";
 import type { Campaign, AIMatchScore } from "@/lib/types";
 import { formatBDT, formatFollowerCount } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { NicheBadge } from "@/components/shared/NicheBadge";
-import { EstimatedTag } from "@/components/shared/EstimatedTag";
+import { getAvatarInitials } from "@/lib/avatar";
+import { getBrandCategoryLabel } from "@/lib/brand-categories";
 import {
   Sparkles,
   Brain,
+  Check,
   ChevronLeft,
-  TrendingUp,
-  Target,
-  DollarSign,
-  Globe2,
   Briefcase,
-  MonitorSmartphone,
-  Clock,
-  Cpu,
+  GitCompareArrows,
+  X,
+  Lightbulb,
+  TrendingUp,
+  DollarSign,
+  Monitor,
+  Globe,
+  Users,
+  FileText,
 } from "lucide-react";
 
 interface MatchesClientProps {
@@ -34,27 +37,139 @@ interface MatchesClientProps {
 export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) {
   const [matches, setMatches] = useState<AIMatchScore[]>(initialMatches);
   const [isPending, startTransition] = useTransition();
+  const [matchingError, setMatchingError] = useState<string | null>(null);
+  const [matchingNotice, setMatchingNotice] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [shortlistingId, setShortlistingId] = useState<string | null>(null);
+  const [shortlistedIds, setShortlistedIds] = useState<Set<string>>(new Set());
+  const [suggestions, setSuggestions] = useState<{ title: string; suggestion: string; dimension: string }[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+
+  const returnTo = `/brand/dashboard/campaigns/${campaign.id}/matches`;
+  const compareHref = `/brand/dashboard/creators/compare?ids=${Array.from(selectedIds).join(",")}&returnTo=${encodeURIComponent(returnTo)}`;
+
+  const toggleSelect = (creatorId: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(creatorId)) {
+        next.delete(creatorId);
+        return next;
+      }
+      if (next.size >= 3) return prev;
+      next.add(creatorId);
+      return next;
+    });
+  };
+
+  const avg = (arr: number[]) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+
+  const fetchSuggestions = async (sortedMatches: AIMatchScore[]) => {
+    const topScore = sortedMatches[0]?.score_total ?? 0;
+    const avgTotal = avg(sortedMatches.map(m => m.score_total ?? 0));
+    if (topScore >= 0.6 && avgTotal >= 0.45) return; // good enough, no suggestions needed
+    setSuggestionsLoading(true);
+    setSuggestions([]);
+    try {
+      const res = await fetch("/api/campaign-suggestion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          campaign: {
+            title: campaign.title,
+            description: campaign.description,
+            niche: campaign.primary_niche,
+            platforms: campaign.required_platforms,
+            budget_max: campaign.budget_per_creator_max,
+            min_followers: campaign.creator_min_followers,
+            max_followers: campaign.creator_max_followers,
+            brand_category: campaign.brand_category,
+          },
+          scores: {
+            avg_niche:      avg(sortedMatches.map(m => m.score_niche ?? 0)),
+            avg_budget:     avg(sortedMatches.map(m => m.score_budget ?? 0)),
+            avg_platform:   avg(sortedMatches.map(m => m.score_platform ?? 0)),
+            avg_language:   avg(sortedMatches.map(m => m.score_language ?? 0)),
+            avg_engagement: avg(sortedMatches.map(m => m.score_engagement ?? 0)),
+            avg_recency:    avg(sortedMatches.map(m => m.score_recency ?? 0)),
+            avg_total:      avgTotal,
+            top_total:      topScore,
+            match_count:    sortedMatches.length,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (data.suggestions?.length) setSuggestions(data.suggestions);
+    } catch {
+      // suggestions are best-effort, ignore failures
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  };
 
   const handleRunMatching = () => {
+    setMatchingError(null);
+    setMatchingNotice(null);
+    setSuggestions([]);
     startTransition(async () => {
       const result = await runMatchingAction(campaign.id);
       if (result.success && result.matches) {
         const sortedMatches = result.matches.sort((a: AIMatchScore, b: AIMatchScore) => (b.score_total || 0) - (a.score_total || 0));
         setMatches(sortedMatches);
+        setSelectedIds(new Set());
+        setMatchingNotice(
+          sortedMatches.length > 0
+            ? `Matching completed: ${sortedMatches.length} creators ranked.`
+            : "Matching completed, but no creators passed the campaign filters."
+        );
+        fetchSuggestions(sortedMatches);
+      } else {
+        setMatchingError(result.error || "Failed to run matching engine.");
       }
     });
   };
 
-  const getScoreColorClass = (score: number) => {
-    if (score >= 0.8) return "bg-emerald-500";
-    if (score >= 0.6) return "bg-indigo-500";
-    return "bg-amber-500";
+  const handleShortlist = (creatorId: string, creatorName: string) => {
+    setMatchingError(null);
+    setMatchingNotice(null);
+    setShortlistingId(creatorId);
+    startTransition(async () => {
+      const result = await shortlistAction(
+        campaign.id,
+        creatorId,
+        `Shortlisted from AI matches for ${campaign.title}`,
+      );
+      setShortlistingId(null);
+      if (result.success) {
+        setShortlistedIds(prev => new Set(prev).add(creatorId));
+        setMatchingNotice(`${creatorName} added to the shortlist. Send a contract offer from the campaign pipeline.`);
+      } else {
+        setMatchingError(result.error || "Failed to add creator to shortlist.");
+      }
+    });
   };
 
   const getScoreBgClass = (score: number) => {
     if (score >= 0.8) return "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400";
     if (score >= 0.6) return "bg-indigo-500/10 border-indigo-500/20 text-indigo-700 dark:text-indigo-400";
     return "bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400";
+  };
+
+  const getScoreLabel = (score: number) => {
+    if (score >= 0.9) return "Excellent fit";
+    if (score >= 0.75) return "Strong fit";
+    if (score >= 0.6) return "Worth reviewing";
+    return "Needs review";
+  };
+
+  const getFitHighlights = (match: AIMatchScore) => {
+    const highlights: string[] = [];
+    if ((match.score_niche || 0) >= 0.8) highlights.push("Strong content fit");
+    if ((match.score_budget || 0) >= 0.8) highlights.push("Budget aligned");
+    if ((match.score_platform || 0) >= 0.8) highlights.push("Platform ready");
+    if ((match.score_language || 0) >= 0.8) highlights.push("Audience language fit");
+    if ((match.score_recency || 0) >= 0.8) highlights.push("Recently active");
+    if ((match.score_engagement || 0) >= 0.8) highlights.push("High engagement");
+    return highlights.slice(0, 4);
   };
 
   return (
@@ -100,11 +215,19 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
             {campaign.description}
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-2 border-t border-border/50">
+        <CardContent className="grid grid-cols-2 md:grid-cols-5 gap-6 pt-2 border-t border-border/50">
           <div>
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Primary Niche</span>
             <div className="mt-1">
               <NicheBadge niche={campaign.primary_niche} size="sm" />
+            </div>
+          </div>
+          <div>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Product Category</span>
+            <div className="mt-1">
+              <Badge variant="secondary" className="text-xs">
+                {getBrandCategoryLabel(campaign.brand_category)}
+              </Badge>
             </div>
           </div>
           <div>
@@ -134,14 +257,103 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
 
       {/* Matches Content */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             Matched Creators
             <Badge variant="outline" className="bg-primary/5 text-primary text-xs font-semibold">
               {matches.length} matches found
             </Badge>
           </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            {selectedIds.size > 0 && (
+              <span className="text-sm font-medium text-muted-foreground">
+                {selectedIds.size} selected
+              </span>
+            )}
+            {selectedIds.size >= 2 ? (
+              <Button asChild variant="outline">
+                <Link href={compareHref}>
+                  <GitCompareArrows className="mr-2 h-4 w-4" />
+                  Compare Selected
+                </Link>
+              </Button>
+            ) : (
+              <Button type="button" variant="outline" disabled>
+                <GitCompareArrows className="mr-2 h-4 w-4" />
+                Compare Selected
+              </Button>
+            )}
+            {selectedIds.size > 0 && (
+              <Button type="button" variant="ghost" onClick={() => setSelectedIds(new Set())}>
+                <X className="mr-2 h-4 w-4" />
+                Clear
+              </Button>
+            )}
+          </div>
         </div>
+
+        {matchingError && (
+          <Card className="border-red-200 bg-red-50 dark:bg-red-950/20">
+            <CardContent className="py-3 text-sm text-red-700 dark:text-red-300">
+              {matchingError}
+            </CardContent>
+          </Card>
+        )}
+
+        {matchingNotice && (
+          <Card className="border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20">
+            <CardContent className="py-3 text-sm text-emerald-700 dark:text-emerald-300">
+              {matchingNotice}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* AI improvement suggestions */}
+        {suggestionsLoading && (
+          <Card className="border-amber-200 bg-amber-50/60 dark:bg-amber-950/20 dark:border-amber-800">
+            <CardContent className="py-4 flex items-center gap-3 text-sm text-amber-700 dark:text-amber-300">
+              <Brain className="h-4 w-4 animate-pulse shrink-0" />
+              Analyzing your campaign for improvement opportunities…
+            </CardContent>
+          </Card>
+        )}
+
+        {!suggestionsLoading && suggestions.length > 0 && (
+          <Card className="border-amber-200 bg-amber-50/60 dark:bg-amber-950/20 dark:border-amber-800">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2 text-amber-800 dark:text-amber-200">
+                <Lightbulb className="h-4 w-4 shrink-0" />
+                How to get better matches
+              </CardTitle>
+              <CardDescription className="text-amber-700/80 dark:text-amber-300/80 text-xs">
+                Your matches scored lower than expected. Here's what to adjust in your campaign settings.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-3">
+              {suggestions.map((s, i) => {
+                const iconMap: Record<string, ElementType> = {
+                  niche: TrendingUp, budget: DollarSign, platform: Monitor,
+                  language: Globe, followers: Users, description: FileText,
+                };
+                const Icon = iconMap[s.dimension] ?? Lightbulb;
+                return (
+                  <div key={i} className="flex gap-3">
+                    <div className="h-7 w-7 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0 mt-0.5">
+                      <Icon className="h-3.5 w-3.5 text-amber-700 dark:text-amber-300" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-amber-900 dark:text-amber-100 leading-tight">{s.title}</p>
+                      <p className="text-sm text-amber-800/80 dark:text-amber-200/80 mt-0.5 leading-relaxed">{s.suggestion}</p>
+                    </div>
+                  </div>
+                );
+              })}
+              <p className="text-xs text-amber-600/70 dark:text-amber-400/70 pt-1">
+                Edit your campaign settings then re-run matching to see improved results.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {matches.length === 0 ? (
           <Card className="border-dashed border-2 py-12 flex flex-col items-center justify-center text-center">
@@ -162,11 +374,14 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
               if (!creator) return null;
               
               const pctScore = Math.round((match.score_total || 0) * 100);
+              const fitHighlights = getFitHighlights(match);
+              const isSelected = selectedIds.has(creator.id);
+              const isShortlisted = shortlistedIds.has(creator.id);
               
               return (
                 <Card 
                   key={match.id} 
-                  className="overflow-hidden border border-border bg-card hover:shadow-md transition-all duration-300 group"
+                  className={`overflow-hidden border bg-card transition-all duration-300 group hover:shadow-md ${isSelected ? "border-primary ring-2 ring-primary/30" : "border-border"}`}
                 >
                   <div className="grid md:grid-cols-12">
                     {/* Creator Info Column */}
@@ -176,7 +391,7 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
                           <Avatar className="h-14 w-14 rounded-lg border-2 border-border shadow-sm">
                             <AvatarImage src={creator.profile_photo_url} alt={creator.display_name} />
                             <AvatarFallback className="rounded-lg text-lg font-bold">
-                              {creator.display_name.slice(0, 2).toUpperCase()}
+                              {getAvatarInitials(creator.display_name)}
                             </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0">
@@ -190,6 +405,19 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
                               <NicheBadge niche={creator.primary_niche} size="sm" />
                             </div>
                           </div>
+                          <button
+                            type="button"
+                            onClick={() => toggleSelect(creator.id)}
+                            className={`ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
+                              isSelected
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-muted-foreground/30 bg-background text-transparent hover:border-primary/60"
+                            }`}
+                            aria-label={isSelected ? "Remove from comparison" : "Select for comparison"}
+                            title={selectedIds.size >= 3 && !isSelected ? "Max 3 creators" : isSelected ? "Remove from comparison" : "Select for comparison"}
+                          >
+                            {isSelected ? <Check className="h-4 w-4" /> : null}
+                          </button>
                         </div>
                         
                         <p className="text-xs text-muted-foreground line-clamp-2">
@@ -213,127 +441,65 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
                       </div>
                     </div>
 
-                    {/* AI Scoring Details Column */}
-                    <div className="p-6 md:col-span-5 flex flex-col justify-between border-b md:border-b-0 md:border-r border-border/50 bg-muted/20">
-                      <div>
-                        <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                          <Brain className="h-4 w-4 text-primary" />
-                          Compatibility Breakdown
-                        </h4>
-                        
-                        <div className="space-y-3.5">
-                          {/* Niche Alignment */}
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-muted-foreground flex items-center gap-1">
-                                <Target className="h-3.5 w-3.5" /> Niche Alignment
-                              </span>
-                              <span className="font-semibold">{Math.round((match.score_niche || 0) * 100)}%</span>
-                            </div>
-                            <Progress value={(match.score_niche || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_niche || 0)} />
-                          </div>
-
-                          {/* Engagement Strength */}
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-muted-foreground flex items-center gap-1">
-                                <TrendingUp className="h-3.5 w-3.5" /> Engagement Strength
-                                <EstimatedTag variant="estimated" />
-                              </span>
-                              <span className="font-semibold">{Math.round((match.score_engagement || 0) * 100)}%</span>
-                            </div>
-                            <Progress value={(match.score_engagement || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_engagement || 0)} />
-                          </div>
-
-                          {/* Budget Fit */}
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-muted-foreground flex items-center gap-1">
-                                <DollarSign className="h-3.5 w-3.5" /> Budget Fit
-                              </span>
-                              <span className="font-semibold">{Math.round((match.score_budget || 0) * 100)}%</span>
-                            </div>
-                            <Progress value={(match.score_budget || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_budget || 0)} />
-                          </div>
-
-                          {/* Language Match */}
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-muted-foreground flex items-center gap-1">
-                                <Globe2 className="h-3.5 w-3.5" /> Language Match
-                              </span>
-                              <span className="font-semibold">{Math.round((match.score_language || 0) * 100)}%</span>
-                            </div>
-                            <Progress value={(match.score_language || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_language || 0)} />
-                          </div>
-
-                          {/* Platform Fit */}
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-muted-foreground flex items-center gap-1">
-                                <MonitorSmartphone className="h-3.5 w-3.5" /> Platform Fit
-                              </span>
-                              <span className="font-semibold">{Math.round((match.score_platform || 0) * 100)}%</span>
-                            </div>
-                            <Progress value={(match.score_platform || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_platform || 0)} />
-                          </div>
-
-                          {/* Recency */}
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-muted-foreground flex items-center gap-1">
-                                <Clock className="h-3.5 w-3.5" /> Recency
-                              </span>
-                              <span className="font-semibold">{Math.round((match.score_recency || 0) * 100)}%</span>
-                            </div>
-                            <Progress value={(match.score_recency || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_recency || 0)} />
-                          </div>
-
-                          {/* Semantic Similarity */}
-                          {(match.score_semantic ?? 0) > 0 && (
-                            <div className="space-y-1">
-                              <div className="flex justify-between text-xs">
-                                <span className="text-muted-foreground flex items-center gap-1">
-                                  <Cpu className="h-3.5 w-3.5" /> Semantic Similarity
-                                </span>
-                                <span className="font-semibold">{Math.round((match.score_semantic || 0) * 100)}%</span>
-                              </div>
-                              <Progress value={(match.score_semantic || 0) * 100} className="h-1.5" indicatorClassName={getScoreColorClass(match.score_semantic || 0)} />
-                            </div>
-                          )}
+                    {/* Recommendation Column */}
+                    <div className="p-6 md:col-span-5 border-b md:border-b-0 md:border-r border-border/50 bg-muted/20">
+                      <div className="flex h-full flex-col justify-between gap-5">
+                        <div className="space-y-3">
+                          <h4 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                            <Sparkles className="h-4 w-4 text-primary" />
+                            Why This Creator
+                          </h4>
+                          <p className="text-sm leading-6 text-foreground">
+                            {match.rationale || "No recommendation note generated yet."}
+                          </p>
                         </div>
+
+                        {fitHighlights.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {fitHighlights.map((highlight) => (
+                              <Badge key={highlight} variant="secondary" className="rounded-md text-xs">
+                                {highlight}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    {/* Overall Score & Rationale Column */}
-                    <div className="p-6 md:col-span-3 flex flex-col justify-between items-center text-center">
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center gap-1.5 mb-2">
-                          <span className="text-xxs uppercase tracking-wider font-semibold text-muted-foreground">Overall Match</span>
-                          <EstimatedTag variant="ai-scored" />
+                    {/* Score & Actions Column */}
+                    <div className="p-6 md:col-span-3 flex flex-col justify-between gap-5">
+                      <div className="space-y-4">
+                        <div className={`rounded-lg border p-4 text-left ${getScoreBgClass(match.score_total || 0)}`}>
+                          <p className="text-xs font-semibold uppercase tracking-wider">Recommendation</p>
+                          <div className="mt-2 flex items-end justify-between gap-3">
+                            <span className="text-lg font-bold">{getScoreLabel(match.score_total || 0)}</span>
+                            <span className="text-3xl font-extrabold leading-none">{pctScore}%</span>
+                          </div>
                         </div>
-                        <div className={`h-20 w-20 rounded-full border-4 flex flex-col items-center justify-center shadow-sm ${getScoreBgClass(match.score_total || 0)}`}>
-                          <span className="text-2xl font-extrabold">{pctScore}%</span>
+
+                        <div className="rounded-lg border border-border/50 bg-background/60 p-4">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Best Use
+                          </p>
+                          <p className="mt-2 text-sm leading-5 text-muted-foreground">
+                            Review their profile and recent content, then shortlist them if their tone fits your campaign creative.
+                          </p>
                         </div>
                       </div>
 
-                      <div className="w-full mt-4 bg-muted/40 rounded-lg p-3 text-left border border-border/30">
-                        <p className="text-xxs font-bold text-primary flex items-center gap-1 uppercase tracking-wider mb-1">
-                          <Sparkles className="h-3 w-3" /> AI Insight
-                        </p>
-                        <p className="text-[11px] text-muted-foreground italic leading-relaxed line-clamp-4">
-                          "{match.rationale || "No rationale generated."}"
-                        </p>
-                      </div>
-
-                      <div className="mt-4 w-full flex gap-2">
-                        <Link href={`/creators/${creator.id}`} className="flex-1">
+                      <div className="w-full flex gap-2">
+                        <Link href={`/brand/dashboard/creators/${creator.id}`} className="flex-1">
                           <Button variant="outline" size="sm" className="w-full text-xs">
                             View Profile
                           </Button>
                         </Link>
-                        <Button size="sm" className="flex-1 text-xs">
-                          Invite
+                        <Button
+                          size="sm"
+                          className="flex-1 text-xs"
+                          disabled={shortlistingId === creator.id || isShortlisted}
+                          onClick={() => handleShortlist(creator.id, creator.display_name)}
+                        >
+                          {shortlistingId === creator.id ? "Adding..." : isShortlisted ? "Shortlisted" : "Add to Shortlist"}
                         </Button>
                       </div>
                     </div>
@@ -344,6 +510,24 @@ export function MatchesClient({ campaign, initialMatches }: MatchesClientProps) 
           </div>
         )}
       </div>
+
+      {selectedIds.size >= 2 && (
+        <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-full border border-border bg-background px-5 py-3 shadow-xl">
+          <GitCompareArrows className="h-5 w-5 text-primary" />
+          <span className="text-sm font-medium">{selectedIds.size} recommended creators selected</span>
+          <Button size="sm" asChild>
+            <Link href={compareHref}>Compare</Link>
+          </Button>
+          <button
+            type="button"
+            onClick={() => setSelectedIds(new Set())}
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Clear comparison selection"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

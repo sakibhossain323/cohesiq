@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import service
@@ -65,24 +65,39 @@ async def onboarding_sync(
         profile.city = data.creatorProfile.get("city")
         profile.gender = data.creatorProfile.get("gender") or None
         
-        # Add niches
+        # Replace niches so onboarding can be retried/reset without duplicates.
         if data.creatorNiches:
+            await db.execute(
+                delete(CreatorNiche).where(CreatorNiche.creator_id == profile.id)
+            )
             primary = data.creatorNiches.get("primary")
             if primary:
                 db.add(CreatorNiche(creator_id=profile.id, niche_id=primary, is_primary=True))
             for sub in data.creatorNiches.get("sub", []):
+                if sub == primary:
+                    continue
                 db.add(CreatorNiche(creator_id=profile.id, niche_id=sub, is_primary=False))
                 
-        # Add platforms
+        # Update-or-create platforms; creator_id + platform is unique.
         if data.creatorPlatforms:
             for p in data.creatorPlatforms:
-                db.add(CreatorSocialProfile(
-                    creator_id=profile.id,
-                    platform=p["platform"],
-                    handle=p["handle"],
-                    profile_url=p["profileUrl"],
-                    follower_count=p.get("followerCount") or 0
-                ))
+                existing_platform = await db.execute(
+                    select(CreatorSocialProfile).where(
+                        CreatorSocialProfile.creator_id == profile.id,
+                        CreatorSocialProfile.platform == p["platform"],
+                    )
+                )
+                social_profile = existing_platform.scalar_one_or_none()
+                if not social_profile:
+                    social_profile = CreatorSocialProfile(
+                        creator_id=profile.id,
+                        platform=p["platform"],
+                    )
+                    db.add(social_profile)
+
+                social_profile.handle = p["handle"]
+                social_profile.profile_url = p["profileUrl"]
+                social_profile.follower_count = p.get("followerCount") or 0
                 
     elif data.role == "brand" and data.brandProfile:
         from app.brands.models import BrandProfile

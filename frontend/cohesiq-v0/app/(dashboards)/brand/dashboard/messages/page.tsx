@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { getAvatarInitials } from "@/lib/avatar";
 import { Search, Send, Info, FileText, MessageSquare } from "lucide-react";
 
 // Mock data for the UI
@@ -59,9 +60,9 @@ export default function BrandMessagesPage() {
   return (
     <div className="flex h-[calc(100vh-theme(spacing.16))] w-full flex-col p-4 sm:p-6 lg:p-8">
       {/* Demo Banner */}
-      <div className="mb-4 rounded-md bg-blue-50 p-3 border border-blue-200 flex items-center justify-center gap-2 text-blue-800 text-sm">
-        <Info className="h-4 w-4" />
-        <span className="font-medium">Demo Mode:</span> Direct Messaging is currently in development. This is a preview of the upcoming chat interface.
+      <div className="mb-4 rounded-xl bg-brand-soft border border-brand/20 px-4 py-3 flex items-center justify-center gap-2 text-brand text-sm">
+        <Info className="h-4 w-4 shrink-0" />
+        <span><span className="font-semibold">Demo Mode:</span> Direct Messaging is in development. This is a preview of the upcoming chat interface.</span>
       </div>
 
       <div className="flex flex-1 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
@@ -92,7 +93,7 @@ export default function BrandMessagesPage() {
               >
                 <Avatar className="h-10 w-10 border border-border mt-0.5">
                   <AvatarImage src={chat.logo_url} />
-                  <AvatarFallback>{chat.creator_name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback>{getAvatarInitials(chat.creator_name)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-baseline mb-0.5">
@@ -124,7 +125,7 @@ export default function BrandMessagesPage() {
               <div className="flex items-center gap-3">
                 <Avatar className="h-9 w-9 border border-border">
                   <AvatarImage src={activeChat.logo_url} />
-                  <AvatarFallback>{activeChat.creator_name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback>{getAvatarInitials(activeChat.creator_name)}</AvatarFallback>
                 </Avatar>
                 <div>
                   <h3 className="font-semibold text-sm">{activeChat.creator_name}</h3>

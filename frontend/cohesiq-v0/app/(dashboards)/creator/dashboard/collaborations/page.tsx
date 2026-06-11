@@ -27,13 +27,17 @@ export default async function CreatorCollaborationsPage() {
   const apps = await getApplicationsByCreatorId(creator.id, token);
   const sorted = apps.sort((a, b) => new Date(b.applied_at).getTime() - new Date(a.applied_at).getTime());
   
-  const invitations = sorted.filter(a => a.status === 'invited');
-  const myApplications = sorted.filter(a => a.status !== 'accepted' && a.status !== 'completed' && a.status !== 'invited');
+  // Open contract offers the creator must respond to (offered or mid-negotiation).
+  const offers = sorted.filter(a => a.status === 'invited' || a.status === 'pending_agreement');
+  const myApplications = sorted.filter(a =>
+    !['invited', 'pending_agreement', 'accepted', 'completed'].includes(a.status)
+  );
   const activeContracts = sorted.filter(a => a.status === 'accepted' || a.status === 'completed');
 
   return (
-    <CollaborationsClient 
-      invitations={invitations}
+    <CollaborationsClient
+      creatorId={creator.id}
+      offers={offers}
       myApplications={myApplications}
       activeContracts={activeContracts}
     />

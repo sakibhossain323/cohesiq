@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,11 +12,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PlatformBadge, getPlatformLabel } from "@/components/shared/PlatformBadge";
+import { RateCardTable } from "@/components/creator/RateCardTable";
 import { FollowerCount } from "@/components/shared/FollowerCount";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Star, Loader2, Share2, RefreshCw, Edit2, Users, Activity, Globe, BadgeCheck } from "lucide-react";
-import type { CreatorSocialProfile, PlatformType } from "@/lib/types";
-import { addPlatformAction, updatePlatformAction, deletePlatformAction } from "../_actions/profile-actions";
+import { Plus, Trash2, Star, Loader2, Share2, RefreshCw, Edit2, Users, Activity, Globe, BadgeCheck, Wand2 } from "lucide-react";
+import { DELIVERABLE_DEFINITIONS, getDeliverableLabel, resolveDeliverableCode } from "@/lib/deliverables";
+import { formatBDT } from "@/lib/utils";
+import type { CreatorRateCard, CreatorSocialProfile, DeliverableCode, DeliverableType, PlatformType } from "@/lib/types";
+import { addPlatformAction, updatePlatformAction, deletePlatformAction, updateRateCardAction, createRateCardAction } from "../_actions/profile-actions";
 
 const PLATFORMS: { value: PlatformType; label: string }[] = [
   { value: "youtube", label: "YouTube" },
@@ -85,7 +89,7 @@ function toFormState(p: CreatorSocialProfile): PlatformFormState {
   return {
     id: p.id,
     platform: p.platform,
-    handle: p.handle,
+    handle: p.handle.startsWith('@') ? p.handle.substring(1) : p.handle,
     profile_url: p.profile_url || "",
     follower_count: p.follower_count?.toString() || "",
     following_count: p.following_count?.toString() || "",
@@ -135,11 +139,101 @@ function fromFormState(f: PlatformFormState): any {
 interface CreatorProfileClientProps {
   creatorId: string;
   initialProfiles: CreatorSocialProfile[];
+  initialRateCards: CreatorRateCard[];
 }
 
-export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProfileClientProps) {
+type RateCardEditState = {
+  price: string;
+  isNegotiable: boolean;
+};
+
+type SuggestedRateCard = {
+  platform: PlatformType;
+  deliverable_code: DeliverableCode;
+  deliverable_type: DeliverableType;
+  price_bdt: number;
+  suggested_price_bdt: number;
+  includes: string;
+  turnaround_days: number;
+  is_negotiable: boolean;
+};
+
+const RATE_SPECS: Partial<Record<PlatformType, Array<{
+  code: DeliverableCode;
+  minimum: number;
+  maximum: number;
+  turnaroundDays: number;
+}>>> = {
+  youtube: [
+    { code: "youtube_short", minimum: 1_000, maximum: 10_000, turnaroundDays: 3 },
+    { code: "youtube_video", minimum: 5_000, maximum: 20_000, turnaroundDays: 7 },
+    { code: "youtube_live", minimum: 10_000, maximum: 50_000, turnaroundDays: 5 },
+  ],
+  instagram: [
+    { code: "instagram_story", minimum: 1_000, maximum: 6_000, turnaroundDays: 2 },
+    { code: "instagram_feed", minimum: 1_500, maximum: 8_000, turnaroundDays: 3 },
+    { code: "instagram_reel", minimum: 2_000, maximum: 15_000, turnaroundDays: 4 },
+    { code: "instagram_live", minimum: 10_000, maximum: 50_000, turnaroundDays: 5 },
+  ],
+  tiktok: [
+    { code: "tiktok_story", minimum: 1_000, maximum: 6_000, turnaroundDays: 2 },
+    { code: "tiktok_video", minimum: 2_000, maximum: 14_000, turnaroundDays: 4 },
+    { code: "tiktok_live", minimum: 10_000, maximum: 50_000, turnaroundDays: 5 },
+  ],
+};
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function roundToNearest(value: number, nearest = 500) {
+  return Math.max(nearest, Math.round(value / nearest) * nearest);
+}
+
+function priceRatio(followers: number | undefined) {
+  const value = Math.max(followers ?? 0, 1);
+  const normalized = (Math.log10(value) - Math.log10(5_000)) / (Math.log10(10_000_000) - Math.log10(5_000));
+  return clamp(normalized, 0, 1);
+}
+
+function suggestedPrice(followers: number | undefined, minimum: number, maximum: number) {
+  const ratio = priceRatio(followers);
+  return roundToNearest(minimum + ((maximum - minimum) * ratio));
+}
+
+function buildSuggestedRateCards(profiles: CreatorSocialProfile[], existingCards: CreatorRateCard[]): SuggestedRateCard[] {
+  const existingCodes = new Set(
+    existingCards
+      .map(card => resolveDeliverableCode(card.platform, card.deliverable_code, card.deliverable_type))
+      .filter(Boolean),
+  );
+
+  return profiles.flatMap(profile => {
+    const specs = RATE_SPECS[profile.platform] ?? [];
+    return specs
+      .filter(spec => !existingCodes.has(spec.code))
+      .map(spec => {
+        const definition = DELIVERABLE_DEFINITIONS[spec.code];
+        const price = suggestedPrice(profile.follower_count, spec.minimum, spec.maximum);
+        return {
+          platform: definition.platform,
+          deliverable_code: definition.code,
+          deliverable_type: definition.legacyType,
+          price_bdt: price,
+          suggested_price_bdt: price,
+          includes: `1 ${definition.label}`,
+          turnaround_days: spec.turnaroundDays,
+          is_negotiable: true,
+        };
+      });
+  });
+}
+
+export function CreatorProfileClient({ creatorId, initialProfiles, initialRateCards }: CreatorProfileClientProps) {
   const { toast } = useToast();
+  const router = useRouter();
   const [profiles, setProfiles] = useState<CreatorSocialProfile[]>(initialProfiles);
+  const [rateCards, setRateCards] = useState<CreatorRateCard[]>(initialRateCards);
   
   const [showDialog, setShowDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
@@ -148,6 +242,10 @@ export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProf
   
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [showRateCardDialog, setShowRateCardDialog] = useState(false);
+  const [selectedRateCard, setSelectedRateCard] = useState<CreatorRateCard | null>(null);
+  const [rateCardEditState, setRateCardEditState] = useState<RateCardEditState>({ price: "", isNegotiable: false });
+  const suggestedRateCards = buildSuggestedRateCards(profiles, rateCards);
 
   const handleOpenAdd = () => {
     setDialogMode("add");
@@ -159,6 +257,78 @@ export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProf
     setDialogMode("edit");
     setForm(toFormState(profile));
     setShowDialog(true);
+  };
+
+  const handleConnectTikTok = () => {
+    setShowDialog(false);
+    router.push("/creator/dashboard/connect-tiktok?autoStart=true");
+  };
+
+  const handleConnectYouTube = () => {
+    setShowDialog(false);
+    router.push("/creator/dashboard/connect-youtube?autoStart=true");
+  };
+
+  const handleOpenRateCardEdit = (rateCard: CreatorRateCard) => {
+    setSelectedRateCard(rateCard);
+    setRateCardEditState({
+      price: rateCard.price_bdt.toString(),
+      isNegotiable: rateCard.is_negotiable,
+    });
+    setShowRateCardDialog(true);
+  };
+
+  const handleCloseRateCardDialog = () => {
+    setShowRateCardDialog(false);
+    setSelectedRateCard(null);
+  };
+
+  const handleSaveRateCard = () => {
+    if (!selectedRateCard) return;
+    const price = parseInt(rateCardEditState.price, 10);
+    if (Number.isNaN(price) || price <= 0) {
+      toast({ title: "Invalid price", description: "Please enter a valid BDT price.", variant: "destructive" });
+      return;
+    }
+
+    startTransition(async () => {
+      const payload = {
+        price_bdt: price,
+        is_negotiable: rateCardEditState.isNegotiable,
+      };
+
+      const result = await updateRateCardAction(creatorId, selectedRateCard.id, payload);
+      if (result.success && result.rateCard) {
+        setRateCards(prev => prev.map(card => card.id === selectedRateCard.id ? result.rateCard : card));
+        toast({ title: "Rate card updated", description: "Your pricing has been saved." });
+        handleCloseRateCardDialog();
+      } else {
+        toast({ title: "Failed to update rate card", description: result.error, variant: "destructive" });
+      }
+    });
+  };
+
+  const handleCreateSuggestedRateCards = () => {
+    if (suggestedRateCards.length === 0) return;
+
+    startTransition(async () => {
+      const created: CreatorRateCard[] = [];
+      for (const suggestion of suggestedRateCards) {
+        const result = await createRateCardAction(creatorId, suggestion);
+        if (result.success && result.rateCard) {
+          created.push(result.rateCard);
+        } else {
+          toast({ title: "Failed to create rate cards", description: result.error, variant: "destructive" });
+          return;
+        }
+      }
+
+      setRateCards(prev => [...prev, ...created]);
+      toast({
+        title: "Suggested rate cards created",
+        description: "Review and adjust the prices anytime from your profile.",
+      });
+    });
   };
 
   const handleSave = () => {
@@ -205,6 +375,15 @@ export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProf
   };
 
   const handleSync = async (platformId: string, platformName: PlatformType) => {
+    if (platformName === "youtube") {
+      router.push("/creator/dashboard/connect-youtube?autoStart=true");
+      return;
+    }
+    if (platformName === "tiktok") {
+      router.push("/creator/dashboard/connect-tiktok?autoStart=true");
+      return;
+    }
+
     setSyncingId(platformId);
     try {
       await new Promise(res => setTimeout(res, 1000));
@@ -275,9 +454,16 @@ export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProf
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Handle</p>
                       <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
-                        @{profile.handle}
-                        {profile.has_verified_badge && <BadgeCheck className="h-5 w-5 text-blue-500" />}
+                        {profile.handle.startsWith('@') ? profile.handle : `@${profile.handle}`}
+                        {(profile.has_verified_badge || profile.is_api_verified) && (
+                          <BadgeCheck className="h-5 w-5 text-primary" />
+                        )}
                       </h3>
+                      {profile.is_api_verified && (
+                        <Badge variant="outline" className="mt-2 text-xs">
+                          API verified
+                        </Badge>
+                      )}
                       {profile.profile_url && (
                         <a href={profile.profile_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline mt-1 inline-block truncate max-w-[250px]">
                           {profile.profile_url}
@@ -389,6 +575,100 @@ export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProf
         </div>
       )}
 
+      <section className="mt-8">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">Rate Cards</h2>
+            <p className="text-sm text-muted-foreground">
+              Update your pricing directly from your creator profile. Suggested rates are based on your connected platform followers.
+            </p>
+          </div>
+          {suggestedRateCards.length > 0 && (
+            <Button onClick={handleCreateSuggestedRateCards} disabled={isPending}>
+              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+              Create Suggested Rates
+            </Button>
+          )}
+        </div>
+        <RateCardTable rateCards={rateCards} onEdit={handleOpenRateCardEdit} />
+        {suggestedRateCards.length > 0 && (
+          <div className="mt-4 rounded-lg border border-border bg-muted/20 p-4">
+            <div className="mb-3 flex items-start gap-3">
+              <Wand2 className="mt-0.5 h-4 w-4 text-primary" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">Suggested missing rate cards</p>
+                <p className="text-xs text-muted-foreground">
+                  These are editable starting prices. We use them during campaign matching to calculate package cost.
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-2 md:grid-cols-2">
+              {suggestedRateCards.map(card => (
+                <div key={card.deliverable_code} className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground">
+                      {getDeliverableLabel(card.platform, card.deliverable_code, card.deliverable_type)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{getPlatformLabel(card.platform)} · {card.turnaround_days} days</p>
+                  </div>
+                  <p className="shrink-0 text-sm font-semibold text-foreground">{formatBDT(card.price_bdt)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+
+      <Dialog open={showRateCardDialog} onOpenChange={handleCloseRateCardDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Update Rate Card</DialogTitle>
+            <DialogDescription>
+              Adjust your current price and negotiable status for this rate card.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="rounded-lg border border-border bg-muted/10 p-4">
+              <p className="text-sm text-muted-foreground">Platform</p>
+              <p className="mt-1 text-base font-semibold">{selectedRateCard ? getPlatformLabel(selectedRateCard.platform) : "-"}</p>
+              <p className="text-sm text-muted-foreground">{selectedRateCard ? getDeliverableLabel(selectedRateCard.platform, selectedRateCard.deliverable_code, selectedRateCard.deliverable_type) : "-"}</p>
+              {selectedRateCard?.suggested_price_bdt && (
+                <p className="mt-2 text-xs text-muted-foreground">Suggested: {formatBDT(selectedRateCard.suggested_price_bdt)}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="rate_price">Price (BDT)</Label>
+              <Input
+                id="rate_price"
+                type="number"
+                value={rateCardEditState.price}
+                onChange={e => setRateCardEditState(prev => ({ ...prev, price: e.target.value }))}
+                placeholder="12000"
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-border p-4">
+              <div>
+                <p className="text-sm font-medium">Negotiable</p>
+                <p className="text-xs text-muted-foreground">Allow brands to negotiate this rate.</p>
+              </div>
+              <Switch
+                checked={rateCardEditState.isNegotiable}
+                onCheckedChange={value => setRateCardEditState(prev => ({ ...prev, isNegotiable: value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter className="pt-4 border-t">
+            <Button variant="outline" onClick={handleCloseRateCardDialog} disabled={isPending}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveRateCard} disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Rate Card
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Dialog Form */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -408,6 +688,55 @@ export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProf
 
             <div className="flex-1 overflow-y-auto px-1 py-4">
               <TabsContent value="basic" className="space-y-4 m-0">
+                {dialogMode === "add" && (
+                  <div className="space-y-3 mb-6">
+                    <div className="rounded-lg border bg-muted/20 p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-3">
+                          <PlatformBadge platform="youtube" />
+                          <div>
+                            <p className="font-medium text-foreground">Sync with YouTube</p>
+                            <p className="text-sm text-muted-foreground">
+                              Securely connect your channel to import stats and live metrics.
+                            </p>
+                          </div>
+                        </div>
+                        <Button type="button" variant="secondary" onClick={handleConnectYouTube} className="shrink-0">
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Sync YouTube
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border bg-muted/20 p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-3">
+                          <PlatformBadge platform="tiktok" />
+                          <div>
+                            <p className="font-medium text-foreground">Sync with TikTok</p>
+                            <p className="text-sm text-muted-foreground">
+                              Verify your TikTok account and import profile metrics automatically.
+                            </p>
+                          </div>
+                        </div>
+                        <Button type="button" variant="secondary" onClick={handleConnectTikTok} className="shrink-0">
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Sync TikTok
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="relative pt-4 pb-2">
+                      <div className="absolute inset-0 flex items-center pt-2">
+                        <span className="w-full border-t border-border" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">Or add manually</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label>Platform *</Label>
                   <Select
@@ -436,7 +765,11 @@ export function CreatorProfileClient({ creatorId, initialProfiles }: CreatorProf
                       id="handle"
                       placeholder="yourhandle"
                       value={form.handle}
-                      onChange={e => setForm(f => ({ ...f, handle: e.target.value }))}
+                      onChange={e => {
+                        let val = e.target.value;
+                        if (val.startsWith('@')) val = val.substring(1);
+                        setForm(f => ({ ...f, handle: val }));
+                      }}
                       className="pl-7"
                     />
                   </div>

@@ -22,8 +22,16 @@ from app.campaigns.schemas import (
     ApplicationRespondInvite,
     ContractCreate,
     ContractOut,
+    CampaignLiveAnalyticsOut,
     ContentDraftSubmit,
     ContentPublishSubmit,
+    LiveContractAnalyticsOut,
+    LiveMetricSnapshotOut,
+    ShortlistCreate,
+    OfferCreate,
+    NegotiationCounter,
+    OfferDecision,
+    NegotiationTurnOut,
 )
 from app.common.dependencies import get_current_user, get_db
 
@@ -35,6 +43,7 @@ router = APIRouter()
 # ------------------------------------------------------------------ #
 
 @router.get("/", response_model=List[CampaignOut])
+@router.get("", response_model=List[CampaignOut])  # no-slash variant for proxy compatibility
 async def list_campaigns(
     db: Annotated[AsyncSession, Depends(get_db)],
     niche: Optional[int] = Query(None),
@@ -60,6 +69,7 @@ async def list_campaigns(
 
 
 @router.post("/", response_model=CampaignOut, status_code=201)
+@router.post("", response_model=CampaignOut, status_code=201)  # no-slash variant for proxy compatibility
 async def create_campaign(
     data: CampaignCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -207,6 +217,127 @@ async def respond_to_invitation(
 
 
 # ------------------------------------------------------------------ #
+# Shortlist + Offer + Negotiation                                     #
+# ------------------------------------------------------------------ #
+
+async def _resolve_brand(db: AsyncSession, current_user: User):
+    from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+    brand = await get_brand_by_user_id(db, current_user.id)
+    if not brand:
+        raise HTTPException(status_code=403, detail="Brand profile not found")
+    return brand
+
+
+async def _resolve_party(db: AsyncSession, current_user: User) -> tuple[str, uuid.UUID]:
+    """Resolve the acting party (brand or creator) and their profile id."""
+    if current_user.role == "brand":
+        from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+        brand = await get_brand_by_user_id(db, current_user.id)
+        if not brand:
+            raise HTTPException(status_code=403, detail="Brand profile not found")
+        return "brand", brand.id
+    if current_user.role == "creator":
+        from app.creators.service import get_creator_by_user_id  # noqa: PLC0415
+        creator = await get_creator_by_user_id(db, current_user.id)
+        if not creator:
+            raise HTTPException(status_code=403, detail="Creator profile not found")
+        return "creator", creator.id
+    raise HTTPException(status_code=403, detail="Only brands or creators can negotiate")
+
+
+@router.post("/{campaign_id}/shortlist", response_model=ApplicationOut, status_code=201)
+async def shortlist_creator(
+    campaign_id: uuid.UUID,
+    data: ShortlistCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """Add a creator to a campaign's shortlist (allowed in any status, no contract)."""
+    brand = await _resolve_brand(db, current_user)
+    return await service.add_to_shortlist(db, campaign_id, brand.id, data)
+
+
+@router.post(
+    "/{campaign_id}/applications/{application_id}/offer",
+    response_model=ApplicationOut,
+    status_code=201,
+)
+async def send_offer(
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    data: OfferCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """Brand sends a contract offer to a shortlisted creator or applicant (campaign must be active)."""
+    brand = await _resolve_brand(db, current_user)
+    return await service.send_offer(db, campaign_id, application_id, brand.id, data)
+
+
+@router.post(
+    "/{campaign_id}/applications/{application_id}/negotiate",
+    response_model=ApplicationOut,
+)
+async def negotiate_offer(
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    data: NegotiationCounter,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """Either party counters the other party's latest proposed terms."""
+    role, profile_id = await _resolve_party(db, current_user)
+    return await service.counter_offer(db, campaign_id, application_id, role, profile_id, data)
+
+
+@router.post(
+    "/{campaign_id}/applications/{application_id}/offer/accept",
+    response_model=ApplicationOut,
+)
+async def accept_offer(
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    data: OfferDecision,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """Accept the other party's latest offer — activates the contract."""
+    role, profile_id = await _resolve_party(db, current_user)
+    return await service.accept_offer(db, campaign_id, application_id, role, profile_id, data)
+
+
+@router.post(
+    "/{campaign_id}/applications/{application_id}/offer/decline",
+    response_model=ApplicationOut,
+)
+async def decline_offer(
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    data: OfferDecision,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """Either party walks away from an open offer."""
+    role, profile_id = await _resolve_party(db, current_user)
+    return await service.decline_offer(db, campaign_id, application_id, role, profile_id, data)
+
+
+@router.get(
+    "/{campaign_id}/applications/{application_id}/negotiation",
+    response_model=List[NegotiationTurnOut],
+)
+async def get_negotiation_thread(
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """Full offer/counter-offer history for an application (brand or creator party)."""
+    role, profile_id = await _resolve_party(db, current_user)
+    return await service.list_negotiation_turns(db, campaign_id, application_id, role, profile_id)
+
+
+# ------------------------------------------------------------------ #
 # Reviews (nested under campaigns router for simplicity)              #
 # ------------------------------------------------------------------ #
 
@@ -348,6 +479,32 @@ async def close_contract(
     return await service.close_contract(db, contract_id, brand.id)
 
 
+@router.post("/contracts/{contract_id}/sync-metrics", response_model=LiveMetricSnapshotOut, status_code=201)
+async def sync_contract_metric_snapshot(
+    contract_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+    brand = await get_brand_by_user_id(db, current_user.id)
+    if not brand:
+        raise HTTPException(status_code=403, detail="Only brands can sync contract metrics")
+    return await service.sync_contract_live_metrics(db, contract_id, brand.id)
+
+
+@router.get("/contracts/{contract_id}/analytics", response_model=LiveContractAnalyticsOut)
+async def get_contract_live_analytics(
+    contract_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+    brand = await get_brand_by_user_id(db, current_user.id)
+    if not brand:
+        raise HTTPException(status_code=403, detail="Only brands can view contract analytics")
+    return await service.get_contract_live_analytics(db, contract_id, brand.id)
+
+
 @router.get("/brands/me/contracts", response_model=List[ContractOut])
 async def list_brand_contracts(
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -371,6 +528,19 @@ async def list_creator_contracts(
     if not creator:
         raise HTTPException(status_code=403, detail="Creator profile not found")
     return await service.list_contracts_for_creator(db, creator.id)
+
+
+@router.get("/{campaign_id}/live-analytics", response_model=CampaignLiveAnalyticsOut)
+async def get_campaign_live_analytics(
+    campaign_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+    brand = await get_brand_by_user_id(db, current_user.id)
+    if not brand:
+        raise HTTPException(status_code=403, detail="Only brands can view campaign analytics")
+    return await service.get_campaign_live_analytics(db, campaign_id, brand.id)
 
 
 @router.get("/{campaign_id}/matches", response_model=List[AIMatchScoreOut])

@@ -1,3 +1,6 @@
+# Playwright MCP artifacts (screenshots, snapshots from Claude Code sessions)
+.playwright-mcp/
+
 # OS files
 .DS_Store
 .DS_Store?
@@ -9,6 +12,7 @@ Thumbs.db
 Desktop.ini
 
 # IDEs and Editors
+.puku
 .idea/
 .vscode/
 *.swp

@@ -22,9 +22,11 @@ Never silently edit `srs.md` to match a shortcut. Record divergences in `plan.md
 | File | What it contains |
 |---|---|
 | [`requirements.md`](requirements.md) | BuildFest 2026 MarTech Track competition rubric — immutable baseline |
-| [`srs.md`](srs.md) | Full product specification: functional/non-functional requirements, user stories, ER diagram, actor definitions |
+| [`srs.md`](srs.md) | IEEE-style product spec: Intro/Scope, Overall Description, Functional & Non-Functional Requirements. References (no longer embeds) user stories, personas, and diagrams |
+| [`user-stories.md`](user-stories.md) | INVEST-compliant user stories with acceptance criteria + FR/rubric cross-refs (extracted from the SRS) |
+| [`personas.md`](personas.md) | Persona cards by segment — demand (brands/SMEs), supply (creators), internal (operators) |
 | [`plan.md`](plan.md) | Unified implementation plan: phase status, as-built vs SRS divergence ledger (§3), migration list, service inventory |
-| [`schema.md`](schema.md) | Full DDL for the live PostgreSQL schema — authoritative relational model |
+| [`schema.md`](schema.md) | Full DDL for the live PostgreSQL schema — authoritative relational model (migration head `0022`) |
 | [`srs-revisions.md`](srs-revisions.md) | Index of all approved SRS change requests → redirects to `revisions/` |
 
 ---
@@ -35,7 +37,9 @@ Never silently edit `srs.md` to match a shortcut. Record divergences in `plan.md
 |---|---|---|
 | [`tasks/tasks-sakib.md`](tasks/tasks-sakib.md) | Sakib | Campaign UI, marketplace, contract entity, analytics, AI features |
 | [`tasks/tasks-navid.md`](tasks/tasks-navid.md) | Navid | YouTube enrichment, matching engine, seeding pipeline, semantic/LLM services |
+| [`tasks/tasks-labib.md`](tasks/tasks-labib.md) | Labib | Campaign creation UX (modal popup, 3-step wizard), invitation lifecycle (Invited→Negotiation→Accepted Kanban, shortlist-as-bookmark) |
 | [`tasks/n01-persist-youtube-enrichment.md`](tasks/n01-persist-youtube-enrichment.md) | Navid | Detailed spec for N01 — persisting YouTube API data to creator profiles |
+| [`tasks/admin-panel.md`](tasks/admin-panel.md) | Sakib | **TOP PRIORITY** step-by-step runbook (F00–F13) — role-gated admin panel: Clerk-metadata auth, `/admin` route group, read-only `/admin/*` endpoints |
 
 ---
 
@@ -59,6 +63,13 @@ Never silently edit `srs.md` to match a shortcut. Record divergences in `plan.md
 
 ---
 
+## Components (self-contained, code-true references)
+
+| File | What it contains |
+|---|---|
+| [`matching-engine.md`](matching-engine.md) | Authoritative matching reference — 5-stage pipeline, 6-factor weights (niche 0.45 / budget 0.20 / …), budget gating, capped semantic rescue, LLM rationale. Validated against `matching_config.py` + `matching.py` |
+| [`youtube-integration.md`](youtube-integration.md) | YouTube Data API v3 enrichment — endpoints, field mappings, `data_source` provenance, persistence into `creator_social_profiles` |
+
 ## Concepts
 
 | File | What it contains |
@@ -79,6 +90,7 @@ All dated revision records live in `revisions/`. Named `<subject>-YY-MM-DD.md`.
 | [`revisions/matching-engine-plan-26-06-07.md`](revisions/matching-engine-plan-26-06-07.md) | 2026-06-07 | Navid | Full matching engine architecture reference (stages, weights, semantic rescue) |
 | [`revisions/youtube-implementation-26-06-07.md`](revisions/youtube-implementation-26-06-07.md) | 2026-06-07 | Navid | YouTube API integration reference (endpoints, field mappings, enrichment flow) |
 | [`revisions/youtube-task-26-06-07.md`](revisions/youtube-task-26-06-07.md) | 2026-06-07 | Navid | YouTube integration unit task tracker |
+| [`revisions/srs-revisions-26-06-10.md`](revisions/srs-revisions-26-06-10.md) | 2026-06-10 | Team | Documentation overhaul — IEEE SRS restructure, stories/personas extraction, diagram single-sourcing, weight-drift fix (0.45/0.20), migration head 0022, component-doc relocation |
 
 ---
 
@@ -101,9 +113,10 @@ These files are background research — informational, not prescriptive.
 
 | File | What it contains |
 |---|---|
+| [`seeding.md`](seeding.md) | **Seeding reference** — use `seed.sql` (real creator data); reset procedure; what survives a DB reset; legacy scripts status |
 | [`deployment-guide.md`](deployment-guide.md) | Deployment instructions, Docker Compose configuration, environment setup |
 | [`openapi.json`](openapi.json) | OpenAPI 3.x specification for all backend API endpoints |
-| [`submittable.md`](submittable.md) | BuildFest deliverables checklist |
+| [`submittable.md`](submittable.md) | BuildFest submission answer sheet — mirrors `requirements.md` section-for-section (copy-paste form answers) |
 | [`executive-summary.md`](executive-summary.md) | High-level project overview for non-technical stakeholders |
 
 ---

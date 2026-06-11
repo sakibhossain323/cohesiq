@@ -38,6 +38,45 @@ async def _ensure_schema_ready(session):
             "then retry `docker compose exec backend python -m scripts.test_matching`."
         )
 
+    column_result = await session.execute(text("""
+        SELECT table_name || '.' || column_name
+        FROM (
+            VALUES
+                ('brand_profiles', 'brand_category'),
+                ('campaigns', 'brand_category')
+        ) AS required(table_name, column_name)
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = required.table_name
+              AND column_name = required.column_name
+        )
+    """))
+    missing_columns = [row[0] for row in column_result.all()]
+    if missing_columns:
+        raise SystemExit(
+            "Database schema is not migrated. Missing columns: "
+            f"{', '.join(missing_columns)}. Run "
+            "`docker compose exec backend alembic upgrade head`, then retry "
+            "`docker compose exec backend python -m scripts.test_matching`."
+        )
+
+
+async def _ensure_seed_data_ready(session):
+    result = await session.execute(text("""
+        SELECT count(*)
+        FROM creator_social_profiles
+        WHERE platform = 'youtube'
+    """))
+    youtube_profile_count = result.scalar_one()
+    if youtube_profile_count <= 0:
+        raise SystemExit(
+            "No YouTube creator profiles found. Seed creator supply first with "
+            "`docker compose exec backend python -m scripts.seed_real_youtube_creators`, "
+            "then retry `docker compose exec backend python -m scripts.test_matching`."
+        )
+
 
 async def _get_or_create_demo_brand_id(session):
     result = await session.execute(text("""
@@ -60,9 +99,11 @@ async def _get_or_create_demo_brand_id(session):
     user_id = user_result.scalar_one()
 
     brand_result = await session.execute(text("""
-        INSERT INTO brand_profiles (user_id, brand_name, description, country_code, city)
-        VALUES (:user_id, 'Cohesiq Demo Brand', 'Demo brand for matching engine validation.', 'BD', 'Dhaka')
-        ON CONFLICT (user_id) DO UPDATE SET brand_name = EXCLUDED.brand_name
+        INSERT INTO brand_profiles (user_id, brand_name, description, brand_category, country_code, city)
+        VALUES (:user_id, 'Cohesiq Demo Brand', 'Demo brand for matching engine validation.', 'edtech', 'BD', 'Dhaka')
+        ON CONFLICT (user_id) DO UPDATE
+        SET brand_name = EXCLUDED.brand_name,
+            brand_category = EXCLUDED.brand_category
         RETURNING id
     """), {"user_id": user_id})
     return brand_result.scalar_one()
@@ -95,6 +136,7 @@ async def _get_or_create_demo_campaign_id(session):
                 description = 'Looking for Bangladesh-oriented YouTube creators for an education campaign.',
                 objectives = 'Validate ranked creator recommendations using verified YouTube data.',
                 primary_niche_id = :niche_id,
+                brand_category = 'edtech',
                 required_platforms = ARRAY['youtube']::platform_type[],
                 budget_per_creator_max = 500000,
                 creator_min_followers = 0,
@@ -115,6 +157,7 @@ async def _get_or_create_demo_campaign_id(session):
                 description,
                 objectives,
                 primary_niche_id,
+                brand_category,
                 required_platforms,
                 budget_per_creator_max,
                 creator_min_followers,
@@ -128,6 +171,7 @@ async def _get_or_create_demo_campaign_id(session):
                 'Looking for Bangladesh-oriented YouTube creators for an education campaign.',
                 'Validate ranked creator recommendations using verified YouTube data.',
                 :niche_id,
+                'edtech',
                 ARRAY['youtube']::platform_type[],
                 500000,
                 0,
@@ -163,6 +207,7 @@ async def _get_or_create_demo_campaign_id(session):
 async def test():
     async with AsyncSessionLocal() as session:
         await _ensure_schema_ready(session)
+        await _ensure_seed_data_ready(session)
         campaign_id = await _get_or_create_demo_campaign_id(session)
 
         print(f"Running live matching service for campaign: {campaign_id}")

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NicheBadge } from "@/components/shared/NicheBadge";
 import { ApplicationStatusBadge } from "@/components/application/ApplicationStatusBadge";
 import { BarChart3, Users } from "lucide-react";
+import { getAvatarInitials } from "@/lib/avatar";
 import { formatBDT } from "@/lib/utils";
 import type { Application } from "@/lib/types";
 
@@ -54,7 +55,7 @@ export function CreatorPerformanceComparison({ applications }: CreatorPerformanc
           <tbody>
             {sorted.map((app, idx) => {
               const creator = app.creator;
-              const initials = creator.display_name.slice(0, 2).toUpperCase();
+              const initials = getAvatarInitials(creator.display_name);
               const savings = app.proposed_rate && app.agreed_rate
                 ? app.proposed_rate - app.agreed_rate
                 : null;

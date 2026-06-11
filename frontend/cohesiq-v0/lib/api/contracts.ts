@@ -1,4 +1,4 @@
-import type { Contract } from "@/lib/types";
+import type { CampaignLiveAnalytics, Contract, LiveMetricSnapshot } from "@/lib/types";
 import { fetchApi } from "./client";
 
 export interface ContractCreatePayload {
@@ -105,4 +105,25 @@ export async function closeContract(contractId: string, token: string): Promise<
     method: "PATCH",
     token,
   });
+}
+
+export async function syncContractMetrics(
+  contractId: string,
+  token: string
+): Promise<LiveMetricSnapshot> {
+  return fetchApi<LiveMetricSnapshot>(`/campaigns/contracts/${contractId}/sync-metrics`, {
+    method: "POST",
+    token,
+  });
+}
+
+export async function getCampaignLiveAnalytics(
+  campaignId: string,
+  token: string
+): Promise<CampaignLiveAnalytics | null> {
+  try {
+    return await fetchApi<CampaignLiveAnalytics>(`/campaigns/${campaignId}/live-analytics`, { token });
+  } catch {
+    return null;
+  }
 }

@@ -6,16 +6,15 @@ from app.database import AsyncSessionLocal
 async def reset_db():
     print("Starting database reset...")
     async with AsyncSessionLocal() as session:
-        # Drop everything cascaded
-        print("Truncating tables...")
-        await session.execute(text("""
-            TRUNCATE TABLE 
-                brand_profiles, 
-                creator_profiles, 
-                campaigns,
-                users
-            CASCADE;
-        """))
+        result = await session.execute(text(
+            "SELECT tablename FROM pg_tables "
+            "WHERE schemaname = 'public' AND tablename != 'alembic_version'"
+        ))
+        tables = [row[0] for row in result]
+        if tables:
+            table_list = ", ".join(f'"{t}"' for t in tables)
+            print(f"Truncating {len(tables)} tables...")
+            await session.execute(text(f"TRUNCATE TABLE {table_list} CASCADE"))
         await session.commit()
         print("Database has been completely reset.")
 

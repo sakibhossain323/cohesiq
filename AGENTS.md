@@ -2,15 +2,23 @@
 
 This document contains strictly enforced conventions and rules for any AI agent or LLM operating within the `cohesiq` codebase. 
 
+## Documentation index
+
+**`docs/index.md`** is the navigation map for every file under `docs/` — source-of-truth hierarchy, task backlogs, diagrams, design, concepts, revisions, and operations. Read it before opening any doc file.
+
+Source-of-truth order when docs disagree: `docs/requirements.md` → `docs/srs.md` → `docs/plan.md` → `docs/schema.md` → `docs/tasks/tasks-*.md`. The SRS is IEEE-style (FR/NFR only); user stories are in `docs/user-stories.md`, personas in `docs/personas.md`, diagrams in `docs/diagrams/`. Self-contained component refs: `docs/matching-engine.md`, `docs/youtube-integration.md`. Claude-specific guidance (graphify-first workflow, design system) lives in `CLAUDE.md` — this file (`AGENTS.md`) is the agent-agnostic counterpart; keep the two complementary.
+
 ## Project Overview
 
 Cohesiq is a B2B SaaS Influencer Matching Platform. It utilizes a Modular Monolith architecture for the backend (FastAPI + PostgreSQL) and a modern frontend (Next.js App Router). Authentication is fully managed via Clerk.
 
-## Current Implementation Snapshot (June 3, 2026)
+## Current Implementation Snapshot (June 10, 2026)
 
-- Matching engine runs in the backend with strict budget gating, tier-aware scoring, and semantic similarity fallback (Gemini embeddings when available).
-- Brand campaign detail view now embeds Collaborations and Recommendations per campaign.
-- Neo4j graph matching and YouTube sync remain planned but not implemented yet.
+- **Stack:** Next.js 16 + React 19 (frontend); FastAPI + Python 3.12 + SQLAlchemy 2.0 async + PostgreSQL 16 (backend). Alembic migration head is **`0022`**.
+- **Matching engine** (`backend/app/services/matching.py` + `matching_config.py`): a 5-stage pipeline — hard SQL filter → 90-day relational conflict-of-interest check → deterministic niche scoring + capped semantic rescue → 6-factor weighted linear score (niche **0.45**, budget **0.20**, platform 0.15, engagement 0.10, language 0.08, recency 0.02) → heuristic rationale (Groq LLM personalizes the top 5; the LLM never alters the numeric score). Full detail: `docs/matching-engine.md`.
+- **AI/LLM:** Groq `llama-3.1-8b-instant` (rationale + synthetic seed), Groq Whisper `large-v3-turbo` (voice→text campaign creation), Gemini `1.5-flash` + `text-embedding-004` (rationale / semantic fallback, embeddings computed live, **not persisted**).
+- **Shipped:** voice + PDF campaign creation, AI brief analysis, multi-turn negotiation (4s polling), admin panel, conflict-of-interest check, ROI/rate-benchmark tools, offer-driven lifecycle (launch→shortlist→offer→negotiate→accept→contract via `campaign_applications` + `negotiation_turns` + `contracts`).
+- **YouTube enrichment is implemented** — `app/youtube/` reads YouTube Data API v3 and persists into `creator_social_profiles` with a `data_source` provenance label (`docs/youtube-integration.md`). **Neo4j graph matching and pgvector/Redis/TimescaleDB remain deferred (Phase E).**
 - API URL routing uses a two-variable strategy: `BACKEND_API_URL` (server-side) and `NEXT_PUBLIC_API_URL` (client/browser). See Environment Variables section.
 
 ## Core Architecture & Stack Conventions
@@ -128,11 +136,17 @@ The frontend uses **two separate env vars** to route API calls correctly based o
 
 ## Documentation Sync
 
+- Read **`docs/index.md`** first to locate the right doc file before opening anything under `docs/`.
 - Use `graphify` (if available via workflow) to maintain up-to-date knowledge of the codebase structure.
 - When making substantial architectural or model changes, you MUST update `docs/schema.md` and `docs/plan.md`.
 
 ## Data Seeding & Mock Data
-When running demos or needing mock data, use the modular seeding scripts in `backend/scripts/`:
-1. `generate_seed_data.py`: Generates synthetic and real profiles using Tavily/Groq.
-2. `sync_clerk_users.py`: Fetches Clerk users, automatically granting `brand` or `creator` roles to those containing `@test.com`.
-3. `seed_db.py`: Truncates existing business data and safely links test users to the generated database records.
+Primary seeding is the relational snapshot `db/seed.sql` (real YouTube/Instagram/TikTok data; `db/seed.sql` is a symlink to the latest snapshot in `db/snapshots/`). See `docs/seeding.md` for the full reference.
+
+```bash
+docker compose exec -T postgres psql -U cohesiq -d cohesiq < db/seed.sql   # load real seed snapshot
+docker compose exec backend python -m scripts.reset_db                     # wipe business data (skips alembic_version)
+docker compose exec backend python -m scripts.sync_clerk_users             # grant brand/creator roles to @test.com Clerk users
+```
+
+> The old `scripts/generate_seed_data.py` and `scripts/seed_db.py` (Tavily+Groq synthetic generation) are **superseded by `seed.sql`** — do not use them.

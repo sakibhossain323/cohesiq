@@ -1,6 +1,6 @@
 SCORE_WEIGHTS = {
-    "niche": 0.35,
-    "budget": 0.30,
+    "niche": 0.45,
+    "budget": 0.20,
     "platform": 0.15,
     "engagement": 0.10,
     "language": 0.08,
@@ -20,4 +20,19 @@ TOP_MATCH_LIMIT = 10
 LLM_RATIONALE_TOP_N = 5
 
 TIER_MIN_FLOOR = 0.5
+CONFLICT_LOOKBACK_DAYS = 90
 
+BRAND_CATEGORIES = {
+    "food_beverage",
+    "stationery",
+    "edtech",
+    "electronics",
+    "fashion",
+    "sports",
+    "gaming",
+    "health_wellness",
+    "finance",
+    "telecom",
+    "media_entertainment",
+    "home_lifestyle",
+}

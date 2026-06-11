@@ -2,6 +2,9 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+import { formatDistanceToNow } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +15,7 @@ import { CampaignStatusBadge } from "../../_components/CampaignStatusBadge";
 import {
   ArrowLeft, Users, Sparkles, Settings, Loader2, CheckCircle2, XCircle,
   Edit, Archive, PlayCircle, FileSignature, BarChart2, Globe, Lock,
-  Send, ChevronRight,
+  ChevronRight, RefreshCw, BookmarkPlus,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -24,46 +27,114 @@ import {
   AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatBDT, formatDate, cn } from "@/lib/utils";
-import type { Campaign, Application, AIMatchScore, ApplicationStatus, Contract } from "@/lib/types";
-import { updateCampaignStatusAction, runMatchingAction } from "../_actions/campaign-actions";
+import { getAvatarInitials } from "@/lib/avatar";
+import { getBrandCategoryLabel } from "@/lib/brand-categories";
+import type { Campaign, Application, AIMatchScore, ApplicationStatus, Contract, CampaignLiveAnalytics } from "@/lib/types";
+import {
+  updateCampaignStatusAction, runMatchingAction,
+  acceptOfferAction, negotiateAction, declineOfferAction,
+  shortlistAction, updateApplicationStatusAction,
+} from "../_actions/campaign-actions";
+import { useToast } from "@/hooks/use-toast";
 import { ApplicationDrawer } from "./ApplicationDrawer";
 import { CampaignAnalyticsTab } from "./CampaignAnalyticsTab";
-import { ContractCreateModal } from "./ContractCreateModal";
+import { OfferModal } from "./OfferModal";
 import { ContractCard } from "./ContractCard";
+import { NegotiationDrawer, type NegotiationActions } from "@/components/negotiation/NegotiationDrawer";
+import { getApplicationsByCampaignId } from "@/lib/api/applications";
+import { listBrandContracts } from "@/lib/api/contracts";
+import { usePolling } from "@/hooks/use-polling";
 
 interface CampaignDetailClientProps {
   campaign: Campaign;
   applications: Application[];
   initialMatches: AIMatchScore[];
   initialContracts: Contract[];
+  initialLiveAnalytics: CampaignLiveAnalytics | null;
 }
 
-// ── Kanban column config ────────────────────────────────────────────────────
 const PIPELINE_COLUMNS = [
-  { key: "invited",     label: "Invited",      dot: "bg-purple-400",  statuses: ["invited"] as ApplicationStatus[] },
-  { key: "pending",     label: "Needs Review",  dot: "bg-yellow-400",  statuses: ["pending"] as ApplicationStatus[] },
-  { key: "shortlisted", label: "Shortlisted",   dot: "bg-blue-400",    statuses: ["shortlisted"] as ApplicationStatus[] },
-  { key: "accepted",    label: "Accepted",      dot: "bg-green-400",   statuses: ["accepted", "completed"] as ApplicationStatus[] },
-] as const;
+  { key: "shortlist",   label: "Shortlist",   dot: "bd-kanban-dot-shortlisted", statuses: ["shortlisted"] as ApplicationStatus[],                       muted: false },
+  { key: "offered",     label: "Offered",     dot: "bd-kanban-dot-invited",     statuses: ["invited"] as ApplicationStatus[],                            muted: false },
+  { key: "negotiating", label: "Negotiating", dot: "bd-kanban-dot-pending",     statuses: ["pending_agreement"] as ApplicationStatus[],                  muted: false },
+  { key: "declined",    label: "Declined",    dot: "bd-kanban-dot-declined",    statuses: ["rejected", "declined", "withdrawn"] as ApplicationStatus[],  muted: true },
+];
 
-// ── Main component ──────────────────────────────────────────────────────────
+// Lanes where clicking a card opens the negotiation thread rather than the shortlist/declined drawer.
+const NEGOTIATION_STATUSES: ApplicationStatus[] = ["invited", "pending_agreement"];
 
 export function CampaignDetailClient({
   campaign,
   applications,
   initialMatches,
   initialContracts,
+  initialLiveAnalytics,
 }: CampaignDetailClientProps) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const { getToken } = useAuth();
   const [matches, setMatches] = useState<AIMatchScore[]>(initialMatches);
   const [localApplications, setLocalApplications] = useState<Application[]>(applications);
   const [localContracts, setLocalContracts] = useState<Contract[]>(initialContracts);
+  const [liveAnalytics, setLiveAnalytics] = useState<CampaignLiveAnalytics | null>(initialLiveAnalytics);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
-  const [contractModalApp, setContractModalApp] = useState<Application | null>(null);
+  const [offerModalApp, setOfferModalApp] = useState<Application | null>(null);
+  const [negotiationApp, setNegotiationApp] = useState<Application | null>(null);
   const [activeTab, setActiveTab] = useState("pipeline");
   const [isPending, startTransition] = useTransition();
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<"active" | "cancelled" | "completed" | "archived" | null>(null);
   const [statusDialogMessage, setStatusDialogMessage] = useState("");
+  const [matchingError, setMatchingError] = useState<string | null>(null);
+  const [matchingNotice, setMatchingNotice] = useState<string | null>(null);
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+
+  const setProcessing = (id: string, on: boolean) => {
+    setProcessingIds((prev) => {
+      const next = new Set(prev);
+      on ? next.add(id) : next.delete(id);
+      return next;
+    });
+  };
+
+  const campaignActive = campaign.status === "active";
+  const isDraft = campaign.status === "draft";
+
+  const fetchApplications = async () => {
+    const token = await getToken();
+    if (!token) return;
+    const fresh = await getApplicationsByCampaignId(campaign.id, token);
+    setLocalApplications(fresh);
+  };
+
+  const fetchContracts = async () => {
+    const token = await getToken();
+    if (!token) return;
+    const fresh = await listBrandContracts(token, campaign.id);
+    setLocalContracts(fresh);
+  };
+
+  const { lastUpdated: appsLastUpdated, isRefreshing: appsRefreshing, refresh: refreshApps } = usePolling(fetchApplications, 30_000);
+  const { lastUpdated: contractsLastUpdated, isRefreshing: contractsRefreshing, refresh: refreshContracts } = usePolling(fetchContracts, 30_000);
+
+  const handleManualRefresh = () => {
+    refreshApps();
+    refreshContracts();
+    router.refresh();
+  };
+
+  const isPollingRefreshing = appsRefreshing || contractsRefreshing;
+  const latestUpdate = appsLastUpdated && contractsLastUpdated
+    ? (appsLastUpdated > contractsLastUpdated ? appsLastUpdated : contractsLastUpdated)
+    : (appsLastUpdated || contractsLastUpdated);
+
+  const upsertApplication = (updated: Application) => {
+    setLocalApplications((prev) =>
+      prev.some((a) => a.id === updated.id)
+        ? prev.map((a) => (a.id === updated.id ? { ...a, ...updated } : a))
+        : [updated, ...prev]
+    );
+  };
 
   const handleAppStatusChange = (applicationId: string, newStatus: ApplicationStatus) => {
     setLocalApplications((prev) =>
@@ -74,14 +145,35 @@ export function CampaignDetailClient({
     );
   };
 
-  const handleAcceptAndContract = (app: Application) => {
-    setSelectedApp(null);
-    setContractModalApp(app);
+  const handleCardClick = (app: Application) => {
+    if (NEGOTIATION_STATUSES.includes(app.status)) {
+      setNegotiationApp(app);
+    } else {
+      setSelectedApp(app);
+    }
   };
 
-  const handleContractCreated = (contract: Contract) => {
-    setLocalContracts((prev) => [contract, ...prev]);
-    setActiveTab("contracts");
+  const handleSendOffer = (app: Application) => {
+    setSelectedApp(null);
+    setOfferModalApp(app);
+  };
+
+  const handleOffered = (updated: Application) => {
+    upsertApplication(updated);
+    setOfferModalApp(null);
+  };
+
+  const handleNegotiationResult = (updated: Application) => {
+    upsertApplication(updated);
+    setNegotiationApp(null);
+    // A freshly accepted offer produces a new active contract — pull it in.
+    if (updated.status === "accepted") router.refresh();
+  };
+
+  const brandNegotiationActions: NegotiationActions = {
+    accept: acceptOfferAction,
+    counter: negotiateAction,
+    decline: declineOfferAction,
   };
 
   const handleContractUpdate = (updated: Contract) => {
@@ -95,7 +187,9 @@ export function CampaignDetailClient({
       archived:  "Archive this campaign? It will be hidden from your active list.",
       cancelled: "Cancel this campaign? Creators will no longer be able to apply.",
       completed: "Mark this campaign as completed?",
-      active:    "Reactivate this campaign?",
+      active:    isDraft
+        ? "Launch this campaign? It goes live — creators can apply and you can start sending offers."
+        : "Reactivate this campaign?",
     };
     setPendingStatus(status);
     setStatusDialogMessage(messages[status]);
@@ -112,187 +206,260 @@ export function CampaignDetailClient({
   };
 
   const handleRunMatching = () => {
+    setMatchingError(null);
+    setMatchingNotice(null);
     startTransition(async () => {
       const result = await runMatchingAction(campaign.id);
       if (result.success && result.matches) {
         setMatches(result.matches);
+        setMatchingNotice(
+          result.matches.length > 0
+            ? `Matching completed: ${result.matches.length} creators ranked.`
+            : "Matching completed, but no creators passed the campaign filters."
+        );
+        setActiveTab("matches");
+      } else {
+        setMatchingError(result.error || "Failed to run matching engine.");
         setActiveTab("matches");
       }
     });
   };
 
-  const activeApps = localApplications.filter(
-    (a) => !["rejected", "withdrawn", "declined"].includes(a.status)
+  // Candidates kanban: brand-curated pipeline only (excludes public applicants and accepted/completed).
+  const candidateApps = localApplications.filter(
+    (a) => !["pending", "accepted", "completed"].includes(a.status)
   );
+  // Active pipeline count (excludes declined/rejected/withdrawn) for tab badge.
+  const activeCandidateCount = candidateApps.filter(
+    (a) => !["rejected", "declined", "withdrawn"].includes(a.status)
+  ).length;
+  // Discover tab: creator-initiated applications awaiting brand review.
+  const applicantApps = localApplications.filter((a) => a.status === "pending");
 
-  const visibilityBadge = campaign.visibility === "private"
-    ? <span className="inline-flex items-center gap-1 text-xs bg-muted text-muted-foreground rounded px-2 py-0.5"><Lock className="h-3 w-3" /> Private</span>
-    : <span className="inline-flex items-center gap-1 text-xs bg-muted text-muted-foreground rounded px-2 py-0.5"><Globe className="h-3 w-3" /> Public</span>;
+  const handleShortlistApplicant = (app: Application) => {
+    if (!app.creator?.id) return;
+    setProcessing(app.id, true);
+    shortlistAction(campaign.id, app.creator.id).then((result) => {
+      setProcessing(app.id, false);
+      if (result.success && result.application) {
+        upsertApplication(result.application);
+        toast({ title: "Added to Shortlist" });
+      } else {
+        toast({ title: "Failed to shortlist", description: (result as any).error, variant: "destructive" });
+      }
+    });
+  };
+
+  const handleDeclineApplicant = (app: Application) => {
+    setProcessing(app.id, true);
+    updateApplicationStatusAction(app.id, "rejected", campaign.id).then((result) => {
+      setProcessing(app.id, false);
+      if (result.success) {
+        handleAppStatusChange(app.id, "rejected");
+        toast({ title: "Applicant declined" });
+      } else {
+        toast({ title: "Failed to decline", description: result.error, variant: "destructive" });
+      }
+    });
+  };
+
+  const handleReShortlist = (app: Application) => {
+    if (!app.creator?.id) return;
+    startTransition(async () => {
+      const result = await shortlistAction(campaign.id, app.creator!.id);
+      if (result.success && result.application) {
+        upsertApplication(result.application);
+        setSelectedApp(null);
+        toast({ title: "Re-added to Shortlist" });
+      } else {
+        toast({ title: "Failed to re-shortlist", description: (result as any).error, variant: "destructive" });
+      }
+    });
+  };
 
   return (
     <>
-      {/* ── Page header ──────────────────────────────────────────── */}
-      <div className="mb-8">
-        <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2 text-muted-foreground">
-          <Link href="/brand/dashboard/campaigns">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Campaigns
-          </Link>
-        </Button>
-
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3 flex-wrap mb-2">
-              <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                {campaign.title}
-              </h1>
+      {/* ── Page header ──────────────────────────────────────── */}
+      <header className="bd-header" style={{ marginBottom: "var(--space-8)" }}>
+        <div className="bd-header-inner">
+          <div style={{ flex: 1 }}>
+            <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2 text-muted-foreground hover:text-foreground">
+              <Link href="/brand/dashboard/campaigns">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Campaigns
+              </Link>
+            </Button>
+            <div className="flex items-center gap-3 flex-wrap mb-1">
               <CampaignStatusBadge status={campaign.status} />
-              {visibilityBadge}
+              <span className="inline-flex items-center gap-1 text-xs bg-muted text-muted-foreground rounded-full px-3 py-1">
+                {campaign.visibility === "private"
+                  ? <><Lock className="h-3 w-3" /> Private</>
+                  : <><Globe className="h-3 w-3" /> Public</>}
+              </span>
+              {campaign.brand_category && (
+                <span className="inline-flex items-center gap-1 text-xs bg-muted text-muted-foreground rounded-full px-3 py-1">
+                  {getBrandCategoryLabel(campaign.brand_category)}
+                </span>
+              )}
             </div>
+            <h1 className="bd-header-title">{campaign.title}</h1>
             {campaign.created_at && (
-              <p className="text-sm text-muted-foreground">
-                Created {formatDate(campaign.created_at)}
-              </p>
+              <p className="bd-header-sub">Created {formatDate(campaign.created_at)}</p>
             )}
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" disabled={isPending}>
+          <div className="bd-header-actions">
+            {isDraft && (
+              <Button onClick={() => confirmStatusChange("active")} disabled={isPending}>
                 {isPending
                   ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  : <Settings className="mr-2 h-4 w-4" />}
-                Manage
+                  : <PlayCircle className="mr-2 h-4 w-4" />}
+                Launch Campaign
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem asChild>
-                <Link href={`/brand/dashboard/campaigns/${campaign.id}/edit`} className="cursor-pointer flex items-center">
-                  <Edit className="mr-2 h-4 w-4" /> Edit Campaign
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {campaign.status !== "active" ? (
-                <DropdownMenuItem onClick={() => confirmStatusChange("active")} className="cursor-pointer">
-                  <PlayCircle className="mr-2 h-4 w-4" /> Reactivate
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={() => confirmStatusChange("completed")} className="cursor-pointer">
-                  <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Completed
-                </DropdownMenuItem>
+            )}
+            <div className="flex items-center gap-2">
+              {latestUpdate && (
+                <span className="text-xs text-muted-foreground hidden sm:inline-block">
+                  Updated {formatDistanceToNow(latestUpdate, { addSuffix: true })}
+                </span>
               )}
-              {!["cancelled", "archived"].includes(campaign.status) && (
-                <DropdownMenuItem
-                  onClick={() => confirmStatusChange("cancelled")}
-                  className="cursor-pointer text-yellow-600 focus:bg-yellow-50 focus:text-yellow-700"
-                >
-                  <XCircle className="mr-2 h-4 w-4" /> Cancel Campaign
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => confirmStatusChange("archived")}
-                className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-700"
+              <Button
+                variant="ghost"
+                size="icon"
+                title="Refresh"
+                onClick={handleManualRefresh}
+                disabled={isPending || isPollingRefreshing}
               >
-                <Archive className="mr-2 h-4 w-4" /> Archive
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <RefreshCw className={cn("h-4 w-4", isPollingRefreshing && "animate-spin")} />
+              </Button>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" disabled={isPending}>
+                  {isPending
+                    ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    : <Settings className="mr-2 h-4 w-4" />}
+                  Manage
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuItem asChild>
+                  <Link href={`/brand/dashboard/campaigns/${campaign.id}/edit`} className="cursor-pointer flex items-center">
+                    <Edit className="mr-2 h-4 w-4" /> Edit Campaign
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {campaign.status === "active" && (
+                  <DropdownMenuItem onClick={() => confirmStatusChange("completed")} className="cursor-pointer">
+                    <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Completed
+                  </DropdownMenuItem>
+                )}
+                {!isDraft && campaign.status !== "active" && (
+                  <DropdownMenuItem onClick={() => confirmStatusChange("active")} className="cursor-pointer">
+                    <PlayCircle className="mr-2 h-4 w-4" /> Reactivate
+                  </DropdownMenuItem>
+                )}
+                {!["cancelled", "archived"].includes(campaign.status) && (
+                  <DropdownMenuItem
+                    onClick={() => confirmStatusChange("cancelled")}
+                    className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
+                  >
+                    <XCircle className="mr-2 h-4 w-4" /> Cancel Campaign
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => confirmStatusChange("archived")}
+                  className="cursor-pointer text-muted-foreground"
+                >
+                  <Archive className="mr-2 h-4 w-4" /> Archive
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* ── Tabs ─────────────────────────────────────────────────── */}
+      {/* ── Tabs ─────────────────────────────────────────────── */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-8 bg-muted/50 w-full sm:w-auto p-1 h-auto grid grid-cols-4 sm:flex">
-          <TabsTrigger value="pipeline" className="py-2 px-5 flex items-center gap-2">
+        <TabsList className="mb-8 bg-surface-subtle border border-border w-full sm:w-auto p-1 h-auto grid grid-cols-4 sm:flex rounded-xl">
+          <TabsTrigger value="pipeline" className="py-2 px-4 flex items-center gap-2 rounded-lg">
             <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Pipeline</span>
-            <Badge variant="secondary" className="bg-primary/10 text-primary px-1.5 py-0 h-5">
-              {activeApps.length}
-            </Badge>
+            <span className="hidden sm:inline">Candidates</span>
+            {activeCandidateCount > 0 && (
+              <Badge variant="secondary" className="bg-brand-soft text-brand px-1.5 py-0 h-5">
+                {activeCandidateCount}
+              </Badge>
+            )}
           </TabsTrigger>
 
-          <TabsTrigger value="contracts" className="py-2 px-5 flex items-center gap-2">
+          <TabsTrigger value="contracts" className="py-2 px-4 flex items-center gap-2 rounded-lg">
             <FileSignature className="h-4 w-4" />
             <span className="hidden sm:inline">Contracts</span>
             {localContracts.length > 0 && (
-              <Badge variant="secondary" className="bg-primary/10 text-primary px-1.5 py-0 h-5">
+              <Badge variant="secondary" className="bg-brand-soft text-brand px-1.5 py-0 h-5">
                 {localContracts.length}
               </Badge>
             )}
           </TabsTrigger>
 
-          <TabsTrigger value="matches" className="py-2 px-5 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-purple-500" />
-            <span className="hidden sm:inline">Matches</span>
-            {matches.length > 0 && (
-              <Badge variant="secondary" className="bg-primary/10 text-primary px-1.5 py-0 h-5">
-                {matches.length}
+          <TabsTrigger value="matches" className="py-2 px-4 flex items-center gap-2 rounded-lg">
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">Discover</span>
+            {(matches.length > 0 || applicantApps.length > 0) && (
+              <Badge variant="secondary" className="bg-brand-soft text-brand px-1.5 py-0 h-5">
+                {matches.length + applicantApps.length}
               </Badge>
             )}
           </TabsTrigger>
 
-          <TabsTrigger value="details" className="py-2 px-5 flex items-center gap-2">
-            <BarChart2 className="h-4 w-4 text-green-500" />
-            <span className="hidden sm:inline">Details</span>
+          <TabsTrigger value="details" className="py-2 px-4 flex items-center gap-2 rounded-lg">
+            <BarChart2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Analytics</span>
           </TabsTrigger>
         </TabsList>
 
-        {/* ──────────── Tab: Pipeline ──────────────────────────────── */}
+        {/* ──────────── Tab: Candidates ────────────────────────── */}
         <TabsContent value="pipeline" className="m-0">
-          {activeApps.length === 0 ? (
-            <Card className="min-h-[40vh] flex items-center justify-center border-dashed">
-              <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-                <Users className="mb-4 h-12 w-12 text-muted-foreground/30" />
-                <p className="font-medium text-foreground text-lg">No activity yet</p>
-                <p className="mt-2 text-sm text-muted-foreground max-w-xs text-balance">
-                  {campaign.visibility === "public"
-                    ? "Creators will appear here once they apply to your campaign."
-                    : "Go to Matches to find and invite specific creators."}
+          {candidateApps.length === 0 ? (
+            <div className="bd-section">
+              <div className="bd-empty">
+                <div className="bd-empty-icon"><Users className="h-6 w-6" /></div>
+                <p className="bd-empty-title">No candidates yet</p>
+                <p className="bd-empty-desc">
+                  Shortlist creators from the Discover tab or the Find Creators page
+                  {campaign.visibility === "public" ? ". Public applicants appear in Discover for review." : "."}{" "}
+                  Then send a contract offer once the campaign is launched.
                 </p>
-                <Button
-                  variant="outline"
-                  className="mt-6"
-                  onClick={() => setActiveTab("matches")}
-                >
-                  <Sparkles className="mr-2 h-4 w-4 text-purple-500" />
-                  Find Creators
+                <Button variant="outline" onClick={() => setActiveTab("matches")}>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Go to Discover
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 items-start">
+            <div className="bd-kanban">
               {PIPELINE_COLUMNS.map((col) => {
-                const colApps = activeApps.filter((a) =>
-                  (col.statuses as readonly string[]).includes(a.status)
+                const colApps = candidateApps.filter((a) =>
+                  (col.statuses as string[]).includes(a.status)
                 );
                 return (
-                  <div
-                    key={col.key}
-                    className="bg-muted/30 rounded-xl p-4 border border-border min-h-[200px]"
-                  >
-                    <div className="flex items-center justify-between mb-4 px-1">
-                      <h3 className="font-semibold text-sm flex items-center gap-2">
-                        <span className={cn("w-2 h-2 rounded-full", col.dot)} />
+                  <div key={col.key} className={cn("bd-kanban-col", col.muted && "opacity-60")}>
+                    <div className="bd-kanban-head">
+                      <span className="bd-kanban-label">
+                        <span className={cn("bd-kanban-dot", col.dot)} />
                         {col.label}
-                      </h3>
-                      <Badge variant="secondary" className="h-5 px-1.5 py-0 text-xs">
+                      </span>
+                      <Badge variant="secondary" className="h-5 px-1.5 py-0 text-xs bg-background">
                         {colApps.length}
                       </Badge>
                     </div>
-
                     <div className="space-y-2">
                       {colApps.map((app) => (
-                        <ApplicationCard
-                          key={app.id}
-                          app={app}
-                          onClick={() => setSelectedApp(app)}
-                        />
+                        <ApplicationCard key={app.id} app={app} onClick={() => handleCardClick(app)} />
                       ))}
                       {colApps.length === 0 && (
-                        <p className="text-xs text-muted-foreground/50 text-center py-6">
-                          Empty
-                        </p>
+                        <p className="text-xs text-muted-foreground/50 text-center py-6">Empty</p>
                       )}
                     </div>
                   </div>
@@ -302,60 +469,67 @@ export function CampaignDetailClient({
           )}
         </TabsContent>
 
-        {/* ──────────── Tab: Contracts ─────────────────────────────── */}
+        {/* ──────────── Tab: Contracts ─────────────────────────── */}
         <TabsContent value="contracts" className="m-0">
           {localContracts.length === 0 ? (
-            <Card className="min-h-[40vh] flex items-center justify-center border-dashed">
-              <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-                <FileSignature className="mb-4 h-12 w-12 text-muted-foreground/30" />
-                <p className="font-medium text-foreground text-lg">No contracts yet</p>
-                <p className="mt-2 text-sm text-muted-foreground max-w-xs text-balance">
-                  Contracts appear here after you accept a creator and define the engagement terms.
-                  Go to the Pipeline tab to review applications.
+            <div className="bd-section">
+              <div className="bd-empty">
+                <div className="bd-empty-icon"><FileSignature className="h-6 w-6" /></div>
+                <p className="bd-empty-title">No contracts yet</p>
+                <p className="bd-empty-desc">
+                  Contracts appear after you accept a creator and define engagement terms.
                 </p>
-                <Button
-                  variant="outline"
-                  className="mt-6"
-                  onClick={() => setActiveTab("pipeline")}
-                >
+                <Button variant="outline" onClick={() => setActiveTab("pipeline")}>
                   <Users className="mr-2 h-4 w-4" />
-                  View Pipeline
+                  View Candidates
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ) : (
             <div className="space-y-3">
               {localContracts.map((c) => (
-                <ContractCard
-                  key={c.id}
-                  contract={c}
-                  onContractUpdate={handleContractUpdate}
-                />
+                <ContractCard key={c.id} contract={c} onContractUpdate={handleContractUpdate} />
               ))}
             </div>
           )}
         </TabsContent>
 
-        {/* ──────────── Tab: Matches ───────────────────────────────── */}
-        <TabsContent value="matches" className="m-0">
-          <Card>
-            <CardHeader>
-              <CardTitle>Best Matches For This Campaign</CardTitle>
-              <CardDescription>Your highest-scoring creators based on niche, budget, and platform fit</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
+        {/* ──────────── Tab: Discover ──────────────────────────── */}
+        <TabsContent value="matches" className="m-0 space-y-6">
+          <div className="bd-section">
+            <div className="bd-section-head">
+              <div>
+                <span className="bd-section-title">AI Matches</span>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Highest-scoring creators based on niche, budget, and platform fit.
+                </p>
+              </div>
+              {matches.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={handleRunMatching} disabled={isPending}>
+                  {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                  Re-run
+                </Button>
+              )}
+            </div>
+            <div className="bd-section-body space-y-3">
+              {matchingError && (
+                <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+                  {matchingError}
+                </div>
+              )}
+              {matchingNotice && (
+                <div className="rounded-xl border border-brand/20 bg-brand-soft/40 px-4 py-3 text-sm text-brand">
+                  {matchingNotice}
+                </div>
+              )}
               {matches.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
-                  <Sparkles className="mb-4 h-10 w-10 text-purple-400 opacity-50" />
-                  <p className="font-medium text-foreground text-lg mb-1">No recommendations yet</p>
-                  <p className="text-sm max-w-sm mb-6">
+                <div className="bd-empty" style={{ paddingBlock: "var(--space-10)" }}>
+                  <div className="bd-empty-icon"><Sparkles className="h-6 w-6" /></div>
+                  <p className="bd-empty-title">No recommendations yet</p>
+                  <p className="bd-empty-desc">
                     Run AI matching to rank and discover the best creators for this campaign.
                   </p>
-                  <Button
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
-                    onClick={handleRunMatching}
-                    disabled={isPending}
-                  >
+                  <Button onClick={handleRunMatching} disabled={isPending}>
                     {isPending
                       ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Running…</>
                       : <><Sparkles className="mr-2 h-4 w-4" /> Run AI Matching</>}
@@ -370,17 +544,17 @@ export function CampaignDetailClient({
                     return (
                       <div
                         key={match.id}
-                        className="flex items-center justify-between gap-4 rounded-lg border border-border p-3"
+                        className="flex items-center justify-between gap-4 rounded-xl border border-border p-3 hover:border-brand/30 hover:bg-surface-subtle transition-all"
                       >
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
+                          <Avatar className="h-9 w-9">
                             <AvatarImage src={creator?.profile_photo_url || ""} />
-                            <AvatarFallback className="text-xs">
-                              {name.slice(0, 2).toUpperCase()}
+                            <AvatarFallback className="text-xs bg-brand-soft text-brand font-semibold">
+                              {getAvatarInitials(name)}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="text-sm font-semibold">{name}</p>
+                            <p className="text-sm font-semibold font-display">{name}</p>
                             {creator?.primary_niche && (
                               <p className="text-xs text-muted-foreground capitalize">
                                 {creator.primary_niche.replace(/_/g, " ")}
@@ -389,7 +563,7 @@ export function CampaignDetailClient({
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant="secondary">Score {score}%</Badge>
+                          <span className="bd-status bd-status-active">Score {score}%</span>
                           <Button size="sm" variant="ghost" asChild>
                             <Link href={`/brand/dashboard/creators/${creator?.id}`}>
                               <ChevronRight className="h-4 w-4" />
@@ -399,11 +573,7 @@ export function CampaignDetailClient({
                       </div>
                     );
                   })}
-                  <div className="flex justify-between items-center pt-2">
-                    <Button variant="ghost" size="sm" onClick={handleRunMatching} disabled={isPending}>
-                      {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      Re-run matching
-                    </Button>
+                  <div className="flex justify-end items-center pt-2">
                     <Button variant="outline" size="sm" asChild>
                       <Link href={`/brand/dashboard/campaigns/${campaign.id}/matches`}>
                         View all {matches.length} matches
@@ -412,21 +582,84 @@ export function CampaignDetailClient({
                   </div>
                 </>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+
+          {/* Applicants review queue — only for public campaigns with pending apps */}
+          {campaign.visibility === "public" && applicantApps.length > 0 && (
+            <div className="bd-section">
+              <div className="bd-section-head">
+                <div>
+                  <span className="bd-section-title">Applications ({applicantApps.length})</span>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Creators who applied to your campaign. Shortlist promising ones or decline the rest.
+                  </p>
+                </div>
+              </div>
+              <div className="bd-section-body space-y-2">
+                {applicantApps.map((app) => {
+                  const name = app.creator?.display_name || "Unknown Creator";
+                  const isProcessing = processingIds.has(app.id);
+                  return (
+                    <div
+                      key={app.id}
+                      className="flex items-center justify-between gap-4 rounded-xl border border-border p-3 hover:border-brand/20 hover:bg-surface-subtle transition-all"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Avatar className="h-9 w-9 shrink-0">
+                          <AvatarImage src={`https://api.dicebear.com/9.x/initials/svg?seed=${name}`} />
+                          <AvatarFallback className="text-xs bg-brand-soft text-brand font-semibold">
+                            {getAvatarInitials(name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold font-display truncate">{name}</p>
+                          <p className="text-xs text-muted-foreground capitalize">
+                            {app.creator?.primary_niche?.replace(/_/g, " ") || "Creator"}
+                            {app.proposed_rate ? ` · ${formatBDT(app.proposed_rate)}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={isProcessing}
+                          onClick={() => handleShortlistApplicant(app)}
+                        >
+                          {isProcessing
+                            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            : <BookmarkPlus className="h-3.5 w-3.5" />}
+                          <span className="ml-1.5 hidden sm:inline">Shortlist</span>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-muted-foreground hover:text-destructive"
+                          disabled={isProcessing}
+                          onClick={() => handleDeclineApplicant(app)}
+                        >
+                          <XCircle className="h-3.5 w-3.5" />
+                          <span className="ml-1.5 hidden sm:inline">Decline</span>
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </TabsContent>
 
-        {/* ──────────── Tab: Details ───────────────────────────────── */}
+        {/* ──────────── Tab: Details ───────────────────────────── */}
         <TabsContent value="details" className="m-0 space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Campaign Brief</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
+          <div className="bd-section">
+            <div className="bd-section-head">
+              <span className="bd-section-title">Campaign Brief</span>
+            </div>
+            <div className="bd-section-body space-y-6">
               <div>
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                  Description
-                </h4>
+                <h4 className="eyebrow mb-3">Description</h4>
                 <p className="text-foreground whitespace-pre-wrap leading-relaxed">
                   {campaign.description}
                 </p>
@@ -434,49 +667,32 @@ export function CampaignDetailClient({
 
               <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6 pt-4 border-t border-border">
                 <div>
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                    Reach strategy
-                  </h4>
-                  <div className="flex items-center gap-1.5 text-sm font-medium">
+                  <h4 className="eyebrow mb-2" style={{ fontSize: "var(--text-xs)" }}>Reach Strategy</h4>
+                  <div className="flex items-center gap-1.5 text-sm font-semibold">
                     {campaign.visibility === "private"
-                      ? <><Lock className="h-3.5 w-3.5" /> Private outreach</>
-                      : <><Globe className="h-3.5 w-3.5" /> Public campaign</>}
+                      ? <><Lock className="h-3.5 w-3.5" /> Private</>
+                      : <><Globe className="h-3.5 w-3.5" /> Public</>}
                   </div>
                 </div>
-
                 <div>
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                    Target Niche
-                  </h4>
-                  <Badge variant="secondary" className="capitalize">
+                  <h4 className="eyebrow mb-2" style={{ fontSize: "var(--text-xs)" }}>Target Niche</h4>
+                  <span className="bd-status bd-status-active capitalize">
                     {campaign.primary_niche && campaign.primary_niche !== "general"
                       ? campaign.primary_niche.replace("_", " ")
                       : "Any"}
-                  </Badge>
+                  </span>
                 </div>
-
                 <div>
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                    Budget (max / creator)
-                  </h4>
-                  <p className="text-sm font-medium">
-                    {campaign.budget_per_creator_max
-                      ? formatBDT(campaign.budget_per_creator_max)
-                      : "Open"}
+                  <h4 className="eyebrow mb-2" style={{ fontSize: "var(--text-xs)" }}>Budget / Creator</h4>
+                  <p className="text-sm font-semibold">
+                    {campaign.budget_per_creator_max ? formatBDT(campaign.budget_per_creator_max) : "Open"}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Exact payment set on contract
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Exact payment set on contract</p>
                 </div>
-
                 <div>
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                    Min Followers
-                  </h4>
-                  <p className="text-sm font-medium">
-                    {campaign.creator_min_followers
-                      ? campaign.creator_min_followers.toLocaleString()
-                      : "Any"}
+                  <h4 className="eyebrow mb-2" style={{ fontSize: "var(--text-xs)" }}>Min Followers</h4>
+                  <p className="text-sm font-semibold">
+                    {campaign.creator_min_followers ? campaign.creator_min_followers.toLocaleString() : "Any"}
                   </p>
                 </div>
               </div>
@@ -485,24 +701,27 @@ export function CampaignDetailClient({
                 <div className="grid sm:grid-cols-2 gap-6 pt-4 border-t border-border">
                   {campaign.application_deadline && (
                     <div>
-                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                        Application Deadline
-                      </h4>
-                      <p className="text-sm font-medium">{formatDate(campaign.application_deadline)}</p>
+                      <h4 className="eyebrow mb-2" style={{ fontSize: "var(--text-xs)" }}>Application Deadline</h4>
+                      <p className="text-sm font-semibold">{formatDate(campaign.application_deadline)}</p>
                     </div>
                   )}
                   {campaign.content_deadline && (
                     <div>
-                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                        Content Deadline
-                      </h4>
-                      <p className="text-sm font-medium">{formatDate(campaign.content_deadline)}</p>
+                      <h4 className="eyebrow mb-2" style={{ fontSize: "var(--text-xs)" }}>Content Deadline</h4>
+                      <p className="text-sm font-semibold">{formatDate(campaign.content_deadline)}</p>
                     </div>
                   )}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+
+          <CampaignAnalyticsTab
+            campaign={campaign}
+            contracts={localContracts}
+            initialAnalytics={liveAnalytics}
+            onAnalyticsUpdate={setLiveAnalytics}
+          />
 
           <p className="text-xs text-muted-foreground px-1">
             Payment terms, engagement type, and clauses are defined per creator on each{" "}
@@ -517,7 +736,7 @@ export function CampaignDetailClient({
         </TabsContent>
       </Tabs>
 
-      {/* ── Status change confirmation ───────────────────────────── */}
+      {/* ── Status change confirmation ───────────────────────── */}
       <AlertDialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -536,23 +755,39 @@ export function CampaignDetailClient({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* ── Application drawer ────────────────────────────────────── */}
+      {/* ── Shortlist / applicant drawer ──────────────────────── */}
       <ApplicationDrawer
         application={selectedApp}
         campaignId={campaign.id}
+        campaignActive={campaignActive}
         onClose={() => setSelectedApp(null)}
         onStatusChange={handleAppStatusChange}
-        onAcceptAndContract={handleAcceptAndContract}
+        onSendOffer={handleSendOffer}
+        onReShortlist={handleReShortlist}
       />
 
-      {/* ── Contract creation modal ───────────────────────────────── */}
-      {contractModalApp && (
-        <ContractCreateModal
-          open={!!contractModalApp}
-          onClose={() => setContractModalApp(null)}
+      {/* ── Offer modal (contract terms sent with the offer) ──── */}
+      {offerModalApp && (
+        <OfferModal
+          open={!!offerModalApp}
+          onClose={() => setOfferModalApp(null)}
+          campaign={campaign}
+          application={offerModalApp}
+          onOffered={handleOffered}
+        />
+      )}
+
+      {/* ── Negotiation drawer (offered / negotiating / accepted) ─ */}
+      {negotiationApp && (
+        <NegotiationDrawer
+          open={!!negotiationApp}
+          onClose={() => setNegotiationApp(null)}
           campaignId={campaign.id}
-          application={contractModalApp}
-          onContractCreated={handleContractCreated}
+          application={negotiationApp}
+          viewerRole="brand"
+          counterpartyName={negotiationApp.creator?.display_name || "Creator"}
+          actions={brandNegotiationActions}
+          onResult={handleNegotiationResult}
         />
       )}
     </>
@@ -560,41 +795,35 @@ export function CampaignDetailClient({
 }
 
 // ── Application card (kanban cell) ──────────────────────────────────────────
-
 function ApplicationCard({ app, onClick }: { app: Application; onClick: () => void }) {
   const creatorName = app.creator?.display_name || "Unknown Creator";
-  const initials = creatorName.slice(0, 2).toUpperCase();
+  const initials = getAvatarInitials(creatorName);
 
   return (
-    <Card
-      className="shadow-none hover:border-primary/50 transition-colors cursor-pointer"
+    <div
+      className="bg-surface-elevated rounded-xl border border-border p-3 cursor-pointer hover:border-brand/40 hover:shadow-sm transition-all"
       onClick={onClick}
     >
-      <div className="p-3">
-        <div className="flex items-center gap-2.5 mb-2">
-          <Avatar className="h-8 w-8 border border-border shrink-0">
-            <AvatarImage
-              src={`https://api.dicebear.com/9.x/initials/svg?seed=${creatorName}`}
-            />
-            <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <p className="font-semibold text-sm truncate leading-tight">{creatorName}</p>
-            <p className="text-xs text-muted-foreground">
-              {app.creator?.primary_niche?.replace(/_/g, " ") || "Creator"}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <ApplicationStatusBadge status={app.status as ApplicationStatus} />
-          {app.proposed_rate && (
-            <span className="text-xs font-semibold text-muted-foreground">
-              {formatBDT(app.proposed_rate)}
-            </span>
-          )}
+      <div className="flex items-center gap-2.5 mb-2.5">
+        <Avatar className="h-8 w-8 border border-border shrink-0">
+          <AvatarImage src={`https://api.dicebear.com/9.x/initials/svg?seed=${creatorName}`} />
+          <AvatarFallback className="text-xs bg-brand-soft text-brand">{initials}</AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-sm truncate leading-tight font-display">{creatorName}</p>
+          <p className="text-xs text-muted-foreground capitalize">
+            {app.creator?.primary_niche?.replace(/_/g, " ") || "Creator"}
+          </p>
         </div>
       </div>
-    </Card>
+      <div className="flex items-center justify-between">
+        <ApplicationStatusBadge status={app.status as ApplicationStatus} />
+        {app.proposed_rate && (
+          <span className="text-xs font-semibold text-muted-foreground">
+            {formatBDT(app.proposed_rate)}
+          </span>
+        )}
+      </div>
+    </div>
   );
 }

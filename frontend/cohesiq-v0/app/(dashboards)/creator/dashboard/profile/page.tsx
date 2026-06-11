@@ -23,5 +23,5 @@ export default async function CreatorPlatformsPage() {
     );
   }
 
-  return <CreatorProfileClient creatorId={creator.id} initialProfiles={creator.social_profiles || []} />;
+  return <CreatorProfileClient creatorId={creator.id} initialProfiles={creator.social_profiles || []} initialRateCards={creator.rate_cards || []} />;
 }

@@ -1,8 +1,9 @@
 import { fetchApi } from "@/lib/api/client";
+import { resolveDeliverableCode } from "@/lib/deliverables";
 import { RateBenchmarkClient, type BenchmarkRow } from "./_components/RateBenchmarkClient";
 
 interface SocialProfile { follower_count?: number | null }
-interface RateCard { platform: string; deliverable_type: string; price_bdt: number; is_active: boolean }
+interface RateCard { platform: string; deliverable_type: string; deliverable_code?: string | null; price_bdt: number; is_active: boolean }
 interface Creator { social_profiles: SocialProfile[]; rate_cards: RateCard[] }
 
 function getCreatorTier(creator: Creator): string {
@@ -34,7 +35,10 @@ async function computeBenchmarks(): Promise<BenchmarkRow[]> {
       const tier = getCreatorTier(creator);
       for (const card of creator.rate_cards) {
         if (!card.is_active || card.price_bdt <= 0) continue;
-        const key = `${card.platform}||${card.deliverable_type}||${tier}`;
+        const deliverable = resolveDeliverableCode(card.platform as any, card.deliverable_code, card.deliverable_type as any)
+          ?? card.deliverable_code
+          ?? card.deliverable_type;
+        const key = `${card.platform}||${deliverable}||${tier}`;
         const existing = groups.get(key) ?? [];
         existing.push(card.price_bdt);
         groups.set(key, existing);

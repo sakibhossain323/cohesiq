@@ -10,7 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Before planning, proposing changes, or touching any file:
 
-1. Check `graphify-out/wiki/index.md` for broad architecture navigation.
+1. Check `docs/index.md` for a full navigation map of every documentation file in the repo.
+2. Check `graphify-out/wiki/index.md` for broad architecture navigation.
 2. Run `graphify query "<question>"` to locate relevant nodes — this returns a scoped subgraph and is faster than grepping source files.
 3. Use `graphify explain "<concept>"` to understand a module or pattern.
 4. Use `graphify path "<A>" "<B>"` to trace relationships between two files or symbols.
@@ -58,10 +59,16 @@ pnpm run lint     # ESLint
 ## Backend scripts (run inside the backend container)
 
 ```bash
-docker compose exec backend python -m scripts.generate_seed_data   # generate ~100 creators/brands via Tavily+Groq
-docker compose exec backend python -m scripts.sync_clerk_users      # assign roles to @test.com Clerk users
-docker compose exec backend python -m scripts.seed_db               # seed database with generated data
+# Primary seeding — db/seed.sql is a symlink to the latest snapshot in db/snapshots/
+docker compose exec -T postgres psql -U cohesiq -d cohesiq < db/seed.sql
+
+docker compose exec backend python -m scripts.reset_db             # wipe all data (schema-agnostic, skips alembic_version)
+docker compose exec backend python -m scripts.sync_clerk_users     # assign roles to @test.com Clerk users
 ```
+
+> The old `scripts/generate_seed_data.py` and `scripts/seed_db.py` used Tavily+Groq to produce synthetic data.
+> They are superseded by `seed.sql` (real YouTube/Instagram/TikTok data). Do not use them.
+> See `docs/seeding.md` for the full seeding reference.
 
 ## Architecture
 
@@ -117,17 +124,25 @@ Before altering any SQLAlchemy model, read `docs/schema.md` first — it is the 
 
 ## Documentation source-of-truth hierarchy
 
+For a full navigation map of every file under `docs/`, see **`docs/index.md`** first.
+
 When docs disagree, resolve in this order (defined in `docs/plan.md` §0):
 
 1. `docs/requirements.md` — BuildFest competition baseline (immutable: rubric, challenge definition)
-2. `docs/srs.md` — Cohesiq product spec (authoritative vision: FR/NFR, user stories, ER diagram)
+2. `docs/srs.md` — Cohesiq product spec (IEEE-style: Intro/Scope, Overall Description, FR, NFR only). User stories live in `docs/user-stories.md`, personas in `docs/personas.md`, all diagrams in `docs/diagrams/` — the SRS references them and holds no embedded diagrams.
 3. `docs/plan.md` — unified implementation plan; reconciles the SRS vision with the **real codebase**, lists every intentional divergence in its §3 Divergence Ledger, and tracks phased status
 4. `docs/schema.md` — code-true relational schema
 5. `docs/tasks/tasks-*.md` — per-developer backlogs (Sakib = marketplace UI/campaigns; Navid = YouTube/matching/data)
 
-**Reality checks that prevent hallucination** (all confirmed live, not aspirational):
-- Storage is **relational-only PostgreSQL** — no pgvector/Neo4j/Redis/TimescaleDB yet (they are deferred Phase-E layers; see plan §3 D1–D5).
-- `app/youtube/` is a **stateless public-API read wrapper** — it does not persist to the DB.
+**Component references** (self-contained, code-true): `docs/matching-engine.md` (5-stage pipeline, weights, semantic rescue) · `docs/youtube-integration.md` (YouTube Data API v3 enrichment). For the submission answer sheet see `docs/submittable.md`; for stakeholders see `docs/executive-summary.md`.
+
+**Reality checks that prevent hallucination** (all confirmed live as of 2026-06-10, not aspirational):
+- Storage is **relational-only PostgreSQL 16** — no pgvector/Neo4j/Redis/TimescaleDB yet (they are deferred Phase-E layers; see plan §3 D1–D5).
+- **Alembic migration head is `0022`** (numbered chain `0001→0022` + hash migrations). New tables since the 0017 era: `negotiation_turns`, `ai_match_scores`, `contract_deliverables`, `live_content_metric_snapshots`; plus campaign visibility/invitation fields and the `archived` status.
+- **Matching weights** (`backend/app/services/matching_config.py`, single source of truth): niche **0.45**, budget **0.20**, platform 0.15, engagement 0.10, language 0.08, recency 0.02. The LLM never alters the numeric score — it only phrases the rationale for the top 5. (Older docs that say 0.35/0.30 are superseded.)
+- **AI/LLM stack:** Groq `llama-3.1-8b-instant` (rationale + synthetic seed), Groq Whisper `large-v3-turbo` (voice→text campaign creation), Gemini `1.5-flash` (rationale fallback) + `text-embedding-004` (semantic rescue, computed live, **not persisted**).
+- The offer-driven lifecycle (launch→shortlist→offer→negotiate→accept→contract) lives in `campaign_applications` + `negotiation_turns` + `contracts`, **not** as campaign states. Campaign statuses are `draft/active/in_progress/completed/cancelled/archived`.
+- `app/youtube/` is a public-API read wrapper; enrichment persists into `creator_social_profiles` with a `data_source` provenance label.
 - Two distinct type taxonomies coexist and must **not** be merged: `campaigns.campaign_type` (brand demand) vs `collaboration_type` (creator supply). See plan §3.1.
 
 If the code forces a new divergence from the SRS, record it in `docs/plan.md` §3 — never silently edit the SRS to match a shortcut.
@@ -140,7 +155,7 @@ If the code forces a new divergence from the SRS, record it in `docs/plan.md` §
 
 ## graphify
 
-This project has a live knowledge graph at `graphify-out/` (2 533 nodes, 7 806 edges, 158 communities as of 2026-06-05). **Always use graphify before reading source files** — see §Mandatory agent workflow Step 1.
+This project has a live knowledge graph at `graphify-out/` (7 470 nodes, 18 064 edges, 467 communities as of 2026-06-10). **Always use graphify before reading source files** — see §Mandatory agent workflow Step 1.
 
 ### CLI quick-reference
 

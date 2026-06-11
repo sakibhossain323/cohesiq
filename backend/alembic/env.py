@@ -24,7 +24,9 @@ from app.creators.models import (  # noqa: F401
 from app.brands.models import BrandProfile  # noqa: F401
 from app.campaigns.models import (  # noqa: F401
     Campaign, CampaignNicheTarget, CampaignLanguageTarget,
-    CampaignDeliverableRequirement, CampaignApplication, Review,
+    CampaignDeliverableRequirement, CampaignApplicationQuestion,
+    CampaignAcknowledgment, CampaignApplication, CampaignApplicationAnswer,
+    CampaignApplicationAcknowledgment, Review,
     AIMatchScore,
 )
 
