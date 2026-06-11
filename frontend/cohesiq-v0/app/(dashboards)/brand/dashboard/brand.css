@@ -256,7 +256,8 @@
 .bd-kanban-dot-invited  { background: var(--brand-secondary); }
 .bd-kanban-dot-pending  { background: var(--n-400); }
 .bd-kanban-dot-shortlisted { background: var(--brand-primary); }
-.bd-kanban-dot-accepted { background: var(--brand-primary-strong); }
+.bd-kanban-dot-accepted  { background: var(--brand-primary-strong); }
+.bd-kanban-dot-declined  { background: var(--n-300); }
 
 /* ── Numbered form cards (new campaign) ──────────────────── */
 .bd-form-card {

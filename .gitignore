@@ -1,3 +1,6 @@
+# Playwright MCP artifacts (screenshots, snapshots from Claude Code sessions)
+.playwright-mcp/
+
 # OS files
 .DS_Store
 .DS_Store?

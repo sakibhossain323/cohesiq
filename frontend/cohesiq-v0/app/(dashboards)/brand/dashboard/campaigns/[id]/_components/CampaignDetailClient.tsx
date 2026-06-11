@@ -2,6 +2,9 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+import { formatDistanceToNow } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +15,7 @@ import { CampaignStatusBadge } from "../../_components/CampaignStatusBadge";
 import {
   ArrowLeft, Users, Sparkles, Settings, Loader2, CheckCircle2, XCircle,
   Edit, Archive, PlayCircle, FileSignature, BarChart2, Globe, Lock,
-  ChevronRight,
+  ChevronRight, RefreshCw, BookmarkPlus,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -27,11 +30,20 @@ import { formatBDT, formatDate, cn } from "@/lib/utils";
 import { getAvatarInitials } from "@/lib/avatar";
 import { getBrandCategoryLabel } from "@/lib/brand-categories";
 import type { Campaign, Application, AIMatchScore, ApplicationStatus, Contract, CampaignLiveAnalytics } from "@/lib/types";
-import { updateCampaignStatusAction, runMatchingAction } from "../_actions/campaign-actions";
+import {
+  updateCampaignStatusAction, runMatchingAction,
+  acceptOfferAction, negotiateAction, declineOfferAction,
+  shortlistAction, updateApplicationStatusAction,
+} from "../_actions/campaign-actions";
+import { useToast } from "@/hooks/use-toast";
 import { ApplicationDrawer } from "./ApplicationDrawer";
 import { CampaignAnalyticsTab } from "./CampaignAnalyticsTab";
-import { ContractCreateModal } from "./ContractCreateModal";
+import { OfferModal } from "./OfferModal";
 import { ContractCard } from "./ContractCard";
+import { NegotiationDrawer, type NegotiationActions } from "@/components/negotiation/NegotiationDrawer";
+import { getApplicationsByCampaignId } from "@/lib/api/applications";
+import { listBrandContracts } from "@/lib/api/contracts";
+import { usePolling } from "@/hooks/use-polling";
 
 interface CampaignDetailClientProps {
   campaign: Campaign;
@@ -42,11 +54,14 @@ interface CampaignDetailClientProps {
 }
 
 const PIPELINE_COLUMNS = [
-  { key: "invited",     label: "Invited",       dot: "bd-kanban-dot-invited",     statuses: ["invited"] as ApplicationStatus[] },
-  { key: "pending",     label: "Needs Review",  dot: "bd-kanban-dot-pending",     statuses: ["pending"] as ApplicationStatus[] },
-  { key: "shortlisted", label: "Shortlisted",   dot: "bd-kanban-dot-shortlisted", statuses: ["shortlisted"] as ApplicationStatus[] },
-  { key: "accepted",    label: "Accepted",      dot: "bd-kanban-dot-accepted",    statuses: ["accepted", "completed"] as ApplicationStatus[] },
-] as const;
+  { key: "shortlist",   label: "Shortlist",   dot: "bd-kanban-dot-shortlisted", statuses: ["shortlisted"] as ApplicationStatus[],                       muted: false },
+  { key: "offered",     label: "Offered",     dot: "bd-kanban-dot-invited",     statuses: ["invited"] as ApplicationStatus[],                            muted: false },
+  { key: "negotiating", label: "Negotiating", dot: "bd-kanban-dot-pending",     statuses: ["pending_agreement"] as ApplicationStatus[],                  muted: false },
+  { key: "declined",    label: "Declined",    dot: "bd-kanban-dot-declined",    statuses: ["rejected", "declined", "withdrawn"] as ApplicationStatus[],  muted: true },
+];
+
+// Lanes where clicking a card opens the negotiation thread rather than the shortlist/declined drawer.
+const NEGOTIATION_STATUSES: ApplicationStatus[] = ["invited", "pending_agreement"];
 
 export function CampaignDetailClient({
   campaign,
@@ -55,12 +70,16 @@ export function CampaignDetailClient({
   initialContracts,
   initialLiveAnalytics,
 }: CampaignDetailClientProps) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const { getToken } = useAuth();
   const [matches, setMatches] = useState<AIMatchScore[]>(initialMatches);
   const [localApplications, setLocalApplications] = useState<Application[]>(applications);
   const [localContracts, setLocalContracts] = useState<Contract[]>(initialContracts);
   const [liveAnalytics, setLiveAnalytics] = useState<CampaignLiveAnalytics | null>(initialLiveAnalytics);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
-  const [contractModalApp, setContractModalApp] = useState<Application | null>(null);
+  const [offerModalApp, setOfferModalApp] = useState<Application | null>(null);
+  const [negotiationApp, setNegotiationApp] = useState<Application | null>(null);
   const [activeTab, setActiveTab] = useState("pipeline");
   const [isPending, startTransition] = useTransition();
   const [showStatusDialog, setShowStatusDialog] = useState(false);
@@ -68,6 +87,54 @@ export function CampaignDetailClient({
   const [statusDialogMessage, setStatusDialogMessage] = useState("");
   const [matchingError, setMatchingError] = useState<string | null>(null);
   const [matchingNotice, setMatchingNotice] = useState<string | null>(null);
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+
+  const setProcessing = (id: string, on: boolean) => {
+    setProcessingIds((prev) => {
+      const next = new Set(prev);
+      on ? next.add(id) : next.delete(id);
+      return next;
+    });
+  };
+
+  const campaignActive = campaign.status === "active";
+  const isDraft = campaign.status === "draft";
+
+  const fetchApplications = async () => {
+    const token = await getToken();
+    if (!token) return;
+    const fresh = await getApplicationsByCampaignId(campaign.id, token);
+    setLocalApplications(fresh);
+  };
+
+  const fetchContracts = async () => {
+    const token = await getToken();
+    if (!token) return;
+    const fresh = await listBrandContracts(token, campaign.id);
+    setLocalContracts(fresh);
+  };
+
+  const { lastUpdated: appsLastUpdated, isRefreshing: appsRefreshing, refresh: refreshApps } = usePolling(fetchApplications, 30_000);
+  const { lastUpdated: contractsLastUpdated, isRefreshing: contractsRefreshing, refresh: refreshContracts } = usePolling(fetchContracts, 30_000);
+
+  const handleManualRefresh = () => {
+    refreshApps();
+    refreshContracts();
+    router.refresh();
+  };
+
+  const isPollingRefreshing = appsRefreshing || contractsRefreshing;
+  const latestUpdate = appsLastUpdated && contractsLastUpdated
+    ? (appsLastUpdated > contractsLastUpdated ? appsLastUpdated : contractsLastUpdated)
+    : (appsLastUpdated || contractsLastUpdated);
+
+  const upsertApplication = (updated: Application) => {
+    setLocalApplications((prev) =>
+      prev.some((a) => a.id === updated.id)
+        ? prev.map((a) => (a.id === updated.id ? { ...a, ...updated } : a))
+        : [updated, ...prev]
+    );
+  };
 
   const handleAppStatusChange = (applicationId: string, newStatus: ApplicationStatus) => {
     setLocalApplications((prev) =>
@@ -78,14 +145,35 @@ export function CampaignDetailClient({
     );
   };
 
-  const handleAcceptAndContract = (app: Application) => {
-    setSelectedApp(null);
-    setContractModalApp(app);
+  const handleCardClick = (app: Application) => {
+    if (NEGOTIATION_STATUSES.includes(app.status)) {
+      setNegotiationApp(app);
+    } else {
+      setSelectedApp(app);
+    }
   };
 
-  const handleContractCreated = (contract: Contract) => {
-    setLocalContracts((prev) => [contract, ...prev]);
-    setActiveTab("contracts");
+  const handleSendOffer = (app: Application) => {
+    setSelectedApp(null);
+    setOfferModalApp(app);
+  };
+
+  const handleOffered = (updated: Application) => {
+    upsertApplication(updated);
+    setOfferModalApp(null);
+  };
+
+  const handleNegotiationResult = (updated: Application) => {
+    upsertApplication(updated);
+    setNegotiationApp(null);
+    // A freshly accepted offer produces a new active contract — pull it in.
+    if (updated.status === "accepted") router.refresh();
+  };
+
+  const brandNegotiationActions: NegotiationActions = {
+    accept: acceptOfferAction,
+    counter: negotiateAction,
+    decline: declineOfferAction,
   };
 
   const handleContractUpdate = (updated: Contract) => {
@@ -99,7 +187,9 @@ export function CampaignDetailClient({
       archived:  "Archive this campaign? It will be hidden from your active list.",
       cancelled: "Cancel this campaign? Creators will no longer be able to apply.",
       completed: "Mark this campaign as completed?",
-      active:    "Reactivate this campaign?",
+      active:    isDraft
+        ? "Launch this campaign? It goes live — creators can apply and you can start sending offers."
+        : "Reactivate this campaign?",
     };
     setPendingStatus(status);
     setStatusDialogMessage(messages[status]);
@@ -135,9 +225,57 @@ export function CampaignDetailClient({
     });
   };
 
-  const activeApps = localApplications.filter(
-    (a) => !["rejected", "withdrawn", "declined"].includes(a.status)
+  // Candidates kanban: brand-curated pipeline only (excludes public applicants and accepted/completed).
+  const candidateApps = localApplications.filter(
+    (a) => !["pending", "accepted", "completed"].includes(a.status)
   );
+  // Active pipeline count (excludes declined/rejected/withdrawn) for tab badge.
+  const activeCandidateCount = candidateApps.filter(
+    (a) => !["rejected", "declined", "withdrawn"].includes(a.status)
+  ).length;
+  // Discover tab: creator-initiated applications awaiting brand review.
+  const applicantApps = localApplications.filter((a) => a.status === "pending");
+
+  const handleShortlistApplicant = (app: Application) => {
+    if (!app.creator?.id) return;
+    setProcessing(app.id, true);
+    shortlistAction(campaign.id, app.creator.id).then((result) => {
+      setProcessing(app.id, false);
+      if (result.success && result.application) {
+        upsertApplication(result.application);
+        toast({ title: "Added to Shortlist" });
+      } else {
+        toast({ title: "Failed to shortlist", description: (result as any).error, variant: "destructive" });
+      }
+    });
+  };
+
+  const handleDeclineApplicant = (app: Application) => {
+    setProcessing(app.id, true);
+    updateApplicationStatusAction(app.id, "rejected", campaign.id).then((result) => {
+      setProcessing(app.id, false);
+      if (result.success) {
+        handleAppStatusChange(app.id, "rejected");
+        toast({ title: "Applicant declined" });
+      } else {
+        toast({ title: "Failed to decline", description: result.error, variant: "destructive" });
+      }
+    });
+  };
+
+  const handleReShortlist = (app: Application) => {
+    if (!app.creator?.id) return;
+    startTransition(async () => {
+      const result = await shortlistAction(campaign.id, app.creator!.id);
+      if (result.success && result.application) {
+        upsertApplication(result.application);
+        setSelectedApp(null);
+        toast({ title: "Re-added to Shortlist" });
+      } else {
+        toast({ title: "Failed to re-shortlist", description: (result as any).error, variant: "destructive" });
+      }
+    });
+  };
 
   return (
     <>
@@ -171,6 +309,30 @@ export function CampaignDetailClient({
           </div>
 
           <div className="bd-header-actions">
+            {isDraft && (
+              <Button onClick={() => confirmStatusChange("active")} disabled={isPending}>
+                {isPending
+                  ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  : <PlayCircle className="mr-2 h-4 w-4" />}
+                Launch Campaign
+              </Button>
+            )}
+            <div className="flex items-center gap-2">
+              {latestUpdate && (
+                <span className="text-xs text-muted-foreground hidden sm:inline-block">
+                  Updated {formatDistanceToNow(latestUpdate, { addSuffix: true })}
+                </span>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                title="Refresh"
+                onClick={handleManualRefresh}
+                disabled={isPending || isPollingRefreshing}
+              >
+                <RefreshCw className={cn("h-4 w-4", isPollingRefreshing && "animate-spin")} />
+              </Button>
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" disabled={isPending}>
@@ -187,13 +349,14 @@ export function CampaignDetailClient({
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                {campaign.status !== "active" ? (
-                  <DropdownMenuItem onClick={() => confirmStatusChange("active")} className="cursor-pointer">
-                    <PlayCircle className="mr-2 h-4 w-4" /> Reactivate
-                  </DropdownMenuItem>
-                ) : (
+                {campaign.status === "active" && (
                   <DropdownMenuItem onClick={() => confirmStatusChange("completed")} className="cursor-pointer">
                     <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Completed
+                  </DropdownMenuItem>
+                )}
+                {!isDraft && campaign.status !== "active" && (
+                  <DropdownMenuItem onClick={() => confirmStatusChange("active")} className="cursor-pointer">
+                    <PlayCircle className="mr-2 h-4 w-4" /> Reactivate
                   </DropdownMenuItem>
                 )}
                 {!["cancelled", "archived"].includes(campaign.status) && (
@@ -222,10 +385,12 @@ export function CampaignDetailClient({
         <TabsList className="mb-8 bg-surface-subtle border border-border w-full sm:w-auto p-1 h-auto grid grid-cols-4 sm:flex rounded-xl">
           <TabsTrigger value="pipeline" className="py-2 px-4 flex items-center gap-2 rounded-lg">
             <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Pipeline</span>
-            <Badge variant="secondary" className="bg-brand-soft text-brand px-1.5 py-0 h-5">
-              {activeApps.length}
-            </Badge>
+            <span className="hidden sm:inline">Candidates</span>
+            {activeCandidateCount > 0 && (
+              <Badge variant="secondary" className="bg-brand-soft text-brand px-1.5 py-0 h-5">
+                {activeCandidateCount}
+              </Badge>
+            )}
           </TabsTrigger>
 
           <TabsTrigger value="contracts" className="py-2 px-4 flex items-center gap-2 rounded-lg">
@@ -240,10 +405,10 @@ export function CampaignDetailClient({
 
           <TabsTrigger value="matches" className="py-2 px-4 flex items-center gap-2 rounded-lg">
             <Sparkles className="h-4 w-4" />
-            <span className="hidden sm:inline">Matches</span>
-            {matches.length > 0 && (
+            <span className="hidden sm:inline">Discover</span>
+            {(matches.length > 0 || applicantApps.length > 0) && (
               <Badge variant="secondary" className="bg-brand-soft text-brand px-1.5 py-0 h-5">
-                {matches.length}
+                {matches.length + applicantApps.length}
               </Badge>
             )}
           </TabsTrigger>
@@ -254,32 +419,32 @@ export function CampaignDetailClient({
           </TabsTrigger>
         </TabsList>
 
-        {/* ──────────── Tab: Pipeline ──────────────────────────── */}
+        {/* ──────────── Tab: Candidates ────────────────────────── */}
         <TabsContent value="pipeline" className="m-0">
-          {activeApps.length === 0 ? (
+          {candidateApps.length === 0 ? (
             <div className="bd-section">
               <div className="bd-empty">
                 <div className="bd-empty-icon"><Users className="h-6 w-6" /></div>
-                <p className="bd-empty-title">No activity yet</p>
+                <p className="bd-empty-title">No candidates yet</p>
                 <p className="bd-empty-desc">
-                  {campaign.visibility === "public"
-                    ? "Creators will appear here once they apply to your campaign."
-                    : "Go to Matches to find and invite specific creators."}
+                  Shortlist creators from the Discover tab or the Find Creators page
+                  {campaign.visibility === "public" ? ". Public applicants appear in Discover for review." : "."}{" "}
+                  Then send a contract offer once the campaign is launched.
                 </p>
                 <Button variant="outline" onClick={() => setActiveTab("matches")}>
                   <Sparkles className="mr-2 h-4 w-4" />
-                  Find Creators
+                  Go to Discover
                 </Button>
               </div>
             </div>
           ) : (
             <div className="bd-kanban">
               {PIPELINE_COLUMNS.map((col) => {
-                const colApps = activeApps.filter((a) =>
-                  (col.statuses as readonly string[]).includes(a.status)
+                const colApps = candidateApps.filter((a) =>
+                  (col.statuses as string[]).includes(a.status)
                 );
                 return (
-                  <div key={col.key} className="bd-kanban-col">
+                  <div key={col.key} className={cn("bd-kanban-col", col.muted && "opacity-60")}>
                     <div className="bd-kanban-head">
                       <span className="bd-kanban-label">
                         <span className={cn("bd-kanban-dot", col.dot)} />
@@ -291,7 +456,7 @@ export function CampaignDetailClient({
                     </div>
                     <div className="space-y-2">
                       {colApps.map((app) => (
-                        <ApplicationCard key={app.id} app={app} onClick={() => setSelectedApp(app)} />
+                        <ApplicationCard key={app.id} app={app} onClick={() => handleCardClick(app)} />
                       ))}
                       {colApps.length === 0 && (
                         <p className="text-xs text-muted-foreground/50 text-center py-6">Empty</p>
@@ -316,7 +481,7 @@ export function CampaignDetailClient({
                 </p>
                 <Button variant="outline" onClick={() => setActiveTab("pipeline")}>
                   <Users className="mr-2 h-4 w-4" />
-                  View Pipeline
+                  View Candidates
                 </Button>
               </div>
             </div>
@@ -329,12 +494,12 @@ export function CampaignDetailClient({
           )}
         </TabsContent>
 
-        {/* ──────────── Tab: Matches ───────────────────────────── */}
-        <TabsContent value="matches" className="m-0">
+        {/* ──────────── Tab: Discover ──────────────────────────── */}
+        <TabsContent value="matches" className="m-0 space-y-6">
           <div className="bd-section">
             <div className="bd-section-head">
               <div>
-                <span className="bd-section-title">Best Matches</span>
+                <span className="bd-section-title">AI Matches</span>
                 <p className="text-sm text-muted-foreground mt-0.5">
                   Highest-scoring creators based on niche, budget, and platform fit.
                 </p>
@@ -419,6 +584,71 @@ export function CampaignDetailClient({
               )}
             </div>
           </div>
+
+          {/* Applicants review queue — only for public campaigns with pending apps */}
+          {campaign.visibility === "public" && applicantApps.length > 0 && (
+            <div className="bd-section">
+              <div className="bd-section-head">
+                <div>
+                  <span className="bd-section-title">Applications ({applicantApps.length})</span>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Creators who applied to your campaign. Shortlist promising ones or decline the rest.
+                  </p>
+                </div>
+              </div>
+              <div className="bd-section-body space-y-2">
+                {applicantApps.map((app) => {
+                  const name = app.creator?.display_name || "Unknown Creator";
+                  const isProcessing = processingIds.has(app.id);
+                  return (
+                    <div
+                      key={app.id}
+                      className="flex items-center justify-between gap-4 rounded-xl border border-border p-3 hover:border-brand/20 hover:bg-surface-subtle transition-all"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Avatar className="h-9 w-9 shrink-0">
+                          <AvatarImage src={`https://api.dicebear.com/9.x/initials/svg?seed=${name}`} />
+                          <AvatarFallback className="text-xs bg-brand-soft text-brand font-semibold">
+                            {getAvatarInitials(name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold font-display truncate">{name}</p>
+                          <p className="text-xs text-muted-foreground capitalize">
+                            {app.creator?.primary_niche?.replace(/_/g, " ") || "Creator"}
+                            {app.proposed_rate ? ` · ${formatBDT(app.proposed_rate)}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={isProcessing}
+                          onClick={() => handleShortlistApplicant(app)}
+                        >
+                          {isProcessing
+                            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            : <BookmarkPlus className="h-3.5 w-3.5" />}
+                          <span className="ml-1.5 hidden sm:inline">Shortlist</span>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-muted-foreground hover:text-destructive"
+                          disabled={isProcessing}
+                          onClick={() => handleDeclineApplicant(app)}
+                        >
+                          <XCircle className="h-3.5 w-3.5" />
+                          <span className="ml-1.5 hidden sm:inline">Decline</span>
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         {/* ──────────── Tab: Details ───────────────────────────── */}
@@ -525,23 +755,39 @@ export function CampaignDetailClient({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* ── Application drawer ────────────────────────────────── */}
+      {/* ── Shortlist / applicant drawer ──────────────────────── */}
       <ApplicationDrawer
         application={selectedApp}
         campaignId={campaign.id}
+        campaignActive={campaignActive}
         onClose={() => setSelectedApp(null)}
         onStatusChange={handleAppStatusChange}
-        onAcceptAndContract={handleAcceptAndContract}
+        onSendOffer={handleSendOffer}
+        onReShortlist={handleReShortlist}
       />
 
-      {/* ── Contract creation modal ───────────────────────────── */}
-      {contractModalApp && (
-        <ContractCreateModal
-          open={!!contractModalApp}
-          onClose={() => setContractModalApp(null)}
+      {/* ── Offer modal (contract terms sent with the offer) ──── */}
+      {offerModalApp && (
+        <OfferModal
+          open={!!offerModalApp}
+          onClose={() => setOfferModalApp(null)}
+          campaign={campaign}
+          application={offerModalApp}
+          onOffered={handleOffered}
+        />
+      )}
+
+      {/* ── Negotiation drawer (offered / negotiating / accepted) ─ */}
+      {negotiationApp && (
+        <NegotiationDrawer
+          open={!!negotiationApp}
+          onClose={() => setNegotiationApp(null)}
           campaignId={campaign.id}
-          application={contractModalApp}
-          onContractCreated={handleContractCreated}
+          application={negotiationApp}
+          viewerRole="brand"
+          counterpartyName={negotiationApp.creator?.display_name || "Creator"}
+          actions={brandNegotiationActions}
+          onResult={handleNegotiationResult}
         />
       )}
     </>
@@ -563,7 +809,7 @@ function ApplicationCard({ app, onClick }: { app: Application; onClick: () => vo
           <AvatarImage src={`https://api.dicebear.com/9.x/initials/svg?seed=${creatorName}`} />
           <AvatarFallback className="text-xs bg-brand-soft text-brand">{initials}</AvatarFallback>
         </Avatar>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="font-semibold text-sm truncate leading-tight font-display">{creatorName}</p>
           <p className="text-xs text-muted-foreground capitalize">
             {app.creator?.primary_niche?.replace(/_/g, " ") || "Creator"}

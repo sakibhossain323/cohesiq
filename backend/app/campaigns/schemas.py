@@ -221,6 +221,12 @@ class ApplicationInviteCreate(BaseModel):
     brand_notes: Optional[str] = None
 
 
+class ShortlistCreate(BaseModel):
+    """Brand adds a creator to a campaign's shortlist (no offer, no active campaign required)."""
+    creator_id: uuid.UUID
+    note: Optional[str] = None
+
+
 class ApplicationRespondInvite(BaseModel):
     action: str  # accept | decline
     proposal_text: Optional[str] = None
@@ -290,17 +296,36 @@ from app.creators.schemas import CreatorProfileOut
 # Contract schemas                                                     #
 # ------------------------------------------------------------------ #
 
+class OfferDeliverableItem(BaseModel):
+    """A single campaign deliverable requirement assigned to this creator's contract."""
+    requirement_id: uuid.UUID
+    quantity: int = 1
+    notes: Optional[str] = None
+
+
+class ContractDeliverableOut(BaseModel):
+    id: uuid.UUID
+    requirement_id: uuid.UUID
+    quantity: int
+    notes: Optional[str] = None
+    requirement: Optional[DeliverableRequirementOut] = None
+    model_config = {"from_attributes": True}
+
+
 class ContractCreate(BaseModel):
     contract_type: str  # content_collaboration | product_seeding | talent_engagement
     # Payment clause
-    payment_structure: str = "none"       # flat_fee | none
+    payment_structure: str = "none"       # flat_fee | non_cash | none
     payment_amount_bdt: Optional[int] = None
     payment_schedule: Optional[str] = None  # upfront | on_delivery | milestone
+    # Non-cash compensation (free product, SaaS access, affiliate revenue, …)
+    non_cash_compensation: Optional[str] = None
     # Product transfer clause
     has_product_transfer: bool = False
     product_disposition: Optional[str] = None  # keep | return
     # Deliverable clause
     deliverable_notes: Optional[str] = None
+    deliverables: List[OfferDeliverableItem] = []
     # Exclusivity clause
     exclusivity_days: Optional[int] = None
     usage_rights_days: Optional[int] = None
@@ -308,6 +333,36 @@ class ContractCreate(BaseModel):
     max_revision_rounds: int = 2
     # Kill fee clause
     kill_fee_percentage: Optional[int] = None
+
+
+class OfferCreate(ContractCreate):
+    """Sending an offer = contract terms + an opening message to the creator."""
+    message: Optional[str] = None
+
+
+class NegotiationCounter(BaseModel):
+    """A counter-offer turn from either side."""
+    message: Optional[str] = None
+    proposed_rate: Optional[int] = None
+    proposed_terms: Optional[dict] = None
+
+
+class OfferDecision(BaseModel):
+    """Accept or decline the other party's latest offer turn."""
+    message: Optional[str] = None
+    reason: Optional[str] = None
+
+
+class NegotiationTurnOut(BaseModel):
+    id: uuid.UUID
+    application_id: uuid.UUID
+    author_role: str
+    status: str
+    message: Optional[str] = None
+    proposed_rate: Optional[int] = None
+    proposed_terms: Optional[dict] = None
+    created_at: datetime
+    model_config = {"from_attributes": True}
 
 
 class ContentDraftSubmit(BaseModel):
@@ -328,9 +383,11 @@ class ContractOut(BaseModel):
     payment_structure: str
     payment_amount_bdt: Optional[int] = None
     payment_schedule: Optional[str] = None
+    non_cash_compensation: Optional[str] = None
     has_product_transfer: bool
     product_disposition: Optional[str] = None
     deliverable_notes: Optional[str] = None
+    deliverables: List[ContractDeliverableOut] = []
     exclusivity_days: Optional[int] = None
     usage_rights_days: Optional[int] = None
     max_revision_rounds: int

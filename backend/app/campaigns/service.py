@@ -7,7 +7,7 @@ from urllib.parse import parse_qs, urlparse
 
 from fastapi import HTTPException, status
 from groq import AsyncGroq
-from sqlalchemy import and_, select
+from sqlalchemy import and_, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -31,9 +31,12 @@ from app.campaigns.models import (
     CampaignLanguageTarget,
     CampaignNicheTarget,
     Contract,
+    ContractDeliverable,
+    NegotiationTurn,
     Review,
     AIMatchScore,
     LiveContentMetricSnapshot,
+    CONTRACT_FEE_MAP,
 )
 from app.campaigns.schemas import (
     ApplicationCreate,
@@ -46,6 +49,10 @@ from app.campaigns.schemas import (
     ReviewCreate,
     ApplicationInviteCreate,
     ApplicationRespondInvite,
+    ShortlistCreate,
+    OfferCreate,
+    NegotiationCounter,
+    OfferDecision,
     LiveMetricSnapshotCreate,
 )
 from app.services.matching import (
@@ -114,22 +121,24 @@ def _passes_budget_gate(
     creator_rate: int | None,
     follower_count: int,
 ) -> bool:
+    """
+    Only hard-filter when the creator has an explicit rate card that is wildly
+    unaffordable (more than 5× the campaign budget). Creators without an
+    explicit rate always pass — score_budget_with_tier gives them a 0.0 budget
+    score when their tier estimate is over budget, which lowers their rank
+    without hiding them from results. Tier-floor checks are removed because
+    they caused entire follower tiers to vanish when budget was just below the
+    floor threshold (e.g. mega creators disappearing at budget < 50k BDT).
+    """
     if not campaign_budget_max or campaign_budget_max <= 0:
         return True
 
-    tier = get_tier(follower_count)
-    tier_range = TIER_BUDGET_RANGES[tier]
-    tier_min = tier_range["min"]
-    tier_max = tier_range["max"]
+    # No explicit rate: always let through; scoring uses tier_min as estimate.
+    if not creator_rate or creator_rate <= 0:
+        return True
 
-    if campaign_budget_max < int(tier_min * TIER_MIN_FLOOR):
-        return False
-
-    if creator_rate and creator_rate > 0:
-        return creator_rate <= int(campaign_budget_max * BUDGET_RATE_HARD_CAP)
-
-    estimated_rate = (tier_min + tier_max) // 2
-    return estimated_rate <= int(campaign_budget_max * BUDGET_RATE_HARD_CAP)
+    # Explicit rate more than 5× budget is genuinely unaffordable — skip.
+    return creator_rate <= campaign_budget_max * 5
 
 
 def _matching_rate_for_campaign(campaign: Campaign, creator) -> int | None:
@@ -892,6 +901,382 @@ async def respond_invite(
     await db.refresh(app)
     return app
 
+
+# ------------------------------------------------------------------ #
+# Shortlist + Offer + Negotiation                                     #
+# ------------------------------------------------------------------ #
+
+# A creator can be re-engaged (re-shortlisted / re-offered) only after a
+# terminal outcome — never while they are already live in the pipeline.
+TERMINAL_APPLICATION_STATUSES = {"rejected", "declined", "withdrawn"}
+
+# Keys the brand controls in a contract; used to snapshot/apply negotiation terms.
+_OFFER_TERM_KEYS = (
+    "contract_type", "payment_structure", "payment_amount_bdt", "payment_schedule",
+    "non_cash_compensation", "has_product_transfer", "product_disposition",
+    "deliverable_notes", "exclusivity_days", "usage_rights_days",
+    "max_revision_rounds", "kill_fee_percentage",
+)
+
+
+def _offer_terms_snapshot(data: OfferCreate) -> dict:
+    snapshot = {key: getattr(data, key, None) for key in _OFFER_TERM_KEYS}
+    snapshot["deliverables"] = [
+        {"requirement_id": str(d.requirement_id), "quantity": d.quantity, "notes": d.notes}
+        for d in data.deliverables
+    ]
+    return snapshot
+
+
+async def _get_full_contract(db: AsyncSession, contract_id: uuid.UUID) -> Contract | None:
+    """Reload a contract with deliverables (+ requirement) eagerly loaded for ContractOut."""
+    result = await db.execute(
+        select(Contract)
+        .where(Contract.id == contract_id)
+        .options(_contract_deliverable_load())
+    )
+    return result.scalar_one_or_none()
+
+
+async def _replace_contract_deliverables(
+    db: AsyncSession,
+    contract: Contract,
+    items: list,
+    valid_requirement_ids: set[uuid.UUID],
+) -> None:
+    # Drop any prior selection, then add the new subset.
+    await db.execute(
+        delete(ContractDeliverable).where(ContractDeliverable.contract_id == contract.id)
+    )
+    for item in items:
+        if item.requirement_id not in valid_requirement_ids:
+            raise HTTPException(
+                status_code=400,
+                detail="Deliverable does not belong to this campaign",
+            )
+        db.add(ContractDeliverable(
+            contract_id=contract.id,
+            requirement_id=item.requirement_id,
+            quantity=item.quantity,
+            notes=item.notes,
+        ))
+
+
+def _apply_offer_terms_to_contract(contract: Contract, data: OfferCreate, fee: int) -> None:
+    contract.contract_type = data.contract_type
+    contract.payment_structure = data.payment_structure
+    contract.payment_amount_bdt = (
+        data.payment_amount_bdt if data.payment_structure == "flat_fee" else None
+    )
+    contract.payment_schedule = (
+        data.payment_schedule if data.payment_structure == "flat_fee" else None
+    )
+    contract.non_cash_compensation = data.non_cash_compensation
+    contract.has_product_transfer = data.has_product_transfer
+    contract.product_disposition = data.product_disposition
+    contract.deliverable_notes = data.deliverable_notes
+    contract.exclusivity_days = data.exclusivity_days
+    contract.usage_rights_days = data.usage_rights_days
+    contract.max_revision_rounds = data.max_revision_rounds
+    contract.kill_fee_percentage = data.kill_fee_percentage
+    contract.platform_fee_percentage = fee
+
+
+async def _load_application(
+    db: AsyncSession, campaign_id: uuid.UUID, application_id: uuid.UUID
+) -> CampaignApplication:
+    result = await db.execute(
+        select(CampaignApplication)
+        .where(
+            CampaignApplication.id == application_id,
+            CampaignApplication.campaign_id == campaign_id,
+        )
+        .options(
+            selectinload(CampaignApplication.contract),
+            selectinload(CampaignApplication.negotiation_turns),
+        )
+    )
+    app = result.scalar_one_or_none()
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found")
+    return app
+
+
+async def _authorize_party(
+    db: AsyncSession,
+    app: CampaignApplication,
+    campaign_id: uuid.UUID,
+    actor_role: str,
+    actor_profile_id: uuid.UUID,
+) -> Campaign:
+    campaign = await get_campaign(db, campaign_id)
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    if actor_role == "brand":
+        if campaign.brand_id != actor_profile_id:
+            raise HTTPException(status_code=403, detail="Not your campaign")
+    else:  # creator
+        if app.creator_id != actor_profile_id:
+            raise HTTPException(status_code=403, detail="Not your application")
+    return campaign
+
+
+async def add_to_shortlist(
+    db: AsyncSession,
+    campaign_id: uuid.UUID,
+    brand_id: uuid.UUID,
+    data: ShortlistCreate,
+) -> CampaignApplication:
+    """Shortlist a creator for a campaign. Allowed in any campaign status
+    (including draft) and does not create a contract. Reuses a prior terminal
+    application so a previously rejected creator can be re-shortlisted."""
+    campaign = await get_campaign(db, campaign_id)
+    if not campaign or campaign.brand_id != brand_id:
+        raise HTTPException(status_code=403, detail="Not your campaign")
+
+    existing = await db.execute(
+        select(CampaignApplication).where(
+            CampaignApplication.campaign_id == campaign_id,
+            CampaignApplication.creator_id == data.creator_id,
+        )
+    )
+    app = existing.scalar_one_or_none()
+    now = datetime.now(timezone.utc)
+    if app is not None:
+        if app.status == "pending":
+            # Upgrade a creator-initiated application to brand-curated shortlist.
+            app.status = "shortlisted"
+            app.brand_notes = data.note
+            app.responded_at = now
+        elif app.status not in TERMINAL_APPLICATION_STATUSES:
+            raise HTTPException(
+                status_code=409,
+                detail="This creator is already in this campaign's pipeline",
+            )
+        else:
+            # Revive a previously rejected/declined/withdrawn application.
+            app.status = "shortlisted"
+            app.initiated_by = "brand"
+            app.rejection_reason = None
+            app.brand_notes = data.note
+            app.responded_at = now
+    else:
+        app = CampaignApplication(
+            campaign_id=campaign_id,
+            creator_id=data.creator_id,
+            initiated_by="brand",
+            status="shortlisted",
+            brand_notes=data.note,
+            responded_at=now,
+        )
+        db.add(app)
+
+    await db.commit()
+    await db.refresh(app)
+    return app
+
+
+async def send_offer(
+    db: AsyncSession,
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    brand_id: uuid.UUID,
+    data: OfferCreate,
+) -> CampaignApplication:
+    """Brand sends a contract offer to a shortlisted creator or a public
+    applicant. Requires an active campaign. Creates/refreshes a drafted
+    contract and opens the negotiation thread with the brand's first turn."""
+    app = await _load_application(db, campaign_id, application_id)
+    campaign = await _authorize_party(db, app, campaign_id, "brand", brand_id)
+
+    if campaign.status != "active":
+        raise HTTPException(status_code=400, detail="Launch the campaign before sending offers")
+    if app.status not in {"shortlisted", "pending"}:
+        raise HTTPException(
+            status_code=400,
+            detail="Offers can only be sent to shortlisted creators or applicants",
+        )
+
+    valid_requirement_ids = {req.id for req in campaign.deliverable_requirements}
+    fee = CONTRACT_FEE_MAP.get(data.contract_type, 15)
+
+    contract = app.contract
+    if contract is None:
+        contract = Contract(
+            application_id=app.id,
+            brand_id=brand_id,
+            creator_id=app.creator_id,
+            contract_type=data.contract_type,
+            status="drafted",
+        )
+        db.add(contract)
+        await db.flush()
+    else:
+        contract.status = "drafted"
+    _apply_offer_terms_to_contract(contract, data, fee)
+    await _replace_contract_deliverables(db, contract, data.deliverables, valid_requirement_ids)
+
+    # Open the negotiation thread with the brand's opening offer.
+    db.add(NegotiationTurn(
+        application_id=app.id,
+        author_role="brand",
+        status="proposed",
+        message=data.message,
+        proposed_rate=data.payment_amount_bdt if data.payment_structure == "flat_fee" else None,
+        proposed_terms=_offer_terms_snapshot(data),
+    ))
+
+    app.status = "invited"
+    app.initiated_by = "brand"
+    app.agreed_rate = data.payment_amount_bdt if data.payment_structure == "flat_fee" else None
+    app.agreed_deliverables = data.deliverable_notes
+    app.rejection_reason = None
+    app.responded_at = datetime.now(timezone.utc)
+
+    await db.commit()
+    await db.refresh(app)
+    return app
+
+
+def _latest_proposed_turn(turns: list[NegotiationTurn]) -> NegotiationTurn | None:
+    proposed = [t for t in turns if t.status == "proposed"]
+    if not proposed:
+        return None
+    return max(proposed, key=lambda t: t.created_at)
+
+
+async def counter_offer(
+    db: AsyncSession,
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    actor_role: str,
+    actor_profile_id: uuid.UUID,
+    data: NegotiationCounter,
+) -> CampaignApplication:
+    """Either party counters the other party's latest proposed terms."""
+    app = await _load_application(db, campaign_id, application_id)
+    await _authorize_party(db, app, campaign_id, actor_role, actor_profile_id)
+
+    if app.status not in {"invited", "pending_agreement"}:
+        raise HTTPException(status_code=400, detail="No open offer to counter")
+
+    latest = _latest_proposed_turn(app.negotiation_turns)
+    if latest is None or latest.author_role == actor_role:
+        raise HTTPException(status_code=400, detail="It is not your turn to counter")
+
+    latest.status = "superseded"
+    db.add(NegotiationTurn(
+        application_id=app.id,
+        author_role=actor_role,
+        status="proposed",
+        message=data.message,
+        proposed_rate=data.proposed_rate,
+        proposed_terms=data.proposed_terms,
+    ))
+
+    # Keep the drafted contract roughly in sync with the latest money terms.
+    if app.contract is not None and data.proposed_rate is not None:
+        app.contract.payment_structure = "flat_fee"
+        app.contract.payment_amount_bdt = data.proposed_rate
+
+    app.status = "pending_agreement"
+    app.responded_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(app)
+    return app
+
+
+async def accept_offer(
+    db: AsyncSession,
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    actor_role: str,
+    actor_profile_id: uuid.UUID,
+    data: OfferDecision,
+) -> CampaignApplication:
+    """Accept the other party's latest proposed terms — activates the contract."""
+    app = await _load_application(db, campaign_id, application_id)
+    campaign = await _authorize_party(db, app, campaign_id, actor_role, actor_profile_id)
+
+    if app.status not in {"invited", "pending_agreement"}:
+        raise HTTPException(status_code=400, detail="No open offer to accept")
+    latest = _latest_proposed_turn(app.negotiation_turns)
+    if latest is None or latest.author_role == actor_role:
+        raise HTTPException(status_code=400, detail="There is no offer from the other party to accept")
+
+    # Capacity guard at the moment of commitment.
+    selected_count = await _selected_application_count(
+        db, campaign_id, exclude_application_id=application_id,
+    )
+    if selected_count >= campaign.number_of_creators:
+        raise HTTPException(status_code=409, detail="Campaign creator capacity is already filled")
+
+    now = datetime.now(timezone.utc)
+    latest.status = "accepted"
+    for turn in app.negotiation_turns:
+        if turn.id != latest.id and turn.status == "proposed":
+            turn.status = "superseded"
+
+    if app.contract is not None:
+        app.contract.status = "active"
+        if latest.proposed_rate is not None:
+            app.contract.payment_structure = "flat_fee"
+            app.contract.payment_amount_bdt = latest.proposed_rate
+
+    app.status = "accepted"
+    app.accepted_at = now
+    app.responded_at = now
+    if latest.proposed_rate is not None:
+        app.agreed_rate = latest.proposed_rate
+
+    await _release_extra_shortlisted_if_capacity_filled(db, campaign)
+    await db.commit()
+    await db.refresh(app)
+    return app
+
+
+async def decline_offer(
+    db: AsyncSession,
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    actor_role: str,
+    actor_profile_id: uuid.UUID,
+    data: OfferDecision,
+) -> CampaignApplication:
+    """Either party walks away from an open offer."""
+    app = await _load_application(db, campaign_id, application_id)
+    await _authorize_party(db, app, campaign_id, actor_role, actor_profile_id)
+
+    if app.status not in {"invited", "pending_agreement"}:
+        raise HTTPException(status_code=400, detail="No open offer to decline")
+
+    for turn in app.negotiation_turns:
+        if turn.status == "proposed":
+            turn.status = "superseded"
+
+    # Brand declining = reject; creator declining = decline. Either way the
+    # drafted contract is retained so a future re-offer can reuse it.
+    app.status = "rejected" if actor_role == "brand" else "declined"
+    if actor_role == "brand" and data.reason:
+        app.rejection_reason = data.reason
+    app.responded_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(app)
+    return app
+
+
+async def list_negotiation_turns(
+    db: AsyncSession,
+    campaign_id: uuid.UUID,
+    application_id: uuid.UUID,
+    actor_role: str,
+    actor_profile_id: uuid.UUID,
+) -> list[NegotiationTurn]:
+    app = await _load_application(db, campaign_id, application_id)
+    await _authorize_party(db, app, campaign_id, actor_role, actor_profile_id)
+    return sorted(app.negotiation_turns, key=lambda t: t.created_at)
+
+
 # ------------------------------------------------------------------ #
 # Reviews                                                              #
 # ------------------------------------------------------------------ #
@@ -1271,6 +1656,7 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
     matches = []
     match_sort_followers = {}
     match_contexts = {}
+    _fallback_niche_skips: list = []  # creators skipped only by niche/semantic filter
     for creator in creators:
         if not creator.is_available or creator.deleted_at is not None:
             continue
@@ -1343,6 +1729,10 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             )
             semantic_used = semantic_score >= SEMANTIC_SIMILARITY_THRESHOLD
             if not semantic_used:
+                _fallback_niche_skips.append((
+                    creator, follower_count, engagement_rate, creator_rate,
+                    creator_platforms, creator_primary, creator_subs, creator_lang_profile,
+                ))
                 continue
             semantic_niche_score = min(semantic_score, SEMANTIC_RESCUE_NICHE_CAP)
             logger.info(
@@ -1411,6 +1801,64 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
             "creator_tier": creator_tier,
             "fallback_rationale": rational_text,
         }
+
+    # Fallback: if strict matching produced zero results, include the best available
+    # creators regardless of niche alignment so something always appears.
+    if not matches:
+        from app.services.matching import get_tier  # noqa: PLC0415
+        _fb_campaign_plats = campaign.required_platforms or []
+        for (
+            creator, follower_count, engagement_rate, creator_rate,
+            creator_platforms, creator_primary, creator_subs, creator_lang_profile,
+        ) in _fallback_niche_skips:
+            days_since_post = _days_since_latest_portfolio_item(
+                creator.portfolio_items, _fb_campaign_plats
+            )
+            scores = compute_match_score(
+                campaign_niche=campaign_niche_name,
+                campaign_budget=campaign.budget_per_creator_max,
+                campaign_platforms=_fb_campaign_plats,
+                campaign_target_language=target_lang,
+                creator_primary_niche=creator_primary,
+                creator_sub_niches=creator_subs,
+                creator_engagement_rate=engagement_rate,
+                creator_follower_count=follower_count,
+                creator_rate=creator_rate,
+                creator_platforms=creator_platforms,
+                creator_language_profile=creator_lang_profile,
+                creator_days_since_post=days_since_post,
+            )
+            creator_tier = get_tier(follower_count)
+            total_score = scores.total
+            rational_text = generate_rationale(
+                creator_name=creator.display_name,
+                niche_match=scores.niche,
+                budget_match=scores.budget,
+                engagement_match=scores.engagement,
+                campaign_title=campaign.title,
+                creator_tier=creator_tier,
+            )
+            match_score_obj = AIMatchScore(
+                campaign_id=campaign.id,
+                creator_id=creator.id,
+                score_niche=scores.niche,
+                score_engagement=scores.engagement,
+                score_budget=scores.budget,
+                score_language=scores.language,
+                score_platform=scores.platform,
+                score_recency=scores.recency,
+                score_semantic=0.0,
+                score_total=total_score,
+                rationale=rational_text,
+            )
+            matches.append(match_score_obj)
+            match_sort_followers[creator.id] = follower_count
+            match_contexts[creator.id] = {
+                "creator": creator,
+                "scores": scores,
+                "creator_tier": creator_tier,
+                "fallback_rationale": rational_text,
+            }
 
     # Sort by score, then selected audience size, then creator id for stable rankings.
     matches.sort(
@@ -1512,6 +1960,7 @@ async def create_contract(
         payment_structure=data.payment_structure,
         payment_amount_bdt=data.payment_amount_bdt,
         payment_schedule=data.payment_schedule,
+        non_cash_compensation=data.non_cash_compensation,
         has_product_transfer=data.has_product_transfer,
         product_disposition=data.product_disposition,
         deliverable_notes=data.deliverable_notes,
@@ -1522,32 +1971,46 @@ async def create_contract(
         platform_fee_percentage=fee,
     )
     db.add(contract)
+    await db.flush()
+
+    campaign = await get_campaign(db, app.campaign_id)
+    valid_requirement_ids = {req.id for req in campaign.deliverable_requirements} if campaign else set()
+    await _replace_contract_deliverables(db, contract, data.deliverables, valid_requirement_ids)
+
     await db.commit()
-    await db.refresh(contract)
-    return contract
+    return await _get_full_contract(db, contract.id)
+
+
+def _contract_deliverable_load():
+    """Eager-load options for ContractOut.deliverables (avoids async lazy-load).
+    Defined as a function so it does not force mapper configuration at import time."""
+    return selectinload(Contract.deliverables).selectinload(ContractDeliverable.requirement)
 
 
 async def get_contract_by_application(
     db: AsyncSession, application_id: uuid.UUID
 ) -> "Contract | None":
-    from app.campaigns.models import Contract
     result = await db.execute(
-        select(Contract).where(Contract.application_id == application_id)
+        select(Contract)
+        .where(Contract.application_id == application_id)
+        .options(_contract_deliverable_load())
     )
     return result.scalar_one_or_none()
 
 
 async def get_contract(db: AsyncSession, contract_id: uuid.UUID) -> "Contract | None":
-    from app.campaigns.models import Contract
-    result = await db.execute(select(Contract).where(Contract.id == contract_id))
+    result = await db.execute(
+        select(Contract)
+        .where(Contract.id == contract_id)
+        .options(_contract_deliverable_load())
+    )
     return result.scalar_one_or_none()
 
 
 async def list_contracts_for_brand(
     db: AsyncSession, brand_id: uuid.UUID, campaign_id: uuid.UUID | None = None
 ) -> list:
-    from app.campaigns.models import Contract
-    query = select(Contract).where(Contract.brand_id == brand_id)
+    query = select(Contract).where(Contract.brand_id == brand_id).options(_contract_deliverable_load())
     if campaign_id:
         query = query.join(CampaignApplication).where(
             CampaignApplication.campaign_id == campaign_id
@@ -1557,10 +2020,10 @@ async def list_contracts_for_brand(
 
 
 async def list_contracts_for_creator(db: AsyncSession, creator_id: uuid.UUID) -> list:
-    from app.campaigns.models import Contract
     result = await db.execute(
         select(Contract)
         .where(Contract.creator_id == creator_id)
+        .options(_contract_deliverable_load())
         .order_by(Contract.contracted_at.desc())
     )
     return list(result.scalars().all())

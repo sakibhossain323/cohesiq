@@ -244,3 +244,25 @@ ingestion, the matching engine internals, semantic/LLM services, and seeding (`t
 [x] I03 Lazy-create user fix — `get_current_user` in `common/dependencies.py` now calls `GET https://api.clerk.com/v1/users/{clerk_id}` when creating a fallback DB row, fetching the real email and role instead of generating `{clerk_id}@placeholder.local`. Falls back to placeholder only if Clerk API is unreachable.
 
 [x] I04 `ResetOnboardingButton` stale-JWT fix — replaced `router.push` + `router.refresh` with `await session.reload()` (Clerk `useSession`) then `window.location.href`. Forces a fresh JWT before middleware runs, preventing the `onboardingComplete: true` guard from bouncing the user back to the dashboard. Also eliminated the stuck "Resetting…" state caused by `setIsResetting(false)` never being called on the success path.
+
+---
+
+## Offer-driven campaign flow (2026-06-10 session) — plan §3 D14
+
+> Reworked the post-creation flow into: draft → **launch** → **shortlist** (independent) → **offer** (terms travel with the offer) → **multi-turn negotiation** → accept → contract active. Backend migration `0022`.
+
+[x] O01 Backend models + migration `0022` — `ContractDeliverable` (per-creator deliverable subset), `NegotiationTurn` (offer/counter thread), `Contract.non_cash_compensation`, `payment_structure='non_cash'`; `CampaignApplication.contract` gains `cascade="all, delete-orphan"` (ORM delete no longer NULLs `contracts.application_id`).
+
+[x] O02 Backend services + guards — `add_to_shortlist` (no active needed; revives terminal apps so a rejected creator can be re-shortlisted), `send_offer` (active-gated; creates `drafted` contract + first turn), `counter_offer` (turn-ownership guard), `accept_offer` (capacity guard → contract `active`), `decline_offer`, `list_negotiation_turns`. Endpoints: `…/shortlist`, `…/offer`, `…/negotiate`, `…/offer/accept|decline`, `…/negotiation`. Verified end-to-end against the DB (draft-gate, offer, two counters, not-your-turn, accept, re-shortlist-after-decline, ORM cascade cleanup).
+
+[x] O03 Launch + Refresh — `CampaignDetailClient`: prominent **Launch Campaign** button when `status==='draft'` (draft→active via existing `updateCampaignStatusAction`); header **Refresh** button (`router.refresh()`) for multi-tenant freshness.
+
+[x] O04 Shortlist split (replaces "Invite to Campaign") — `InviteModal` → **Add to Shortlist** via new `shortlistAction` server action with toast + auto-close (fixes the no-toast / modal-stays-open bug); `MatchesClient` per-card action → **Add to Shortlist**.
+
+[x] O05 Offer modal — `OfferModal.tsx` (evolved from `ContractCreateModal`, now deleted): two engagement types only (Branded promotion / Product review — talent_engagement hidden), structured per-creator deliverable selection from the campaign's requirements, compensation = flat_fee / **non_cash** (with "what the creator receives") / none. Submits via `sendOfferAction`.
+
+[x] O06 Pipeline redesign — lanes **Shortlist | Offered | Negotiating | Accepted**; public applicants land in Shortlist badged "Applied"; `ApplicationDrawer` repurposed (Send Offer gated on active + remove/decline); badges relabeled (`invited`→Offered, `pending`→Applied, `pending_agreement`→Negotiating).
+
+[x] O07 Negotiation thread — `components/negotiation/NegotiationDrawer.tsx` (shared brand + creator): offer/counter history + Accept/Counter/Decline. Creator side wired into `CollaborationsClient` (new **Offers** tab) with creator `acceptOfferAction`/`negotiateAction`/`declineOfferAction`.
+
+[x] O08 Docs — `docs/schema.md` (contract_deliverables, negotiation_turns, non_cash_compensation, offer-time contract note), `docs/plan.md` §3 D14, this file.

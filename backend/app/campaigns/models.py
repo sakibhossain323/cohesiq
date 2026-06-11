@@ -306,13 +306,18 @@ class CampaignApplication(Base):
         "Review", back_populates="application", cascade="all, delete-orphan"
     )
     contract: Mapped[Optional["Contract"]] = relationship(
-        "Contract", back_populates="application", uselist=False
+        "Contract", back_populates="application", uselist=False,
+        cascade="all, delete-orphan",
     )
     answers: Mapped[List["CampaignApplicationAnswer"]] = relationship(
         "CampaignApplicationAnswer", back_populates="application", cascade="all, delete-orphan"
     )
     acknowledgments: Mapped[List["CampaignApplicationAcknowledgment"]] = relationship(
         "CampaignApplicationAcknowledgment", back_populates="application", cascade="all, delete-orphan"
+    )
+    negotiation_turns: Mapped[List["NegotiationTurn"]] = relationship(
+        "NegotiationTurn", back_populates="application",
+        cascade="all, delete-orphan", order_by="NegotiationTurn.created_at",
     )
 
 
@@ -480,6 +485,8 @@ class Contract(Base):
     )
     # Deliverable clause
     deliverable_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Non-cash compensation (e.g. free product, SaaS access, affiliate revenue)
+    non_cash_compensation: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     # Exclusivity clause
     exclusivity_days: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
     usage_rights_days: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
@@ -509,6 +516,74 @@ class Contract(Base):
     )
     metric_snapshots: Mapped[List["LiveContentMetricSnapshot"]] = relationship(
         "LiveContentMetricSnapshot", back_populates="contract", cascade="all, delete-orphan"
+    )
+    deliverables: Mapped[List["ContractDeliverable"]] = relationship(
+        "ContractDeliverable", back_populates="contract", cascade="all, delete-orphan"
+    )
+
+
+class ContractDeliverable(Base):
+    """A per-creator subset of the campaign's deliverable requirements,
+    selected by the brand when sending an offer. Lets one creator owe only
+    a portion of the campaign deliverables (with a per-creator quantity)."""
+    __tablename__ = "contract_deliverables"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
+    )
+    contract_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("contracts.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    requirement_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("campaign_deliverable_requirements.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    quantity: Mapped[int] = mapped_column(SmallInteger, nullable=False, server_default="1")
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    contract: Mapped["Contract"] = relationship("Contract", back_populates="deliverables")
+    requirement: Mapped["CampaignDeliverableRequirement"] = relationship(
+        "CampaignDeliverableRequirement"
+    )
+
+    __table_args__ = (
+        UniqueConstraint("contract_id", "requirement_id", name="uq_contract_deliverable"),
+    )
+
+
+class NegotiationTurn(Base):
+    """One turn in the offer/counter-offer thread for an application.
+    The brand opens with an offer; either side may counter; either side may
+    accept the other's latest proposed turn (which activates the contract)."""
+    __tablename__ = "negotiation_turns"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
+    )
+    application_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("campaign_applications.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    author_role: Mapped[str] = mapped_column(String(10), nullable=False)  # brand | creator
+    status: Mapped[str] = mapped_column(String(12), nullable=False, server_default="proposed")  # proposed | accepted | superseded
+    message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    proposed_rate: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    proposed_terms: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    application: Mapped["CampaignApplication"] = relationship(
+        "CampaignApplication", back_populates="negotiation_turns"
+    )
+
+    __table_args__ = (
+        CheckConstraint("author_role IN ('brand', 'creator')", name="ck_negotiation_author_role"),
+        Index("idx_negotiation_turns_application_time", "application_id", "created_at"),
     )
 
 

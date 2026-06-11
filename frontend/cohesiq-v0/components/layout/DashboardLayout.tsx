@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Show, UserButton, SignInButton } from '@clerk/nextjs'
+import { Show, UserButton, SignInButton, useUser } from '@clerk/nextjs'
 import {
   SidebarProvider,
   Sidebar,
@@ -34,6 +34,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
   const pathname = usePathname()
+  const { user } = useUser()
 
   function isActive(href: string): boolean {
     if (href === '/creator/dashboard' || href === '/brand/dashboard' || href === '/admin') {
@@ -84,9 +85,13 @@ export function DashboardLayout({ children, navItems }: DashboardLayoutProps) {
               <UserButton
                 appearance={{ elements: { avatarBox: 'h-8 w-8' } }}
               />
-              <div className="sb-user-info group-data-[collapsible=icon]:hidden">
-                <span className="sb-user-name">My Account</span>
-                <span className="sb-user-sub">Manage profile</span>
+              <div className="sb-user-info group-data-[collapsible=icon]:hidden overflow-hidden">
+                <span className="sb-user-name truncate">
+                  {user?.fullName || user?.firstName || 'My Account'}
+                </span>
+                <span className="sb-user-sub truncate">
+                  {user?.primaryEmailAddress?.emailAddress || 'Manage profile'}
+                </span>
               </div>
             </div>
           </Show>

@@ -50,6 +50,23 @@ services:
       - frontend_next:/app/.next
     command: pnpm dev
 
+  # Expose the frontend publicly via ngrok.
+  # Requires NGROK_AUTHTOKEN in your environment or a .env file at repo root.
+  # Public URL appears in logs: docker compose logs ngrok
+  # Local ngrok dashboard: http://localhost:4040
+  ngrok:
+    image: ngrok/ngrok:latest
+    restart: unless-stopped
+    command: http frontend:3000 --domain=subprime-ligament-sixfold.ngrok-free.dev --log=stdout
+    env_file:
+      - ./backend/.env
+    ports:
+      - "4040:4040"
+    depends_on:
+      - frontend
+    profiles:
+      - tunnel
+
 volumes:
   postgres_data:
   frontend_node_modules:
