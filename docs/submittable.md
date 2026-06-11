@@ -213,25 +213,41 @@ No n8n/Zapier/Airflow/Temporal/LangGraph. Orchestration is FastAPI's synchronous
 
 ## Section 5 — 180-Second Video Pitch Script
 
-### 0:00–0:30 | Problem
-*(Visual: chaotic WhatsApp/Instagram DMs and spreadsheets → clean Cohesiq dashboard)*
-"Bangladesh's influencer market is racing past 45 million dollars with over half a million creators — but for small businesses, running a campaign is still manual chaos. They hunt for creators through WhatsApp and DMs, guessing at follower counts where bots inflate reach. The result: wasted budgets, mismatched audiences, no predictable ROI, and no BDT-native infrastructure built for them."
+> **Tone:** Shark Tank / Y Combinator demo-day. Flashy but plain-spoken. One human story carries the whole pitch.
+> **Rule we followed:** no jargon on camera. We never say "Pydantic," "deterministic-math-first," or weight numbers out loud — investors don't buy vocabulary, they buy the change we create. Every claim below maps to something live in the build (see the Evidence Map).
+> **Narrator:** warm, confident founder voice. **Music:** builds from a single sparse beat to a wide, optimistic swell by the close.
 
-### 0:30–1:00 | Solution
-*(Visual: 'Create Campaign' — typing, uploading a PDF, then speaking a brief)*
-"Cohesiq is an AI matching engine for the Bangladesh creator economy. A brand describes a campaign by typing, uploading a PDF, or just speaking it — our Whisper pipeline turns voice into a structured brief. Then Cohesiq ranks creators on real fit, not vanity metrics: niche, budget realism, platform, engagement, language, and recency."
+---
 
-### 1:00–2:00 | Demo
-*(Visual: live screen recording — Run Matching → ranked creator cards with score bars + rationale)*
-"Watch it work. An artisanal fashion brand sets a micro-budget of 1,500 BDT. They hit Run Matching. In one pass, Cohesiq applies hard filters, runs a 90-day conflict-of-interest check so no competing brand collides, scores every eligible creator on six weighted factors, and rescues near-misses with semantic similarity — capped so it never overrides a real mismatch. The top creators come back with a precise match score, a visible six-bar breakdown, and a plain-language rationale. From there the brand sends an offer and negotiates in a live, multi-turn thread that polls every four seconds — straight into a structured contract."
+### 0:00–0:22 | The Hook — meet a real founder
+**VISUAL:** Cinematic, golden-hour. A young woman, **Rumana**, sits cross-legged on the floor of a tiny Dhaka apartment, surrounded by handmade jamdani scarves she sews herself. Her phone screen glows — dozens of unanswered WhatsApp chats, a messy Excel sheet, a calculator. She rubs her eyes, exhausted. Soft text overlay fades in: *"3,000 creators. No idea which one is real."*
+**SCRIPT:**
+"This is Rumana. She makes beautiful scarves in Dhaka, and she has exactly five thousand taka to find one creator to show them to the world. So she does what everyone here does — she scrolls. She messages strangers. She prays the follower count isn't fake. Most of the time… it is."
 
-### 2:00–2:30 | AI Approach
-*(Visual: the 5-stage pipeline diagram)*
-"Here's the real AI thinking. We tried pure-LLM matching first — it hallucinated budget tiers. So we went deterministic-math-first. The numeric score is a transparent weighted model: niche 0.45, budget 0.20, platform 0.15, engagement 0.10, language 0.08, recency 0.02. The LLM never touches the number — Groq Llama and Gemini only personalize the rationale for the top five, gated behind hard budget constraints. Every output is schema-validated by Pydantic and tagged AI-Generated. We navigate our own codebase with a graphify knowledge-graph MCP and context7 for live docs."
+### 0:22–0:45 | The Problem — a whole market stuck in the DMs
+**VISUAL:** Snap-zoom out from Rumana to a fast montage: hundreds of small brand owners across Bangladesh — a bakery, a phone-case seller, a skincare startup — all staring at the same chaotic DMs. Animated counter spins up: **$45M market · 500,000+ creators**. Then a red stamp slams across the screen: *"Half of all 'followers' are bots."*
+**SCRIPT:**
+"Rumana isn't alone. Bangladesh's creator economy is racing toward forty-five million dollars, with over half a million creators. But it all runs on guesswork and group chats. Bots inflate the numbers, small brands overpay, and the right creator never gets found. The world's big tools? They charge in dollars and don't even see this market."
 
-### 2:30–3:00 | Impact & Next Step
-*(Visual: creator pipeline → zoom out to South Asia)*
-"The impact: zero manual hunting, budget-realistic matches, and full pricing transparency — grounded in 67 verified Bangladesh YouTube channels. We solved cold-start with public YouTube data and strict schema validation. Next: real bKash and Nagad escrow — fee computation is already simulated — plus a vector and graph retrieval layer and a Bangla UI. Cohesiq takes creator matchmaking from chaotic vibes to structured production."
+### 0:45–1:25 | The Solution + Demo — the magic moment
+**VISUAL:** Hard cut to a clean, bright laptop screen — the **Cohesiq** dashboard. Rumana *speaks* into her phone: "I want creators for handmade scarves, budget five thousand taka." Her words turn into a structured campaign brief on screen, field by field, like magic. She clicks one glowing button: **Run Matching.** A half-second beat — then a ranked list of real creators slides in, each card showing a clear **match score**, little colored bars, and one plain sentence: *"Great fit — her audience loves local fashion and she's in your budget."*
+**SCRIPT:**
+"Now watch what Cohesiq does. Rumana doesn't fill out a form — she just *talks*. We turn her voice into a campaign in seconds. One click, and instead of three thousand strangers, she gets a short, ranked list of real creators — each one verified against their actual YouTube data, not their bragging. And next to every name, in plain language: *why* they fit, and proof she can afford them. From here she sends an offer, negotiates right inside the app, and signs a contract. No middlemen. No agency cut. No guessing."
+
+### 1:25–2:00 | The Moat — why this is trustworthy, in human words
+**VISUAL:** Split screen. LEFT: a black-box labeled "Other AI" spits out a random name with a ❌. RIGHT: Cohesiq shows the same six honest bars — *Audience fit · Budget · Platform · Engagement · Language · Freshness* — each filling up with a satisfying snap, ending in a green ✅ and a glowing **"AI-Generated · Verified"** tag.
+**SCRIPT:**
+"Here's the part investors should love. Most AI just hands you an answer and hopes you trust it. Ours shows its work. Every match is scored on six things that actually matter to a real campaign — and every score is visible, explainable, and checkable. The AI explains the match in plain English, but it can *never* fake a number or push a creator you can't afford. Honest by design. That's how you build trust in a market that's been burned by fakes."
+
+### 2:00–2:38 | The Vision — cross-border, and a new industry standard
+**VISUAL:** The map of Bangladesh on screen pulls back to reveal the whole globe. Glowing arcs of light connect Dhaka to **London, New York, Dubai, Toronto** — and then to **Jakarta, Lagos, Manila**. Diaspora brand logos light up along the arcs. Text sweeps across: *"Any currency. Any market. Same engine."*
+**SCRIPT:**
+"And this doesn't stop at Bangladesh. A Bangladeshi founder in New York selling halal snacks can now reach trusted creators back home — overnight. A global beauty brand can tap five hundred thousand authentic South Asian creators at a tenth of Western prices. And the creators? A nano-creator in a small town finally gets discovered on merit, and earns from brands across the world. Our matching engine doesn't care about the currency or the country — swap the market, and the same trust layer works for Indonesia, Nigeria, the Philippines. We're not just fixing Bangladesh's creator economy. We're building the rails for every emerging one."
+
+### 2:38–3:00 | The Close — the ask
+**VISUAL:** Return to Rumana — but now she's smiling, packing a stack of scarves into a shipping box, her phone showing a signed contract and a creator's video featuring her product. Pull back to the Cohesiq logo on a clean field. Tagline animates in: **"Cohesiq — matchmaking the creator economy, honestly."** Final line of text: *"Built and running today."*
+**SCRIPT:**
+"Rumana found her creator in two minutes, not two weeks — and it cost her nothing until the deal was done. That's the whole point: we only win when our brands and creators win. The market is huge, the timing is now, and the platform is already live. Cohesiq turns the world's creator chaos into trusted, structured business — one honest match at a time. Come build it with us."
 
 ---
 
