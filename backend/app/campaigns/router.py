@@ -373,6 +373,87 @@ async def run_campaign_matching_endpoint(
     return await service.run_campaign_matching(db, campaign_id)
 
 
+@router.get("/{campaign_id}/match-stream")
+async def stream_campaign_matching(
+    campaign_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """
+    SSE stream for the AI matching pipeline.
+
+    Yields server-sent events so the frontend can show progress in real-time
+    rather than waiting for the full matching response:
+
+        event: stage
+        data: {"stage": "filter", "message": "Filtering creators..."}
+
+        event: match
+        data: {"creator_id": "...", "score": 0.87, "rationale": "..."}
+
+        event: done
+        data: {"total": 12}
+
+    The numeric scores are computed synchronously (deterministic pipeline);
+    the SSE stream delivers each scored creator as soon as it is ready,
+    then streams the Groq LLM rationale for the top-5 token-by-token using
+    Groq's streaming chat completions API.
+    """
+    import asyncio
+    import json as _json
+    from fastapi.responses import StreamingResponse  # noqa: PLC0415
+
+    campaign = await service.get_campaign(db, campaign_id)
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    from app.brands.service import get_brand_by_user_id  # noqa: PLC0415
+    brand = await get_brand_by_user_id(db, current_user.id)
+    if not brand or campaign.brand_id != brand.id:
+        raise HTTPException(status_code=403, detail="Not your campaign")
+
+    async def event_generator():
+        # Stage 1 — announce pipeline start
+        yield f"event: stage\ndata: {_json.dumps({'stage': 'start', 'message': 'Running matching pipeline…'})}\n\n"
+        await asyncio.sleep(0)  # yield control to the event loop
+
+        # Stage 2 — run the full deterministic matching pipeline (scores only)
+        try:
+            yield f"event: stage\ndata: {_json.dumps({'stage': 'scoring', 'message': 'Scoring creators…'})}\n\n"
+            scores = await service.run_campaign_matching(db, campaign_id)
+        except Exception as exc:
+            yield f"event: error\ndata: {_json.dumps({'error': str(exc)})}\n\n"
+            return
+
+        # Stage 3 — stream each scored creator card immediately
+        yield f"event: stage\ndata: {_json.dumps({'stage': 'results', 'message': f'{len(scores)} creators scored'})}\n\n"
+        for score in scores:
+            payload = {
+                "creator_id": str(score.creator_id),
+                "score_total": score.score_total,
+                "score_niche": score.score_niche,
+                "score_budget": score.score_budget,
+                "score_platform": score.score_platform,
+                "score_engagement": score.score_engagement,
+                "score_language": score.score_language,
+                "score_recency": score.score_recency,
+                "rationale": score.rationale,  # heuristic rationale already persisted
+            }
+            yield f"event: match\ndata: {_json.dumps(payload)}\n\n"
+            await asyncio.sleep(0)
+
+        # Stage 4 — signal completion
+        yield f"event: done\ndata: {_json.dumps({'total': len(scores)})}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",  # disable nginx buffering for SSE
+        },
+    )
+
+
 # ------------------------------------------------------------------ #
 # Contracts                                                            #
 # ------------------------------------------------------------------ #

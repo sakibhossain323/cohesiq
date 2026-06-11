@@ -1,0 +1,45 @@
+{
+  "name": "Trigger — Auto-Run Matching on Campaign Launch",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "campaign-launched",
+        "responseMode": "onReceived"
+      },
+      "id": "webhook-trigger",
+      "name": "Campaign Launched (Webhook)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://backend:8000/campaigns/{{ $json.body.campaign_id }}/run-matching",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-cron-secret", "value": "={{ $env.CRON_SECRET }}" }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "run-matching-http",
+      "name": "Run Matching Pipeline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [520, 300]
+    }
+  ],
+  "connections": {
+    "Campaign Launched (Webhook)": {
+      "main": [[{ "node": "Run Matching Pipeline", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {},
+  "active": false,
+  "_comment": "Event-driven: fires when a brand sets a campaign to 'active'. The backend campaigns service should POST to n8n's webhook URL (configured in N8N_CAMPAIGN_LAUNCH_WEBHOOK_URL env var) after a successful status transition. n8n then calls the matching pipeline so the shortlist is ready by the time the brand navigates to the matches view. Requires N8N_WEBHOOK_URL and CRON_SECRET env vars."
+}

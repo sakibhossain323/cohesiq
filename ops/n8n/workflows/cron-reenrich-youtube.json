@@ -1,0 +1,53 @@
+{
+  "name": "Cron — Daily YouTube Re-Enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 3 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every Day at 03:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/admin/cron/reenrich-youtube-creators",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-cron-secret", "value": "={{ $env.CRON_SECRET }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"recent_video_limit\": 6 }",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "reenrich-http",
+      "name": "Re-Enrich YouTube Creators",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [520, 300]
+    }
+  ],
+  "connections": {
+    "Every Day at 03:00": {
+      "main": [[{ "node": "Re-Enrich YouTube Creators", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {},
+  "active": false,
+  "_comment": "Runs daily at 03:00 UTC. Calls POST /admin/cron/reenrich-youtube-creators which re-pulls YouTube stats for all is_api_verified=true creators. Timeout set to 120s because enrichment involves multiple YouTube API calls per creator. Requires CRON_SECRET env var."
+}

@@ -1,0 +1,48 @@
+{
+  "name": "Cron — Expire Stale Campaigns (Daily)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 2 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every Day at 02:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/admin/cron/expire-campaigns",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-cron-secret", "value": "={{ $env.CRON_SECRET }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "expire-http",
+      "name": "Expire Stale Campaigns",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [520, 300]
+    }
+  ],
+  "connections": {
+    "Every Day at 02:00": {
+      "main": [[{ "node": "Expire Stale Campaigns", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {},
+  "active": false,
+  "_comment": "Runs daily at 02:00 UTC. Calls POST /admin/cron/expire-campaigns which marks campaigns whose application_deadline has passed and status is still 'active' → 'archived'. Requires CRON_SECRET env var set in both backend/.env and n8n environment."
+}

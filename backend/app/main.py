@@ -56,7 +56,9 @@ app.include_router(campaigns_router, prefix="/campaigns", tags=["campaigns"])
 app.include_router(youtube_router, prefix="/youtube", tags=["youtube"])
 
 from app.admin.router import router as admin_router
+from app.admin.cron import router as cron_router
 app.include_router(admin_router, prefix="/admin", tags=["admin"])
+app.include_router(cron_router, tags=["cron"])
 
 from app.webhooks.router import router as webhooks_router  # noqa: E402
 app.include_router(webhooks_router, prefix="/webhooks", tags=["webhooks"])
