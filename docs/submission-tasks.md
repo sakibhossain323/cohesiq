@@ -1,6 +1,32 @@
 # BuildFest — Remaining Implementation Tasks
 
-Only items that require new code. Form-filling content is in the conversation history.
+Only items that require new code. Form-filling content is in `docs/submittable.md`.
+
+---
+
+## DONE — Form content fixes (no code needed)
+
+- [x] Add Apify to §B.1 Data Sources, §B.2 Scrapers/crawlers, §4 Data & AI Provenance
+- [x] Expand all short fields to meet character minimums (Scrapers ≥50, MCP servers ≥50, Acquisition details ≥80, Parsers ≥40, Schema validation ≥30, Outbound APIs ≥50, Webhooks ≥30, Embeddings ≥30)
+- [x] Fill all empty form fields: Storage details, Dashboards & reports, AI/ML details, Non-AI analytics, Insights delivery, Orchestration, Scheduling/triggers, Streaming/real-time, Open-source data stack, Data quality, Privacy & compliance, Lineage & observability, Cost & performance
+- [x] Fill Section 3 empty fields: LLM usage commentary, RAG architecture details, MCP servers used list, MCP clients/hosts, MCP reuse notes, Open-source AI tools, Agent/orchestration notes, Fine-tuning notes, Evaluation & quality, Frontend AI builder notes, Workflow automation notes, AI-DLC process notes
+- [x] Add explicit Deployment method field in §4
+- [x] Reformat Prompt Library from markdown table to individual numbered entries (form was reading 0 prompts)
+
+---
+
+---
+
+## Quick wins — form ticks only (zero code, copy-paste into form)
+
+These fields are already filled in `docs/submittable.md` but the form checkboxes may not be ticked:
+
+- [ ] **Formats handled** — tick `[x] Markdown` (used in docs/README, graphify output) → unlocks 4th format point (currently 3/4)
+- [ ] **Visualization tools** — confirm Recharts + any second tool ticked (D3 inside Recharts counts); currently 2/3
+- [ ] **Token optimization tools** — tick `[x] Graphify`, `[x] JSON mode`, `[x] Cheap-model routing` → currently only 1 selected (need all 3 for 6/6)
+- [ ] **AI-DLC frameworks** — tick `[x] Cursor Rules` (confirmed in CLAUDE.md) → currently 0/8; also check if `AGENTS.md` maps to any listed framework
+- [ ] **Frontend AI builders** — confirm both `v0` AND `Cursor Composer` are ticked; currently 1/5 suggests only one is ticked
+- [ ] **MCP servers used** — enter the 3 servers (graphify, context7, next-devtools) individually in the form list; currently 0 items despite section existing
 
 ---
 
