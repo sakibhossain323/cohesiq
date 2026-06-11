@@ -27,3 +27,7 @@ langchain-mcp-adapters>=0.1,<0.2
 langgraph>=0.2,<0.7
 # Prometheus /metrics for Grafana observability
 prometheus-fastapi-instrumentator>=7,<8
+# Redis async client — cache layer for matching results
+redis[asyncio]>=5.0,<6
+# pgvector — Python type bindings for the pgvector PostgreSQL extension
+pgvector>=0.3,<1

@@ -27,11 +27,28 @@ services:
       DATABASE_URL: postgresql+asyncpg://cohesiq:cohesiq@postgres:5432/cohesiq
       SECRET_KEY: change_this_in_production
       CLERK_ISSUER_URL: https://sharp-marten-52.clerk.accounts.dev
+      REDIS_URL: redis://redis:6379/0
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
     volumes:
       - ./backend:/app
+
+  # Redis — in-memory cache for matching results (5-min TTL).
+  # Part of the default stack; no profile required.
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   frontend:
     restart: unless-stopped
@@ -174,6 +191,7 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
   frontend_node_modules:
   frontend_next:
   prometheus_data:

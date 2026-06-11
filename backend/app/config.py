@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60 * 24  # 24 hours
     clerk_webhook_secret: str | None = None
     cron_secret: str | None = None  # Shared secret for n8n → backend cron endpoints
+    redis_url: str | None = None    # e.g. redis://redis:6379/0 — optional, soft-fail
     clerk_issuer_url: str | None = None
     clerk_secret_key: str | None = None
     youtube_api_key: str | None = None

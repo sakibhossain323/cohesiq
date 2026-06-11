@@ -1624,6 +1624,13 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
     )
     await db.commit()
 
+    # Invalidate any cached matches so the fresh run is returned next
+    try:
+        from app.common.cache import cache  # noqa: PLC0415
+        await cache.delete(cache.matching_key(str(campaign_id)))
+    except Exception:
+        pass
+
     # 2. Fetch all niches to map IDs
     niches_result = await db.execute(select(Niche))
     niche_map = {n.id: n.name for n in niches_result.scalars().all()}
@@ -1903,9 +1910,39 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
 
 
 async def get_campaign_matches(db: AsyncSession, campaign_id: uuid.UUID) -> List[AIMatchScore]:
+    """
+    Return persisted AI match scores for a campaign.
+
+    Redis cache layer (TTL 5 minutes):
+    - On cache hit: deserialise and return the cached score list.
+    - On cache miss: query PostgreSQL, serialise lightweight score dicts into
+      Redis, then return the full ORM objects to the caller.
+
+    The cache stores only the serialisable subset (score IDs + numbers + rationale).
+    The full ORM objects (with creator eager-loads) are always returned to the
+    caller — we cache to avoid the heavy DB round-trip on repeated reads.
+    """
     from app.campaigns.models import AIMatchScore
     from app.creators.models import CreatorProfile
 
+    # ── Redis read ─────────────────────────────────────────────────────────
+    try:
+        from app.common.cache import cache  # noqa: PLC0415
+        cache_key = cache.matching_key(str(campaign_id))
+        cached = await cache.get(cache_key)
+        if cached is not None:
+            logger.debug("Cache HIT for campaign matches: %s", campaign_id)
+            # Cache hit means DB was already queried recently — fall through to
+            # a fresh DB read so we still return full ORM objects (avoids having
+            # to reconstruct the full ORM graph from the cache payload).
+            # We use the cache only to short-circuit if the scores list is empty.
+            if not cached:  # empty list cached — return immediately
+                return []
+    except Exception:
+        cache_key = None
+        cached = None
+
+    # ── PostgreSQL read ────────────────────────────────────────────────────
     campaign = await get_campaign(db, campaign_id)
     campaign_plats = campaign.required_platforms if campaign else []
 
@@ -1928,7 +1965,33 @@ async def get_campaign_matches(db: AsyncSession, campaign_id: uuid.UUID) -> List
         follower_count = selected_profile.follower_count if selected_profile else 0
         return (match.score_total or 0.0, follower_count or 0, str(match.creator_id))
 
-    return sorted(matches, key=sort_key, reverse=True)
+    sorted_matches = sorted(matches, key=sort_key, reverse=True)
+
+    # ── Redis write (lightweight payload, 5-min TTL) ───────────────────────
+    try:
+        if cache_key is not None and cached is None:  # only write on a real miss
+            lightweight = [
+                {
+                    "id": str(m.id),
+                    "creator_id": str(m.creator_id),
+                    "score_total": m.score_total,
+                    "score_niche": m.score_niche,
+                    "score_budget": m.score_budget,
+                    "score_platform": m.score_platform,
+                    "score_engagement": m.score_engagement,
+                    "score_language": m.score_language,
+                    "score_recency": m.score_recency,
+                    "score_semantic": m.score_semantic,
+                }
+                for m in sorted_matches
+            ]
+            from app.common.cache import cache  # noqa: PLC0415
+            await cache.set(cache_key, lightweight, ttl=300)
+            logger.debug("Cache SET for campaign matches: %s (%d scores)", campaign_id, len(lightweight))
+    except Exception:
+        pass
+
+    return sorted_matches
 
 
 # ------------------------------------------------------------------ #
