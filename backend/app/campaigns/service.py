@@ -1890,6 +1890,15 @@ async def run_campaign_matching(db: AsyncSession, campaign_id: uuid.UUID) -> Lis
         db.add(match)
     await db.commit()
 
+    # Observability — additive, fail-soft (never blocks the matching result).
+    try:
+        from app.common.metrics import MATCHING_CREATORS_SCORED, MATCHING_RUNS
+
+        MATCHING_RUNS.labels(outcome="success").inc()
+        MATCHING_CREATORS_SCORED.inc(len(matches))
+    except Exception:
+        pass
+
     return await get_campaign_matches(db, campaign_id)
 
 

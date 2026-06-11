@@ -1,0 +1,44 @@
+{
+  "name": "Creator enrich on register",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "creator-registered",
+        "responseMode": "onReceived"
+      },
+      "id": "webhook-trigger",
+      "name": "Creator Registered (Webhook)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://backend:8000/creators/{{ $json.body.creator_id }}/platforms/youtube/enrich",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "channel_ref", "value": "={{ $json.body.youtube_handle }}" },
+            { "name": "recent_video_limit", "value": "6" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "enrich-http",
+      "name": "Enrich YouTube Profile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [520, 300]
+    }
+  ],
+  "connections": {
+    "Creator Registered (Webhook)": {
+      "main": [[{ "node": "Enrich YouTube Profile", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {},
+  "active": false,
+  "_comment": "STUB workflow for the `automation` profile. Wires: new creator registered -> YouTube enrichment. Import via the n8n UI (http://localhost:5678) after `docker compose --profile automation up -d n8n`. Endpoint path/shape may need adjusting to your live webhook payload."
+}

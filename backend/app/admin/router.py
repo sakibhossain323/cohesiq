@@ -11,6 +11,8 @@ from app.admin.schemas import (
     AdminReviewOut,
     AdminStats,
     AdminUserOut,
+    AssistantRequest,
+    AssistantResponse,
     Paginated,
     UpdateCampaignStatusRequest,
 )
@@ -23,6 +25,16 @@ router = APIRouter()
 @router.get("/stats", response_model=AdminStats, dependencies=[Depends(require_admin)])
 async def admin_stats(db: Annotated[AsyncSession, Depends(get_db)]):
     return await service.get_platform_stats(db)
+
+
+@router.post("/assistant", response_model=AssistantResponse, dependencies=[Depends(require_admin)])
+async def admin_assistant(body: AssistantRequest):
+    """Admin AI Assistant — a LangChain agent that answers questions by calling
+    the Cohesiq MCP server's tools. Fail-soft: returns an 'offline' payload
+    rather than erroring if the model or MCP server is unavailable."""
+    from app.admin.assistant import ask_admin_assistant
+
+    return await ask_admin_assistant(body.question)
 
 
 @router.get("/users", response_model=Paginated[AdminUserOut], dependencies=[Depends(require_admin)])

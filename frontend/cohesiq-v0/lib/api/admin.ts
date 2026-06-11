@@ -87,3 +87,17 @@ export const getAdminReviews = (token: string, params?: { page?: number }) => {
   const qs = params?.page ? `?page=${params.page}` : "";
   return fetchApi<Paginated<AdminReview>>(`/admin/reviews${qs}`, { token });
 };
+
+export interface AssistantReply {
+  ok: boolean;
+  answer: string;
+  tools_used: string[];
+  offline_reason?: string | null;
+}
+
+export const askAdminAssistant = (token: string, question: string) =>
+  fetchApi<AssistantReply>("/admin/assistant", {
+    method: "POST",
+    token,
+    body: JSON.stringify({ question }),
+  });

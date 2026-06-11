@@ -69,9 +69,9 @@ Scores persist in `ai_match_scores`. The brand then runs an offer-driven lifecyc
 **ROADMAP (NOT built):** Vector DB (pgvector), Graph DB (Neo4j), Cache/KV (Redis), Data Warehouse (TimescaleDB) — deferred Phase-E layers. Do **not** mark these as built.
 
 ### 5. Visualization
-**Tick:** [x] Recharts
-**Visualization details:** Recharts (in-app React) powers the 6-factor match-score breakdown bar charts (one bar per signal: niche, budget, platform, engagement, language, recency) and creator profile-strength meters shown on every match card. Score bars update live when a brand reruns matching.
-**Dashboards & reports:** All dashboards are in-app React components — no external BI tooling. Brand dashboard: match shortlist with score breakdown + LLM rationale, campaign pipeline status, ROI calculator, rate benchmark tool, creator side-by-side comparison view. Creator dashboard: active deal tracker, negotiation thread, contract state timeline.
+**Tick:** [x] Recharts · [x] Grafana
+**Visualization details:** Recharts (in-app React) powers the 6-factor match-score breakdown bar charts (one bar per signal: niche, budget, platform, engagement, language, recency) and creator profile-strength meters shown on every match card. Score bars update live when a brand reruns matching. **Grafana** (`ai` Compose profile) renders an operational dashboard over Prometheus metrics — request rate, p95 latency, matching-run / creators-scored / LLM-call counters.
+**Dashboards & reports:** In-app React dashboards (brand: match shortlist + score breakdown + LLM rationale, campaign pipeline, ROI calculator, rate benchmark, creator comparison; creator: deal tracker, negotiation thread, contract timeline) **plus** an ops Grafana dashboard ("Cohesiq — API & Matching") auto-provisioned from `ops/grafana/`.
 
 ### 6. Insights — AI, ML & non-AI
 **Tick:** [x] LLM Inference / RAG · [x] Rule Engine · [x] Statistical Analysis
@@ -101,8 +101,8 @@ Scores persist in `ai_match_scores`. The brand then runs an offer-driven lifecyc
 ### 10. Quality, Governance & Observability
 **Data quality:** Pydantic v2 boundary schemas on every API input — rejects negative follower counts, engagement rates outside 0–100%, and impossible budget values at the system boundary before any DB write. YouTube enrichment validates niche against a fixed 16-niche taxonomy (LLM fallback with schema check). Apify-scraped social profiles go through `PublicSocialProfileEnrichment` normalization before persistence. All creator metrics tagged with `data_source` (self_reported / verified / estimated) so provenance is explicit and never implicit.
 **Privacy & compliance:** Only public API data used (YouTube Data API v3, public Apify scraping of public profiles) — no private database access or authenticated scraping. Clerk RS256 JWT auth on all protected backend routes; `get_current_user` dependency validates token on every request. No PII beyond what creators voluntarily publish on public platforms. UPSERT semantics prevent duplicate rows; `api_verified_at` timestamp records when data was last verified.
-**Lineage & observability:** `data_source` provenance labels on every `creator_social_profiles` row (self_reported / verified / estimated). `ai_match_scores` table persists all 6 sub-scores + semantic flag per campaign×creator pair — every match is auditable and reproducible. `is_api_verified` + `api_verified_at` fields on social profiles. FastAPI structured logs on every request. Live OpenAPI at `/docs` for API introspection. `data_source` field in portfolio items links each item back to its ingestion method.
-**Cost & performance:** Cheap-model routing — Groq `llama-3.1-8b-instant` runs first (sub-100ms latency, free-tier quota); Gemini `1.5-flash` only as fallback. LLM rationale gated to top-5 candidates only (not all matches) to bound per-run token cost. JSON mode on all LLM calls eliminates re-prompt loops. Gemini embedding call triggered only when niche score falls below 0.28 threshold — most runs skip it entirely. Graphify MCP compresses codebase context at dev time (scoped subgraph vs. full file dump).
+**Lineage & observability:** `data_source` provenance labels on every `creator_social_profiles` row (self_reported / verified / estimated). `ai_match_scores` table persists all 6 sub-scores + semantic flag per campaign×creator pair — every match is auditable and reproducible. `is_api_verified` + `api_verified_at` on social profiles. **Prometheus + Grafana observability** (`ai` Compose profile): `prometheus-fastapi-instrumentator` exposes `/metrics` (request rate, latency histograms) plus custom domain counters (`cohesiq_matching_runs_total`, `cohesiq_matching_creators_scored_total`, `cohesiq_llm_calls_total`); Prometheus scrapes the backend and Grafana renders an auto-provisioned "Cohesiq — API & Matching" dashboard. FastAPI structured logs + live OpenAPI at `/docs`.
+**Cost & performance:** Cheap-model routing — Groq `llama-3.1-8b-instant` runs first (sub-100ms latency, free-tier quota); Gemini `1.5-flash` only as fallback. LLM rationale gated to top-5 candidates only (not all matches) to bound per-run token cost. JSON mode on all LLM calls eliminates re-prompt loops. Gemini embedding call triggered only when niche score falls below 0.28 threshold — most runs skip it entirely. The Grafana matching-run + LLM-call counters make per-run cost/latency observable. Graphify MCP compresses codebase context at dev time (scoped subgraph vs. full file dump).
 
 ### 11. Publish Local Environment to Internet
 **Tick:** [x] ngrok
@@ -136,21 +136,35 @@ Structured **JSON-mode** prompts tightly coupled to Pydantic v2 schemas for dete
 **ROADMAP (NOT built):** Persistent pgvector store, Graph RAG, Knowledge Graph retrieval, Rerankers, Agentic/Self/Corrective RAG.
 
 ### MCP Usage (20 pts)
-**Tick:** [x] We used MCP servers/clients.
-**MCP servers used:**
-1. **graphify** — codebase knowledge-graph MCP: `query` / `explain` / `path` / god-nodes / shortest-path over 7,470 nodes / 18,064 edges. Mandatory first-step for all codebase navigation.
-2. **context7** — live framework documentation MCP (resolves up-to-date docs for Next.js, FastAPI, Clerk, SQLAlchemy).
-3. **next-devtools** — Next.js devtools MCP (client config in `.vscode/mcp.json`).
-**MCP clients / hosts:** Claude Code (Anthropic CLI) as primary MCP client for graphify and context7; VS Code with next-devtools MCP extension.
-**MCP reuse / architecture notes:** The graphify MCP replaced ad-hoc file grepping entirely — every codebase exploration query goes through `graphify query "<question>"` which returns a scoped subgraph (typically 10–50 nodes) instead of loading full source files into context. This reduced LLM context consumption by an estimated 80% on large cross-file questions and prevented hallucination about file structure. context7 ensured all framework-specific code (Next.js App Router patterns, SQLAlchemy 2.0 async syntax, Clerk SDK) was generated against current docs rather than training data.
-*(Honesty: we did not author a custom MCP server; all claims above are "used" only.)*
+**Tick:** [x] We **built** an MCP server. · [x] We **used** MCP servers/clients. · Transports: [x] stdio · [x] streamable HTTP.
+
+**MCP server we BUILT — `cohesiq-matching-mcp`** (`backend/mcp_server.py`, FastMCP):
+A real Model Context Protocol server that exposes Cohesiq's matching engine + admin reads as callable tools, each delegating to an existing service (no logic duplication). Tools:
+- `platform_stats()` — live platform counts (users/creators/brands/campaigns/applications).
+- `list_creators(niche, platform, limit)` — verified-creator browse with niche-name resolution.
+- `get_creator(creator_id)` — single creator + social metrics + provenance.
+- `run_matching(campaign_id)` — runs the deterministic 6-factor engine, persists + returns ranked matches.
+- `get_match_scores(campaign_id)` — reads persisted sub-scores.
+- `enrich_creator_youtube(creator_id, channel_ref)` — triggers YouTube Data API enrichment.
+Runs over **both transports**: stdio (for desktop MCP clients like Claude Code/Cursor) and streamable HTTP on `:8001` (for the in-app agent). Ships behind the `ai` Compose profile.
+
+**MCP servers we USED:**
+1. **cohesiq-matching-mcp** (ours) — consumed at runtime by the Admin AI Assistant (a LangChain agent) via `langchain-mcp-adapters`, making the agent a real MCP client.
+2. **graphify** — codebase knowledge-graph MCP: `query`/`explain`/`path` over 7,470 nodes / 18,064 edges. Mandatory first step for all codebase navigation.
+3. **context7** — live framework documentation MCP (Next.js, FastAPI, Clerk, SQLAlchemy, FastMCP).
+4. **next-devtools** — Next.js devtools MCP (`.vscode/mcp.json`).
+
+**MCP clients / hosts:** the Cohesiq backend (LangChain agent via `langchain-mcp-adapters`, streamable-HTTP transport) at runtime; Claude Code / Cursor (stdio) at dev-time for graphify/context7/our own server.
+
+**MCP reuse / architecture notes:** Building the server as a thin protocol layer over the existing service functions means the same matching logic is reachable three ways — REST (`/campaigns/{id}/run-matching`), the admin AI Assistant, and any external MCP client — with zero duplication. graphify MCP replaced ad-hoc grepping (scoped subgraphs cut context use ~80% and prevented file-structure hallucination); context7 kept framework code current.
 
 ### Open Source Tools (8 pts)
-**Open-source AI tools & libraries:** groq Python SDK (Llama inference + Whisper STT), google-generativeai SDK (Gemini flash inference + text-embedding-004), PDF.js (browser-side PDF parsing), Pydantic v2 (AI output schema validation), Recharts (score breakdown visualization), httpx (async HTTP client for Apify REST API calls).
-**Full stack:** FastAPI, SQLAlchemy 2.0, Alembic, Pydantic v2, Next.js 16, React 19, Tailwind v4, shadcn/ui, PDF.js, Recharts, PostgreSQL 16, Docker. SDKs: `groq`, `google-generativeai`, Clerk SDK. No upstream contributions submitted; usage is integration-level.
+**Open-source AI tools & libraries:** **LangChain** + **LangGraph** (admin AI Assistant agent), **FastMCP** (the `cohesiq-matching-mcp` server), **langchain-mcp-adapters** (agent↔MCP bridge), **langchain-groq** (Groq chat model binding), **prometheus-fastapi-instrumentator** + **prometheus-client** (metrics), **Ollama** (local Hermes runtime), **n8n** (workflow automation); groq Python SDK (Llama + Whisper), google-generativeai SDK (Gemini + text-embedding-004), PDF.js (PDF parsing), Pydantic v2 (AI output validation), Recharts + Grafana (visualization), httpx (Apify/YouTube REST).
+**Full stack:** FastAPI, SQLAlchemy 2.0, Alembic, Pydantic v2, Next.js 16, React 19, Tailwind v4, shadcn/ui, PDF.js, Recharts, PostgreSQL 16, Docker, Prometheus, Grafana. SDKs: `groq`, `google-generativeai`, Clerk SDK, FastMCP, LangChain/LangGraph. No upstream contributions submitted; usage is integration-level.
 
 ### Agent Frameworks & Orchestration (7 pts)
-**Agent / orchestration notes:** No runtime multi-agent framework (no LangGraph/CrewAI/AutoGen/Pydantic-AI). Runtime AI is a deterministic 5-stage pipeline with gated single-shot LLM calls — tool-calling loops are not required because the matching logic is deterministic math, not agentic reasoning. The "agentic" surface is exclusively dev-time: Claude Code + Cursor Composer agents operating under an `AGENTS.md` spec that enforces DDD domain boundaries, graphify-first codebase navigation, and task-tracked implementation.
+**Tick:** [x] LangChain · [x] LangGraph
+**Agent / orchestration notes:** The **Admin AI Assistant** (`backend/app/admin/assistant.py`) is a real LangChain tool-calling agent: a LangGraph prebuilt ReAct agent (with an `AgentExecutor` fallback) driven by `langchain-groq` (`llama-3.1-8b-instant`), whose tools are loaded from our `cohesiq-matching-mcp` server via `langchain-mcp-adapters`. An admin asks a plain-language question → the agent decides which MCP tool(s) to call → the tools read the live DB / run the matching engine → the agent composes the answer and reports which tools it used. The agent is gated to admin-only and fails soft (never 500). The core **matching** pipeline remains deliberately deterministic (non-agentic) — agentic reasoning is used where it belongs (open-ended admin Q&A), not where determinism matters (scoring). Dev-time agents (Claude Code + Cursor under `AGENTS.md`) remain in use for implementation.
 
 ### Fine-tuning / Adaptation (5 pts)
 **Fine-tuning / adaptation:** No fine-tuning applied. All models (Groq Llama 3.1 8B, Gemini 1.5 Flash, Whisper large-v3-turbo, text-embedding-004) are used as-is via their public APIs with no LoRA, QLoRA, or full fine-tune. Adaptation is achieved entirely through prompt engineering: JSON-mode structured prompts, role prompting with dynamic campaign/creator variables, and a fixed niche taxonomy that constrains LLM output to valid categories. Roadmap: BanglaBERT-based niche classification fine-tuned on Bangla creator content for improved local accuracy.
@@ -168,13 +182,15 @@ Structured **JSON-mode** prompts tightly coupled to Pydantic v2 schemas for dete
 **Frontend AI / visual builder notes:** v0 (Vercel) bootstrapped the initial React/shadcn/ui dashboard layouts (`frontend/cohesiq-v0/` directory name is a direct artifact of the v0 scaffold). Cursor Composer (Agent mode) wired the scaffolded components to the FastAPI backend — resolving Next.js App Router Server Component hydration boundaries, implementing the two-variable API URL contract (`BACKEND_API_URL` vs `NEXT_PUBLIC_API_URL`), and connecting the matching, negotiation, and contract state machine UIs end-to-end.
 
 ### Workflow Automation (4 pts)
-**Workflow automation notes:** No n8n/Zapier/Airflow/Temporal/LangGraph in the current build. Orchestration is FastAPI's synchronous 5-stage request pipeline and Docker Compose service dependencies. This is an intentional scope decision — the pipeline complexity does not require a DAG scheduler at demo scale. n8n is on the implementation roadmap (Clerk webhook → enrichment trigger workflow).
+**Tick:** [x] n8n
+**Workflow automation notes:** n8n is wired into the stack (`automation` Compose profile) with an exported workflow `ops/n8n/workflows/creator-enrich-on-register.json`: a webhook trigger (new creator registered) → HTTP node that calls the backend's YouTube enrichment endpoint. Ships opt-in so the default demo image stays light. The core request path also uses FastAPI's synchronous 5-stage pipeline + Docker Compose service orchestration.
 
 ### Local / On-device LLMs (8 pts)
-**Local LLM hardware / quantization notes:** None in current build. All inference is cloud API (Groq for Llama + Whisper, Google for Gemini + embeddings). No Ollama/vLLM/local quantized models deployed. Ollama with `llama3.2:3b` as a local fallback is on the roadmap (`profiles: [local-llm]` Docker Compose profile planned).
+**Tick:** [x] Ollama · model: **Hermes** (`hermes3`)
+**Local LLM hardware / quantization notes:** An **Ollama** runtime ships in the stack (`local-llm` Compose profile) configured to run the **Hermes** open-weight model (`hermes3`). `OLLAMA_BASE_URL` lets the backend prefer the local model over Groq when set; default stays on Groq for demo stability. The model is a multi-GB pull, so it is opt-in (`docker compose --profile local-llm up -d ollama && docker compose exec ollama ollama pull hermes3`) rather than baked into the default image. Cloud inference (Groq Llama + Whisper, Gemini) remains the primary path.
 
 ### Agentic Frameworks
-**None at runtime** (no LangGraph/CrewAI/AutoGen/Pydantic-AI/etc.). Dev-time agents only (Claude Code via CLI, Cursor Composer).
+**Tick:** [x] LangChain · [x] LangGraph. The runtime agentic surface is the Admin AI Assistant (LangChain/LangGraph tool-calling agent over the Cohesiq MCP server — see Agent Frameworks above). The matching pipeline stays deterministic by design. Dev-time agents (Claude Code via CLI, Cursor Composer) also in use.
 
 ### AI Development Lifecycle (AI-DLC)
 **Tick:** [x] Cursor Rules

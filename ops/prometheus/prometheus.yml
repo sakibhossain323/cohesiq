@@ -1,0 +1,14 @@
+# Prometheus scrape config for Cohesiq.
+# Scrapes the FastAPI backend's /metrics endpoint (exposed by
+# prometheus-fastapi-instrumentator + custom cohesiq_* counters).
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: cohesiq-backend
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["backend:8000"]
+        labels:
+          service: cohesiq-backend

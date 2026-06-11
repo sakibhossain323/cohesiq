@@ -23,6 +23,25 @@ async def health_check():
     return {"status": "ok"}
 
 
+# ------------------------------------------------------------------ #
+# Observability — Prometheus /metrics (scraped by Grafana via the     #
+# `prometheus` Compose service, profile `ai`). Additive and fail-soft: #
+# if the instrumentator package is missing, the app still boots.       #
+# ------------------------------------------------------------------ #
+try:
+    from prometheus_fastapi_instrumentator import Instrumentator
+
+    # Aliased import — `import app.common.metrics` would rebind the name `app`
+    # (the package) over the FastAPI instance. Importing registers the custom
+    # domain counters/histograms on the default registry so they appear on
+    # /metrics alongside the HTTP metrics.
+    from app.common import metrics as _metrics  # noqa: F401
+
+    Instrumentator().instrument(app).expose(app, endpoint="/metrics", tags=["health"])
+except Exception:  # pragma: no cover - observability must never block startup
+    pass
+
+
 # Domain routers
 from app.auth.router import router as auth_router
 from app.creators.router import router as creators_router

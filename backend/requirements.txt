@@ -3,14 +3,27 @@ uvicorn[standard]==0.30.0
 sqlalchemy[asyncio]==2.0.36
 asyncpg==0.30.0
 alembic==1.14.0
-pydantic==2.10.0
+pydantic>=2.11.7,<3
 pydantic-settings==2.7.0
 python-jose[cryptography]==3.3.0
 bcrypt>=4.0.0
 python-multipart==0.0.20
 email-validator>=2.0.0
-httpx==0.27.2
+httpx>=0.28.1,<0.29
 passlib[bcrypt]==1.7.4
-groq==0.11.0
+# Bumped from 0.11.0: <0.13 passes a `proxies` kwarg removed in httpx 0.28
+# (which fastmcp requires), which broke every Groq client init.
+groq>=0.18,<1
 google-generativeai==0.8.6
 tavily-python==0.5.0
+
+# --- AI-usage stack (branch sakib/ai-score-max) ---
+# MCP server exposing the matching engine as callable tools (stdio + HTTP transports)
+fastmcp>=2.10,<3
+# LangChain agent that consumes the MCP server (admin AI Assistant)
+langchain>=0.3,<0.4
+langchain-groq>=0.2,<0.4
+langchain-mcp-adapters>=0.1,<0.2
+langgraph>=0.2,<0.7
+# Prometheus /metrics for Grafana observability
+prometheus-fastapi-instrumentator>=7,<8

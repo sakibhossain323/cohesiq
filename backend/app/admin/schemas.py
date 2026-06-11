@@ -71,3 +71,14 @@ class UpdateCampaignStatusRequest(BaseModel):
 
 class AdminActionResponse(BaseModel):
     ok: bool
+
+
+class AssistantRequest(BaseModel):
+    question: str
+
+
+class AssistantResponse(BaseModel):
+    ok: bool
+    answer: str
+    tools_used: list[str] = []
+    offline_reason: Optional[str] = None

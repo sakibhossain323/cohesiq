@@ -30,26 +30,33 @@ These fields are already filled in `docs/submittable.md` but the form checkboxes
 
 ---
 
-## MCP Server (20 pts — biggest single gain)
+## DONE on branch `sakib/ai-score-max` — real AI-usage stack
 
-**What:** Build an MCP server that exposes Cohesiq's matching engine as callable tools.
-**Why it scores:** MCP Built (0→10 pts) + MCP Used (0→5 pts) + MCP Transport checkboxes (0→2 pts).
+Built and wired (see `docs/submission-actions.md` for config/run commands):
 
-### Tasks
+- [x] **MCP server** `backend/mcp_server.py` (FastMCP) — tools `platform_stats`, `list_creators`,
+  `get_creator`, `run_matching`, `get_match_scores`, `enrich_creator_youtube`; stdio + HTTP transports.
+- [x] **Admin AI Assistant** — LangChain/LangGraph agent (`backend/app/admin/assistant.py`,
+  `POST /admin/assistant`, new admin tab) consuming the MCP server via `langchain-mcp-adapters`.
+- [x] **Prometheus + Grafana** — `/metrics` (instrumentator + custom `cohesiq_*` counters),
+  scrape config + auto-provisioned dashboard under `ops/`. Compose profile `ai`.
+- [x] **Ollama (Hermes)** — `local-llm` profile stub + `OLLAMA_BASE_URL`/`OLLAMA_MODEL` env (model not pulled).
+- [x] **n8n** — `automation` profile stub + `ops/n8n/workflows/creator-enrich-on-register.json`.
+- [x] All new deps in `backend/requirements.txt`; env vars in `backend/.env.example`; everything
+  behind Compose profiles so the default demo is unaffected.
 
-- [ ] Create `backend/mcp_server.py` — FastMCP server exposing at minimum:
-  - `run_matching(campaign_id)` — triggers deterministic + semantic match, returns ranked creators
-  - `get_match_scores(campaign_id)` — returns persisted sub-scores from `ai_match_scores`
-  - `enrich_creator(creator_id, youtube_handle)` — triggers YouTube enrichment pipeline
-- [ ] Add `fastmcp` to `backend/requirements.txt`
-- [ ] Add `mcp` service to `docker-compose.yml` (or run alongside backend)
-- [ ] Test with Claude Code or any MCP client
+### Submission form fields unlocked (fill these in)
+- MCP servers **built**: `cohesiq-matching-mcp` (6 tools) → 10 pts
+- MCP servers **used**: cohesiq-matching-mcp + Context7 + Graphify → 5 pts
+- MCP **transports**: tick stdio + HTTP → 2 pts
+- **Agentic frameworks**: LangChain + LangGraph
+- **Workflow automation**: n8n
+- **Local LLM runtime**: Ollama; **model**: Hermes
+- **Visualization**: + Grafana; **Observability/Cost**: Prometheus + Grafana
 
-### Submission form fields unlocked
-- MCP servers we built: list `cohesiq-matching-mcp` → 10 pts
-- MCP servers we used: list Context7 + Graphify (already used) → 5 pts
-- MCP transports: tick stdio/HTTP → 2 pts
-- MCP tools exposed: list `run_matching`, `get_match_scores`, `enrich_creator`
+### Remaining (optional, flip on later — see submission-actions.md)
+- [ ] Pull the Hermes model (`docker compose exec ollama ollama pull hermes3`) if demoing local LLM.
+- [ ] Import the n8n workflow via the UI if demoing automation.
 
 ---
 

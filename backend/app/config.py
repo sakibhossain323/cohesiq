@@ -15,6 +15,16 @@ class Settings(BaseSettings):
     apify_tiktok_actor_id: str | None = None
     apify_wait_secs: int = 120
     groq_api_key: str | None = None
+    gemini_api_key: str | None = None
+
+    # --- AI-usage stack (branch sakib/ai-score-max) ---
+    # Admin AI Assistant (LangChain agent → Cohesiq MCP server)
+    assistant_enabled: bool = True
+    assistant_model: str = "llama-3.1-8b-instant"
+    mcp_http_url: str = "http://mcp:8001/mcp"
+    # Optional local-LLM runtime (Ollama / Hermes). When set, providers may prefer it.
+    ollama_base_url: str | None = None
+    ollama_model: str = "hermes3"
 
     @property
     def resolved_apify_api_token(self) -> str | None:
